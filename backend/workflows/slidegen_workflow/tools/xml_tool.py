@@ -1,176 +1,38 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
-import os
-import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.dom import minidom
-
+import os
 from PIL import ImageFont
 
 
-# Keep the requested font size even when the text exceeds its textbox.
-# Overflow is handled by wrapping/clipping in the renderer; generation never
-# silently reduces the requested font size.
-AUTO_SHRINK_TEXT = False
 
-
-def _resolve_font_fallback_path(
-    bold: bool = False,
-    italic: bool = False,
-) -> Path:
-    """Return a concrete font file path available in Linux/Docker or Windows."""
-    candidates = [
-        "DejaVuSans-BoldOblique.ttf"
-        if bold and italic
-        else "DejaVuSans-Bold.ttf"
-        if bold
-        else "DejaVuSans-Oblique.ttf"
-        if italic
-        else "DejaVuSans.ttf",
-        "FreeSansBoldOblique.ttf"
-        if bold and italic
-        else "FreeSansBold.ttf"
-        if bold
-        else "FreeSansOblique.ttf"
-        if italic
-        else "FreeSans.ttf",
-        "LiberationSans-BoldItalic.ttf"
-        if bold and italic
-        else "LiberationSans-Bold.ttf"
-        if bold
-        else "LiberationSans-Italic.ttf"
-        if italic
-        else "LiberationSans-Regular.ttf",
-    ]
-    directories = [
-        Path("/usr/share/fonts/truetype/dejavu"),
-        Path("/usr/share/fonts/truetype/freefont"),
-        Path("/usr/share/fonts/truetype/liberation"),
-        Path("/usr/local/share/fonts"),
-        Path.cwd(),
-    ]
-    windir = os.environ.get("WINDIR")
-    if windir:
-        directories.append(Path(windir) / "Fonts")
-
-    for directory in directories:
-        for filename in candidates:
-            path = directory / filename
-            if not path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(path), 12)
-                return path
-            except OSError:
-                continue
-
-    raise OSError("No usable fallback font was found in the runtime environment")
-
-
-#Slide Intro
-def generate_modern_cover_slide_xml(
-    title: str = "THIS IS YOUR PRESENTATION TITLE THIS IS YOUR PRESENTATION TITLE",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#F4F4F4",
-    dark_panel_color: str = "#23242B",
-    accent_color: str = "#98F033",
-    title_color: str = "#98F033",
+# ==========================================================
+# 1. SLIDE INTRO (Giới thiệu, Cover)
+# ==========================================================
+def generate_intro_slide_xml(
+    title: str = "Intro Template",
+    subtitle: str = "Choose a topic and audience to generate a tailored introductory presentation",
+    background_color: str = "#F4F6F7",
+    title_color: str = "#1C4670",
+    subtitle_color: str = "#38618C",
 ) -> str:
     """
-    Generate XML for a modern cover slide.
-
-    The layout features a bright photo background on the right,
-    a dark diagonal panel on the left, a bold accent bar aligned
-    directly with the diagonal boundary, and a large title inside
-    the dark panel.
+    Sinh XML cho slide Intro (Tiêu đề chính) với background SVG blob.
+    Tích hợp thuật toán đo đạc và co giãn text tự động.
     """
+    import os
 
-
-
-    # =====================================================
-    # Canvas and layout regions
-    # =====================================================
+    if not title.strip():
+        raise ValueError("title không được để trống")
 
     canvas_width = 1600
     canvas_height = 900
 
-    image_x = 515
-    image_y = 0
-    image_width = 1085
-    image_height = 900
-
-    title_x = 78
-    title_y = 210
-    title_max_height = 420
-    title_right_padding = 40.0
-
-    panel_top_x = 965.0
-    panel_bottom_x = 595.0
-    panel_top_y = 0.0
-    panel_bottom_y = 900.0
-
-    dark_panel_points = (
-        f"0,0 "
-        f"{panel_top_x:.2f},0 "
-        f"{panel_bottom_x:.2f},900 "
-        f"0,900"
-    )
-
-    accent_top_y = 145.0
-    accent_bottom_y = 708.0
-    accent_width = 48.0
-    accent_overlap = 5.0
-
-    def diagonal_x_at_y(y: float) -> float:
-        ratio = (
-            (y - panel_top_y)
-            / (panel_bottom_y - panel_top_y)
-        )
-
-        return (
-            panel_top_x
-            + ratio
-            * (panel_bottom_x - panel_top_x)
-        )
-
-    def title_width_for_height(text_height: float) -> float:
-        title_bottom_y = min(
-            canvas_height,
-            title_y + min(text_height, title_max_height),
-        )
-
-        return max(
-            1.0,
-            diagonal_x_at_y(title_bottom_y)
-            - title_x
-            - title_right_padding,
-        )
-
-    accent_top_inner_x = (
-        diagonal_x_at_y(accent_top_y)
-        - accent_overlap
-    )
-
-    accent_bottom_inner_x = (
-        diagonal_x_at_y(accent_bottom_y)
-        - accent_overlap
-    )
-
-    accent_points = (
-        f"{accent_top_inner_x:.2f},{accent_top_y:.2f} "
-        f"{accent_top_inner_x + accent_width:.2f},{accent_top_y:.2f} "
-        f"{accent_bottom_inner_x + accent_width:.2f},{accent_bottom_y:.2f} "
-        f"{accent_bottom_inner_x:.2f},{accent_bottom_y:.2f}"
-    )
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
+    content_max_width = 1200
+    content_max_height = 500
+    content_x = (canvas_width - content_max_width) / 2
 
     def normalize_font_name(name: str) -> str:
         return "".join(
@@ -179,19037 +41,8 @@ def generate_modern_cover_slide_xml(
             if char.isalnum()
         )
 
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            path
-            for path in directories
-            if path.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback_name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
-        fallback_paths = [
-            Path("/usr/share/fonts/truetype/dejavu") / fallback_name,
-            Path("/usr/share/fonts/truetype/freefont") / ("FreeSansBold.ttf" if bold else "FreeSans.ttf"),
-            Path("/usr/share/fonts/truetype/liberation") / ("LiberationSans-Bold.ttf" if bold else "LiberationSans-Regular.ttf"),
-            Path("/usr/local/share/fonts") / fallback_name,
-            Path.cwd() / fallback_name,
-        ]
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        return _resolve_font_fallback_path(bold=bold)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 6,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height + padding,
-        }
-
-    def longest_word_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        words = text.split()
-
-        if not words:
-            return 0.0
-
-        return max(
-            measure_text_width(
-                word,
-                font_path,
-                font_size_pt,
-            )
-            for word in words
-        )
-
-    # =====================================================
-    # Typography settings
-    # =====================================================
-
-    title_font_name = "Arial"
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-
-    title_font_size = 58.0
-    title_min_font_size = 34.0
-    title_line_spacing = 0.96
-
-    def layout_title_at_size(font_size: float) -> dict:
-        title_width = title_width_for_height(title_max_height)
-
-        for _ in range(8):
-            layout = layout_text(
-                title,
-                font_path=title_font_path,
-                font_size=font_size,
-                max_width=title_width,
-                line_spacing=title_line_spacing,
-                padding=8,
-            )
-
-            next_title_width = title_width_for_height(
-                layout["height"]
-            )
-
-            if abs(next_title_width - title_width) < 0.5:
-                layout["width"] = title_width
-                return layout
-
-            title_width = next_title_width
-
-        layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=font_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=8,
-        )
-        layout["width"] = title_width
-        return layout
-
-    title_layout = layout_title_at_size(title_font_size)
-
-    for _ in range(140 if AUTO_SHRINK_TEXT else 0):
-        if (
-            title_layout["height"] <= title_max_height
-            and len(title_layout["lines"]) <= 5
-            and longest_word_width(
-                title,
-                title_font_path,
-                title_font_size,
-            )
-            <= title_layout["width"]
-        ):
-            break
-
-        if title_font_size <= title_min_font_size:
-            break
-
-        title_font_size = max(
-            title_min_font_size,
-            title_font_size - 0.5,
-        )
-
-        title_layout = layout_title_at_size(title_font_size)
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "polygon",
-        points=dark_panel_points,
-        fill=dark_panel_color,
-        line_color="none",
-    )
-
-    add(
-        "polygon",
-        points=accent_points,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        title,
-        x=title_x,
-        y=title_y,
-        width=title_layout["width"],
-        height=title_layout["height"],
-        font=title_font_name,
-        size=title_layout["font_size"],
-        min_font_size=title_layout["font_size"],
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_it_sales_proposal_cover_inline_vector_xml_closer(
-    brand_name: str = "FORGE",
-    title: str = "IT Software Sales Proposal",
-    subtitle: str = "Modern productivity for secure, high-performing teams",
-    prepared_for: str = "Value Financials",
-    date_text: str = "June 2035",
-    background_color: str = "#1A0B3A",
-    title_color: str = "#F7F2FF",
-    subtitle_color: str = "#FFFFFF",
-    subtitle_bar_color: str = "#6545A2",
-    brand_color: str = "#F7F2FF",
-    footer_color: str = "#F7F2FF",
-) -> str:
-    """
-    Generate XML for a premium software proposal cover slide.
-
-    The layout features an inline vector ribbon decoration on the left,
-    a compact brand mark near the top-right, a large proposal title,
-    a horizontal subtitle bar, and two footer labels along the bottom.
-    """
-
-
-
-    # =====================================================
-    # Canvas and layout regions
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    decoration_x = 0.0
-    decoration_y = 0.0
-    decoration_width = 760.0
-    decoration_height = 900.0
-
-    content_x = 600.0
-    content_right = 1530.0
-    content_width = content_right - content_x
-
-    brand_y = 105.0
-    brand_icon_width = 58.0
-    brand_gap = 18.0
-
-    main_top = 245.0
-    main_bottom = 700.0
-    available_main_height = main_bottom - main_top
-
-    title_to_subtitle_gap = 42.0
-    minimum_gap = 20.0
-
-    footer_y = 825.0
-    footer_left_x = content_x
-    footer_left_width = 470.0
-    footer_right_width = 200.0
-    footer_right_x = content_right - footer_right_width
-
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-    
-
-        return Path(font_path)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-    brand_font_name = "Arial"
-    footer_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-    subtitle_font_path = resolve_font_path(
-        subtitle_font_name,
-        bold=False,
-    )
-    brand_font_path = resolve_font_path(
-        brand_font_name,
-        bold=True,
-    )
-    footer_font_path = resolve_font_path(
-        footer_font_name,
-        bold=False,
-    )
-
-    title_font_size = 60.0
-    title_min_font_size = 42.0
-
-    subtitle_font_size = 20.0
-    subtitle_min_font_size = 17.0
-
-    title_line_spacing = 0.95
-    subtitle_line_spacing = 1.0
-
-    subtitle_bar_padding_x = 34.0
-    subtitle_bar_padding_y = 12.0
-
-    def calculate_main_layout(
-        current_title_size: float,
-        current_subtitle_size: float,
-        current_gap: float,
-    ) -> dict:
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=content_width,
-            line_spacing=title_line_spacing,
-            padding=4,
-        )
-
-        subtitle_text_width = max(
-            1.0,
-            content_width
-            - 2 * subtitle_bar_padding_x,
-        )
-
-        subtitle_layout = layout_text(
-            subtitle,
-            font_path=subtitle_font_path,
-            font_size=current_subtitle_size,
-            max_width=subtitle_text_width,
-            line_spacing=subtitle_line_spacing,
-            padding=3,
-        )
-
-        subtitle_bar_height = (
-            subtitle_layout["height"]
-            + 2 * subtitle_bar_padding_y
-        )
-
-        total_height = (
-            title_layout["height"]
-            + current_gap
-            + subtitle_bar_height
-        )
-
-        group_y = (
-            main_top
-            + max(
-                0.0,
-                available_main_height - total_height,
-            )
-            / 2
-        )
-
-        return {
-            "title": title_layout,
-            "subtitle": subtitle_layout,
-            "subtitle_bar_height": subtitle_bar_height,
-            "total_height": total_height,
-            "group_y": group_y,
-        }
-
-    layouts = calculate_main_layout(
-        title_font_size,
-        subtitle_font_size,
-        title_to_subtitle_gap,
-    )
-
-    for _ in range(220):
-        if layouts["total_height"] <= available_main_height:
-            break
-
-        changed = False
-
-        if title_to_subtitle_gap > minimum_gap:
-            title_to_subtitle_gap = max(
-                minimum_gap,
-                title_to_subtitle_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
-            subtitle_font_size = max(
-                subtitle_min_font_size,
-                subtitle_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_main_layout(
-            title_font_size,
-            subtitle_font_size,
-            title_to_subtitle_gap,
-        )
-
-    title_y = layouts["group_y"]
-    subtitle_bar_y = (
-        title_y
-        + layouts["title"]["height"]
-        + title_to_subtitle_gap
-    )
-    subtitle_y = (
-        subtitle_bar_y
-        + subtitle_bar_padding_y
-    )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    svg_node = add(
-        "svg",
-        x=decoration_x,
-        y=decoration_y,
-        width=decoration_width,
-        height=decoration_height,
-        pixel_width=900,
-        pixel_height=900,
-    )
-    svg_node.text = """
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900" style="background: transparent;">
-  <defs>
-    <linearGradient id="outer" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#4A2C82"/>
-      <stop offset="45%" stop-color="#805AD5"/>
-      <stop offset="100%" stop-color="#B794F4"/>
-    </linearGradient>
-    <linearGradient id="middle" x1="0" y1="0" x2="1" y2="0.9">
-      <stop offset="0%" stop-color="#6B46C1"/>
-      <stop offset="55%" stop-color="#9F7AEA"/>
-      <stop offset="100%" stop-color="#D6BCFA"/>
-    </linearGradient>
-    <linearGradient id="inner" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#805AD5"/>
-      <stop offset="50%" stop-color="#B794F4"/>
-      <stop offset="100%" stop-color="#E9D8FD"/>
-    </linearGradient>
-    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-
-  <g opacity="0.18">
-    <rect x="360" y="58" width="250" height="190" fill="#B794F4"/>
-    <rect x="360" y="384" width="250" height="190" fill="#9F7AEA"/>
-    <rect x="108" y="575" width="205" height="300" fill="#8B5CF6"/>
-  </g>
-
-  <path
-    d="M0,210 C185,35 420,28 620,58 C650,332 540,602 305,760 C170,850 63,880 0,882 Z"
-    fill="url(#outer)"
-    opacity="0.96"/>
-
-  <path
-    d="M0,410 C180,210 382,194 590,250 C548,470 438,635 258,760 C132,846 52,870 0,876 Z"
-    fill="url(#middle)"
-    opacity="0.98"/>
-
-  <path
-    d="M0,640 C154,410 338,350 535,384 C470,580 363,704 211,798 C112,858 44,874 0,878 Z"
-    fill="url(#inner)"
-    opacity="0.98"
-    filter="url(#softGlow)"/>
-
-  <path
-    d="M150,900 C145,750 200,636 312,598 C390,571 457,590 510,640 C412,734 302,824 150,900 Z"
-    fill="#8B5CF6"
-    opacity="0.82"/>
-</svg>
-""".strip()
-
-    textbox(
-        "✣",
-        x=content_x,
-        y=brand_y,
-        width=brand_icon_width,
-        height=58,
-        font=brand_font_name,
-        font_path=str(brand_font_path),
-        size=42,
-        min_font_size=42,
-        bold="true",
-        color=brand_color,
-        align="center",
-        vertical_align="middle",
-        single_line="true",
-        max_lines=1,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        brand_name,
-        x=content_x + brand_icon_width + brand_gap,
-        y=brand_y + 5,
-        width=260,
-        height=50,
-        font=brand_font_name,
-        font_path=str(brand_font_path),
-        size=30,
-        min_font_size=22,
-        bold="true",
-        color=brand_color,
-        align="left",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        layouts["title"]["source_text"],
-        x=content_x,
-        y=title_y,
-        width=content_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=content_x,
-        y=subtitle_bar_y,
-        width=content_width,
-        height=layouts["subtitle_bar_height"],
-        fill=subtitle_bar_color,
-        line_color="none",
-    )
-
-    textbox(
-        layouts["subtitle"]["source_text"],
-        x=content_x + subtitle_bar_padding_x,
-        y=subtitle_y,
-        width=content_width - 2 * subtitle_bar_padding_x,
-        height=layouts["subtitle"]["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=layouts["subtitle"]["font_size"],
-        min_font_size=layouts["subtitle"]["font_size"],
-        color=subtitle_color,
-        align="center",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["subtitle"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=subtitle_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        f"Prepared for {prepared_for}",
-        x=footer_left_x,
-        y=footer_y,
-        width=footer_left_width,
-        height=42,
-        font=footer_font_name,
-        font_path=str(footer_font_path),
-        size=22,
-        min_font_size=16,
-        color=footer_color,
-        align="left",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        date_text,
-        x=footer_right_x,
-        y=footer_y,
-        width=footer_right_width,
-        height=42,
-        font=footer_font_name,
-        font_path=str(footer_font_path),
-        size=22,
-        min_font_size=16,
-        color=footer_color,
-        align="right",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_elegant_professional_cover_slide_xml(
-    title: str = "Messi cầu thủ vĩ đại nhất thế giới",
-    subtitle: str = "Bài thuyết trình về Messi, cầu thủ bóng đá xuất sắc nhất mọi thời đại, với những thành tích và đóng góp đáng kinh ngạc cho đội tuyển quốc gia và câu lạc bộ.",
-    presented_by_label: str = "PRESENTED BY",
-    presenter_name: str = "NAME SURNAME",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1517048676732-d65bc937f952"
-        "?q=80&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#E5E5DB",
-    panel_color: str = "#F2F0E7",
-    title_color: str = "#64625C",
-    subtitle_color: str = "#64625C",
-    meta_label_color: str = "#76746E",
-    meta_name_color: str = "#55534E",
-    accent_color: str = "#9FA984",
-) -> str:
-    """
-    Generate XML for an elegant editorial cover slide.
-
-    The layout features a large image block on the left, a light content
-    panel on the right, soft corner accents, a centered title and subtitle,
-    and a small presenter credit near the bottom of the panel. The text
-    layout is adaptive so longer content can use wider text areas, smaller
-    font sizes, and adjusted spacing instead of feeling constrained.
-    """
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 112.0
-    image_y = 92.0
-    image_width = 650.0
-    image_height = 716.0
-
-    panel_x = 838.0
-    panel_y = 92.0
-    panel_width = 650.0
-    panel_height = 716.0
-    panel_center_x = panel_x + panel_width / 2
-
-    # -----------------------------------------------------
-    # Font helpers
-    # -----------------------------------------------------
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Helvetica": ["helvetica", "arial"],
-            "Arial": ["arial"],
-            "Times New Roman": ["timesnewroman", "times"],
-            "Garamond": ["garamond"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(
-                font_name,
-                [font_name],
-            )
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(
-                    normalized in stem
-                    for normalized in normalized_names
-                ):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                        "demi",
-                    )
-                )
-                has_italic = any(
-                    token in stem
-                    for token in (
-                        "italic",
-                        "oblique",
-                        "it",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 8
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(
-                        str(path),
-                        12,
-                    )
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(
-            os.environ.get(
-                "WINDIR",
-                "C:/Windows",
-            )
-        )
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            explicit_fallbacks = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            explicit_fallbacks = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                windows_fonts / "aptos-bold.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            explicit_fallbacks = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                windows_fonts / "aptos-italic.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            explicit_fallbacks = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                windows_fonts / "aptos.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-                Path("/usr/share/fonts/dejavu/DejaVuSans.ttf"),
-                Path("/Library/Fonts/Arial.ttf"),
-                Path.home() / "Library/Fonts/Arial.ttf",
-            ]
-
-        for fallback_path in explicit_fallbacks:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(
-                    str(fallback_path),
-                    12,
-                )
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                font_files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in font_files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                try:
-                    ImageFont.truetype(
-                        str(path),
-                        12,
-                    )
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(font_path: Path, font_size_pt: float, line_spacing: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(text: str, font_path: Path, font_size_pt: float, max_width: float) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt) <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        box_width: float,
-        line_spacing: float,
-        padding: float = 2.0,
-    ) -> dict:
-        lines = wrap_text(text, font_path, font_size, box_width)
-        line_height = measure_line_height(font_path, font_size, line_spacing)
-        widest_line = 0.0
-
-        for line in lines:
-            widest_line = max(
-                widest_line,
-                measure_text_width(line, font_path, font_size),
-            )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "box_width": box_width,
-            "used_width": widest_line,
-            "height": len(lines) * line_height + padding,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        width_candidates: list[float],
-        max_height: float,
-        line_spacing: float,
-        padding: float = 2.0,
-        prefer_fewer_lines: bool = True,
-        prefer_wider_boxes: bool = True,
-    ) -> dict:
-        best = None
-
-        for box_width in width_candidates:
-            current_font_size = preferred_font_size
-
-            while current_font_size >= min_font_size:
-                layout = layout_text(
-                    text,
-                    font_path=font_path,
-                    font_size=current_font_size,
-                    box_width=box_width,
-                    line_spacing=line_spacing,
-                    padding=padding,
-                )
-
-                line_penalty = len(layout["lines"]) * (28.0 if prefer_fewer_lines else 6.0)
-                width_bonus = -box_width * (0.08 if prefer_wider_boxes else 0.03)
-                score = (
-                    max(0.0, layout["height"] - max_height) * 1800
-                    + (preferred_font_size - current_font_size) * 12
-                    + line_penalty
-                    + width_bonus
-                )
-
-                if best is None or score < best["score"]:
-                    layout["score"] = score
-                    best = layout
-
-                if layout["height"] <= max_height:
-                    layout["score"] = score
-                    if best is None or score < best["score"]:
-                        best = layout
-                    break
-
-                break
-
-        return best
-
-    title_font_path = resolve_font_path("Arial", bold=False)
-    subtitle_font_path = resolve_font_path("Arial", italic=False)
-    meta_font_path = resolve_font_path("Arial", bold=False)
-    meta_bold_font_path = resolve_font_path("Arial", bold=True)
-
-    panel_inner_left = panel_x + 52.0
-    panel_inner_right = panel_x + panel_width - 52.0
-    panel_inner_width = panel_inner_right - panel_inner_left
-
-    display_title = (
-        "Elegant\nProfessional"
-        if title.strip() == "Elegant Professional"
-        else title
-    )
-
-    title_layout = fit_text(
-        display_title,
-        font_path=title_font_path,
-        preferred_font_size=58.0,
-        min_font_size=18.0,
-        width_candidates=[
-            panel_inner_width - 110.0,
-            panel_inner_width - 60.0,
-            panel_inner_width - 20.0,
-        ],
-        max_height=188.0,
-        line_spacing=1.04,
-        padding=2.0,
-        prefer_fewer_lines=True,
-        prefer_wider_boxes=True,
-    )
-
-    subtitle_layout = fit_text(
-        subtitle,
-        font_path=subtitle_font_path,
-        preferred_font_size=20.0,
-        min_font_size=12.0,
-        width_candidates=[
-            270.0,
-            340.0,
-            430.0,
-            panel_inner_width - 140.0,
-        ],
-        max_height=66.0,
-        line_spacing=1.0,
-        padding=1.0,
-        prefer_fewer_lines=False,
-        prefer_wider_boxes=True,
-    )
-
-    label_layout = fit_text(
-        presented_by_label,
-        font_path=meta_font_path,
-        preferred_font_size=15.5,
-        min_font_size=10.0,
-        width_candidates=[220.0, 280.0, 340.0],
-        max_height=26.0,
-        line_spacing=1.0,
-        padding=1.0,
-        prefer_fewer_lines=False,
-        prefer_wider_boxes=True,
-    )
-
-    name_layout = fit_text(
-        presenter_name,
-        font_path=meta_bold_font_path,
-        preferred_font_size=16.5,
-        min_font_size=10.0,
-        width_candidates=[220.0, 300.0, 360.0],
-        max_height=30.0,
-        line_spacing=1.0,
-        padding=1.0,
-        prefer_fewer_lines=False,
-        prefer_wider_boxes=True,
-    )
-
-    title_width = min(title_layout["box_width"], panel_inner_width)
-    subtitle_width = min(subtitle_layout["box_width"], panel_inner_width - 70.0)
-    meta_width = min(
-        max(label_layout["box_width"], name_layout["box_width"]),
-        panel_inner_width - 120.0,
-    )
-
-    title_x = panel_center_x - title_width / 2
-    subtitle_x = panel_center_x - subtitle_width / 2
-    meta_x = panel_center_x - meta_width / 2
-
-    top_anchor = panel_y + 144.0
-    title_y = top_anchor
-
-    dynamic_gap_1 = 44.0 if title_layout["height"] <= 110.0 else 30.0
-    subtitle_y = title_y + title_layout["height"] + dynamic_gap_1
-
-    meta_y = panel_y + panel_height - 130.0
-
-    # If title grows, allow the block to shift up slightly and subtitle to use less gap.
-    if subtitle_y + subtitle_layout["height"] > panel_y + 470.0:
-        overflow = subtitle_y + subtitle_layout["height"] - (panel_y + 470.0)
-        title_y = max(panel_y + 118.0, title_y - overflow * 0.55)
-        dynamic_gap_1 = 28.0
-        subtitle_y = title_y + title_layout["height"] + dynamic_gap_1
-
-    # If still tight, move the meta block a little lower and compress spacing gracefully.
-    min_meta_top = subtitle_y + subtitle_layout["height"] + 52.0
-    if meta_y < min_meta_top:
-        meta_y = min_meta_top
-
-    if meta_y + label_layout["height"] + name_layout["height"] + 10.0 > panel_y + panel_height - 46.0:
-        meta_y = panel_y + panel_height - (
-            label_layout["height"] + name_layout["height"] + 56.0
-        )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Soft vignette accents matching the reference slide.  SVG is used here
-    # so the corners fade out smoothly instead of becoming hard-edged ovals.
-    corner_wash = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=canvas_width,
-        pixel_height=canvas_height,
-    )
-    corner_wash.text = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <radialGradient id="topLeft" cx="0%" cy="0%" r="72%">
-      <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.86"/>
-      <stop offset="42%" stop-color="{accent_color}" stop-opacity="0.46"/>
-      <stop offset="68%" stop-color="{accent_color}" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bottomRight" cx="100%" cy="100%" r="72%">
-      <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.86"/>
-      <stop offset="42%" stop-color="{accent_color}" stop-opacity="0.46"/>
-      <stop offset="68%" stop-color="{accent_color}" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="1600" height="900" fill="url(#topLeft)"/>
-  <rect width="1600" height="900" fill="url(#bottomRight)"/>
-</svg>'''
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "shape",
-        type="rectangle",
-        x=panel_x,
-        y=panel_y,
-        width=panel_width,
-        height=panel_height,
-        fill=panel_color,
-        line_color="none",
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font="Arial",
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(10.0, title_layout["font_size"] - 2.0),
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.04,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_x,
-        y=subtitle_y,
-        width=subtitle_width,
-        height=subtitle_layout["height"],
-        font="Arial",
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=max(9.0, subtitle_layout["font_size"] - 2.0),
-        italic="true",
-        color=subtitle_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        label_layout["source_text"],
-        x=meta_x,
-        y=meta_y,
-        width=meta_width,
-        height=label_layout["height"],
-        font="Arial",
-        font_path=str(meta_font_path),
-        size=label_layout["font_size"],
-        min_font_size=max(9.0, label_layout["font_size"] - 1.0),
-        color=meta_label_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(label_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        name_layout["source_text"],
-        x=meta_x,
-        y=meta_y + label_layout["height"] + 10.0,
-        width=meta_width,
-        height=name_layout["height"],
-        font="Arial",
-        font_path=str(meta_bold_font_path),
-        size=name_layout["font_size"],
-        min_font_size=max(9.0, name_layout["font_size"] - 1.0),
-        bold="true",
-        color=meta_name_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(name_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_elegant_fancy_font_cover_slide_xml(
-    title: str = "Messi cầu thủ vĩ đại nhất thế giới túc cầu hiện tịa",
-    subtitle: str = "Beauty Products Pitch Deck Beauty Products Pitch Deck Beauty Products Pitch Deck Beauty Products Pitch Deck",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1612817288484-6f916006741a"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#D7D8C8",
-    title_color: str = "#3F3627",
-    subtitle_color: str = "#3F3627",
-) -> str:
-    """
-    Generate XML for a minimalist beauty pitch deck cover slide.
-
-    The layout features a wide hero image near the top, a very large
-    elegant serif title underneath, and a smaller subtitle aligned to
-    the same left edge. Text uses adaptive sizing and width so longer
-    content stays balanced without overlapping the image or subtitle.
-    """
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 88.0
-    image_y = 50.0
-    image_width = 1408.0
-    image_height = 500.0
-
-    text_x = 90.0
-    text_box_width = 1400.0
-    title_y = 592.0
-    title_max_height = 140.0
-    subtitle_gap = 18.0
-    subtitle_max_height = 90.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        dirs: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            dirs.append(Path(windir) / "Fonts")
-        dirs.extend([
-            Path("/usr/share/fonts"),
-            Path("/usr/local/share/fonts"),
-            Path.home() / ".fonts",
-            Path.home() / "Library/Fonts",
-            Path("/Library/Fonts"),
-        ])
-        return [d for d in dirs if d.exists()]
-
-    def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
-        aliases = {
-            "Arial": ["arial"],
-            "Helvetica": ["helvetica", "arial"],
-            "Times New Roman": ["timesnewroman", "times"],
-            "Arial": ["arial", "timesnewroman", "times"],
-            "Garamond": ["garamond", "timesnewroman", "times"],
-            "Didot": ["didot", "timesnewroman", "times"],
-            "Bodoni": ["bodoni", "timesnewroman", "times"],
-        }
-        names = [normalize_font_name(n) for n in aliases.get(font_name, [font_name])]
-        candidates: list[tuple[int, Path]] = []
-        for d in font_directories():
-            try:
-                files = d.rglob("*")
-            except OSError:
-                continue
-            for p in files:
-                if p.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-                stem = normalize_font_name(p.stem)
-                if not any(n in stem for n in names):
-                    continue
-                score = 70
-                if stem in names:
-                    score += 30
-                has_bold = any(t in stem for t in ("bold", "bd", "semibold"))
-                has_italic = any(t in stem for t in ("italic", "oblique", "it"))
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 6
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 4
-                candidates.append((score, p))
-        candidates.sort(key=lambda x: x[0], reverse=True)
-        for _, p in candidates:
-            try:
-                ImageFont.truetype(str(p), 12)
-                return p
-            except OSError:
-                pass
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        wf = windir / "Fonts"
-        fallback_paths = [
-            wf / "times.ttf",
-            wf / "arial.ttf",
-            wf / "arial.ttf",
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-        ]
-        for p in fallback_paths:
-            if p.exists():
-                try:
-                    ImageFont.truetype(str(p), 12)
-                    return p
-                except OSError:
-                    pass
-        for d in font_directories():
-            try:
-                for p in d.rglob("*"):
-                    if p.suffix.lower() in {".ttf", ".otf", ".ttc"}:
-                        try:
-                            ImageFont.truetype(str(p), 12)
-                            return p
-                        except OSError:
-                            pass
-            except OSError:
-                continue
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(size: float) -> float:
-        return size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, size: float):
-        return ImageFont.truetype(str(font_path), max(1, round(pt_to_canvas(size))))
-
-    def text_width(text: str, font_path: Path, size: float) -> float:
-        font = load_font(font_path, size)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        l, _, r, _ = font.getbbox(text)
-        return float(r - l)
-
-    def line_height(font_path: Path, size: float, spacing: float) -> float:
-        font = load_font(font_path, size)
-        a, d = font.getmetrics()
-        return float(a + d) * spacing
-
-    def wrap_text(text: str, font_path: Path, size: float, max_width: float) -> list[str]:
-        lines: list[str] = []
-        for para in text.splitlines() or [text]:
-            words = para.split()
-            if not words:
-                lines.append("")
-                continue
-            cur = ""
-            for word in words:
-                candidate = word if not cur else f"{cur} {word}"
-                if not cur or text_width(candidate, font_path, size) <= max_width:
-                    cur = candidate
-                else:
-                    lines.append(cur)
-                    cur = word
-            if cur:
-                lines.append(cur)
-        return lines or [""]
-
-    def layout_text(text: str, font_path: Path, size: float, max_width: float, spacing: float) -> dict:
-        lines = wrap_text(text, font_path, size, max_width)
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": size,
-            "width": max_width,
-            "height": len(lines) * line_height(font_path, size, spacing) + 2.0,
-        }
-
-    def fit_text(text: str, font_path: Path, preferred: float, minimum: float, max_width: float, max_height: float, spacing: float) -> dict:
-        best = None
-        size = preferred
-        while size >= minimum:
-            layout = layout_text(text, font_path, size, max_width, spacing)
-            score = max(0, layout["height"] - max_height) * 1000 + (preferred - size) * 8 + len(layout["lines"]) * 18
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-            if layout["height"] <= max_height:
-                return layout
-            break
-        return best
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-    title_font_path = resolve_font_path(title_font_name, bold=True)
-    subtitle_font_path = resolve_font_path(subtitle_font_name, italic=True)
-
-    title_layout = fit_text(
-        title,
-        title_font_path,
-        preferred=82.0,
-        minimum=26.0,
-        max_width=text_box_width,
-        max_height=title_max_height,
-        spacing=0.86,
-    )
-
-    dynamic_gap = 14.0 if title_layout["height"] > 108.0 else subtitle_gap
-    subtitle_y = title_y + title_layout["height"] + dynamic_gap
-    subtitle_layout = fit_text(
-        subtitle,
-        subtitle_font_path,
-        preferred=18.0,
-        minimum=18.0,
-        max_width=min(1200.0, text_box_width),
-        max_height=subtitle_max_height,
-        spacing=1.0,
-    )
-
-    if subtitle_y + subtitle_layout["height"] > 860.0:
-        overflow = subtitle_y + subtitle_layout["height"] - 860.0
-        title_y = max(592.0, title_y - overflow)
-        subtitle_y = title_y + title_layout["height"] + dynamic_gap
-
-    presentation = ET.Element("presentation", {
-        "schemaVersion": "1.0",
-        "width": str(canvas_width),
-        "height": str(canvas_height),
-        "slideWidthInches": "13.333",
-        "slideHeightInches": "7.5",
-    })
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(slide, tag, {k: str(v) for k, v in attrs.items() if v is not None})
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add("image", src=image_url, x=image_x, y=image_y, width=image_width, height=image_height)
-
-    textbox(
-        title_layout["source_text"],
-        x=text_x,
-        y=title_y,
-        width=title_layout["width"],
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(10.0, title_layout["font_size"] - 2.0),
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.86,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=text_x,
-        y=subtitle_y,
-        width=subtitle_layout["width"],
-        height=subtitle_layout["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=max(10.0, subtitle_layout["font_size"] - 2.0),
-        italic="true",
-        color=subtitle_color,
-        align="left",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_intro_welcome_slide_xml(
-    title: str = "Welcome to Our Today's Presentation Slide",
-    subtitle: str = (
-        "Here You Can Add Brief Text to Explain the Topic of Your Presentation\n"
-        "This is Just a Demo So Consider Replacing These Texts with Your Own\n"
-        "Presentation Content."
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_overlay_color: str = "#FFFFFF",
-    background_overlay_opacity: float = 0.10,
-    panel_color: str = "#FFFFFF",
-    panel_opacity: float = 0.76,
-    accent_color: str = "#EA4B32",
-    accent_opacity: float = 0.76,
-    company_color: str = "#2D2A2B",
-    headline_black_color: str = "#2B2929",
-    description_color: str = "#2D2A2B",
-) -> str:
-    """
-    Generate XML for a modern intro welcome slide.
-
-    The layout uses a full-bleed office image background, a translucent white
-    rounded panel, a bold orange rounded arrow frame, and only two left-aligned
-    text blocks: a title and a subtitle.
-    """
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Arial": ["arial"],
-            "Times New Roman": ["timesnewroman", "times"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt)
-                    > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-            if current_chunk:
-                chunks.append(current_chunk)
-            return chunks or [word]
-
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-                    word_chunks = split_long_word(word)
-                    lines.extend(word_chunks[:-1])
-                    current = word_chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "width": max_width,
-            "height": len(lines) * line_height,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
-
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
-            )
-
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
-
-            score = (
-                max(0.0, layout["height"] - max_height) * 1700
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 1100
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best
-
-    font_name = "Arial"
-    font_path_regular = resolve_font_path(font_name, bold=False)
-    font_path_bold = resolve_font_path(font_name, bold=True)
-
-    title_box_width = 1100.0
-    subtitle_box_width = 1180.0
-    text_x = 78.0
-    text_content_top = 286.0
-    # Leave a small reserve for the converter's textbox safety expansion.
-    text_content_bottom = 636.0
-    text_content_height = text_content_bottom - text_content_top
-    title_subtitle_gap = 30.0
-
-    def build_text_layouts(scale: float) -> tuple[dict, dict]:
-        title_layout = fit_text(
-                title.strip(),
-                font_path=font_path_bold,
-                preferred_font_size=max(20.0, 54.0 * scale),
-                min_font_size=22.0,
-                max_width=title_box_width,
-                max_height=150.0,
-                line_spacing=0.95,
-                max_lines=2,
-            )
-        subtitle_layout = fit_text(
-                subtitle.strip(),
-                font_path=font_path_regular,
-                preferred_font_size=max(10.0, 20.0 * scale),
-                min_font_size=10.0,
-                max_width=subtitle_box_width,
-                max_height=170.0,
-                line_spacing=1.08,
-                max_lines=5,
-            )
-        return title_layout, subtitle_layout
-
-    # Scale the whole text stack only when its content cannot fit. This keeps
-    # the requested hierarchy while guaranteeing that the blocks stay inside
-    # the panel and do not collide with one another.
-    text_scale = 1.0
-    title_layout, subtitle_layout = build_text_layouts(text_scale)
-    for _ in range(50):
-        stack_height = (
-            title_layout["height"]
-            + title_subtitle_gap
-            + subtitle_layout["height"]
-        )
-        if stack_height <= text_content_height:
-            break
-        text_scale = max(0.38, text_scale - 0.02)
-        title_layout, subtitle_layout = build_text_layouts(text_scale)
-
-    stack_height = (
-        title_layout["height"]
-        + title_subtitle_gap
-        + subtitle_layout["height"]
-    )
-    stack_y = text_content_top + max(
-        0.0,
-        (text_content_height - stack_height) / 2.0,
-    )
-    title_y = stack_y
-    subtitle_y = title_y + title_layout["height"] + title_subtitle_gap
-
-    frame_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <filter id="softWhite" x="-5%" y="-10%" width="115%" height="120%">
-      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#ffffff" flood-opacity="0.35"/>
-    </filter>
-  </defs>
-
-  <rect x="0" y="0" width="1600" height="900" fill="{background_overlay_color}" opacity="{background_overlay_opacity:g}"/>
-
-  <path
-    d="
-      M 0 220
-      L 1100 220
-      C 1180 220 1236 252 1288 326
-      L 1364 435
-      L 1288 544
-      C 1236 618 1180 650 1100 650
-      L 0 650
-      Z
-    "
-    fill="{panel_color}"
-    opacity="{panel_opacity:g}"
-    filter="url(#softWhite)"
-  />
-
-  <path
-    d="
-      M -60 188
-      L 1112 188
-      C 1215 188 1276 232 1345 334
-      L 1420 444
-      L 1345 554
-      C 1276 656 1215 698 1112 698
-      L -60 698
-    "
-    fill="none"
-    stroke="{accent_color}"
-    stroke-width="70"
-    stroke-linecap="square"
-    stroke-linejoin="round"
-    opacity="{accent_opacity:g}"
-  />
-
-  <path
-    d="
-      M -60 188
-      L 1112 188
-      C 1215 188 1276 232 1345 334
-      L 1420 444
-      L 1345 554
-      C 1276 656 1215 698 1112 698
-      L -60 698
-    "
-    fill="none"
-    stroke="{accent_color}"
-    stroke-width="30"
-    stroke-linecap="square"
-    stroke-linejoin="round"
-    opacity="0.32"
-  />
-</svg>
-""".strip()
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": "#FFFFFF"},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fit="cover",
-        crop_x=0.55,
-        crop_y=0.50,
-    )
-
-    frame_node = add(
-        "svg",
-        name="orange_arrow_panel",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=3200,
-        pixel_height=1800,
-    )
-    frame_node.text = frame_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=text_x,
-        y=title_y,
-        width=title_box_width,
-        height=title_layout["height"],
-        font=font_name,
-        font_path=str(font_path_bold),
-        size=title_layout["font_size"],
-        min_font_size=22.0,
-        bold="true",
-        color=headline_black_color,
-        align="left",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=text_x,
-        y=subtitle_y,
-        width=subtitle_box_width,
-        height=subtitle_layout["height"],
-        font=font_name,
-        font_path=str(font_path_regular),
-        size=subtitle_layout["font_size"],
-        min_font_size=10.0,
-        bold="false",
-        color=description_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=5,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.08,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_memorial_cover_slide_xml(
-    title: str = "Welcome to Our Presentation on Memorial Day 2024 Celebration and Remembrance",
-    subtitle: str = "A clear and engaging introduction to today's topic     with a focus on honoring and remembering those who have served.",
-    image_url: str = (
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=85&w=1600&h=900&auto=format&fit=crop"
-    ),
-    background_color: str = "#F3F3F3",
-    top_band_color: str = "#DECAC7",
-    title_band_color: str = "#DECAC7",
-    subtitle_color: str = "#111111",
-    title_color: str = "#050505",
-    stripe_blue_color: str = "#E7EEF1",
-    stripe_pink_color: str = "#DECAC7",
-    stripe_white_color: str = "#F8F8F8",
-    image_overlay_color: str = "#FFFFFF",
-) -> str:
-    """
-    Generate XML for an intro-style cover slide.
-
-    The layout uses a full-bleed monochrome landscape photo, a narrow subtitle
-    band, a large centered title band, and decorative vertical stripes.
-    """
-
-
-    # LLM/tool calls can occasionally omit optional text values or send them
-    # as empty strings. Keep the XML generator total: an empty value should
-    # produce a usable slide instead of failing during font measurement.
-    title = str(title or "").strip()
-    subtitle = str(subtitle or "").strip()
-    image_url = str(image_url or "").strip() or (
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
-        "?q=85&w=1600&h=900&auto=format&fit=crop"
-    )
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": [
-                "timesnewroman",
-                "times",
-                "arial",
-                "freeserif",
-                "liberationserif",
-                "dejavuserif",
-            ],
-            "Arial": [
-                "arial",
-                "timesnewroman",
-                "times",
-                "freeserif",
-                "liberationserif",
-                "dejavuserif",
-            ],
-            "Arial": [
-                "arial",
-                "calibri",
-                "aptos",
-                "freesans",
-                "liberationsans",
-                "dejavusans",
-            ],
-        }
-
-        normalized_names = [
-            normalize_font_name(item)
-            for item in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 80 if any(name == stem for name in normalized_names) else 58
-
-                has_bold = any(token in stem for token in ("bold", "bd", "semibold", "demi"))
-                has_italic = any(token in stem for token in ("italic", "oblique", "it"))
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 6
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 4
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
-        if bold and italic:
-            fallbacks = [
-                windows_fonts / "timesbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSerifBoldItalic.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSansBoldOblique.ttf"),
-            ]
-        elif italic:
-            fallbacks = [
-                windows_fonts / "timesi.ttf",
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSerifItalic.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSansOblique.ttf"),
-            ]
-        elif bold:
-            fallbacks = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf"),
-            ]
-        else:
-            fallbacks = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSerif.ttf"),
-                Path("/usr/share/fonts/truetype/freefont/FreeSans.ttf"),
-            ]
-
-        for path in fallbacks:
-            if not path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(path), 12)
-                return path
-            except OSError:
-                continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(str(font_path), max(1, round(pt_to_canvas(font_size_pt))))
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(font_path: Path, font_size_pt: float, line_spacing: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(text: str, font_path: Path, font_size_pt: float, max_width: float) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt) > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-            if current_chunk:
-                chunks.append(current_chunk)
-            return chunks or [word]
-
-        lines: list[str] = []
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-            for word in words:
-                if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-                    chunks = split_long_word(word)
-                    lines.extend(chunks[:-1])
-                    current = chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-                if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
-                    current = candidate
-                else:
-                    lines.append(current)
-                    current = word
-            if current:
-                lines.append(current)
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best_layout = None
-
-        while current_font_size >= min_font_size:
-            lines = wrap_text(text, font_path, current_font_size, max_width)
-            line_height = measure_line_height(font_path, current_font_size, line_spacing)
-            height = len(lines) * line_height
-
-            too_many_lines = max_lines is not None and len(lines) > max_lines
-            overflow_height = max(0.0, height - max_height)
-            score = overflow_height * 2000 + max(0, len(lines) - (max_lines or 999)) * 1500 + (preferred_font_size - current_font_size) * 10
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_font_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best_layout
-
-    subtitle_font_name = "Arial"
-    title_font_name = "Times New Roman"
-
-    subtitle_font_path = resolve_font_path(subtitle_font_name, bold=False, italic=False)
-    title_font_path = resolve_font_path(title_font_name, bold=False, italic=True)
-
-    subtitle_layout = fit_text(
-        subtitle.strip(),
-        font_path=subtitle_font_path,
-        preferred_font_size=18.0,
-        min_font_size=10.0,
-        max_width=820.0,
-        max_height=150.0,
-        line_spacing=1.0,
-        max_lines=4,
-    )
-
-    title_layout = fit_text(
-        title.strip(),
-        font_path=title_font_path,
-        preferred_font_size=58.0,
-        min_font_size=18.0,
-        max_width=1400.0,
-        max_height=260.0,
-        line_spacing=0.95,
-        max_lines=4,
-    )
-
-    def measured_layout_width(layout: dict, font_path: Path) -> float:
-        return max(
-            [
-                measure_text_width(line, font_path, layout["font_size"])
-                for line in layout["lines"]
-            ]
-            or [0.0]
-        )
-
-    # Expand the background bands around the text first. Text keeps its
-    # requested size; overflow is handled by the textbox renderer.
-    subtitle_content_width = measured_layout_width(subtitle_layout, subtitle_font_path)
-    subtitle_band_width = min(
-        900.0,
-        max(876.0, subtitle_content_width + 72.0),
-    )
-    subtitle_band_height = min(
-        180.0,
-        max(56.0, subtitle_layout["height"] + 24.0),
-    )
-    subtitle_band_x = (canvas_width - subtitle_band_width) / 2.0
-    subtitle_band_y = 204.0 - subtitle_band_height / 2.0
-
-    title_content_width = measured_layout_width(title_layout, title_font_path)
-    title_box_width = min(
-        1460.0,
-        max(1230.0, title_content_width + 80.0),
-    )
-    title_band_height = min(
-        280.0,
-        max(126.0, title_layout["height"] + 36.0),
-    )
-    title_band_y = 442.0 - title_band_height / 2.0
-    title_box_x = (canvas_width - title_box_width) / 2.0
-    title_box_y = title_band_y + (title_band_height - title_layout["height"]) / 2.0
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(slide, tag, {k: str(v) for k, v in attrs.items() if v is not None})
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.48,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=image_overlay_color,
-        opacity=0.15,
-        line_color="none",
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=subtitle_band_x,
-        y=subtitle_band_y,
-        width=subtitle_band_width,
-        height=subtitle_band_height,
-        fill=top_band_color,
-        opacity=0.96,
-        line_color="none",
-    )
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=title_band_y,
-        width=canvas_width,
-        height=title_band_height,
-        fill=title_band_color,
-        opacity=0.96,
-        line_color="none",
-    )
-    stripe_width = 32
-    stripe_height = 56
-    stripe_gap = 18
-    stripe_sequence = [
-        stripe_blue_color,
-        stripe_white_color,
-        stripe_pink_color,
-        stripe_white_color,
-        stripe_blue_color,
-        stripe_white_color,
-        stripe_pink_color,
-    ]
-
-    def add_stripe_group(start_x: float, top_y: float) -> None:
-        current_x = start_x
-        for color in stripe_sequence:
-            add(
-                "shape",
-                type="rect",
-                x=current_x,
-                y=top_y,
-                width=stripe_width,
-                height=stripe_height,
-                fill=color,
-                opacity=0.98,
-                line_color="none",
-            )
-            current_x += stripe_width + stripe_gap
-
-    stripe_group_width = len(stripe_sequence) * stripe_width + (len(stripe_sequence) - 1) * stripe_gap
-    stripe_clearance = 18.0
-    enough_room_for_stripes = (
-        subtitle_band_width + 2.0 * (stripe_group_width + stripe_clearance)
-        <= canvas_width
-    )
-    if enough_room_for_stripes:
-        left_stripe_x = subtitle_band_x - stripe_group_width - stripe_clearance
-        right_stripe_x = subtitle_band_x + subtitle_band_width + stripe_clearance
-        stripe_y = subtitle_band_y + (subtitle_band_height - stripe_height) / 2.0
-        add_stripe_group(left_stripe_x, stripe_y)
-        add_stripe_group(right_stripe_x, stripe_y)
-    # The intro layout uses only the top subtitle band and centered title.
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_band_x + 28.0,
-        y=subtitle_band_y + 8.0,
-        width=subtitle_band_width - 56.0,
-        height=subtitle_band_height - 16.0,
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=10.0,
-        color=subtitle_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        overflow="clip",
-        reflow_on_resize="true",
-        max_lines=4,
-        line_spacing=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_box_x,
-        y=title_box_y,
-        width=title_box_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=18.0,
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="true",
-        single_line="false",
-        overflow="clip",
-        reflow_on_resize="true",
-        max_lines=4,
-        line_spacing=0.95,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
-
-    return xml_content
-
-def generate_social_topic_idea_slide_xml(
-    title: str = "Write Your Topic or Write Your Topic or Idea On Write Your Topic or Idea On Social Media",
-    subtitle: str = "Elaborate on what you want to discuss. Elaborate on what you want to discuss.",
-    image_url: str = (
-        "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#FFFFFF",
-    accent_color: str = "#6F8369",
-    title_color: str = "#26352A",
-    subtitle_color: str = "#111111",
-    line_color: str = "#3F3F3F",
-) -> str:
-    """
-    Generate XML for a clean social media topic slide.
-
-    The layout has a white text area on the left and a full-height portrait
-    image on the right. The title is one editable string. A thin horizontal
-    line and short subtitle sit near the lower-left.
-    """
-
-
- 
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            ch.lower()
-            for ch in name
-            if ch.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if fallback_path.exists():
-                try:
-                    ImageFont.truetype(str(fallback_path), 12)
-                    return fallback_path
-                except OSError:
-                    continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        if not text:
-            return 0.0
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-                if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_size = preferred_font_size
-        best_layout = None
-
-        while current_size >= min_font_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-            too_many_lines = max_lines is not None and len(lines) > max_lines
-            overflow = max(0.0, height - max_height)
-
-            score = (
-                overflow * 1700
-                + max(0, len(lines) - (max_lines or 999)) * 1200
-                + (preferred_font_size - current_size) * 8
-            )
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best_layout
-
-    title_font_name = "Arial"
-    title_font_path = resolve_font_path(title_font_name, bold=True, italic=False)
-    title_layout = fit_text(
-        title,
-        font_path=title_font_path,
-        preferred_font_size=48.0,
-        min_font_size=22.0,
-        max_width=740.0,
-        max_height=310.0,
-        line_spacing=0.98,
-        max_lines=4,
-    )
-
-    subtitle_font_path = resolve_font_path("Arial", bold=False)
-    subtitle_layout = fit_text(
-        subtitle.strip() or "Elaborate on what you want to discuss.",
-        font_path=subtitle_font_path,
-        preferred_font_size=18.0,
-        min_font_size=11.0,
-        max_width=680.0,
-        max_height=76.0,
-        line_spacing=1.1,
-        max_lines=2,
-    )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Right image area.
-    add(
-        "image",
-        src=image_url,
-        x=888,
-        y=0,
-        width=712,
-        height=900,
-        fit="cover",
-        crop_x=0.52,
-        crop_y=0.46,
-    )
-
-    # One editable title string on the left, with a restrained accent marker.
-    title_x = 72.0
-    title_width = 740.0
-    title_y = 164.0 + max(
-        0.0,
-        (310.0 - title_layout["height"]) / 2.0,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=26.0,
-        y=title_y + 8.0,
-        width=6.0,
-        height=max(48.0, title_layout["height"] - 16.0),
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=22.0,
-        color=title_color,
-        align="left",
-        vertical_align="middle",
-        bold="true",
-        italic="false",
-        single_line="false",
-        max_lines=4,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.98,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    # Lower line and subtitle. The line is separate and comes before text.
-    add(
-        "line",
-        x1=28,
-        y1=650,
-        x2=154,
-        y2=650,
-        color=line_color,
-        width=1.2,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=182,
-        y=650 - subtitle_layout["height"] / 2,
-        width=subtitle_layout["width"],
-        height=subtitle_layout["height"],
-        font="Arial",
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=11.0,
-        color=subtitle_color,
-        align="left",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.1,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_roman_empire_history_cover_slide_xml(
-    subtitle: str = "History Subject for High School History Subject for High School History Subject for High School",
-    title: str = "ROMAN EMPIRE ROMAN EMPIRE ROMAN EMPIRE",
-    image_url: str = (
-        "https://picsum.photos/seed/roman-empire-history/1600/620.jpg"
-    ),
-    background_color: str = "#D8B98A",
-    parchment_overlay_color: str = "#C49A61",
-    image_sepia_overlay_color: str = "#B07132",
-    torn_paper_color: str = "#F3E9D7",
-    torn_shadow_color: str = "#B89A72",
-    subtitle_color: str = "#5A1E20",
-    title_color: str = "#4A1118",
-    blood_color: str = "#9E1018",
-) -> str:
-    """
-    Generate XML for a Roman Empire history cover slide.
-
-    The layout uses a wide image area on top, a torn-paper frame overlay
-    across the lower part of the image, decorative parchment texture, red
-    splatter accents, a script-style subtitle, and a large serif title.
-    """
-
-    clean_subtitle = str(subtitle or "").strip()
-    clean_title = str(title or "").strip()
-
-    clean_image_url = image_url.strip()
-    if not clean_image_url:
-        clean_image_url = "https://picsum.photos/seed/roman-empire-history/1600/620.jpg"
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(character.lower() for character in name if character.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-            "Arial": ["arial", "timesnewroman", "times"],
-            "Garamond": ["garamond", "arial", "timesnewroman", "times"],
-            "Arial": ["arial", "calibri", "aptos"],
-            "Calibri": ["calibri", "arial", "aptos"],
-        }
-
-        normalized_names = [
-            normalize_font_name(item)
-            for item in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 80 if any(name == stem for name in normalized_names) else 58
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 6
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 4
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "timesbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "timesi.ttf",
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        if not text:
-            return 0.0
-
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt)
-                    > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-
-            return chunks + [current_chunk] if current_chunk else chunks or [word]
-
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-
-                    chunks = split_long_word(word)
-                    lines.extend(chunks[:-1])
-                    current = chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt)
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_size: float,
-        min_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_size = preferred_size
-        best_layout = None
-
-        while current_size >= min_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-            too_many = max_lines is not None and len(lines) > max_lines
-            overflow = max(0.0, height - max_height)
-
-            score = (
-                overflow * 2000
-                + max(0, len(lines) - (max_lines or 999)) * 1500
-                + (preferred_size - current_size) * 8
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many:
-                return layout
-
-            break
-
-        return best_layout
-
-    title_font_name = "Garamond"
-    subtitle_font_name = "Times New Roman"
-
-    title_font_path = resolve_font_path(title_font_name, bold=False, italic=False)
-    subtitle_font_path = resolve_font_path(subtitle_font_name, bold=False, italic=True)
-
-    # Responsive lower text group. The boxes are intentionally wider and may
-    # use two lines. Font reduction is the final fallback after the group has
-    # used the available vertical space and the title/subtitle gap.
-    subtitle_x = 130.0
-    subtitle_width = 1340.0
-    title_x = 60.0
-    title_width = 1480.0
-    text_group_top = 604.0
-    text_group_bottom = 866.0
-    subtitle_title_gap = 18.0
-
-    subtitle_size = 20.0
-    title_size = 62.0
-    subtitle_min_size = 14.0
-    title_min_size = 24.0
-
-    for _ in range(120):
-        subtitle_layout = fit_text(
-            clean_subtitle,
-            font_path=subtitle_font_path,
-            preferred_size=subtitle_size,
-            min_size=subtitle_min_size,
-            max_width=subtitle_width,
-            max_height=104.0,
-            line_spacing=0.95,
-            max_lines=2,
-        )
-
-        title_layout = fit_text(
-            clean_title.upper(),
-            font_path=title_font_path,
-            preferred_size=title_size,
-            min_size=title_min_size,
-            max_width=title_width,
-            max_height=184.0,
-            line_spacing=0.92,
-            max_lines=2,
-        )
-
-        # Keep the next iteration aware of any reduction needed to fit a
-        # textbox's own width/line constraints.
-        subtitle_size = min(subtitle_size, float(subtitle_layout["font_size"]))
-        title_size = min(title_size, float(title_layout["font_size"]))
-
-        group_height = (
-            float(subtitle_layout["height"])
-            + subtitle_title_gap
-            + float(title_layout["height"])
-        )
-        available_group_height = text_group_bottom - text_group_top
-
-        if group_height <= available_group_height:
-            break
-
-        # Keep the requested font sizes. Overflow is handled by the renderer.
-        break
-
-    group_height = (
-        float(subtitle_layout["height"])
-        + subtitle_title_gap
-        + float(title_layout["height"])
-    )
-    group_y = text_group_top + max(
-        0.0,
-        (text_group_bottom - text_group_top - group_height) / 2.0,
-    )
-    subtitle_y = group_y
-    title_y = subtitle_y + float(subtitle_layout["height"]) + subtitle_title_gap
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Base parchment color.
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=background_color,
-        line_color="none",
-    )
-
-    texture_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <filter id="paperNoise">
-      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="4" seed="13"/>
-      <feColorMatrix type="matrix"
-        values="0.46 0 0 0 0.48
-                0 0.36 0 0 0.36
-                0 0 0.24 0 0.20
-                0 0 0 0.20 0"/>
-    </filter>
-    <radialGradient id="oldPaper" cx="50%" cy="50%" r="74%">
-      <stop offset="0%" stop-color="#F1D5AA" stop-opacity="0.20"/>
-      <stop offset="68%" stop-color="{parchment_overlay_color}" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#6B3C1C" stop-opacity="0.20"/>
-    </radialGradient>
-  </defs>
-  <rect x="0" y="0" width="1600" height="900" filter="url(#paperNoise)" opacity="0.62"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#oldPaper)"/>
-  <circle cx="90" cy="100" r="150" fill="#A85E2E" opacity="0.08"/>
-  <circle cx="1420" cy="120" r="180" fill="#8A4E28" opacity="0.08"/>
-  <circle cx="310" cy="710" r="210" fill="#5A2E19" opacity="0.06"/>
-</svg>
-""".strip()
-
-    texture_node = add(
-        "svg",
-        name="parchment_texture",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=3200,
-        pixel_height=1800,
-    )
-    texture_node.text = texture_svg
-
-    # Top image area. The torn paper overlay below creates the image frame.
-    add(
-        "image",
-        src=clean_image_url,
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=620,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.43,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=620,
-        fill=image_sepia_overlay_color,
-        opacity=0.22,
-        line_color="none",
-    )
-
-    # Torn-paper frame. This is the key frame effect: it overlays the image
-    # with an irregular edge while leaving the upper image visible.
-    torn_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="420" viewBox="0 0 1600 420">
-  <defs>
-    <filter id="tornShadow" x="-10%" y="-20%" width="120%" height="150%">
-      <feDropShadow dx="0" dy="-9" stdDeviation="8" flood-color="{torn_shadow_color}" flood-opacity="0.28"/>
-    </filter>
-    <filter id="fiber">
-      <feTurbulence type="fractalNoise" baseFrequency="0.055" numOctaves="3" seed="22"/>
-      <feColorMatrix type="saturate" values="0"/>
-      <feComponentTransfer>
-        <feFuncA type="table" tableValues="0 0.10"/>
-      </feComponentTransfer>
-    </filter>
-  </defs>
-
-  <path d="
-      M -10 116
-      C 34 109, 73 122, 119 112
-      C 169 100, 207 127, 258 120
-      C 303 114, 337 98, 383 108
-      C 437 121, 485 129, 531 113
-      C 581 96, 628 117, 672 112
-      C 730 106, 764 127, 811 119
-      C 858 111, 905 98, 957 113
-      C 1004 126, 1057 111, 1108 121
-      C 1169 134, 1219 102, 1270 114
-      C 1327 127, 1380 122, 1434 111
-      C 1492 99, 1539 119, 1610 106
-      L 1610 430
-      L -10 430
-      Z"
-    fill="{torn_paper_color}"
-    filter="url(#tornShadow)"/>
-
-  <path d="
-      M -10 116
-      C 34 109, 73 122, 119 112
-      C 169 100, 207 127, 258 120
-      C 303 114, 337 98, 383 108
-      C 437 121, 485 129, 531 113
-      C 581 96, 628 117, 672 112
-      C 730 106, 764 127, 811 119
-      C 858 111, 905 98, 957 113
-      C 1004 126, 1057 111, 1108 121
-      C 1169 134, 1219 102, 1270 114
-      C 1327 127, 1380 122, 1434 111
-      C 1492 99, 1539 119, 1610 106"
-    fill="none"
-    stroke="#FFFFFF"
-    stroke-width="14"
-    opacity="0.82"/>
-
-  <rect x="-10" y="98" width="1620" height="330" fill="{torn_paper_color}" filter="url(#fiber)" opacity="0.72"/>
-</svg>
-""".strip()
-
-    torn_node = add(
-        "svg",
-        name="torn_paper_frame",
-        x=0,
-        y=472,
-        width=canvas_width,
-        height=428,
-        pixel_width=3200,
-        pixel_height=856,
-    )
-    torn_node.text = torn_svg
-
-    splatter_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <g fill="{blood_color}" opacity="0.86">
-    <ellipse cx="24" cy="680" rx="13" ry="34" transform="rotate(42 24 680)"/>
-    <ellipse cx="68" cy="724" rx="9" ry="30" transform="rotate(49 68 724)"/>
-    <circle cx="7" cy="614" r="7"/>
-    <circle cx="36" cy="633" r="5"/>
-    <circle cx="85" cy="657" r="8"/>
-    <path d="M 0 860 C 28 828, 55 842, 78 872 C 51 877, 22 875, 0 900 Z"/>
-    <ellipse cx="1440" cy="736" rx="8" ry="28" transform="rotate(38 1440 736)"/>
-    <ellipse cx="1490" cy="792" rx="10" ry="38" transform="rotate(55 1490 792)"/>
-    <ellipse cx="1545" cy="824" rx="12" ry="42" transform="rotate(63 1545 824)"/>
-    <circle cx="1513" cy="728" r="5"/>
-    <circle cx="1572" cy="741" r="8"/>
-    <circle cx="1430" cy="804" r="7"/>
-  </g>
-</svg>
-""".strip()
-
-    splatter_node = add(
-        "svg",
-        name="red_splatter_accents",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=3200,
-        pixel_height=1800,
-    )
-    splatter_node.text = splatter_svg
-
-    # Refined Roman frame and restrained ornamental accents. These sit above
-    # the image and parchment layers, but stay outside the main text blocks.
-    ornament_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <g fill="none" stroke="{torn_shadow_color}" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="24" y="24" width="1552" height="852" rx="6" stroke-width="3" opacity="0.58"/>
-    <rect x="37" y="37" width="1526" height="826" rx="4" stroke-width="1.4" opacity="0.55"/>
-
-    <path d="M 38 108 L 38 58 L 88 58" stroke-width="3" opacity="0.72"/>
-    <path d="M 1562 108 L 1562 58 L 1512 58" stroke-width="3" opacity="0.72"/>
-    <path d="M 38 792 L 38 842 L 88 842" stroke-width="3" opacity="0.72"/>
-    <path d="M 1562 792 L 1562 842 L 1512 842" stroke-width="3" opacity="0.72"/>
-
-    <line x1="235" y1="735" x2="485" y2="735" stroke-width="2" opacity="0.68"/>
-    <line x1="1115" y1="735" x2="1365" y2="735" stroke-width="2" opacity="0.68"/>
-  </g>
-
-  <g fill="{title_color}" opacity="0.72">
-    <polygon points="800,725 811,735 800,745 789,735"/>
-    <circle cx="800" cy="735" r="3" fill="{torn_paper_color}"/>
-  </g>
-
-  <g fill="none" stroke="{title_color}" stroke-width="2.4" stroke-linecap="round" opacity="0.52">
-    <path d="M 292 701 C 260 685, 238 668, 220 646"/>
-    <path d="M 1308 701 C 1340 685, 1362 668, 1380 646"/>
-  </g>
-
-  <g fill="{title_color}" opacity="0.52">
-    <ellipse cx="254" cy="679" rx="9" ry="4" transform="rotate(28 254 679)"/>
-    <ellipse cx="241" cy="665" rx="9" ry="4" transform="rotate(18 241 665)"/>
-    <ellipse cx="231" cy="650" rx="9" ry="4" transform="rotate(8 231 650)"/>
-    <ellipse cx="1346" cy="679" rx="9" ry="4" transform="rotate(-28 1346 679)"/>
-    <ellipse cx="1359" cy="665" rx="9" ry="4" transform="rotate(-18 1359 665)"/>
-    <ellipse cx="1369" cy="650" rx="9" ry="4" transform="rotate(-8 1369 650)"/>
-  </g>
-</svg>
-""".strip()
-
-    ornament_node = add(
-        "svg",
-        name="roman_ornamental_frame",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=3200,
-        pixel_height=1800,
-    )
-    ornament_node.text = ornament_svg
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_x,
-        y=subtitle_y,
-        width=subtitle_width,
-        height=subtitle_layout["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=max(12.0, subtitle_layout["font_size"] - 1.0),
-        color=subtitle_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="true",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(20.0, title_layout["font_size"] - 1.0),
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.92,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-
-#slide transition
-def generate_transition_headline_slide_xml(
-    title: str = "Messi và sự nghiệp của anh ấy",
-    subtitle: str = "Let’s start with the first set of slides Let’s start with the first set of slides",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1522202176988-66273c2fd55f"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#FFFFFF",
-    dark_panel_color: str = "#292A30",
-    accent_color: str = "#98F20F",
-    title_color: str = "#98F20F",
-    subtitle_color: str = "#2ED329",
-) -> str:
-    """
-    Generate XML for a transition slide with a large headline.
-
-    The layout features a full-slide image, a dark diagonal panel
-    on the left, a bright accent bar centered on the diagonal edge,
-    a large transition headline, and a smaller supporting subtitle
-    placed below it.
-    """
-
-
-
-    # =====================================================
-    # Canvas and panel geometry
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 0
-    image_y = 0
-    image_width = 1600
-    image_height = 900
-
-    panel_top_x = 760.0
-    panel_bottom_x = 340.0
-    panel_top_y = 0.0
-    panel_bottom_y = 900.0
-
-    dark_panel_points = (
-        f"0,0 "
-        f"{panel_top_x:.2f},0 "
-        f"{panel_bottom_x:.2f},900 "
-        f"0,900"
-    )
-
-    accent_top_y = 275.0
-    accent_bottom_y = 720.0
-    accent_width = 64.0
-
-    def diagonal_x_at_y(y: float) -> float:
-        ratio = (
-            (y - panel_top_y)
-            / (panel_bottom_y - panel_top_y)
-        )
-
-        return (
-            panel_top_x
-            + ratio
-            * (panel_bottom_x - panel_top_x)
-        )
-
-    accent_top_center_x = diagonal_x_at_y(
-        accent_top_y
-    )
-    accent_bottom_center_x = diagonal_x_at_y(
-        accent_bottom_y
-    )
-    accent_half_width = accent_width / 2.0
-
-    accent_points = (
-        f"{accent_top_center_x - accent_half_width:.2f},"
-        f"{accent_top_y:.2f} "
-        f"{accent_top_center_x + accent_half_width:.2f},"
-        f"{accent_top_y:.2f} "
-        f"{accent_bottom_center_x + accent_half_width:.2f},"
-        f"{accent_bottom_y:.2f} "
-        f"{accent_bottom_center_x - accent_half_width:.2f},"
-        f"{accent_bottom_y:.2f}"
-    )
-
-    text_left = 70.0
-    text_right_padding = 24.0
-
-    title_top_limit = 145.0
-    title_bottom_limit = 735.0
-    text_center_y = 450.0
-
-    title_to_subtitle_gap = 32.0
-    minimum_gap = 12.0
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(
-                Path(windir) / "Fonts"
-            )
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(
-        point_size: float,
-    ) -> float:
-        return (
-            point_size
-            * canvas_dpi
-            / 72.0
-        )
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(
-                    pt_to_canvas(font_size_pt)
-                ),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(
-                font.getlength(text)
-            )
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 2.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines)
-                * line_height
-                + padding
-            ),
-        }
-
-    def longest_word_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        words = text.split()
-
-        if not words:
-            return 0.0
-
-        return max(
-            measure_text_width(
-                word,
-                font_path,
-                font_size_pt,
-            )
-            for word in words
-        )
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    subtitle_font_path = resolve_font_path(
-        subtitle_font_name,
-        bold=False,
-    )
-
-    subtitle_font_size = 18.0
-    subtitle_min_font_size = 14.0
-    title_min_font_size = 34.0
-    title_ratio = 2
-    title_font_size = subtitle_font_size * title_ratio
-
-    title_line_spacing = 0.98
-    subtitle_line_spacing = 1.0
-
-    def text_width_for_block(
-        block_y: float,
-        block_height: float,
-    ) -> float:
-        block_bottom_y = (
-            block_y
-            + block_height
-        )
-
-        safe_right_edge = (
-            diagonal_x_at_y(
-                block_bottom_y
-            )
-            - accent_half_width
-            - text_right_padding
-        )
-
-        return max(
-            1.0,
-            safe_right_edge - text_left,
-        )
-
-    def calculate_layouts(
-        current_subtitle_size: float,
-        current_gap: float,
-    ) -> dict:
-        current_title_size = max(
-            title_min_font_size,
-            current_subtitle_size * title_ratio,
-        )
-
-        estimated_group_y = text_center_y
-        estimated_group_height = 170.0
-        result = None
-
-        for _ in range(12):
-            estimated_width = text_width_for_block(
-                estimated_group_y,
-                estimated_group_height,
-            )
-
-            title_layout = layout_text(
-                title,
-                font_path=title_font_path,
-                font_size=current_title_size,
-                max_width=estimated_width,
-                line_spacing=title_line_spacing,
-                padding=2,
-            )
-
-            subtitle_layout = layout_text(
-                subtitle,
-                font_path=subtitle_font_path,
-                font_size=current_subtitle_size,
-                max_width=estimated_width,
-                line_spacing=subtitle_line_spacing,
-                padding=2,
-            )
-
-            total_height = (
-                title_layout["height"]
-                + current_gap
-                + subtitle_layout["height"]
-            )
-
-            group_y = max(
-                title_top_limit,
-                min(
-                    text_center_y
-                    - total_height / 2,
-                    title_bottom_limit
-                    - total_height,
-                ),
-            )
-
-            title_width = text_width_for_block(
-                group_y,
-                title_layout["height"],
-            )
-            title_layout = layout_text(
-                title,
-                font_path=title_font_path,
-                font_size=current_title_size,
-                max_width=title_width,
-                line_spacing=title_line_spacing,
-                padding=2,
-            )
-
-            subtitle_y = (
-                group_y
-                + title_layout["height"]
-                + current_gap
-            )
-            subtitle_width = text_width_for_block(
-                subtitle_y,
-                subtitle_layout["height"],
-            )
-            subtitle_layout = layout_text(
-                subtitle,
-                font_path=subtitle_font_path,
-                font_size=current_subtitle_size,
-                max_width=subtitle_width,
-                line_spacing=subtitle_line_spacing,
-                padding=2,
-            )
-
-            total_height = (
-                title_layout["height"]
-                + current_gap
-                + subtitle_layout["height"]
-            )
-
-            group_y = max(
-                title_top_limit,
-                min(
-                    text_center_y
-                    - total_height / 2,
-                    title_bottom_limit
-                    - total_height,
-                ),
-            )
-
-            title_width = text_width_for_block(
-                group_y,
-                title_layout["height"],
-            )
-            subtitle_y = (
-                group_y
-                + title_layout["height"]
-                + current_gap
-            )
-            subtitle_width = text_width_for_block(
-                subtitle_y,
-                subtitle_layout["height"],
-            )
-
-            result = {
-                "title": title_layout,
-                "title_width": title_width,
-                "subtitle": subtitle_layout,
-                "subtitle_width": subtitle_width,
-                "gap": current_gap,
-                "total_height": total_height,
-                "group_y": group_y,
-            }
-
-            if (
-                abs(group_y - estimated_group_y) < 0.5
-                and abs(total_height - estimated_group_height) < 0.5
-            ):
-                break
-
-            estimated_group_y = group_y
-            estimated_group_height = total_height
-
-        return result
-
-    layouts = calculate_layouts(
-        subtitle_font_size,
-        title_to_subtitle_gap,
-    )
-
-    for _ in range(160):
-        width_fits = (
-            longest_word_width(
-                title,
-                title_font_path,
-                layouts["title"]["font_size"],
-            )
-            <= layouts["title_width"]
-            and longest_word_width(
-                subtitle,
-                subtitle_font_path,
-                layouts["subtitle"]["font_size"],
-            )
-            <= layouts["subtitle_width"]
-        )
-
-        fits = (
-            layouts["group_y"] >= title_top_limit
-            and layouts["group_y"] + layouts["total_height"] <= title_bottom_limit
-            and width_fits
-        )
-
-        if fits:
-            break
-
-        changed = False
-
-        if title_to_subtitle_gap > minimum_gap:
-            title_to_subtitle_gap = max(
-                minimum_gap,
-                title_to_subtitle_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
-            subtitle_font_size = max(
-                subtitle_min_font_size,
-                subtitle_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            subtitle_font_size,
-            title_to_subtitle_gap,
-        )
-
-    title_y = layouts["group_y"]
-    subtitle_y = (
-        title_y
-        + layouts["title"]["height"]
-        + layouts["gap"]
-    )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "polygon",
-        points=dark_panel_points,
-        fill=dark_panel_color,
-        line_color="none",
-    )
-
-    add(
-        "polygon",
-        points=accent_points,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        layouts["title"]["source_text"],
-        x=text_left,
-        y=title_y,
-        width=layouts["title_width"],
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        layouts["subtitle"]["source_text"],
-        x=text_left,
-        y=subtitle_y,
-        width=layouts["subtitle_width"],
-        height=layouts["subtitle"]["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=layouts["subtitle"]["font_size"],
-        min_font_size=layouts["subtitle"]["font_size"],
-        color=subtitle_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["subtitle"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=subtitle_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_about_us_transition_slide_xml(
-    title: str = "Messi vô địch thế giới",
-    background_base_color: str = "#CED0C0",
-    center_glow_color: str = "#9E8C70",
-    inner_glow_color: str = "#B1A180",
-    outer_glow_color: str = "#D9D8CC",
-    title_color: str = "#3B3227",
-) -> str:
-    """
-    Generate XML for a minimalist transition slide.
-
-    The layout features a muted sage background with a soft warm radial
-    glow in the center and one large centered serif title.
-    """
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    title_center_x = canvas_width / 2
-    title_center_y = 448.0
-    title_max_width = 920.0
-    title_max_height = 145.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times"],
-            "Arial": ["arial"],
-            "Garamond": ["garamond"],
-            "Arial": ["arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(normalized in stem for normalized in normalized_names):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 8
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        explicit_fallbacks = [
-            windows_fonts / "times.ttf",
-            windows_fonts / "timesnewroman.ttf",
-            windows_fonts / "arial.ttf",
-            windows_fonts / "garamond.ttf",
-            windows_fonts / "arial.ttf",
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-        ]
-
-        for fallback_path in explicit_fallbacks:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def tracked_title(text: str) -> str:
-        cleaned = " ".join(text.strip().split())
-
-        if len(cleaned) <= 2:
-            return cleaned.upper()
-
-        words = cleaned.upper().split()
-        tracked_words = [" ".join(list(word)) for word in words]
-
-        return "   ".join(tracked_words)
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        words = text.split()
-
-        if not words:
-            return [""]
-
-        lines: list[str] = []
-        current = ""
-
-        for word in words:
-            candidate = word if not current else f"{current} {word}"
-
-            if (
-                not current
-                or measure_text_width(candidate, font_path, font_size_pt)
-                <= max_width
-            ):
-                current = candidate
-            else:
-                lines.append(current)
-                current = word
-
-        if current:
-            lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height,
-        }
-
-    title_font_name = "Times New Roman"
-    title_font_path = resolve_font_path(title_font_name)
-
-    # Keep normal word spacing so the title wraps naturally instead of
-    # separating every character and forcing one word onto each line.
-    display_title = " ".join(title.strip().split())
-
-    title_font_size = 58.0
-    title_min_font_size = 28.0
-    title_line_spacing = 1.0
-
-    title_layout = layout_text(
-        display_title,
-        font_path=title_font_path,
-        font_size=title_font_size,
-        max_width=title_max_width,
-        line_spacing=title_line_spacing,
-    )
-
-    for _ in range(140 if AUTO_SHRINK_TEXT else 0):
-        if (
-            title_layout["height"] <= title_max_height
-            and len(title_layout["lines"]) <= 2
-        ):
-            break
-
-        if title_font_size <= title_min_font_size:
-            break
-
-        title_font_size = max(
-            title_min_font_size,
-            title_font_size - 0.5,
-        )
-
-        title_layout = layout_text(
-            display_title,
-            font_path=title_font_path,
-            font_size=title_font_size,
-            max_width=title_max_width,
-            line_spacing=title_line_spacing,
-        )
-
-    title_y = title_center_y - title_layout["height"] / 2
-    title_x = title_center_x - title_max_width / 2
-
-    background_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <radialGradient id="mainGlow" cx="50%" cy="47%" r="57%">
-      <stop offset="0%" stop-color="{center_glow_color}" stop-opacity="0.78"/>
-      <stop offset="24%" stop-color="{inner_glow_color}" stop-opacity="0.62"/>
-      <stop offset="53%" stop-color="{outer_glow_color}" stop-opacity="0.52"/>
-      <stop offset="100%" stop-color="{background_base_color}" stop-opacity="1"/>
-    </radialGradient>
-    <radialGradient id="topSoft" cx="50%" cy="0%" r="56%">
-      <stop offset="0%" stop-color="#EFEDE2" stop-opacity="0.26"/>
-      <stop offset="100%" stop-color="#EFEDE2" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bottomWarm" cx="50%" cy="95%" r="65%">
-      <stop offset="0%" stop-color="#A49778" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#A49778" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect x="0" y="0" width="1600" height="900" fill="{background_base_color}"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#mainGlow)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#topSoft)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#bottomWarm)"/>
-</svg>
-""".strip()
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_base_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    svg_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    svg_node.text = background_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_max_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(24.0, title_layout["font_size"] - 2.0),
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_gallery_transition_slide_xml(
-    title: str = "Messi vs Ronaldo - The Ultimate Showdown of Football Legends",
-    image_url_1: str = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=85&w=1200&auto=format&fit=crop",
-    image_url_2: str = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=85&w=1200&auto=format&fit=crop",
-    image_url_3: str = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=85&w=1200&auto=format&fit=crop",
-    image_url_4: str = "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=85&w=1200&auto=format&fit=crop",
-    image_url_5: str = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=85&w=1200&auto=format&fit=crop",
-    image_url_6: str = "https://images.unsplash.com/photo-1512316609839-ce289d3eba0a?q=85&w=1200&auto=format&fit=crop",
-    background_color: str = "#CDD0C1",
-    title_color: str = "#3B3024",
-) -> str:
-    """
-    Generate XML for a gallery transition slide.
-
-    The layout features a soft neutral background, three landscape images
-    across the top, three landscape images across the bottom, and one large
-    centered serif title placed in the open middle area.
-    """
-
-
-    gallery_fallback_image = (
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-        "?auto=compress&cs=tinysrgb&w=1600"
-    )
-    image_url_1 = str(image_url_1 or "").strip() or gallery_fallback_image
-    image_url_2 = str(image_url_2 or "").strip() or gallery_fallback_image
-    image_url_3 = str(image_url_3 or "").strip() or gallery_fallback_image
-    image_url_4 = str(image_url_4 or "").strip() or gallery_fallback_image
-    image_url_5 = str(image_url_5 or "").strip() or gallery_fallback_image
-    image_url_6 = str(image_url_6 or "").strip() or gallery_fallback_image
-
-    def image_url_by_number(number: int) -> str:
-        if number == 1:
-            return image_url_1
-        if number == 2:
-            return image_url_2
-        if number == 3:
-            return image_url_3
-        if number == 4:
-            return image_url_4
-        if number == 5:
-            return image_url_5
-        if number == 6:
-            return image_url_6
-        return gallery_fallback_image
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times"],
-            "Arial": ["arial"],
-            "Garamond": ["garamond"],
-            "Arial": ["arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(normalized in stem for normalized in normalized_names):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        fallback_paths = [
-            windows_fonts / "times.ttf",
-            windows_fonts / "arial.ttf",
-            windows_fonts / "arial.ttf",
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-            Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-        ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt)
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 2.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "width": max_width,
-            "height": len(lines) * line_height + padding,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        padding: float = 2.0,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
-
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
-                padding=padding,
-            )
-
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
-
-            score = (
-                max(0.0, layout["height"] - max_height) * 1400
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 900
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best
-
-    title_font_name = "Arial"
-    title_font_path = resolve_font_path(title_font_name, bold=True)
-
-    title_layout = fit_text(
-        title.strip().upper(),
-        font_path=title_font_path,
-        preferred_font_size=58.0,
-        min_font_size=40.0,
-        max_width=1500.0,
-        max_height=130.0,
-        line_spacing=0.95,
-        padding=1.0,
-        max_lines=2,
-    )
-
-    left_margin = 8.0
-    right_margin = 8.0
-    column_gap = 40.0
-    image_width = (canvas_width - left_margin - right_margin - 2 * column_gap) / 3
-    image_height = 230.0
-
-    top_row_y = 78.0
-    bottom_row_y = 566.0
-
-    image_x_positions = [
-        left_margin,
-        left_margin + image_width + column_gap,
-        left_margin + 2 * (image_width + column_gap),
-    ]
-
-    title_x = canvas_width / 2 - 1500.0 / 2
-    title_center_y = (
-        top_row_y
-        + image_height
-        + (bottom_row_y - (top_row_y + image_height)) / 2
-    )
-    title_y = title_center_y - title_layout["height"] / 2
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    background_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <radialGradient id="topRight" cx="100%" cy="0%" r="30%">
-      <stop offset="0%" stop-color="#B6B39D" stop-opacity="0.62"/>
-      <stop offset="55%" stop-color="#B6B39D" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#B6B39D" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bottomLeft" cx="0%" cy="100%" r="34%">
-      <stop offset="0%" stop-color="#B6B39D" stop-opacity="0.46"/>
-      <stop offset="55%" stop-color="#B6B39D" stop-opacity="0.14"/>
-      <stop offset="100%" stop-color="#B6B39D" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect x="0" y="0" width="1600" height="900" fill="{background_color}"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#topRight)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#bottomLeft)"/>
-</svg>
-""".strip()
-
-    svg_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    svg_node.text = background_svg
-
-    for index in range(3):
-        add(
-            "image",
-            src=image_url_by_number(index + 1),
-            x=image_x_positions[index],
-            y=top_row_y,
-            width=image_width,
-            height=image_height,
-            fit="cover",
-        )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=1500.0,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(40.0, title_layout["font_size"] - 2.0),
-        bold="true",
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    for index in range(3):
-        add(
-            "image",
-            src=image_url_by_number(index + 4),
-            x=image_x_positions[index],
-            y=bottom_row_y,
-            width=image_width,
-            height=image_height,
-            fit="cover",
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_slide_transition_slide_xml(
-    title: str = "Social Media Sales Presentation Social Media Sales Presentation",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1519085360753-af0119f7cbe7"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    right_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#FFFFFF",
-    right_panel_color: str = "#6D8767",
-    arc_color: str = "#819A7B",
-    title_color: str = "#FFFFFF",
-    line_color: str = "#2F3530",
-) -> str:
-    """
-    Generate XML for a modern split cover slide.
-
-    The layout places a portrait photo on the left with a thin horizontal
-    divider line, and a green image-backed panel on the right with a large
-    translucent arc decoration and one editable title string.
-    """
-
-    # Keep title as one plain string; do not introduce explicit line breaks.
-    title = " ".join(title.split()) or "Social Media Sales Presentation"
-
-    if not image_url.strip():
-        image_url = (
-            "https://images.unsplash.com/"
-            "photo-1519085360753-af0119f7cbe7"
-            "?q=85&w=1200&auto=format&fit=crop"
-        )
-
-    if not right_image_url.strip():
-        right_image_url = (
-            "https://images.unsplash.com/"
-            "photo-1497366754035-f200968a6e72"
-            "?q=85&w=1200&auto=format&fit=crop"
-        )
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            ch.lower()
-            for ch in name
-            if ch.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(
-                    normalized in stem
-                    for normalized in normalized_names
-                ):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt) <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best_layout = None
-
-        while current_font_size >= min_font_size:
-            lines = wrap_text(text, font_path, current_font_size, max_width)
-            line_height = measure_line_height(font_path, current_font_size, line_spacing)
-            height = len(lines) * line_height
-            too_many_lines = max_lines is not None and len(lines) > max_lines
-            overflow_height = max(0.0, height - max_height)
-
-            score = (
-                overflow_height * 1800
-                + max(0, len(lines) - (max_lines or 999)) * 1300
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_font_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best_layout
-
-    font_name = "Arial"
-
-    # Measure the complete title as one editable textbox. The string remains
-    # a single value; the textbox may wrap naturally at the requested size.
-    title_max_width = 620.0
-    title_area_height = 310.0
-    preferred_title_size = 58.0
-    min_title_size = 24.0
-    title_font_path = resolve_font_path(font_name, bold=False, italic=False)
-    title_layout = fit_text(
-        title,
-        font_path=title_font_path,
-        preferred_font_size=preferred_title_size,
-        min_font_size=min_title_size,
-        max_width=title_max_width,
-        max_height=title_area_height,
-        line_spacing=0.96,
-        max_lines=4,
-    )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Left white area.
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=684,
-        height=900,
-        fill=background_color,
-        line_color="none",
-    )
-
-    # Right background image + green overlay.
-    add(
-        "image",
-        src=right_image_url,
-        x=684,
-        y=0,
-        width=916,
-        height=900,
-        fit="cover",
-        crop_x=0.52,
-        crop_y=0.48,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=684,
-        y=0,
-        width=916,
-        height=900,
-        fill=right_panel_color,
-        line_color="none",
-        opacity=0.88,
-    )
-
-    # Large curved arc on right side.
-    arc_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="916" height="900" viewBox="0 0 916 900">
-  <path d="M 636 -150
-           C 288 26 220 336 353 575
-           C 477 799 700 873 926 918
-           L 926 900
-           C 628 813 493 666 431 522
-           C 330 288 438 70 746 -102
-           Z"
-        fill="{arc_color}" opacity="{0.38:g}"/>
-</svg>
-"""
-
-    arc_node = add(
-        "svg",
-        name="right_large_arc",
-        x=684,
-        y=0,
-        width=916,
-        height=900,
-        pixel_width=1832,
-        pixel_height=1800,
-    )
-    arc_node.text = arc_svg
-
-    # Horizontal line first so it sits behind the portrait image.
-    add(
-        "line",
-        x1=0,
-        y1=452,
-        x2=758,
-        y2=452,
-        color=line_color,
-        width=1.2,
-    )
-
-    # Left portrait image on top of the line.
-    add(
-        "image",
-        src=image_url,
-        x=118,
-        y=128,
-        width=430,
-        height=652,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.45,
-    )
-
-    # Single editable title on the right panel.
-    title_x = 818.0
-    title_y = 292.0 + (title_area_height - title_layout["height"]) / 2
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_max_width,
-        height=title_layout["height"],
-        font=font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=min_title_size,
-        color=title_color,
-        align="left",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=4,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.96,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_green_social_media_transition_slide_xml(
-    title: str = "Write Your Topic or Idea On Social Media",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1516321318423-f06f85e504b3"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#6F8369",
-    right_overlay_color: str = "#6F8369",
-    right_overlay_opacity: float = 0.58,
-    title_color: str = "#FFFFFF",
-    line_color: str = "#D8E0D3",
-) -> str:
-    """
-    Generate XML for a green social media transition slide.
-
-    The layout uses a solid muted-green left panel, a tinted full-height image
-    on the right, a short horizontal divider line, and one editable title
-    string.
-    """
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-
-        normalized_names = [normalize_font_name(name) for name in aliases.get(font_name, [font_name])]
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(token in stem for token in ("bold", "bd", "semibold", "demi"))
-                has_italic = any(token in stem for token in ("italic", "oblique", "it"))
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if fallback_path.exists():
-                try:
-                    ImageFont.truetype(str(fallback_path), 12)
-                    return fallback_path
-                except OSError:
-                    continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(str(font_path), max(1, round(pt_to_canvas(font_size_pt))))
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(font_path: Path, font_size_pt: float, line_spacing: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(text: str, font_path: Path, font_size_pt: float, max_width: float) -> list[str]:
-        words = text.split()
-        if not words:
-            return [""]
-
-        lines: list[str] = []
-        current = ""
-
-        for word in words:
-            candidate = word if not current else f"{current} {word}"
-            if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
-                current = candidate
-            else:
-                lines.append(current)
-                current = word
-
-        if current:
-            lines.append(current)
-
-        return lines or [""]
-
-    def fit_line(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_size: float,
-        min_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int = 2,
-    ) -> dict:
-        current_size = preferred_size
-        best_layout = None
-
-        while current_size >= min_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-
-            overflow = max(0.0, height - max_height)
-            too_many = len(lines) > max_lines
-
-            score = (
-                overflow * 1800
-                + max(0, len(lines) - max_lines) * 1300
-                + (preferred_size - current_size) * 8
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many:
-                return layout
-
-            break
-
-        return best_layout
-
-    font_name = "Arial"
-    max_title_width = 760.0
-    max_title_height = 330.0
-    preferred_title_size = 43.0
-    min_title_size = 22.0
-    title_line_gap = 12.0
-
-    title_font_path = resolve_font_path(font_name, bold=True, italic=False)
-    title_layout = fit_line(
-        title,
-        font_path=title_font_path,
-        preferred_size=preferred_title_size,
-        min_size=min_title_size,
-        max_width=max_title_width,
-        max_height=max_title_height,
-        line_spacing=0.96,
-        max_lines=4,
-    )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Solid green background.
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=background_color,
-        line_color="none",
-    )
-
-    # Right image region.
-    right_x = 1065.0
-    right_w = canvas_width - right_x
-
-    add(
-        "image",
-        src=image_url,
-        x=right_x,
-        y=0,
-        width=right_w,
-        height=canvas_height,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.45,
-    )
-
-    overlay_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="{right_w:g}" height="{canvas_height:g}" viewBox="0 0 {right_w:g} {canvas_height:g}">
-  <rect x="0" y="0" width="{right_w:g}" height="{canvas_height:g}" fill="{right_overlay_color}" opacity="{right_overlay_opacity:g}"/>
-</svg>
-""".strip()
-
-    overlay_node = add(
-        "svg",
-        name="right_green_overlay",
-        x=right_x,
-        y=0,
-        width=right_w,
-        height=canvas_height,
-        pixel_width=round(right_w * 2),
-        pixel_height=canvas_height * 2,
-    )
-    overlay_node.text = overlay_svg
-
-    # Short divider line on the left.
-    add(
-        "line",
-        x1=0,
-        y1=455,
-        x2=158,
-        y2=455,
-        color=line_color,
-        width=1.2,
-    )
-
-    # One editable title string.
-    title_x = 198.0
-    title_y = 300.0 + (max_title_height - title_layout["height"]) / 2.0
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=max_title_width,
-        height=title_layout["height"],
-        font=font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=min_title_size,
-        color=title_color,
-        align="left",
-        vertical_align="middle",
-        bold="true",
-        italic="false",
-        single_line="false",
-        max_lines=4,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.96,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_section_header_image_slide_xml(
-    section_header: str = "Add a Section Header Here and a Subtitle if Needed or Leave Blank",
-    image_url: str = (
-        "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#FFFFFF",
-    header_color: str = "#6F8369",
-    title_color: str = "#FFFFFF",
-    divider_color: str = "#C9D4C3",
-) -> str:
-    """
-    Generate XML for a section-header transition slide.
-
-    The layout has a muted green header panel across the top, a short centered
-    vertical divider line, a large centered section title, and a full-width
-    image cropped into the lower half of the slide.
-    """
-
-    clean_header = section_header.strip()
-   
-
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if fallback_path.exists():
-                try:
-                    ImageFont.truetype(str(fallback_path), 12)
-                    return fallback_path
-                except OSError:
-                    continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        if not text:
-            return 0.0
-
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt)
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_size: float,
-        min_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-    ) -> dict:
-        current_size = preferred_size
-        best_layout = None
-
-        while current_size >= min_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-            overflow = max(0.0, height - max_height)
-
-            score = overflow * 1800 + (preferred_size - current_size) * 8
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height:
-                return layout
-
-            break
-
-        return best_layout
-
-    font_name = "Arial"
-    title_font_path = resolve_font_path(font_name, bold=True)
-
-    header_height = 438.0
-    image_y = header_height
-    image_height = canvas_height - image_y
-
-    title_layout = fit_text(
-        clean_header,
-        font_path=title_font_path,
-        preferred_size=44.0,
-        min_size=18.0,
-        max_width=1000.0,
-        max_height=230.0,
-        line_spacing=1.0,
-    )
-
-    title_x = 300.0
-    title_y = 158.0 + (170.0 - title_layout["height"]) / 2
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=header_height,
-        fill=header_color,
-        line_color="none",
-    )
-
-    add(
-        "line",
-        x1=canvas_width / 2,
-        y1=0,
-        x2=canvas_width / 2,
-        y2=108,
-        color=divider_color,
-        width=1.0,
-        opacity=0.82,
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=1000.0,
-        height=title_layout["height"],
-        font=font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(16.0, title_layout["font_size"] - 2.0),
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        bold="true",
-        italic="false",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    add(
-        "image",
-        src=image_url,
-        x=0,
-        y=image_y,
-        width=canvas_width,
-        height=image_height,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.46,
-    )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-
-# Slide content
-
-def generate_content_creation_slide_xml(
-    main_title: str = "Content\nCreation",
-    original_title: str = "Original Content",
-    original_description: str = (
-        "Develop unique visuals, videos, and copy that align with your "
-        "brand's message and resonate with your audience's interests. "
-        "Create content that not only captures attention but also conveys "
-        "the essence of your brand."
-    ),
-    curated_title: str = "Curated Content",
-    curated_description: str = (
-        "Share valuable curated content from reputable sources in your "
-        "industry such as articles, videos, and graphics to enhance your "
-        "original material and engage your audience in discussions."
-    ),
-    main_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1625064757761-c9bccabf1163"
-        "?auto=format&fit=crop&q=80&w=1800"
-    ),
-    portrait_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1552113125-81af17f36b57"
-        "?auto=format&fit=crop&q=80&w=1000"
-    ),
-    background_color: str = "#D2DADE",
-    title_color: str = "#68767C",
-    accent_color: str = "#E4AAA2",
-    decoration_color: str = "#AEB9BE",
-    text_color: str = "#111111",
-) -> str:
-    """
-    Sinh XML cho slide Content Creation.
-
-    AI có thể truyền:
-    - main_title
-    - original_title
-    - original_description
-    - curated_title
-    - curated_description
-    - main_image_url
-    - portrait_image_url
-    - các màu
-
-    Bố cục và đồ họa trang trí được giữ cố định.
-    """
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": "810",
-            "height": "455",
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add_element(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items()},
-        )
-
-    def add_textbox(text: str, **attrs):
-        node = add_element("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Ảnh lớn bên trái
-    add_element(
-        "image",
-        src=main_image_url,
-        x=0,
-        y=27,
-        width=498,
-        height=225,
-    )
-
-    # Tiêu đề lớn bên phải
-    add_textbox(
-        main_title,
-        x=575,
-        y=24,
-        width=220,
-        height=170,
-        font="Arial",
-        size=42,
-        min_font_size=38,
-        color=title_color,
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        line_spacing=0.95,
-        safety_ratio=0.97,
-    )
-
- 
-
-   
-
-    # Nền bo góc cho ảnh chân dung
-    add_element(
-        "shape",
-        type="rounded_rectangle",
-        x=568,
-        y=205,
-        width=229,
-        height=250,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    # Ảnh chân dung
-    add_element(
-        "image",
-        src=portrait_image_url,
-        x=568,
-        y=205,
-        width=229,
-        height=250,
-    )
-
-    # Cột nội dung 1
-    add_textbox(
-        original_title,
-        x=34,
-        y=295,
-        width=230,
-        height=28,
-        font="Arial",
-        size=17,
-        bold="true",
-        color=text_color,
-        single_line="true",
-        min_font_size=13,
-        overflow="clip",
-    )
-
-    add_textbox(
-        original_description,
-        x=34,
-        y=332,
-        width=250,
-        height=93,
-        font="Arial",
-        size=12,
-        min_font_size=10,
-        color=text_color,
-        single_line="false",
-        max_lines=5,
-        overflow="clip",
-        line_spacing=1.18,
-        safety_ratio=0.96,
-    )
-
-    # Cột nội dung 2
-    add_textbox(
-        curated_title,
-        x=330,
-        y=295,
-        width=210,
-        height=28,
-        font="Arial",
-        size=17,
-        bold="true",
-        color=text_color,
-        single_line="true",
-        min_font_size=13,
-        overflow="clip",
-    )
-
-    add_textbox(
-        curated_description,
-        x=330,
-        y=332,
-        width=225,
-        height=93,
-        font="Arial",
-        size=12,
-        min_font_size=10,
-        color=text_color,
-        single_line="false",
-        max_lines=5,
-        overflow="clip",
-        line_spacing=1.18,
-        safety_ratio=0.96,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    pretty_xml = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    )
-
-    xml_content = pretty_xml.decode("utf-8")
-
-    return xml_content
-
-def generate_ai_content_slide_xml(
-    title: str = "THE SLIDE TITLE GOES HERE",
-    intro_text: str = (
-        "Do you know what helps you make your point clear? "
-        "Lists like this one:"
-    ),
-    bullet_items: list[str] = [
-        "They’re simple",
-        "You can organize your ideas clearly",
-        "You’ll never forget to buy milk!",
-     
-    ],
-    footer_text: str = (
-        "You can replace the image. Just right-click on "
-        "it and select “Replace image”"
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1485827404703-89b55fcc595e"
-        "?q=85&w=1400&auto=format&fit=crop"
-    ),
-    background_color: str = "#E3EAED",
-    title_color: str = "#101010",
-    text_color: str = "#1B1B1B",
-) -> str:
-    """
-    Sinh XML cho slide nội dung có ảnh bên phải.
-
-    Không dùng class phụ.
-    Layout linh hoạt:
-    - Mỗi vùng nội dung là một textbox.
-    - Tự wrap, đo chiều cao và xếp theo flow dọc.
-    - Nếu nội dung dài, tự giảm gap, body font và title font.
-    - Không để các textbox overlap nhau.
-    """
-
-
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    left_x = 120
-    left_width = 690
-
-    content_top = 76
-    content_bottom = 832
-    available_height = content_bottom - content_top
-
-    image_x = 860
-    image_y = 30
-    image_width = 700
-    image_height = 820
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            char.lower()
-            for char in name
-            if char.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            path
-            for path in directories
-            if path.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Times New Roman": "times",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-                has_italic = any(
-                    token in stem
-                    for token in (
-                        "italic",
-                        "it",
-                        "oblique",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                if italic and has_italic:
-                    score += 20
-                elif italic:
-                    score -= 10
-                elif has_italic:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback_name = (
-            "DejaVuSans-BoldOblique.ttf"
-            if bold and italic
-            else "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans-Oblique.ttf"
-            if italic
-            else "DejaVuSans.ttf"
-        )
-
-        fallback_stem = (
-            "FreeSansBoldOblique.ttf"
-            if bold and italic
-            else "FreeSansBold.ttf"
-            if bold
-            else "FreeSansOblique.ttf"
-            if italic
-            else "FreeSans.ttf"
-        )
-        liberation_stem = (
-            "LiberationSans-BoldItalic.ttf"
-            if bold and italic
-            else "LiberationSans-Bold.ttf"
-            if bold
-            else "LiberationSans-Italic.ttf"
-            if italic
-            else "LiberationSans-Regular.ttf"
-        )
-        fallback_paths = [
-            Path("/usr/share/fonts/truetype/dejavu") / fallback_name,
-            Path("/usr/share/fonts/truetype/freefont") / fallback_stem,
-            Path("/usr/share/fonts/truetype/liberation") / liberation_stem,
-            Path("/usr/local/share/fonts") / fallback_name,
-            Path.cwd() / fallback_name,
-        ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        font_path = None
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def break_long_word(
-        word: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        parts: list[str] = []
-        current = ""
-
-        for char in word:
-            candidate = current + char
-
-            if (
-                current
-                and measure_text_width(
-                    candidate,
-                    font_path,
-                    font_size_pt,
-                )
-                > max_width
-            ):
-                parts.append(current)
-                current = char
-            else:
-                current = candidate
-
-        if current:
-            parts.append(current)
-
-        return parts or [""]
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if (
-                    measure_text_width(
-                        word,
-                        font_path,
-                        font_size_pt,
-                    )
-                    > max_width
-                ):
-                    pieces = break_long_word(
-                        word,
-                        font_path,
-                        font_size_pt,
-                        max_width,
-                    )
-                else:
-                    pieces = [word]
-
-                for piece in pieces:
-                    candidate = (
-                        piece
-                        if not current
-                        else f"{current} {piece}"
-                    )
-
-                    if (
-                        not current
-                        or measure_text_width(
-                            candidate,
-                            font_path,
-                            font_size_pt,
-                        )
-                        <= max_width
-                    ):
-                        current = candidate
-                    else:
-                        result.append(current)
-                        current = piece
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        vertical_padding: float = 6,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + vertical_padding
-            ),
-        }
-
-    title_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 56.0
-    title_min_font_size = 36.0
-
-    body_font_size = 28.0
-    body_min_font_size = 18.0
-
-    title_line_spacing = 0.92
-    body_line_spacing = 1.05
-    bullet_line_spacing = 1.08
-
-    title_intro_gap = 56.0
-    intro_bullet_gap = 26.0
-    bullet_footer_gap = 28.0
-    minimum_gap = 14.0
-
-    bullet_text = "\n".join(
-        f"•  {item.strip()}"
-        for item in bullet_items
-        if item.strip()
-    )
-
-    if not bullet_text:
-        bullet_text = ""
-
-    def calculate_all_layouts(
-        current_title_size: float,
-        current_body_size: float,
-    ) -> dict:
-        return {
-            "title": layout_text(
-                title,
-                font_path=title_font_path,
-                font_size=current_title_size,
-                max_width=left_width,
-                line_spacing=title_line_spacing,
-                vertical_padding=8,
-            ),
-            "intro": layout_text(
-                intro_text,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=left_width,
-                line_spacing=body_line_spacing,
-                vertical_padding=6,
-            ),
-            "bullet": layout_text(
-                bullet_text,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=left_width,
-                line_spacing=bullet_line_spacing,
-                vertical_padding=6,
-            ),
-            "footer": layout_text(
-                footer_text,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=left_width,
-                line_spacing=body_line_spacing,
-                vertical_padding=6,
-            ),
-        }
-
-    def total_required_height(
-        layouts: dict,
-        gap_1: float,
-        gap_2: float,
-        gap_3: float,
-    ) -> float:
-        return (
-            layouts["title"]["height"]
-            + gap_1
-            + layouts["intro"]["height"]
-            + gap_2
-            + layouts["bullet"]["height"]
-            + gap_3
-            + layouts["footer"]["height"]
-        )
-
-    layouts = calculate_all_layouts(
-        title_font_size,
-        body_font_size,
-    )
-
-    total_height = total_required_height(
-        layouts,
-        title_intro_gap,
-        intro_bullet_gap,
-        bullet_footer_gap,
-    )
-
-    for _ in range(200):
-        if total_height <= available_height:
-            break
-
-        changed = False
-
-        if (
-            title_intro_gap > minimum_gap
-            or intro_bullet_gap > minimum_gap
-            or bullet_footer_gap > minimum_gap
-        ):
-            title_intro_gap = max(
-                minimum_gap,
-                title_intro_gap - 2,
-            )
-            intro_bullet_gap = max(
-                minimum_gap,
-                intro_bullet_gap - 2,
-            )
-            bullet_footer_gap = max(
-                minimum_gap,
-                bullet_footer_gap - 2,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_all_layouts(
-            title_font_size,
-            body_font_size,
-        )
-
-        total_height = total_required_height(
-            layouts,
-            title_intro_gap,
-            intro_bullet_gap,
-            bullet_footer_gap,
-        )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add(
-            "textbox",
-            **attrs,
-        )
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    cursor_y = float(content_top)
-
-    title_y = cursor_y
-
-    textbox(
-        layouts["title"]["text"],
-        x=left_x,
-        y=title_y,
-        width=left_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    cursor_y += (
-        layouts["title"]["height"]
-        + title_intro_gap
-    )
-
-    intro_y = cursor_y
-
-    textbox(
-        layouts["intro"]["text"],
-        x=left_x,
-        y=intro_y,
-        width=left_width,
-        height=layouts["intro"]["height"],
-        font=body_font_name,
-        size=layouts["intro"]["font_size"],
-        min_font_size=layouts["intro"]["font_size"],
-        color=text_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["intro"]["lines"]),
-        overflow="clip",
-        line_spacing=body_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    cursor_y += (
-        layouts["intro"]["height"]
-        + intro_bullet_gap
-    )
-
-    bullet_y = cursor_y
-
-    textbox(
-        layouts["bullet"]["text"],
-        x=left_x,
-        y=bullet_y,
-        width=left_width,
-        height=layouts["bullet"]["height"],
-        font=body_font_name,
-        size=layouts["bullet"]["font_size"],
-        min_font_size=layouts["bullet"]["font_size"],
-        color=text_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["bullet"]["lines"]),
-        overflow="clip",
-        line_spacing=bullet_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    cursor_y += (
-        layouts["bullet"]["height"]
-        + bullet_footer_gap
-    )
-
-    footer_y = cursor_y
-
-    textbox(
-        layouts["footer"]["text"],
-        x=left_x,
-        y=footer_y,
-        width=left_width,
-        height=layouts["footer"]["height"],
-        font=body_font_name,
-        size=layouts["footer"]["font_size"],
-        min_font_size=layouts["footer"]["font_size"],
-        color=text_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["footer"]["lines"]),
-        overflow="clip",
-        line_spacing=body_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    print(
-        "Layout đã fit:"
-        f"\n  Title: {len(layouts['title']['lines'])} dòng, "
-        f"{layouts['title']['font_size']:g}pt, "
-        f"y={title_y:.1f}, h={layouts['title']['height']:.1f}"
-        f"\n  Intro: {len(layouts['intro']['lines'])} dòng, "
-        f"{layouts['intro']['font_size']:g}pt, "
-        f"y={intro_y:.1f}, h={layouts['intro']['height']:.1f}"
-        f"\n  Bullet: {len(layouts['bullet']['lines'])} dòng, "
-        f"{layouts['bullet']['font_size']:g}pt, "
-        f"y={bullet_y:.1f}, h={layouts['bullet']['height']:.1f}"
-        f"\n  Footer: {len(layouts['footer']['lines'])} dòng, "
-        f"{layouts['footer']['font_size']:g}pt, "
-        f"y={footer_y:.1f}, h={layouts['footer']['height']:.1f}"
-        f"\n  Tổng chiều cao: {total_height:.1f}/"
-        f"{available_height:.1f}px"
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-
-
-    return xml_content
-
-def generate_two_ideas_slide_xml(
-    title: str = "TWO IDEAS",
-    idea_titles: list[str] = [
-        "VENUS",
-        "MERCURY",
-    ],
-    idea_descriptions: list[str] = [
-        (
-            "Venus has a beautiful name and is the second planet "
-            "from the Sun. It’s hot and is the second-brightest "
-            "natural object in the night sky."
-        ),
-        (
-            "Mercury is the closest planet to the Sun and the "
-            "smallest one in the Solar System. This planet’s name "
-            "has nothing to do with the liquid metal."
-        ),
-    ],
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1529139574466-a303027c1d8b"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#1A1A1A",
-    title_color: str = "#FFFFFF",
-    heading_color: str = "#FFFFFF",
-    body_color: str = "#F1F1F1",
-) -> str:
-    """
-    Generate XML for a two-column ideas slide.
-
-    The layout features a full-height image on the left and a dark
-    content area on the right containing a main title and vertically
-    stacked idea sections with headings and descriptions.
-    """
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 0
-    image_y = 0
-    image_width = 520
-    image_height = 900
-
-    content_x = 680
-    content_width = 810
-    content_top = 92
-    content_bottom = 825
-    available_height = content_bottom - content_top
-
-    # =====================================================
-    # Font helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            char.lower()
-            for char in name
-            if char.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            path
-            for path in directories
-            if path.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def break_long_word(
-        word: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        parts: list[str] = []
-        current = ""
-
-        for char in word:
-            candidate = current + char
-
-            if (
-                current
-                and measure_text_width(
-                    candidate,
-                    font_path,
-                    font_size_pt,
-                )
-                > max_width
-            ):
-                parts.append(current)
-                current = char
-            else:
-                current = candidate
-
-        if current:
-            parts.append(current)
-
-        return parts or [""]
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if (
-                    measure_text_width(
-                        word,
-                        font_path,
-                        font_size_pt,
-                    )
-                    > max_width
-                ):
-                    pieces = break_long_word(
-                        word,
-                        font_path,
-                        font_size_pt,
-                        max_width,
-                    )
-                else:
-                    pieces = [word]
-
-                for piece in pieces:
-                    candidate = (
-                        piece
-                        if not current
-                        else f"{current} {piece}"
-                    )
-
-                    if (
-                        not current
-                        or measure_text_width(
-                            candidate,
-                            font_path,
-                            font_size_pt,
-                        )
-                        <= max_width
-                    ):
-                        current = candidate
-                    else:
-                        result.append(current)
-                        current = piece
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 4,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    # =====================================================
-    # Typography
-    # =====================================================
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    heading_font_path = resolve_font_path(
-        heading_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 48.0
-    title_min_font_size = 38.0
-
-    heading_font_size = 36.0
-    heading_min_font_size = 26.0
-
-    body_font_size = 26.0
-    body_min_font_size = 18.0
-
-    title_line_spacing = 0.95
-    heading_line_spacing = 0.98
-    body_line_spacing = 1.08
-
-    title_to_items_gap = 72.0
-    heading_to_body_gap = 12.0
-    item_gap = 70.0
-
-    minimum_title_gap = 36.0
-    minimum_item_gap = 28.0
-
-    # =====================================================
-    # Fit toàn bộ layout
-    # =====================================================
-
-    def calculate_layouts(
-        current_title_size: float,
-        current_heading_size: float,
-        current_body_size: float,
-    ) -> dict:
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=content_width,
-            line_spacing=title_line_spacing,
-            padding=6,
-        )
-
-        item_layouts: list[dict] = []
-
-        for item_title, item_description in zip(
-            idea_titles,
-            idea_descriptions,
-        ):
-            heading_layout = layout_text(
-                item_title,
-                font_path=heading_font_path,
-                font_size=current_heading_size,
-                max_width=content_width,
-                line_spacing=heading_line_spacing,
-                padding=4,
-            )
-
-            body_layout = layout_text(
-                item_description,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=content_width,
-                line_spacing=body_line_spacing,
-                padding=4,
-            )
-
-            item_layouts.append(
-                {
-                    "heading": heading_layout,
-                    "body": body_layout,
-                    "height": (
-                        heading_layout["height"]
-                        + heading_to_body_gap
-                        + body_layout["height"]
-                    ),
-                }
-            )
-
-        total_height = (
-            title_layout["height"]
-            + title_to_items_gap
-            + sum(
-                item["height"]
-                for item in item_layouts
-            )
-            + item_gap
-            * max(
-                0,
-                len(item_layouts) - 1,
-            )
-        )
-
-        return {
-            "title": title_layout,
-            "items": item_layouts,
-            "total_height": total_height,
-        }
-
-    layouts = calculate_layouts(
-        title_font_size,
-        heading_font_size,
-        body_font_size,
-    )
-
-    for _ in range(240):
-        if layouts["total_height"] <= available_height:
-            break
-
-        changed = False
-
-        if (
-            title_to_items_gap > minimum_title_gap
-            or item_gap > minimum_item_gap
-        ):
-            title_to_items_gap = max(
-                minimum_title_gap,
-                title_to_items_gap - 2,
-            )
-            item_gap = max(
-                minimum_item_gap,
-                item_gap - 2,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
-            heading_font_size = max(
-                heading_min_font_size,
-                heading_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            title_font_size,
-            heading_font_size,
-            body_font_size,
-        )
-
-    # Nếu nội dung ngắn, giữ bố cục gần ảnh mẫu nhưng
-    # phân phối một phần khoảng trống còn lại vào item_gap.
-    remaining_space = (
-        available_height
-        - layouts["total_height"]
-    )
-
-    if (
-        remaining_space > 0
-        and len(layouts["items"]) > 1
-    ):
-        added_gap = min(
-            70.0,
-            remaining_space
-            / (len(layouts["items"]) - 1),
-        )
-        item_gap += added_gap
-
-        layouts = calculate_layouts(
-            title_font_size,
-            heading_font_size,
-            body_font_size,
-        )
-
-    # =====================================================
-    # XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add(
-            "textbox",
-            **attrs,
-        )
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    cursor_y = float(content_top)
-
-    textbox(
-        layouts["title"]["text"],
-        x=content_x,
-        y=cursor_y,
-        width=content_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    cursor_y += (
-        layouts["title"]["height"]
-        + title_to_items_gap
-    )
-
-    for index, item in enumerate(
-        layouts["items"]
-    ):
-        textbox(
-            item["heading"]["text"],
-            x=content_x,
-            y=cursor_y,
-            width=content_width,
-            height=item["heading"]["height"],
-            font=heading_font_name,
-            size=item["heading"]["font_size"],
-            min_font_size=item["heading"]["font_size"],
-            bold="true",
-            color=heading_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["heading"]["lines"]),
-            overflow="clip",
-            line_spacing=heading_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        cursor_y += (
-            item["heading"]["height"]
-            + heading_to_body_gap
-        )
-
-        textbox(
-            item["body"]["text"],
-            x=content_x,
-            y=cursor_y,
-            width=content_width,
-            height=item["body"]["height"],
-            font=body_font_name,
-            size=item["body"]["font_size"],
-            min_font_size=item["body"]["font_size"],
-            color=body_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["body"]["lines"]),
-            overflow="clip",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        cursor_y += item["body"]["height"]
-
-        if index < len(layouts["items"]) - 1:
-            cursor_y += item_gap
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_three_ideas_slide_xml(
-    title: str = "THREE IDEAS",
-    idea_titles: list[str] = [
-        "MERCURY",
-        "MARS",
-        "VENUS",
-    ],
-    idea_descriptions: list[str] = [
-        (
-            "Mercury is the closest planet to the Sun and the Mercury is the closest planet to the Sun and the "
-            "smallest one in the Solar System."
-        ),
-        (
-            "Despite being red, Mars is actually a cold place. "
-            "It’s full of iron oxide dust."
-        ),
-        (
-            "Venus has a beautiful name and is the second "
-            "planet from the Sun."
-        ),
-    ],
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1594035910387-fea47794261f"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#181818",
-    title_color: str = "#FFFFFF",
-    heading_color: str = "#FFFFFF",
-    body_color: str = "#F2F2F2",
-) -> str:
-    """
-    Generate XML for a split-layout ideas slide.
-
-    The layout features a dark content area on the left and a
-    full-height image panel on the right. The left side contains
-    a large title at the top and multiple vertically stacked idea
-    sections. Each section includes a heading and a centered
-    description below it.
-    """
-
-
-    # =====================================================
-    # Canvas and layout regions
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    content_x = 0
-    content_y = 0
-    content_width = 1065
-    content_height = 900
-
-    image_x = 1065
-    image_y = 0
-    image_width = 535
-    image_height = 900
-
-    text_x = 58
-    text_width = 930
-
-    content_top = 42
-    content_bottom = 825
-    available_height = content_bottom - content_top
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            char.lower()
-            for char in name
-            if char.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            path
-            for path in directories
-            if path.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def break_long_word(
-        word: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        parts: list[str] = []
-        current = ""
-
-        for char in word:
-            candidate = current + char
-
-            if (
-                current
-                and measure_text_width(
-                    candidate,
-                    font_path,
-                    font_size_pt,
-                )
-                > max_width
-            ):
-                parts.append(current)
-                current = char
-            else:
-                current = candidate
-
-        if current:
-            parts.append(current)
-
-        return parts or [""]
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if (
-                    measure_text_width(
-                        word,
-                        font_path,
-                        font_size_pt,
-                    )
-                    > max_width
-                ):
-                    pieces = break_long_word(
-                        word,
-                        font_path,
-                        font_size_pt,
-                        max_width,
-                    )
-                else:
-                    pieces = [word]
-
-                for piece in pieces:
-                    candidate = (
-                        piece
-                        if not current
-                        else f"{current} {piece}"
-                    )
-
-                    if (
-                        not current
-                        or measure_text_width(
-                            candidate,
-                            font_path,
-                            font_size_pt,
-                        )
-                        <= max_width
-                    ):
-                        current = candidate
-                    else:
-                        result.append(current)
-                        current = piece
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 4,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height + padding,
-        }
-
-    # =====================================================
-    # Typography settings
-    # =====================================================
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    heading_font_path = resolve_font_path(
-        heading_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 52.0
-    title_min_font_size = 40.0
-
-    heading_font_size = 38.0
-    heading_min_font_size = 26.0
-
-    body_font_size = 27.0
-    body_min_font_size = 18.0
-
-    title_line_spacing = 0.95
-    heading_line_spacing = 0.98
-    body_line_spacing = 1.08
-
-    title_to_items_gap = 70.0
-    heading_to_body_gap = 10.0
-    item_gap = 58.0
-
-    minimum_title_gap = 32.0
-    minimum_item_gap = 22.0
-
-    # =====================================================
-    # Fit the complete content layout
-    # =====================================================
-
-    def calculate_layouts(
-        current_title_size: float,
-        current_heading_size: float,
-        current_body_size: float,
-    ) -> dict:
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=text_width,
-            line_spacing=title_line_spacing,
-            padding=6,
-        )
-
-        item_layouts: list[dict] = []
-
-        for idea_title, idea_description in zip(
-            idea_titles,
-            idea_descriptions,
-        ):
-            heading_layout = layout_text(
-                idea_title,
-                font_path=heading_font_path,
-                font_size=current_heading_size,
-                max_width=text_width,
-                line_spacing=heading_line_spacing,
-                padding=3,
-            )
-
-            body_layout = layout_text(
-                idea_description,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=text_width,
-                line_spacing=body_line_spacing,
-                padding=3,
-            )
-
-            item_layouts.append(
-                {
-                    "heading": heading_layout,
-                    "body": body_layout,
-                    "height": (
-                        heading_layout["height"]
-                        + heading_to_body_gap
-                        + body_layout["height"]
-                    ),
-                }
-            )
-
-        total_height = (
-            title_layout["height"]
-            + title_to_items_gap
-            + sum(
-                item["height"]
-                for item in item_layouts
-            )
-            + item_gap
-            * max(
-                0,
-                len(item_layouts) - 1,
-            )
-        )
-
-        return {
-            "title": title_layout,
-            "items": item_layouts,
-            "total_height": total_height,
-        }
-
-    layouts = calculate_layouts(
-        title_font_size,
-        heading_font_size,
-        body_font_size,
-    )
-
-    for _ in range(260):
-        if layouts["total_height"] <= available_height:
-            break
-
-        changed = False
-
-        if (
-            title_to_items_gap > minimum_title_gap
-            or item_gap > minimum_item_gap
-        ):
-            title_to_items_gap = max(
-                minimum_title_gap,
-                title_to_items_gap - 2,
-            )
-            item_gap = max(
-                minimum_item_gap,
-                item_gap - 2,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
-            heading_font_size = max(
-                heading_min_font_size,
-                heading_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            title_font_size,
-            heading_font_size,
-            body_font_size,
-        )
-
-    remaining_space = available_height - layouts["total_height"]
-
-    if (
-        remaining_space > 0
-        and len(layouts["items"]) > 1
-    ):
-        item_gap += min(
-            45.0,
-            remaining_space
-            / max(1, len(layouts["items"]) - 1),
-        )
-
-        layouts = calculate_layouts(
-            title_font_size,
-            heading_font_size,
-            body_font_size,
-        )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    cursor_y = float(content_top)
-
-    textbox(
-        layouts["title"]["text"],
-        x=text_x,
-        y=cursor_y,
-        width=text_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        bold="true",
-        color=title_color,
-        align="right",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    cursor_y += (
-        layouts["title"]["height"]
-        + title_to_items_gap
-    )
-
-    for index, item in enumerate(
-        layouts["items"]
-    ):
-        textbox(
-            item["heading"]["text"],
-            x=text_x,
-            y=cursor_y,
-            width=text_width,
-            height=item["heading"]["height"],
-            font=heading_font_name,
-            size=item["heading"]["font_size"],
-            min_font_size=item["heading"]["font_size"],
-            bold="true",
-            color=heading_color,
-            align="right",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["heading"]["lines"]),
-            overflow="clip",
-            line_spacing=heading_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        cursor_y += (
-            item["heading"]["height"]
-            + heading_to_body_gap
-        )
-
-        textbox(
-            item["body"]["text"],
-            x=text_x,
-            y=cursor_y,
-            width=text_width,
-            height=item["body"]["height"],
-            font=body_font_name,
-            size=item["body"]["font_size"],
-            min_font_size=item["body"]["font_size"],
-            color=body_color,
-            align="right",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["body"]["lines"]),
-            overflow="clip",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        cursor_y += item["body"]["height"]
-
-        if index < len(layouts["items"]) - 1:
-            cursor_y += item_gap
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-
-def generate_our_history_slide_xml(
-    title: str = "OUR HISTORY",
-    event_titles: list[str] = [
-        "SATURN",
-        "MARS",
-        "NEPTUNE",
-    ],
-    event_descriptions: list[str] = [
-        "Saturn is composed of hydrogen and helium.",
-        "Despite being red, Mars is actually a cold place.",
-        "Neptune is the farthest planet from the Sun.",
-        "Neptune is the farthest planet from the Sun.",
-
-    ],
-    event_years: list[str] = [
-        "XX",
-        "XX",
-        "XX",
-        "XX"
-    ],
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1495474472287-4d71bcdd2085"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#151515",
-    title_color: str = "#FFFFFF",
-    heading_color: str = "#FFFFFF",
-    body_color: str = "#F2F2F2",
-    year_color: str = "#FFFFFF",
-    line_color: str = "#E8E8E8",
-) -> str:
-    """
-    Generate XML for a split-layout history slide.
-
-    The layout features a dark content area on the left and a
-    tall image panel on the right. The left area contains a large
-    title at the top and multiple vertically stacked history
-    sections. Each section includes a heading, a description,
-    a year marker, and a thin vertical separator line.
-    """
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 1155
-    image_y = 0
-    image_width = 445
-    image_height = 900
-
-    content_x = 80
-    content_width = 1000
-    content_top = 60
-    content_bottom = 835
-    available_height = content_bottom - content_top
-
-    title_block_x = 200
-    title_block_width = 700
-
-    text_column_x = 70
-    text_column_width = 700
-
-    year_column_x = 820
-    year_column_width = 120
-
-    line_x = 870
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            char.lower()
-            for char in name
-            if char.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            path
-            for path in directories
-            if path.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def break_long_word(
-        word: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        parts: list[str] = []
-        current = ""
-
-        for char in word:
-            candidate = current + char
-
-            if (
-                current
-                and measure_text_width(
-                    candidate,
-                    font_path,
-                    font_size_pt,
-                )
-                > max_width
-            ):
-                parts.append(current)
-                current = char
-            else:
-                current = candidate
-
-        if current:
-            parts.append(current)
-
-        return parts or [""]
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if (
-                    measure_text_width(
-                        word,
-                        font_path,
-                        font_size_pt,
-                    )
-                    > max_width
-                ):
-                    pieces = break_long_word(
-                        word,
-                        font_path,
-                        font_size_pt,
-                        max_width,
-                    )
-                else:
-                    pieces = [word]
-
-                for piece in pieces:
-                    candidate = (
-                        piece
-                        if not current
-                        else f"{current} {piece}"
-                    )
-
-                    if (
-                        not current
-                        or measure_text_width(
-                            candidate,
-                            font_path,
-                            font_size_pt,
-                        )
-                        <= max_width
-                    ):
-                        current = candidate
-                    else:
-                        result.append(current)
-                        current = piece
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 4,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height + padding,
-        }
-
-    # =====================================================
-    # Typography settings
-    # =====================================================
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-    year_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    heading_font_path = resolve_font_path(
-        heading_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-    year_font_path = resolve_font_path(
-        year_font_name,
-        bold=True,
-    )
-
-    title_font_size = 50.0
-    title_min_font_size = 38.0
-
-    heading_font_size = 34.0
-    heading_min_font_size = 24.0
-
-    body_font_size = 25.0
-    body_min_font_size = 17.0
-
-    year_font_size = 28.0
-    year_min_font_size = 20.0
-
-    title_line_spacing = 0.95
-    heading_line_spacing = 0.98
-    body_line_spacing = 1.08
-    year_line_spacing = 1.0
-
-    title_to_items_gap = 64.0
-    item_gap = 42.0
-    heading_to_body_gap = 10.0
-
-    minimum_title_gap = 30.0
-    minimum_item_gap = 18.0
-
-    # =====================================================
-    # Fit the complete content layout
-    # =====================================================
-
-    def calculate_layouts(
-        current_title_size: float,
-        current_heading_size: float,
-        current_body_size: float,
-        current_year_size: float,
-    ) -> dict:
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=title_block_width,
-            line_spacing=title_line_spacing,
-            padding=6,
-        )
-
-        item_layouts: list[dict] = []
-
-        for event_title, event_description, event_year in zip(
-            event_titles,
-            event_descriptions,
-            event_years,
-        ):
-            heading_layout = layout_text(
-                event_title,
-                font_path=heading_font_path,
-                font_size=current_heading_size,
-                max_width=text_column_width,
-                line_spacing=heading_line_spacing,
-                padding=2,
-            )
-
-            body_layout = layout_text(
-                event_description,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=text_column_width,
-                line_spacing=body_line_spacing,
-                padding=2,
-            )
-
-            year_layout = layout_text(
-                event_year,
-                font_path=year_font_path,
-                font_size=current_year_size,
-                max_width=year_column_width,
-                line_spacing=year_line_spacing,
-                padding=2,
-            )
-
-            text_block_height = (
-                heading_layout["height"]
-                + heading_to_body_gap
-                + body_layout["height"]
-            )
-
-            line_height = max(
-                84.0,
-                body_layout["height"] + 26.0,
-            )
-
-            item_layouts.append(
-                {
-                    "heading": heading_layout,
-                    "body": body_layout,
-                    "year": year_layout,
-                    "text_block_height": text_block_height,
-                    "line_height": line_height,
-                    "height": max(
-                        text_block_height,
-                        year_layout["height"] + line_height,
-                    ),
-                }
-            )
-
-        total_height = (
-            title_layout["height"]
-            + title_to_items_gap
-            + sum(item["height"] for item in item_layouts)
-            + item_gap * max(0, len(item_layouts) - 1)
-        )
-
-        return {
-            "title": title_layout,
-            "items": item_layouts,
-            "total_height": total_height,
-        }
-
-    layouts = calculate_layouts(
-        title_font_size,
-        heading_font_size,
-        body_font_size,
-        year_font_size,
-    )
-
-    for _ in range(260):
-        if layouts["total_height"] <= available_height:
-            break
-
-        changed = False
-
-        if (
-            title_to_items_gap > minimum_title_gap
-            or item_gap > minimum_item_gap
-        ):
-            title_to_items_gap = max(
-                minimum_title_gap,
-                title_to_items_gap - 2,
-            )
-            item_gap = max(
-                minimum_item_gap,
-                item_gap - 2,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
-            heading_font_size = max(
-                heading_min_font_size,
-                heading_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and year_font_size > year_min_font_size:
-            year_font_size = max(
-                year_min_font_size,
-                year_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            title_font_size,
-            heading_font_size,
-            body_font_size,
-            year_font_size,
-        )
-
-    remaining_space = available_height - layouts["total_height"]
-
-    if remaining_space > 0:
-        if len(layouts["items"]) > 1:
-            extra_gap = min(
-                34.0,
-                remaining_space / max(1, len(layouts["items"]) - 1),
-            )
-            item_gap += extra_gap
-            layouts = calculate_layouts(
-                title_font_size,
-                heading_font_size,
-                body_font_size,
-                year_font_size,
-            )
-        else:
-            title_to_items_gap += min(remaining_space, 50.0)
-            layouts = calculate_layouts(
-                title_font_size,
-                heading_font_size,
-                body_font_size,
-                year_font_size,
-            )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    cursor_y = float(content_top)
-
-    textbox(
-        layouts["title"]["text"],
-        x=title_block_x,
-        y=cursor_y,
-        width=title_block_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        bold="true",
-        color=title_color,
-        align="center",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    cursor_y += (
-        layouts["title"]["height"]
-        + title_to_items_gap
-    )
-
-    for index, item in enumerate(layouts["items"]):
-        item_top = cursor_y
-
-        textbox(
-            item["heading"]["text"],
-            x=text_column_x,
-            y=item_top,
-            width=text_column_width,
-            height=item["heading"]["height"],
-            font=heading_font_name,
-            size=item["heading"]["font_size"],
-            min_font_size=item["heading"]["font_size"],
-            bold="true",
-            color=heading_color,
-            align="right",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["heading"]["lines"]),
-            overflow="clip",
-            line_spacing=heading_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            item["body"]["text"],
-            x=text_column_x,
-            y=item_top + item["heading"]["height"] + heading_to_body_gap,
-            width=text_column_width,
-            height=item["body"]["height"],
-            font=body_font_name,
-            size=item["body"]["font_size"],
-            min_font_size=item["body"]["font_size"],
-            color=body_color,
-            align="right",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["body"]["lines"]),
-            overflow="clip",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            item["year"]["text"],
-            x=year_column_x,
-            y=item_top + 2,
-            width=year_column_width,
-            height=item["year"]["height"],
-            font=year_font_name,
-            size=item["year"]["font_size"],
-            min_font_size=item["year"]["font_size"],
-            bold="true",
-            color=year_color,
-            align="center",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["year"]["lines"]),
-            overflow="clip",
-            line_spacing=year_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        add(
-            "line",
-            x1=line_x,
-            y1=item_top + item["year"]["height"] + 18,
-            x2=line_x,
-            y2=item_top + item["year"]["height"] + 18 + item["line_height"],
-            color=line_color,
-            width=1.2,
-        )
-
-        cursor_y += item["height"]
-
-        if index < len(layouts["items"]) - 1:
-            cursor_y += item_gap
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_instructions_slide_xml(
-    title: str = "INSTRUCTIONS FOR USE",
-    left_heading: str = "EDIT IN GOOGLE SLIDES",
-    left_paragraphs: list[str] = [
-        (
-            'Click on the button under the presentation preview that says '
-            '“Use as Google Slides Theme”.'
-        ),
-        (
-            "You will get a copy of this document on your Google Drive and will be able to edit, add or delete slides."
-        ),
-        (
-            "You have to be signed in to your Google account."
-        ),
-    ],
-    right_heading: str = "EDIT IN POWERPOINT®",
-    right_paragraphs: list[str] = [
-        (
-            'Click on the button under the presentation preview that says '
-            '“Download as PowerPoint template”. You will get a .pptx file '
-            'that you can edit in PowerPoint.'
-        ),
-        (
-            "Remember to download and install the fonts used in this "
-            "presentation."
-        ),
-    ],
-    footer_text: str = (
-        "More info on how to use this template at "
-        "slidescarnival.com/help-use-presentation-template\n"
-        "This template is free to use under Creative Commons Attribution "
-        "license. You can keep the Credits slide or mention SlidesCarnival "
-        "and other resources used in a slide footer."
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497032628192-86f99bcd76bc"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#F3F4F7",
-    dark_panel_color: str = "#34343B",
-    accent_color: str = "#98F20F",
-    title_color: str = "#98F20F",
-    heading_color: str = "#FFFFFF",
-    body_color: str = "#FFFFFF",
-    footer_color: str = "#39C62F",
-) -> str:
-    """
-    Generate XML for an instructional split-layout slide.
-
-    The layout features a dark diagonal content panel on the left,
-    a bright workspace image on the right, a large title at the top,
-    two text columns in the center, a green information block near
-    the bottom, and a slanted accent bar aligned with the diagonal edge.
-    """
-
-
-    # =====================================================
-    # Canvas and panel geometry
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 760
-    image_y = 0
-    image_width = 840
-    image_height = 900
-
-    panel_top_x = 1115.0
-    panel_bottom_x = 760.0
-    panel_top_y = 0.0
-    panel_bottom_y = 900.0
-
-    dark_panel_points = (
-        f"0,0 "
-        f"{panel_top_x:.2f},0 "
-        f"{panel_bottom_x:.2f},900 "
-        f"0,900"
-    )
-
-    accent_top_y = 305.0
-    accent_bottom_y = 610.0
-    accent_width = 54.0
-    accent_overlap = 5.0
-
-    def diagonal_x_at_y(y: float) -> float:
-        ratio = (
-            (y - panel_top_y)
-            / (panel_bottom_y - panel_top_y)
-        )
-
-        return (
-            panel_top_x
-            + ratio
-            * (panel_bottom_x - panel_top_x)
-        )
-
-    accent_top_inner_x = (
-        diagonal_x_at_y(accent_top_y)
-        - accent_overlap
-    )
-
-    accent_bottom_inner_x = (
-        diagonal_x_at_y(accent_bottom_y)
-        - accent_overlap
-    )
-
-    accent_points = (
-        f"{accent_top_inner_x:.2f},{accent_top_y:.2f} "
-        f"{accent_top_inner_x + accent_width:.2f},{accent_top_y:.2f} "
-        f"{accent_bottom_inner_x + accent_width:.2f},{accent_bottom_y:.2f} "
-        f"{accent_bottom_inner_x:.2f},{accent_bottom_y:.2f}"
-    )
-
-    content_left = 74.0
-    content_right_padding = 72.0
-    content_top = 145.0
-    content_bottom = 825.0
-
-    title_y = 145.0
-    title_width = 720.0
-
-    columns_top = 255.0
-    column_gap = 42.0
-    column_width = 365.0
-    left_column_x = 74.0
-    right_column_x = (
-        left_column_x
-        + column_width
-        + column_gap
-    )
-
-    footer_x = 74.0
-    footer_y = 675.0
-    footer_width = 680.0
-    footer_max_height = 150.0
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 4.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    def join_paragraphs(paragraphs: list[str]) -> str:
-        return "\n".join(
-            paragraph.strip()
-            for paragraph in paragraphs
-            if paragraph.strip()
-        )
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-    heading_font_path = resolve_font_path(
-        heading_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 46.0
-    title_min_font_size = 34.0
-
-    heading_font_size = 21.0
-    heading_min_font_size = 16.0
-
-    body_font_size = 19.0
-    body_min_font_size = 14.0
-
-    footer_font_size = 17.0
-    footer_min_font_size = 13.0
-
-    title_line_spacing = 0.96
-    heading_line_spacing = 1.0
-    body_line_spacing = 1.12
-    footer_line_spacing = 1.08
-
-    heading_to_body_gap = 10.0
-    paragraph_gap = 11.0
-    minimum_heading_to_body_gap = 5.0
-    minimum_paragraph_gap = 5.0
-
-    left_text = join_paragraphs(left_paragraphs)
-    right_text = join_paragraphs(right_paragraphs)
-
-    def calculate_column_layout(
-        heading: str,
-        paragraphs: list[str],
-        current_heading_size: float,
-        current_body_size: float,
-        current_heading_gap: float,
-        current_paragraph_gap: float,
-    ) -> dict:
-        heading_layout = layout_text(
-            heading,
-            font_path=heading_font_path,
-            font_size=current_heading_size,
-            max_width=column_width,
-            line_spacing=heading_line_spacing,
-            padding=2,
-        )
-
-        paragraph_layouts: list[dict] = []
-
-        for paragraph in paragraphs:
-            paragraph_layouts.append(
-                layout_text(
-                    paragraph,
-                    font_path=body_font_path,
-                    font_size=current_body_size,
-                    max_width=column_width,
-                    line_spacing=body_line_spacing,
-                    padding=2,
-                )
-            )
-
-        total_height = (
-            heading_layout["height"]
-            + current_heading_gap
-            + sum(
-                paragraph["height"]
-                for paragraph in paragraph_layouts
-            )
-            + current_paragraph_gap
-            * max(
-                0,
-                len(paragraph_layouts) - 1,
-            )
-        )
-
-        return {
-            "heading": heading_layout,
-            "paragraphs": paragraph_layouts,
-            "total_height": total_height,
-        }
-
-    title_layout = layout_text(
-        title,
-        font_path=title_font_path,
-        font_size=title_font_size,
-        max_width=title_width,
-        line_spacing=title_line_spacing,
-        padding=4,
-    )
-
-    for _ in range(100 if AUTO_SHRINK_TEXT else 0):
-        if title_layout["height"] <= 78:
-            break
-
-        if title_font_size <= title_min_font_size:
-            break
-
-        title_font_size = max(
-            title_min_font_size,
-            title_font_size - 0.5,
-        )
-
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=title_font_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=4,
-        )
-
-    left_layout = calculate_column_layout(
-        left_heading,
-        left_paragraphs,
-        heading_font_size,
-        body_font_size,
-        heading_to_body_gap,
-        paragraph_gap,
-    )
-
-    right_layout = calculate_column_layout(
-        right_heading,
-        right_paragraphs,
-        heading_font_size,
-        body_font_size,
-        heading_to_body_gap,
-        paragraph_gap,
-    )
-
-    available_column_height = footer_y - columns_top - 28.0
-
-    for _ in range(180):
-        tallest_column = max(
-            left_layout["total_height"],
-            right_layout["total_height"],
-        )
-
-        if tallest_column <= available_column_height:
-            break
-
-        changed = False
-
-        if (
-            heading_to_body_gap
-            > minimum_heading_to_body_gap
-            or paragraph_gap
-            > minimum_paragraph_gap
-        ):
-            heading_to_body_gap = max(
-                minimum_heading_to_body_gap,
-                heading_to_body_gap - 1,
-            )
-            paragraph_gap = max(
-                minimum_paragraph_gap,
-                paragraph_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
-            heading_font_size = max(
-                heading_min_font_size,
-                heading_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        left_layout = calculate_column_layout(
-            left_heading,
-            left_paragraphs,
-            heading_font_size,
-            body_font_size,
-            heading_to_body_gap,
-            paragraph_gap,
-        )
-
-        right_layout = calculate_column_layout(
-            right_heading,
-            right_paragraphs,
-            heading_font_size,
-            body_font_size,
-            heading_to_body_gap,
-            paragraph_gap,
-        )
-
-    footer_layout = layout_text(
-        footer_text,
-        font_path=body_font_path,
-        font_size=footer_font_size,
-        max_width=footer_width,
-        line_spacing=footer_line_spacing,
-        padding=4,
-    )
-
-    for _ in range(80 if AUTO_SHRINK_TEXT else 0):
-        if footer_layout["height"] <= footer_max_height:
-            break
-
-        if footer_font_size <= footer_min_font_size:
-            break
-
-        footer_font_size = max(
-            footer_min_font_size,
-            footer_font_size - 0.5,
-        )
-
-        footer_layout = layout_text(
-            footer_text,
-            font_path=body_font_path,
-            font_size=footer_font_size,
-            max_width=footer_width,
-            line_spacing=footer_line_spacing,
-            padding=4,
-        )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add(
-            "textbox",
-            **attrs,
-        )
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "polygon",
-        points=dark_panel_points,
-        fill=dark_panel_color,
-        line_color="none",
-    )
-
-    add(
-        "polygon",
-        points=accent_points,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=content_left,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=title_layout["font_size"],
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    def render_column(
-        x: float,
-        layout: dict,
-    ) -> None:
-        cursor_y = columns_top
-
-        textbox(
-            layout["heading"]["source_text"],
-            x=x,
-            y=cursor_y,
-            width=column_width,
-            height=layout["heading"]["height"],
-            font=heading_font_name,
-            font_path=str(heading_font_path),
-            size=layout["heading"]["font_size"],
-            min_font_size=layout["heading"]["font_size"],
-            bold="true",
-            color=heading_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(layout["heading"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=heading_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        cursor_y += (
-            layout["heading"]["height"]
-            + heading_to_body_gap
-        )
-
-        for index, paragraph in enumerate(
-            layout["paragraphs"]
-        ):
-            textbox(
-                paragraph["source_text"],
-                x=x,
-                y=cursor_y,
-                width=column_width,
-                height=paragraph["height"],
-                font=body_font_name,
-                font_path=str(body_font_path),
-                size=paragraph["font_size"],
-                min_font_size=paragraph["font_size"],
-                color=body_color,
-                align="left",
-                vertical_align="top",
-                single_line="false",
-                max_lines=len(paragraph["lines"]),
-                overflow="clip",
-                reflow_on_resize="true",
-                line_spacing=body_line_spacing,
-                safety_ratio=1.0,
-                margin_left=0,
-                margin_right=0,
-                margin_top=0,
-                margin_bottom=0,
-            )
-
-            cursor_y += paragraph["height"]
-
-            if index < len(layout["paragraphs"]) - 1:
-                cursor_y += paragraph_gap
-
-    render_column(
-        left_column_x,
-        left_layout,
-    )
-
-    render_column(
-        right_column_x,
-        right_layout,
-    )
-
-    textbox(
-        footer_layout["source_text"],
-        x=footer_x,
-        y=footer_y,
-        width=footer_width,
-        height=footer_layout["height"],
-        font=body_font_name,
-        font_path=str(body_font_path),
-        size=footer_layout["font_size"],
-        min_font_size=footer_layout["font_size"],
-        color=footer_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(footer_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=footer_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_split_content_slide_xml(
-    title: str = "YOU CAN ALSO SPLIT YOUR CONTENT  YOUR CONTENT  YOUR CONTENT",
-    column_titles: list[str] = [
-        "White",
-        "Black",
-    ],
-    column_descriptions: list[str] = [
-        (
-            "Is the color of milk and fresh snow, the color "
-            "produced by the combination of all the colors "
-            "of the visible spectrum."
-        ),
-        (
-            "Is the color of ebony and of outer space. It has "
-            "been the symbolic color of elegance, solemnity "
-            "and authority."
-        ),
-    ],
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#F3F4F7",
-    dark_panel_color: str = "#34343B",
-    accent_color: str = "#98F20F",
-    title_color: str = "#98F20F",
-    heading_color: str = "#FFFFFF",
-    body_color: str = "#FFFFFF",
-) -> str:
-    """
-    Generate XML for a split-content slide.
-
-    The layout features a full-slide workspace image, a dark diagonal
-    panel covering the left side, a large title at the top, two text
-    columns below it, and a bright slanted accent bar aligned with
-    the diagonal edge.
-    """
-
-    raw_column_titles = column_titles if isinstance(column_titles, (list, tuple)) else [column_titles]
-    raw_column_descriptions = (
-        column_descriptions
-        if isinstance(column_descriptions, (list, tuple))
-        else [column_descriptions]
-    )
-    column_titles = [str(value or "").strip() for value in raw_column_titles[:2]]
-    column_descriptions = [
-        str(value or "").strip()
-        for value in raw_column_descriptions[:2]
-    ]
-    while len(column_titles) < 2:
-        column_titles.append("")
-    while len(column_descriptions) < 2:
-        column_descriptions.append("")
-    column_titles = [
-        value
-        for index, value in enumerate(column_titles)
-    ]
-    column_descriptions = [
-        value
-        for value in column_descriptions
-    ]
-
-
-    # =====================================================
-    # Canvas and panel geometry
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 0
-    image_y = 0
-    image_width = 1600
-    image_height = 900
-
-    panel_top_x = 1115.0
-    panel_bottom_x = 760.0
-    panel_top_y = 0.0
-    panel_bottom_y = 900.0
-
-    dark_panel_points = (
-        f"0,0 "
-        f"{panel_top_x:.2f},0 "
-        f"{panel_bottom_x:.2f},900 "
-        f"0,900"
-    )
-
-    accent_top_y = 285.0
-    accent_bottom_y = 595.0
-    accent_width = 54.0
-
-    def diagonal_x_at_y(y: float) -> float:
-        ratio = (
-            (y - panel_top_y)
-            / (panel_bottom_y - panel_top_y)
-        )
-
-        return (
-            panel_top_x
-            + ratio
-            * (panel_bottom_x - panel_top_x)
-        )
-
-    accent_top_x = (
-        diagonal_x_at_y(accent_top_y)
-        - accent_width / 2
-    )
-
-    accent_bottom_x = (
-        diagonal_x_at_y(accent_bottom_y)
-        - accent_width / 2
-    )
-
-    accent_points = (
-        f"{accent_top_x:.2f},{accent_top_y:.2f} "
-        f"{accent_top_x + accent_width:.2f},{accent_top_y:.2f} "
-        f"{accent_bottom_x + accent_width:.2f},{accent_bottom_y:.2f} "
-        f"{accent_bottom_x:.2f},{accent_bottom_y:.2f}"
-    )
-
-    content_left = 64.0
-    content_top = 70.0
-
-    title_y = 70.0
-    title_right_padding = 80.0
-
-    minimum_columns_top = 250.0
-    columns_bottom = canvas_height - 60.0
-    column_gap = 72.0
-    column_width = 350.0
-    left_column_x = 64.0
-    title_to_columns_gap = 18.0
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 4.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-    heading_font_path = resolve_font_path(
-        heading_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 46.0
-    title_min_font_size = 34.0
-
-    heading_font_size = 25.0
-    heading_min_font_size = 18.0
-
-    body_font_size = 26.0
-    body_min_font_size = 17.0
-
-    title_line_spacing = 0.96
-    heading_line_spacing = 1.0
-    body_line_spacing = 1.08
-
-    heading_to_body_gap = 16.0
-    minimum_heading_to_body_gap = 8.0
-
-    def title_width_for_height(text_height: float) -> float:
-        title_bottom_y = min(
-            canvas_height,
-            title_y + text_height,
-        )
-
-        return max(
-            1.0,
-            diagonal_x_at_y(title_bottom_y)
-            - content_left
-            - title_right_padding,
-        )
-
-    def layout_title_at_size(font_size: float) -> dict:
-        title_width = title_width_for_height(
-            0
-        )
-
-        for _ in range(8):
-            layout = layout_text(
-                title,
-                font_path=title_font_path,
-                font_size=font_size,
-                max_width=title_width,
-                line_spacing=title_line_spacing,
-                padding=6,
-            )
-
-            next_title_width = title_width_for_height(
-                layout["height"]
-            )
-
-            if abs(
-                next_title_width - title_width
-            ) < 0.5:
-                layout["width"] = title_width
-                return layout
-
-            title_width = next_title_width
-
-        layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=font_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=6,
-        )
-        layout["width"] = title_width
-
-        return layout
-
-    title_layout = layout_title_at_size(
-        title_font_size
-    )
-
-    for _ in range(100 if AUTO_SHRINK_TEXT else 0):
-        pushed_columns_top = (
-            title_y
-            + title_layout["height"]
-            + title_to_columns_gap
-        )
-
-        if (
-            pushed_columns_top <= minimum_columns_top
-            or title_font_size <= title_min_font_size
-        ):
-            break
-
-        title_font_size = max(
-            title_min_font_size,
-            title_font_size - 0.5,
-        )
-
-        title_layout = layout_title_at_size(
-            title_font_size
-        )
-
-    columns_top = max(
-        minimum_columns_top,
-        title_y
-        + title_layout["height"]
-        + title_to_columns_gap,
-    )
-
-    available_column_height = max(
-        1.0,
-        columns_bottom - columns_top,
-    )
-
-    def calculate_columns(
-        current_heading_size: float,
-        current_body_size: float,
-        current_gap: float,
-    ) -> list[dict]:
-        layouts: list[dict] = []
-
-        for column_title, column_description in zip(
-            column_titles,
-            column_descriptions,
-        ):
-            heading_layout = layout_text(
-                column_title,
-                font_path=heading_font_path,
-                font_size=current_heading_size,
-                max_width=column_width,
-                line_spacing=heading_line_spacing,
-                padding=2,
-            )
-
-            body_layout = layout_text(
-                column_description,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=column_width,
-                line_spacing=body_line_spacing,
-                padding=2,
-            )
-
-            layouts.append(
-                {
-                    "heading": heading_layout,
-                    "body": body_layout,
-                    "height": (
-                        heading_layout["height"]
-                        + current_gap
-                        + body_layout["height"]
-                    ),
-                }
-            )
-
-        return layouts
-
-    column_layouts = calculate_columns(
-        heading_font_size,
-        body_font_size,
-        heading_to_body_gap,
-    )
-
-    for _ in range(180):
-        tallest_column = max(
-            layout["height"]
-            for layout in column_layouts
-        )
-
-        if tallest_column <= available_column_height:
-            break
-
-        changed = False
-
-        if (
-            heading_to_body_gap
-            > minimum_heading_to_body_gap
-        ):
-            heading_to_body_gap = max(
-                minimum_heading_to_body_gap,
-                heading_to_body_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
-            heading_font_size = max(
-                heading_min_font_size,
-                heading_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        column_layouts = calculate_columns(
-            heading_font_size,
-            body_font_size,
-            heading_to_body_gap,
-        )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add(
-            "textbox",
-            **attrs,
-        )
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "polygon",
-        points=dark_panel_points,
-        fill=dark_panel_color,
-        line_color="none",
-    )
-
-    add(
-        "polygon",
-        points=accent_points,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=content_left,
-        y=title_y,
-        width=title_layout["width"],
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=title_layout["font_size"],
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    for index, layout in enumerate(
-        column_layouts
-    ):
-        column_x = (
-            left_column_x
-            + index
-            * (
-                column_width
-                + column_gap
-            )
-        )
-
-        cursor_y = columns_top
-
-        textbox(
-            layout["heading"]["source_text"],
-            x=column_x,
-            y=cursor_y,
-            width=column_width,
-            height=layout["heading"]["height"],
-            font=heading_font_name,
-            font_path=str(heading_font_path),
-            size=layout["heading"]["font_size"],
-            min_font_size=layout["heading"]["font_size"],
-            bold="true",
-            color=heading_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(layout["heading"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=heading_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        cursor_y += (
-            layout["heading"]["height"]
-            + heading_to_body_gap
-        )
-
-        textbox(
-            layout["body"]["source_text"],
-            x=column_x,
-            y=cursor_y,
-            width=column_width,
-            height=layout["body"]["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=layout["body"]["font_size"],
-            min_font_size=layout["body"]["font_size"],
-            color=body_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(layout["body"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_picture_quote_slide_xml(
-    title: str = "A PICTURE IS WORTH THOUSAND WORDS",
-    content: str = (
-        "A complex idea can be conveyed with just a single still image, "
-        "namely making it possible to absorb large amounts of data quickly."
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1521737711867-e3b97375f902"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#FFFFFF",
-    accent_color: str = "#98F20F",
-    title_color: str = "#7CCF1A",
-    body_color: str = "#858392",
-) -> str:
-    """
-    Generate XML for a split image-and-text slide.
-
-    The layout features a large image on the left, a white content
-    panel on the right, a slanted accent bar centered on the diagonal
-    boundary, and a title with supporting text arranged vertically.
-    """
-
-    # =====================================================
-    # Canvas and panel geometry
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 0
-    image_y = 0
-    image_width = 1010
-    image_height = 900
-
-    panel_top_x = 965.0
-    panel_bottom_x = 610.0
-    panel_top_y = 0.0
-    panel_bottom_y = 900.0
-
-    white_panel_points = (
-        f"{panel_top_x:.2f},0 "
-        f"1600,0 "
-        f"1600,900 "
-        f"{panel_bottom_x:.2f},900"
-    )
-
-    accent_top_y = 310.0
-    accent_bottom_y = 610.0
-    accent_width = 54.0
-
-    def diagonal_x_at_y(y: float) -> float:
-        ratio = (
-            (y - panel_top_y)
-            / (panel_bottom_y - panel_top_y)
-        )
-
-        return (
-            panel_top_x
-            + ratio
-            * (panel_bottom_x - panel_top_x)
-        )
-
-    accent_top_center_x = diagonal_x_at_y(
-        accent_top_y
-    )
-    accent_bottom_center_x = diagonal_x_at_y(
-        accent_bottom_y
-    )
-    accent_half_width = accent_width / 2.0
-
-    accent_points = (
-        f"{accent_top_center_x - accent_half_width:.2f},"
-        f"{accent_top_y:.2f} "
-        f"{accent_top_center_x + accent_half_width:.2f},"
-        f"{accent_top_y:.2f} "
-        f"{accent_bottom_center_x + accent_half_width:.2f},"
-        f"{accent_bottom_y:.2f} "
-        f"{accent_bottom_center_x - accent_half_width:.2f},"
-        f"{accent_bottom_y:.2f}"
-    )
-
-    content_x = 980.0
-    content_right = 1510.0
-    content_width = content_right - content_x
-
-    content_top = 260.0
-    content_bottom = 720.0
-    available_height = content_bottom - content_top
-
-    title_to_body_gap = 34.0
-    minimum_gap = 18.0
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 4.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 38.0
-    title_min_font_size = 28.0
-
-    body_font_size = 31.0
-    body_min_font_size = 18.0
-
-    title_line_spacing = 0.98
-    body_line_spacing = 1.12
-
-    def calculate_layouts(
-        current_title_size: float,
-        current_body_size: float,
-        current_gap: float,
-    ) -> dict:
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=content_width,
-            line_spacing=title_line_spacing,
-            padding=4,
-        )
-
-        body_layout = layout_text(
-            content,
-            font_path=body_font_path,
-            font_size=current_body_size,
-            max_width=content_width,
-            line_spacing=body_line_spacing,
-            padding=4,
-        )
-
-        total_height = (
-            title_layout["height"]
-            + current_gap
-            + body_layout["height"]
-        )
-
-        return {
-            "title": title_layout,
-            "body": body_layout,
-            "total_height": total_height,
-        }
-
-    layouts = calculate_layouts(
-        title_font_size,
-        body_font_size,
-        title_to_body_gap,
-    )
-
-    for _ in range(180):
-        if layouts["total_height"] <= available_height:
-            break
-
-        changed = False
-
-        if title_to_body_gap > minimum_gap:
-            title_to_body_gap = max(
-                minimum_gap,
-                title_to_body_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            title_font_size,
-            body_font_size,
-            title_to_body_gap,
-        )
-
-    remaining_space = (
-        available_height
-        - layouts["total_height"]
-    )
-
-    content_group_y = (
-        content_top
-        + remaining_space / 2
-    )
-
-    title_y = content_group_y
-    body_y = (
-        title_y
-        + layouts["title"]["height"]
-        + title_to_body_gap
-    )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add(
-            "textbox",
-            **attrs,
-        )
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "polygon",
-        points=white_panel_points,
-        fill=background_color,
-        line_color="none",
-    )
-
-    add(
-        "polygon",
-        points=accent_points,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        layouts["title"]["source_text"],
-        x=content_x,
-        y=title_y,
-        width=content_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        layouts["body"]["source_text"],
-        x=content_x,
-        y=body_y,
-        width=content_width,
-        height=layouts["body"]["height"],
-        font=body_font_name,
-        font_path=str(body_font_path),
-        size=layouts["body"]["font_size"],
-        min_font_size=layouts["body"]["font_size"],
-        color=body_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["body"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=body_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_bullet_content_slide_xml(
-    title: str = "THIS IS A SLIDE TITLE THIS IS A SLIDE TITLE",
-    bullet_items: list[str] = [
-        "Here you have a list of items",
-        "And some text And some text  some text And some text",
-        (
-            "But remember not to overload your slides with content"
-        ),
-    ],
-    closing_text: str = (
-        "Your audience will listen to you or read "
-        "the content, but won’t do both."
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1499750310107-5fef28a66643"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#FFFFFF",
-    dark_panel_color: str = "#2D2E34",
-    accent_color: str = "#98F20F",
-    title_color: str = "#98F20F",
-    bullet_color: str = "#98F20F",
-    body_color: str = "#FFFFFF",
-) -> str:
-    """
-    Generate XML for a diagonal split-content slide.
-
-    The layout features a full-slide image, a dark diagonal panel
-    on the left, a bright accent bar centered on the diagonal edge,
-    a title at the top, a vertically stacked bullet list, and a
-    supporting text block below the list.
-    """
-
-
-    # =====================================================
-    # Canvas and panel geometry
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    image_x = 0
-    image_y = 0
-    image_width = 1600
-    image_height = 900
-
-    panel_top_x = 1055.0
-    panel_bottom_x = 705.0
-    panel_top_y = 0.0
-    panel_bottom_y = 900.0
-
-    dark_panel_points = (
-        f"0,0 "
-        f"{panel_top_x:.2f},0 "
-        f"{panel_bottom_x:.2f},900 "
-        f"0,900"
-    )
-
-    accent_top_y = 270.0
-    accent_bottom_y = 550.0
-    accent_width = 58.0
-
-    def diagonal_x_at_y(y: float) -> float:
-        ratio = (
-            (y - panel_top_y)
-            / (panel_bottom_y - panel_top_y)
-        )
-
-        return (
-            panel_top_x
-            + ratio
-            * (panel_bottom_x - panel_top_x)
-        )
-
-    accent_top_center_x = diagonal_x_at_y(
-        accent_top_y
-    )
-    accent_bottom_center_x = diagonal_x_at_y(
-        accent_bottom_y
-    )
-    accent_half_width = accent_width / 2.0
-
-    accent_points = (
-        f"{accent_top_center_x - accent_half_width:.2f},"
-        f"{accent_top_y:.2f} "
-        f"{accent_top_center_x + accent_half_width:.2f},"
-        f"{accent_top_y:.2f} "
-        f"{accent_bottom_center_x + accent_half_width:.2f},"
-        f"{accent_bottom_y:.2f} "
-        f"{accent_bottom_center_x - accent_half_width:.2f},"
-        f"{accent_bottom_y:.2f}"
-    )
-
-    text_left = 62.0
-    bullet_text_left = 132.0
-    text_right_padding = 58.0
-
-    content_top = 118.0
-    content_bottom = 760.0
-
-    title_to_bullets_gap = 42.0
-    bullet_gap = 12.0
-    bullets_to_closing_gap = 28.0
-
-    minimum_title_gap = 22.0
-    minimum_bullet_gap = 6.0
-    minimum_closing_gap = 16.0
-
-    bullet_marker_width = 44.0
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(
-                Path(windir) / "Fonts"
-            )
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append(
-                    (score, path)
-                )
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(
-        point_size: float,
-    ) -> float:
-        return (
-            point_size
-            * canvas_dpi
-            / 72.0
-        )
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(
-                    pt_to_canvas(font_size_pt)
-                ),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(
-                font.getlength(text)
-            )
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                if word_width > max_width:
-                    if current:
-                        result.append(current)
-                        current = ""
-
-                    chunks: list[str] = []
-                    chunk = ""
-                    for character in word:
-                        candidate = chunk + character
-                        if (
-                            chunk
-                            and measure_text_width(
-                                candidate,
-                                font_path,
-                                font_size_pt,
-                            )
-                            > max_width
-                        ):
-                            chunks.append(chunk)
-                            chunk = character
-                        else:
-                            chunk = candidate
-
-                    if chunk:
-                        chunks.append(chunk)
-
-                    result.extend(chunks[:-1])
-                    current = chunks[-1] if chunks else ""
-                    continue
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines)
-                * line_height
-                + padding
-            ),
-        }
-
-    def longest_word_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        words = text.split()
-
-        if not words:
-            return 0.0
-
-        return max(
-            measure_text_width(
-                word,
-                font_path,
-                font_size_pt,
-            )
-            for word in words
-        )
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-
-    title_font_size = 38.0
-    title_min_font_size = 30.0
-
-    body_font_size = 28.0
-    body_min_font_size = 17.0
-
-    title_line_spacing = 0.98
-    body_line_spacing = 1.08
-
-    def width_for_block(
-        block_left: float,
-        block_y: float,
-        block_height: float,
-    ) -> float:
-        safe_right_edge = (
-            diagonal_x_at_y(
-                block_y + block_height
-            )
-            - accent_half_width
-            - text_right_padding
-        )
-
-        return max(
-            1.0,
-            safe_right_edge - block_left,
-        )
-
-    def calculate_layouts(
-        current_title_size: float,
-        current_body_size: float,
-        current_title_gap: float,
-        current_bullet_gap: float,
-        current_closing_gap: float,
-    ) -> dict:
-        cursor_y = content_top
-
-        title_width = width_for_block(
-            text_left,
-            cursor_y,
-            90.0,
-        )
-
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=3,
-        )
-
-        title_width = width_for_block(
-            text_left,
-            cursor_y,
-            title_layout["height"],
-        )
-
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=3,
-        )
-
-        title_y = cursor_y
-
-        cursor_y += (
-            title_layout["height"]
-            + current_title_gap
-        )
-
-        bullet_layouts: list[dict] = []
-
-        for item in bullet_items:
-            estimated_width = width_for_block(
-                bullet_text_left,
-                cursor_y,
-                70.0,
-            )
-
-            item_layout = layout_text(
-                item,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=estimated_width,
-                line_spacing=body_line_spacing,
-                padding=3,
-            )
-
-            item_width = width_for_block(
-                bullet_text_left,
-                cursor_y,
-                item_layout["height"],
-            )
-
-            item_layout = layout_text(
-                item,
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=item_width,
-                line_spacing=body_line_spacing,
-                padding=3,
-            )
-
-            bullet_layouts.append(
-                {
-                    "layout": item_layout,
-                    "x": bullet_text_left,
-                    "y": cursor_y,
-                    "width": item_width,
-                    "height": item_layout["height"],
-                }
-            )
-
-            cursor_y += item_layout["height"]
-
-            if len(bullet_layouts) < len(bullet_items):
-                cursor_y += current_bullet_gap
-
-        cursor_y += current_closing_gap
-
-        closing_width = width_for_block(
-            text_left,
-            cursor_y,
-            100.0,
-        )
-
-        closing_layout = layout_text(
-            closing_text,
-            font_path=body_font_path,
-            font_size=current_body_size,
-            max_width=closing_width,
-            line_spacing=body_line_spacing,
-            padding=3,
-        )
-
-        closing_width = width_for_block(
-            text_left,
-            cursor_y,
-            closing_layout["height"],
-        )
-
-        closing_layout = layout_text(
-            closing_text,
-            font_path=body_font_path,
-            font_size=current_body_size,
-            max_width=closing_width,
-            line_spacing=body_line_spacing,
-            padding=3,
-        )
-
-        closing_y = cursor_y
-        total_bottom = (
-            closing_y + closing_layout["height"]
-        )
-
-        # wrap_text() splits long unbroken strings by character, so width
-        # safety is handled there. Height still controls the fit decision.
-        width_fits = True
-
-        return {
-            "title": title_layout,
-            "title_x": text_left,
-            "title_y": title_y,
-            "title_width": title_width,
-            "bullets": bullet_layouts,
-            "closing": closing_layout,
-            "closing_x": text_left,
-            "closing_y": closing_y,
-            "closing_width": closing_width,
-            "total_bottom": total_bottom,
-            "width_fits": width_fits,
-        }
-
-    layouts = calculate_layouts(
-        title_font_size,
-        body_font_size,
-        title_to_bullets_gap,
-        bullet_gap,
-        bullets_to_closing_gap,
-    )
-
-    for _ in range(220):
-        fits = (
-            layouts["total_bottom"] <= content_bottom
-            and layouts["width_fits"]
-        )
-
-        if fits:
-            break
-
-        changed = False
-
-        if (
-            title_to_bullets_gap
-            > minimum_title_gap
-            or bullet_gap
-            > minimum_bullet_gap
-            or bullets_to_closing_gap
-            > minimum_closing_gap
-        ):
-            title_to_bullets_gap = max(
-                minimum_title_gap,
-                title_to_bullets_gap - 1,
-            )
-            bullet_gap = max(
-                minimum_bullet_gap,
-                bullet_gap - 1,
-            )
-            bullets_to_closing_gap = max(
-                minimum_closing_gap,
-                bullets_to_closing_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            title_font_size,
-            body_font_size,
-            title_to_bullets_gap,
-            bullet_gap,
-            bullets_to_closing_gap,
-        )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(
-        tag: str,
-        **attrs,
-    ):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(
-        text: str,
-        **attrs,
-    ):
-        node = add(
-            "textbox",
-            **attrs,
-        )
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_width,
-        height=image_height,
-    )
-
-    add(
-        "polygon",
-        points=dark_panel_points,
-        fill=dark_panel_color,
-        line_color="none",
-    )
-
-    add(
-        "polygon",
-        points=accent_points,
-        fill=accent_color,
-        line_color="none",
-    )
-
-    textbox(
-        layouts["title"]["source_text"],
-        x=layouts["title_x"],
-        y=layouts["title_y"],
-        width=layouts["title_width"],
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(
-            layouts["title"]["lines"]
-        ),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    for item_data in layouts["bullets"]:
-        textbox(
-            "–",
-            x=text_left,
-            y=item_data["y"],
-            width=bullet_marker_width,
-            height=item_data["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=item_data["layout"]["font_size"],
-            min_font_size=item_data["layout"]["font_size"],
-            color=bullet_color,
-            align="left",
-            vertical_align="top",
-            single_line="true",
-            max_lines=1,
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            item_data["layout"]["source_text"],
-            x=item_data["x"],
-            y=item_data["y"],
-            width=item_data["width"],
-            height=item_data["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=item_data["layout"]["font_size"],
-            min_font_size=item_data["layout"]["font_size"],
-            color=body_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(
-                item_data["layout"]["lines"]
-            ),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    textbox(
-        layouts["closing"]["source_text"],
-        x=layouts["closing_x"],
-        y=layouts["closing_y"],
-        width=layouts["closing_width"],
-        height=layouts["closing"]["height"],
-        font=body_font_name,
-        font_path=str(body_font_path),
-        size=layouts["closing"]["font_size"],
-        min_font_size=layouts["closing"]["font_size"],
-        color=body_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(
-            layouts["closing"]["lines"]
-        ),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=body_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_client_snapshot_slide_xml(
-    title: str = "Client snapshot, snapshot",
-    subtitle: str = "About Value Financials",
-    client_details: list[str] = [
-        "Industry: Financial services and banking",
-        "Team size: 300+ employees",
-        (
-        "Current setup: Disconnected productivity tools, "
-        "shared drives, and manual handoffs"
-        ),
-        "Primary goals:",
-        "  Improve cross-team collaboration",
-        "  Standardize workflows across departments",
-        (
-            "  Support growth while meeting regulatory "
-            "requirements"
-        ),
-    ],
-    top_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1552664730-d307ca884978"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    bottom_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1556761175-b413da4baf72"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#1A0B3A",
-    title_color: str = "#A678FF",
-    subtitle_color: str = "#F7F2FF",
-    body_color: str = "#F7F2FF",
-) -> str:
-    """
-    Generate XML for a client snapshot slide.
-
-    The layout features a dark purple background, a large title and
-    short subtitle on the left, a structured bullet summary below,
-    a footer link near the bottom-left, and two large stacked images
-    on the right.
-    """
-
-
-    # =====================================================
-    # Canvas and layout regions
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    title_x = 22.0
-    title_y = 38.0
-    title_width = 680.0
-
-    subtitle_x = 22.0
-    subtitle_width = 700.0
-
-    # The marker is a separate textbox (x=45, width=30). Leave a visible gap
-    # before the label instead of starting it inside the marker box.
-    content_x = 84.0
-    marker_x = 45.0
-    content_right = 795.0
-
-    value_gap = 10.0
-    subgoal_marker_x = 88.0
-    subgoal_text_x = 122.0
-    subgoal_width = content_right - subgoal_text_x
-
-    content_bottom = 760.0
-
-    title_to_subtitle_gap = 34.0
-    subtitle_to_content_gap = 125.0
-    bullet_gap = 13.0
-    goal_gap = 8.0
-
-    minimum_title_gap = 18.0
-    minimum_subtitle_gap = 55.0
-    minimum_bullet_gap = 7.0
-    minimum_goal_gap = 4.0
-
-    image_x = 845.0
-    image_width = 715.0
-    top_image_y = 32.0
-    top_image_height = 410.0
-    bottom_image_y = 474.0
-    bottom_image_height = 410.0
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    def single_line_width(
-        text: str,
-        font_path: Path,
-        font_size: float,
-    ) -> float:
-        return measure_text_width(
-            text,
-            font_path,
-            font_size,
-        )
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    subtitle_font_path = resolve_font_path(
-        subtitle_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=False,
-    )
-    body_bold_font_path = resolve_font_path(
-        body_font_name,
-        bold=True,
-    )
-
-    title_font_size = 60.0
-    title_min_font_size = 46.0
-
-    subtitle_font_size = 20.0
-    subtitle_min_font_size = 22.0
-
-    body_font_size = 27.0
-    body_min_font_size = 18.0
-
-    title_line_spacing = 0.95
-    subtitle_line_spacing = 1.0
-    body_line_spacing = 1.18
-
-    def calculate_layouts(
-        current_title_size: float,
-        current_subtitle_size: float,
-        current_body_size: float,
-        current_title_gap: float,
-        current_subtitle_gap: float,
-        current_bullet_gap: float,
-        current_goal_gap: float,
-    ) -> dict:
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=current_title_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=3,
-        )
-
-        subtitle_y = (
-            title_y
-            + title_layout["height"]
-            + current_title_gap
-        )
-
-        subtitle_layout = layout_text(
-            subtitle,
-            font_path=subtitle_font_path,
-            font_size=current_subtitle_size,
-            max_width=subtitle_width,
-            line_spacing=subtitle_line_spacing,
-            padding=3,
-        )
-
-        cursor_y = (
-            subtitle_y
-            + subtitle_layout["height"]
-            + current_subtitle_gap
-        )
-
-        bullet_layouts: list[dict] = []
-
-        for detail in client_details:
-            raw_detail = detail.rstrip()
-            stripped_detail = raw_detail.lstrip()
-            had_indentation = len(raw_detail) != len(stripped_detail)
-
-            is_subitem = (
-                had_indentation
-                or stripped_detail.startswith(("- ", "• ", "◦ "))
-            )
-
-            # This renderer owns the list marker, so remove numbering supplied
-            # by the document/model from the label (e.g. "1. Formula:").
-            stripped_detail = re.sub(
-                r"^\d+(?:\.\d+)*[.)]\s+",
-                "",
-                stripped_detail,
-            )
-
-            if is_subitem:
-                for prefix in ("- ", "• ", "◦ "):
-                    if stripped_detail.startswith(prefix):
-                        stripped_detail = stripped_detail[
-                            len(prefix):
-                        ].strip()
-                        break
-                # Also handle inputs such as "• 1. Formula".
-                stripped_detail = re.sub(
-                    r"^\d+(?:\.\d+)*[.)]\s+",
-                    "",
-                    stripped_detail,
-                )
-
-                sub_marker_layout = layout_text(
-                    "◦",
-                    font_path=body_font_path,
-                    font_size=current_body_size,
-                    max_width=30.0,
-                    line_spacing=body_line_spacing,
-                    padding=2,
-                )
-
-                subitem_layout = layout_text(
-                    stripped_detail,
-                    font_path=body_font_path,
-                    font_size=current_body_size,
-                    max_width=subgoal_width,
-                    line_spacing=body_line_spacing,
-                    padding=2,
-                )
-
-                subitem_height = max(
-                    sub_marker_layout["height"],
-                    subitem_layout["height"],
-                )
-
-                bullet_layouts.append(
-                    {
-                        "subgoal": True,
-                        "marker": sub_marker_layout,
-                        "value": subitem_layout,
-                        "marker_x": subgoal_marker_x,
-                        "value_x": subgoal_text_x,
-                        "value_width": subgoal_width,
-                        "y": cursor_y,
-                        "height": subitem_height,
-                    }
-                )
-
-                cursor_y += (
-                    subitem_height
-                    + current_goal_gap
-                )
-                continue
-
-            raw_label, separator, raw_value = (
-                stripped_detail.partition(":")
-            )
-
-            if separator:
-                label = f"{raw_label.strip()}:"
-                value = raw_value.strip()
-            else:
-                label = ""
-                value = stripped_detail
-
-            marker_layout = layout_text(
-                "•",
-                font_path=body_font_path,
-                font_size=current_body_size,
-                max_width=36.0,
-                line_spacing=body_line_spacing,
-                padding=2,
-            )
-
-            label_width = (
-                single_line_width(
-                    label,
-                    body_bold_font_path,
-                    current_body_size,
-                )
-                + 12.0
-                if label
-                else 0.0
-            )
-
-            label_layout = (
-                layout_text(
-                    label,
-                    font_path=body_bold_font_path,
-                    font_size=current_body_size,
-                    max_width=max(label_width, 1.0),
-                    line_spacing=body_line_spacing,
-                    padding=2,
-                )
-                if label
-                else {
-                    "source_text": "",
-                    "text": "",
-                    "lines": [],
-                    "font_size": current_body_size,
-                    "height": 0.0,
-                }
-            )
-
-            value_x = (
-                content_x + label_width + value_gap
-                if label
-                else content_x
-            )
-            value_width = max(
-                1.0,
-                content_right - value_x,
-            )
-
-            value_layout = (
-                layout_text(
-                    value,
-                    font_path=body_font_path,
-                    font_size=current_body_size,
-                    max_width=value_width,
-                    line_spacing=body_line_spacing,
-                    padding=2,
-                )
-                if value.strip()
-                else {
-                    "source_text": "",
-                    "text": "",
-                    "lines": [],
-                    "font_size": current_body_size,
-                    "height": 0.0,
-                }
-            )
-
-            row_height = max(
-                marker_layout["height"],
-                label_layout["height"],
-                value_layout["height"],
-            )
-
-            bullet_layouts.append(
-                {
-                    "marker": marker_layout,
-                    "label": label_layout,
-                    "value": value_layout,
-                    "marker_x": marker_x,
-                    "label_x": content_x,
-                    "value_x": value_x,
-                    "label_width": label_width,
-                    "value_width": value_width,
-                    "y": cursor_y,
-                    "height": row_height,
-                }
-            )
-
-            cursor_y += (
-                row_height
-                + current_bullet_gap
-            )
-
-        if bullet_layouts:
-            last_item = bullet_layouts[-1]
-            cursor_y -= (
-                current_goal_gap
-                if last_item.get("subgoal")
-                else current_bullet_gap
-            )
-
-        return {
-            "title": title_layout,
-            "subtitle": subtitle_layout,
-            "subtitle_y": subtitle_y,
-            "bullets": bullet_layouts,
-            "content_bottom": cursor_y,
-        }
-
-    layouts = calculate_layouts(
-        title_font_size,
-        subtitle_font_size,
-        body_font_size,
-        title_to_subtitle_gap,
-        subtitle_to_content_gap,
-        bullet_gap,
-        goal_gap,
-    )
-
-    for _ in range(260):
-        if layouts["content_bottom"] <= content_bottom:
-            break
-
-        changed = False
-
-        if (
-            subtitle_to_content_gap > minimum_subtitle_gap
-            or title_to_subtitle_gap > minimum_title_gap
-            or bullet_gap > minimum_bullet_gap
-            or goal_gap > minimum_goal_gap
-        ):
-            subtitle_to_content_gap = max(
-                minimum_subtitle_gap,
-                subtitle_to_content_gap - 2,
-            )
-            title_to_subtitle_gap = max(
-                minimum_title_gap,
-                title_to_subtitle_gap - 1,
-            )
-            bullet_gap = max(
-                minimum_bullet_gap,
-                bullet_gap - 1,
-            )
-            goal_gap = max(
-                minimum_goal_gap,
-                goal_gap - 1,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
-            body_font_size = max(
-                body_min_font_size,
-                body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
-            subtitle_font_size = max(
-                subtitle_min_font_size,
-                subtitle_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
-            title_font_size = max(
-                title_min_font_size,
-                title_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        layouts = calculate_layouts(
-            title_font_size,
-            subtitle_font_size,
-            body_font_size,
-            title_to_subtitle_gap,
-            subtitle_to_content_gap,
-            bullet_gap,
-            goal_gap,
-        )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    textbox(
-        layouts["title"]["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=layouts["title"]["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=layouts["title"]["font_size"],
-        min_font_size=layouts["title"]["font_size"],
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["title"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        layouts["subtitle"]["source_text"],
-        x=subtitle_x,
-        y=layouts["subtitle_y"],
-        width=subtitle_width,
-        height=layouts["subtitle"]["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=layouts["subtitle"]["font_size"],
-        min_font_size=layouts["subtitle"]["font_size"],
-        bold="true",
-        color=subtitle_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(layouts["subtitle"]["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=subtitle_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    for item in layouts["bullets"]:
-        if item.get("subgoal"):
-            textbox(
-                item["marker"]["source_text"],
-                x=item["marker_x"],
-                y=item["y"],
-                width=26,
-                height=item["height"],
-                font=body_font_name,
-                font_path=str(body_font_path),
-                size=item["marker"]["font_size"],
-                min_font_size=item["marker"]["font_size"],
-                color=body_color,
-                align="left",
-                vertical_align="top",
-                single_line="true",
-                max_lines=1,
-                overflow="clip",
-                reflow_on_resize="true",
-                line_spacing=body_line_spacing,
-                safety_ratio=1.0,
-                margin_left=0,
-                margin_right=0,
-                margin_top=0,
-                margin_bottom=0,
-            )
-
-            textbox(
-                item["value"]["source_text"],
-                x=item["value_x"],
-                y=item["y"],
-                width=item["value_width"],
-                height=item["value"]["height"],
-                font=body_font_name,
-                font_path=str(body_font_path),
-                size=item["value"]["font_size"],
-                min_font_size=item["value"]["font_size"],
-                color=body_color,
-                align="left",
-                vertical_align="top",
-                single_line="false",
-                max_lines=len(item["value"]["lines"]),
-                overflow="clip",
-                reflow_on_resize="true",
-                line_spacing=body_line_spacing,
-                safety_ratio=1.0,
-                margin_left=0,
-                margin_right=0,
-                margin_top=0,
-                margin_bottom=0,
-            )
-            continue
-
-        textbox(
-            item["marker"]["source_text"],
-            x=item["marker_x"],
-            y=item["y"],
-            width=30,
-            height=item["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=item["marker"]["font_size"],
-            min_font_size=item["marker"]["font_size"],
-            color=body_color,
-            align="left",
-            vertical_align="top",
-            single_line="true",
-            max_lines=1,
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=body_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        if item["label"]["source_text"].strip():
-            textbox(
-                item["label"]["source_text"],
-                x=item["label_x"],
-                y=item["y"],
-                width=item["label_width"],
-                height=item["label"]["height"],
-                font=body_font_name,
-                font_path=str(body_bold_font_path),
-                size=item["label"]["font_size"],
-                min_font_size=item["label"]["font_size"],
-                bold="true",
-                color=body_color,
-                align="left",
-                vertical_align="top",
-                single_line="true",
-                max_lines=1,
-                overflow="clip",
-                reflow_on_resize="true",
-                line_spacing=body_line_spacing,
-                safety_ratio=1.0,
-                margin_left=0,
-                margin_right=0,
-                margin_top=0,
-                margin_bottom=0,
-            )
-
-        if item["value"]["source_text"].strip():
-            textbox(
-                item["value"]["source_text"],
-                x=item["value_x"],
-                y=item["y"],
-                width=item["value_width"],
-                height=item["value"]["height"],
-                font=body_font_name,
-                font_path=str(body_font_path),
-                size=item["value"]["font_size"],
-                min_font_size=item["value"]["font_size"],
-                color=body_color,
-                align="left",
-                vertical_align="top",
-                single_line="false",
-                max_lines=len(item["value"]["lines"]),
-                overflow="clip",
-                reflow_on_resize="true",
-                line_spacing=body_line_spacing,
-                safety_ratio=1.0,
-                margin_left=0,
-                margin_right=0,
-                margin_top=0,
-                margin_bottom=0,
-            )
-
-    add(
-        "image",
-        src=top_image_url,
-        x=image_x,
-        y=top_image_y,
-        width=image_width,
-        height=top_image_height,
-    )
-
-    add(
-        "image",
-        src=bottom_image_url,
-        x=image_x,
-        y=bottom_image_y,
-        width=image_width,
-        height=bottom_image_height,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_how_forge_works_slide_xml(
-    title: str = "How Forge works How Forge works",
-    subtitle: str = (
-        "From setup to daily use, Forge fits into how your team operates."
-    ),
-    steps: list[dict[str, str]] = [
-        {
-            "step": "Step 1",
-            "content": (
-                "Connect teams, files, and existing systems"
-            ),
-        },
-        {
-            "step": "Step 2",
-            "content": (
-                "Configure shared workspaces and approval workflows"
-            ),
-        },
-        {
-            "step": "Step 3",
-            "content": (
-                "Roll out to teams with guided onboarding"
-            ),
-        },
-        {
-            "step": "Step 4",
-            "content": (
-                "Monitor usage, productivity, and adoption in real time"
-            ),
-        },
-        {
-            "step": "Step 5",
-            "content": (
-                "Monitor usage, productivity, and adoption in real time"
-            ),
-        },
-    ],
-    background_color: str = "#1A0B3A",
-    title_color: str = "#A678FF",
-    subtitle_color: str = "#F7F2FF",
-    step_label_color: str = "#FFFFFF",
-    step_body_color: str = "#F7F2FF",
-    arrow_color: str = "#FFFFFF",
-) -> str:
-    """
-    Generate XML for a process overview slide.
-
-    The layout features a dark purple background, abstract circular
-    decoration on the left, a title and subtitle block on the left,
-    and a vertical sequence of step cards connected by arrows on
-    the right.
-    """
-
-    raw_steps = steps if isinstance(steps, (list, tuple)) else [steps]
-    normalized_steps: list[dict[str, str]] = []
-    for index, raw_step in enumerate(raw_steps):
-        step = raw_step if isinstance(raw_step, dict) else {}
-        label = str(step.get("step") or "").strip()
-        content = str(step.get("content") or "").strip()
-        normalized_steps.append(
-            {
-                "step": label,
-                "content": content,
-            }
-        )
-    steps = normalized_steps or [
-        {"step": "", "content": ""}
-    ]
-
-    # =====================================================
-    # Canvas and layout regions
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    safe_margin_x = 64.0
-    safe_margin_top = 56.0
-    safe_margin_bottom = 56.0
-
-    cards_x = 650.0
-    cards_right = canvas_width - safe_margin_x
-    cards_width = cards_right - cards_x
-    cards_top = safe_margin_top
-    cards_bottom = canvas_height - safe_margin_bottom
-    cards_area_height = cards_bottom - cards_top
-
-    left_column_right = cards_x - 60.0
-    left_column_width = left_column_right - safe_margin_x
-    left_column_center_x = safe_margin_x + left_column_width / 2
-
-    title_x = safe_margin_x
-    title_y = safe_margin_top
-    title_width = left_column_width
-    title_max_width = left_column_width
-
-    subtitle_x = safe_margin_x
-    subtitle_width = left_column_width
-    subtitle_max_width = left_column_width
-    title_to_subtitle_gap = 48.0
-    title_to_subtitle_min_gap = 26.0
-
-    decoration_preferred_y = 380.0
-    decoration_preferred_width = 398.0
-    decoration_preferred_height = 460.0
-    decoration_width = decoration_preferred_width
-    decoration_height = decoration_preferred_height
-    decoration_x = left_column_center_x - decoration_width / 2
-    decoration_y = decoration_preferred_y
-
-    card_height = 110.0
-    card_min_height = 86.0
-    card_gap = 55.0
-    card_min_gap = 25.0
-    card_radius = 14.0
-
-    card_padding_left = 56.0
-    card_padding_right = 45.0
-    label_width = 180.0
-    label_to_body_gap = 58.0
-
-    arrow_x = cards_x + 118.0
-    arrow_gap_from_card = 0.0
-
-    # =====================================================
-    # Inline vector decoration
-    # =====================================================
-
-    decoration_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" width="520" height="600" viewBox="0 0 520 600">
-  <defs>
-    <linearGradient id="simpleGradient" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#29144F"/>
-      <stop offset="52%" stop-color="#6540A9"/>
-      <stop offset="100%" stop-color="#9865EE"/>
-    </linearGradient>
-    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12"/>
-    </filter>
-  </defs>
-
-  <g opacity="0.48" filter="url(#softGlow)">
-    <circle cx="260" cy="100" r="82" fill="#8959D9"/>
-    <path
-      d="M58,170 H462 V188
-         C462,300 395,365 260,365
-         C125,365 58,300 58,188 Z"
-      fill="#8959D9"/>
-    <path
-      d="M0,286 H520 V326
-         C520,475 445,570 260,630
-         C75,570 0,475 0,326 Z"
-      fill="#8959D9"/>
-  </g>
-
-  <circle cx="260" cy="100" r="82" fill="url(#simpleGradient)"/>
-
-  <path
-    d="M58,170 H462 V188
-       C462,300 395,365 260,365
-       C125,365 58,300 58,188 Z"
-    fill="url(#simpleGradient)"/>
-
-  <path
-    d="M0,286 H520 V326
-       C520,475 445,570 260,630
-       C75,570 0,475 0,326 Z"
-    fill="url(#simpleGradient)"/>
-</svg>
-""".strip()
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            if (
-                measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-                <= max_width
-            ):
-                return [word]
-
-            chunks: list[str] = []
-            current = ""
-
-            for character in word:
-                candidate = f"{current}{character}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    chunks.append(current)
-                    current = character
-
-            if current:
-                chunks.append(current)
-
-            return chunks or [word]
-
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words: list[str] = []
-
-            for word in paragraph.split():
-                words.extend(split_long_word(word))
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-    step_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    subtitle_font_path = resolve_font_path(
-        subtitle_font_name,
-        bold=True,
-    )
-    step_label_font_path = resolve_font_path(
-        step_font_name,
-        bold=True,
-    )
-    step_body_font_path = resolve_font_path(
-        step_font_name,
-        bold=True,
-    )
-
-    title_font_size = 44.0
-    title_min_font_size = title_font_size
-
-    subtitle_font_size = 18.0
-    subtitle_min_font_size = subtitle_font_size
-
-    step_label_font_size = 29.0
-    step_label_min_font_size = 21.0
-
-    step_body_font_size = 15.0
-    step_body_min_font_size = 12.0
-
-    title_line_spacing = 0.92
-    subtitle_line_spacing = 1.18
-    step_line_spacing = 1.05
-
-    text_to_decoration_gap = 36.0
-    decoration_bottom = canvas_height - safe_margin_bottom
-
-    def calculate_left_text_layout() -> tuple[dict, dict, float, float]:
-        current_title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=title_font_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=8,
-        )
-
-        current_subtitle_y = (
-            title_y
-            + current_title_layout["height"]
-            + title_to_subtitle_gap
-        )
-
-        current_subtitle_layout = layout_text(
-            subtitle,
-            font_path=subtitle_font_path,
-            font_size=subtitle_font_size,
-            max_width=subtitle_width,
-            line_spacing=subtitle_line_spacing,
-            padding=8,
-        )
-
-        current_text_bottom = (
-            current_subtitle_y
-            + current_subtitle_layout["height"]
-        )
-
-        return (
-            current_title_layout,
-            current_subtitle_layout,
-            current_subtitle_y,
-            current_text_bottom,
-        )
-
-    for _ in range(80):
-        (
-            title_layout,
-            subtitle_layout,
-            subtitle_y,
-            text_bottom,
-        ) = calculate_left_text_layout()
-
-        if text_bottom <= decoration_bottom:
-            break
-
-        changed_text_box = False
-
-        if title_width < title_max_width:
-            title_width = min(
-                title_max_width,
-                title_width + 12.0,
-            )
-            changed_text_box = True
-
-        if subtitle_width < subtitle_max_width:
-            subtitle_width = min(
-                subtitle_max_width,
-                subtitle_width + 12.0,
-            )
-            changed_text_box = True
-
-        if (
-            not changed_text_box
-            and title_to_subtitle_gap > title_to_subtitle_min_gap
-        ):
-            title_to_subtitle_gap = max(
-                title_to_subtitle_min_gap,
-                title_to_subtitle_gap - 2.0,
-            )
-            changed_text_box = True
-
-        if not changed_text_box:
-            break
-
-    decoration_y = max(
-        decoration_preferred_y,
-        text_bottom + text_to_decoration_gap,
-    )
-
-    decoration_width = decoration_preferred_width
-    decoration_height = decoration_preferred_height
-    decoration_x = left_column_center_x - decoration_width / 2
-
-    parsed_steps = [
-        (
-            step["step"].strip(),
-            step["content"].strip(),
-        )
-        for step in steps
-    ]
-
-    def calculate_step_layouts(
-        current_card_height: float,
-        current_gap: float,
-        current_label_size: float,
-        current_body_size: float,
-    ) -> dict:
-        layouts: list[dict] = []
-        cursor_y = cards_top
-
-        body_x = (
-            cards_x
-            + card_padding_left
-            + label_width
-            + label_to_body_gap
-        )
-        body_width = max(
-            1.0,
-            cards_right
-            - body_x
-            - card_padding_right,
-        )
-
-        for label, body in parsed_steps:
-            label_layout = layout_text(
-                label,
-                font_path=step_label_font_path,
-                font_size=current_label_size,
-                max_width=label_width,
-                line_spacing=step_line_spacing,
-                padding=2,
-            )
-
-            body_layout = layout_text(
-                body,
-                font_path=step_body_font_path,
-                font_size=current_body_size,
-                max_width=body_width,
-                line_spacing=step_line_spacing,
-                padding=2,
-            )
-
-            text_height = max(
-                label_layout["height"],
-                body_layout["height"],
-            )
-
-            item_height = max(
-                current_card_height,
-                text_height + 24.0,
-            )
-
-            layouts.append(
-                {
-                    "label": label_layout,
-                    "body": body_layout,
-                    "x": cards_x,
-                    "y": cursor_y,
-                    "width": cards_width,
-                    "height": item_height,
-                    "label_x": cards_x + card_padding_left,
-                    "body_x": body_x,
-                    "body_width": body_width,
-                }
-            )
-
-            cursor_y += item_height + current_gap
-
-        if layouts:
-            cursor_y -= current_gap
-
-        return {
-            "items": layouts,
-            "total_height": cursor_y - cards_top,
-        }
-
-    step_layouts = calculate_step_layouts(
-        card_height,
-        card_gap,
-        step_label_font_size,
-        step_body_font_size,
-    )
-
-    for _ in range(200):
-        if step_layouts["total_height"] <= cards_area_height:
-            break
-
-        changed = False
-
-        if card_gap > card_min_gap:
-            card_gap = max(
-                card_min_gap,
-                card_gap - 2,
-            )
-            changed = True
-
-        elif card_height > card_min_height:
-            card_height = max(
-                card_min_height,
-                card_height - 2,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and step_body_font_size > step_body_min_font_size:
-            step_body_font_size = max(
-                step_body_min_font_size,
-                step_body_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and step_label_font_size > step_label_min_font_size:
-            step_label_font_size = max(
-                step_label_min_font_size,
-                step_label_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        step_layouts = calculate_step_layouts(
-            card_height,
-            card_gap,
-            step_label_font_size,
-            step_body_font_size,
-        )
-
-    cards_offset_y = (
-        cards_area_height
-        - step_layouts["total_height"]
-    ) / 2
-
-    for item in step_layouts["items"]:
-        item["y"] += cards_offset_y
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    svg_node = add(
-        "svg",
-        x=decoration_x,
-        y=decoration_y,
-        width=decoration_width,
-        height=decoration_height,
-        pixel_width=520,
-        pixel_height=600,
-    )
-    svg_node.text = decoration_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=title_min_font_size,
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_x,
-        y=subtitle_y,
-        width=subtitle_width,
-        height=subtitle_layout["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=subtitle_min_font_size,
-        bold="true",
-        color=subtitle_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=subtitle_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    def rounded_card_svg(
-        width: float,
-        height: float,
-        radius: float,
-    ) -> str:
-        return f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="{int(width)}" height="{int(height)}" viewBox="0 0 {width:.2f} {height:.2f}">
-  <defs>
-    <linearGradient id="cardGradient" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#8750F7"/>
-      <stop offset="100%" stop-color="#3E335F"/>
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="{width:.2f}" height="{height:.2f}" rx="{radius:.2f}" ry="{radius:.2f}" fill="url(#cardGradient)"/>
-</svg>
-""".strip()
-
-    for index, item in enumerate(step_layouts["items"]):
-        card_svg_node = add(
-            "svg",
-            x=item["x"],
-            y=item["y"],
-            width=item["width"],
-            height=item["height"],
-            pixel_width=int(item["width"]),
-            pixel_height=int(item["height"]),
-        )
-        card_svg_node.text = rounded_card_svg(
-            item["width"],
-            item["height"],
-            card_radius,
-        )
-
-        label_y = (
-            item["y"]
-            + (item["height"] - item["label"]["height"]) / 2
-        )
-        body_y = (
-            item["y"]
-            + (item["height"] - item["body"]["height"]) / 2
-        )
-
-        textbox(
-            item["label"]["source_text"],
-            x=item["label_x"],
-            y=label_y,
-            width=label_width,
-            height=item["label"]["height"],
-            font=step_font_name,
-            font_path=str(step_label_font_path),
-            size=item["label"]["font_size"],
-            min_font_size=item["label"]["font_size"],
-            bold="true",
-            color=step_label_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["label"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=step_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            item["body"]["source_text"],
-            x=item["body_x"],
-            y=body_y,
-            width=item["body_width"],
-            height=item["body"]["height"],
-            font=step_font_name,
-            font_path=str(step_body_font_path),
-            size=item["body"]["font_size"],
-            min_font_size=item["body"]["font_size"],
-            bold="true",
-            color=step_body_color,
-            align="left",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["body"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=step_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        if index < len(step_layouts["items"]) - 1:
-            next_item = step_layouts["items"][index + 1]
-            arrow_top = item["y"] + item["height"] + arrow_gap_from_card
-            arrow_bottom = next_item["y"] - arrow_gap_from_card
-
-            add(
-                "line",
-                x1=arrow_x,
-                y1=arrow_top,
-                x2=arrow_x,
-                y2=arrow_bottom - 10,
-                color=arrow_color,
-                width=1.4,
-            )
-
-            add(
-                "polygon",
-                points=(
-                    f"{arrow_x - 6:.2f},{arrow_bottom - 10:.2f} "
-                    f"{arrow_x + 6:.2f},{arrow_bottom - 10:.2f} "
-                    f"{arrow_x:.2f},{arrow_bottom:.2f}"
-                ),
-                fill=arrow_color,
-                line_color="none",
-            )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_implementation_timeline_slide_xml(
-    title: str = "Implementation timeline Implementation timeline",
-    subtitle: str = (
-        "Forge offers a structured rollout designed for minimal disruption"
-    ),
-    timeline_items: list[dict[str, str]] = [
-        {
-            "label": "Week 1",
-            "content": "Kickoff and workspace setup ",
-        },
-        {
-            "label": "Week 2",
-            "content": "Workflow configuration and security policies",
-        },
-        {
-            "label": "Week 3",
-            "content": "Team onboarding and training",
-        },
-        {
-            "label": "Week 4",
-            "content": "Go-live and optimization",
-        },
-    ],
-    background_color: str = "#1A0B3A",
-    title_color: str = "#A678FF",
-    subtitle_color: str = "#F7F2FF",
-    timeline_color: str = "#A678FF",
-    label_color: str = "#F7F2FF",
-    content_color: str = "#F7F2FF",
-) -> str:
-    """
-    Generate XML for an implementation timeline slide.
-
-    The layout features a dark purple background, a large title and
-    subtitle at the top-left, an abstract inline vector decoration
-    at the top-right, and a horizontal timeline with labeled milestones
-    across the lower half of the slide.
-    """
-
-    raw_timeline_items = (
-        timeline_items
-        if isinstance(timeline_items, (list, tuple))
-        else [timeline_items]
-    )
-    normalized_timeline_items: list[dict[str, str]] = []
-    for index, raw_item in enumerate(raw_timeline_items):
-        item = raw_item if isinstance(raw_item, dict) else {}
-        normalized_timeline_items.append(
-            {
-                "label": str(item.get("label") or "").strip(),
-                "content": str(item.get("content") or "").strip(),
-            }
-        )
-    timeline_items = normalized_timeline_items or [
-        {"label": "", "content": ""}
-    ]
-
-
-    # =====================================================
-    # Canvas and layout regions
-    # =====================================================
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    safe_left = 24.0
-    safe_right = 24.0
-
-    title_x = 24.0
-    title_y = 70.0
-    title_width = 1040.0
-    subtitle_x = 24.0
-    subtitle_width = 1110.0
-    title_to_subtitle_gap = 20.0
-
-    decoration_width = 360.0
-    decoration_height = 405.0
-    decoration_x = canvas_width - decoration_width
-    decoration_y = 0.0
-
-    timeline_y = 610.0
-    timeline_start_x = 60.0
-    timeline_end_x = canvas_width - 60.0
-    dot_radius = 15.0
-
-    label_y_gap = 46.0
-    content_y_gap = 42.0
-    item_cell_padding = 24.0
-
-    content_bottom_limit = 820.0
-
-    # =====================================================
-    # Inline vector decoration
-    # =====================================================
-
-    decoration_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" width="252" height="284" viewBox="0 0 252 284" preserveAspectRatio="xMidYMid meet">
-  <defs>
-    <linearGradient id="panelGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#9A78DB"/>
-      <stop offset="52%" stop-color="#8D69CE"/>
-      <stop offset="100%" stop-color="#614B94"/>
-    </linearGradient>
-    <linearGradient id="mainDiscGrad" x1="0.36" y1="0" x2="0.7" y2="1">
-      <stop offset="0%" stop-color="#D7C6FF" stop-opacity="0.94"/>
-      <stop offset="44%" stop-color="#B493F2" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="#8A5FDC" stop-opacity="0.76"/>
-    </linearGradient>
-    <linearGradient id="innerDiscGrad" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0%" stop-color="#B79AFF"/>
-      <stop offset="100%" stop-color="#7E58C9"/>
-    </linearGradient>
-    <linearGradient id="backArcGrad" x1="0" y1="0" x2="0.75" y2="1">
-      <stop offset="0%" stop-color="#4A3A68" stop-opacity="0.78"/>
-      <stop offset="100%" stop-color="#251844" stop-opacity="0.96"/>
-    </linearGradient>
-    <filter id="softEdge" x="-16%" y="-16%" width="132%" height="132%">
-      <feGaussianBlur stdDeviation="2.2"/>
-    </filter>
-  </defs>
-
-  <!-- soft dark arc behind the composition -->
-  <circle cx="136" cy="0" r="119" fill="url(#backArcGrad)" filter="url(#softEdge)"/>
-
-  <!-- rounded panel visible beneath the sweeping disc -->
-  <rect x="16" y="82" width="154" height="155" rx="17" ry="17"
-        fill="url(#panelGrad)"/>
-
-  <!-- large translucent disc creates the curved sweep over the panel -->
-  <circle cx="252" cy="0" r="236" fill="url(#mainDiscGrad)"/>
-
-  <!-- dark outer ring cropped by the top and right edges -->
-  <circle cx="252" cy="0" r="115" fill="#190B39"/>
-
-  <!-- illuminated inner disc leaves the soft purple crescent -->
-  <circle cx="252" cy="0" r="75" fill="url(#innerDiscGrad)"/>
-</svg>
-""".strip()
-
-    # =====================================================
-    # Font measurement helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-            return candidates[0][1]
-
-        fallback = (
-            "DejaVuSans-Bold.ttf"
-            if bold
-            else "DejaVuSans.ttf"
-        )
-
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return (
-            float(ascent + descent)
-            * line_spacing
-        )
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                word_width = measure_text_width(
-                    word,
-                    font_path,
-                    font_size_pt,
-                )
-
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
-            ),
-        }
-
-    # =====================================================
-    # Typography and responsive fitting
-    # =====================================================
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-    label_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=False,
-    )
-    subtitle_font_path = resolve_font_path(
-        subtitle_font_name,
-        bold=True,
-    )
-    label_font_path = resolve_font_path(
-        label_font_name,
-        bold=True,
-    )
-    body_font_path = resolve_font_path(
-        body_font_name,
-        bold=True,
-    )
-
-    title_font_size = 46.0
-    title_min_font_size = 36.0
-
-    subtitle_font_size = 18.0
-    subtitle_min_font_size = 15.0
-
-    label_font_size = 23.0
-    label_min_font_size = 17.0
-
-    content_font_size = 13.5
-    content_min_font_size = 10.5
-
-    title_line_spacing = 0.95
-    subtitle_line_spacing = 1.0
-    label_line_spacing = 1.0
-    content_line_spacing = 1.12
-
-    title_layout = layout_text(
-        title,
-        font_path=title_font_path,
-        font_size=title_font_size,
-        max_width=title_width,
-        line_spacing=title_line_spacing,
-        padding=3,
-    )
-
-    for _ in range(80 if AUTO_SHRINK_TEXT else 0):
-        if title_layout["height"] <= 74.0:
-            break
-
-        if title_font_size <= title_min_font_size:
-            break
-
-        title_font_size = max(
-            title_min_font_size,
-            title_font_size - 0.5,
-        )
-
-        title_layout = layout_text(
-            title,
-            font_path=title_font_path,
-            font_size=title_font_size,
-            max_width=title_width,
-            line_spacing=title_line_spacing,
-            padding=3,
-        )
-
-    subtitle_y = (
-        title_y
-        + title_layout["height"]
-        + title_to_subtitle_gap
-    )
-
-    subtitle_layout = layout_text(
-        subtitle,
-        font_path=subtitle_font_path,
-        font_size=subtitle_font_size,
-        max_width=subtitle_width,
-        line_spacing=subtitle_line_spacing,
-        padding=3,
-    )
-
-    for _ in range(80 if AUTO_SHRINK_TEXT else 0):
-        if subtitle_layout["height"] <= 52.0:
-            break
-
-        if subtitle_font_size <= subtitle_min_font_size:
-            break
-
-        subtitle_font_size = max(
-            subtitle_min_font_size,
-            subtitle_font_size - 0.5,
-        )
-
-        subtitle_layout = layout_text(
-            subtitle,
-            font_path=subtitle_font_path,
-            font_size=subtitle_font_size,
-            max_width=subtitle_width,
-            line_spacing=subtitle_line_spacing,
-            padding=3,
-        )
-
-    item_count = len(timeline_items)
-
-    timeline_text_left = safe_left
-    timeline_text_right = canvas_width - safe_right
-    cell_width = (
-        timeline_text_right - timeline_text_left
-    ) / item_count
-
-    cell_ranges: list[tuple[float, float]] = []
-    item_positions: list[float] = []
-
-    for index in range(item_count):
-        cell_left = (
-            timeline_text_left
-            + index * cell_width
-        )
-        cell_right = cell_left + cell_width
-        dot_x = (
-            cell_left + cell_right
-        ) / 2
-
-        cell_ranges.append(
-            (
-                cell_left,
-                cell_right,
-            )
-        )
-        item_positions.append(dot_x)
-
-    timeline_start_x = item_positions[0]
-    timeline_end_x = item_positions[-1]
-
-    def calculate_timeline_layouts(
-        current_label_size: float,
-        current_content_size: float,
-    ) -> dict:
-        item_layouts: list[dict] = []
-
-        max_bottom = 0.0
-
-        for index, item in enumerate(timeline_items):
-            dot_x = item_positions[index]
-            cell_left, cell_right = cell_ranges[index]
-
-            item_text_width = max(
-                80.0,
-                cell_right
-                - cell_left
-                - 2 * item_cell_padding,
-            )
-            text_x = (
-                dot_x - item_text_width / 2
-            )
-
-            label_layout = layout_text(
-                item["label"].strip(),
-                font_path=label_font_path,
-                font_size=current_label_size,
-                max_width=item_text_width,
-                line_spacing=label_line_spacing,
-                padding=2,
-            )
-
-            content_layout = layout_text(
-                item["content"].strip(),
-                font_path=body_font_path,
-                font_size=current_content_size,
-                max_width=item_text_width,
-                line_spacing=content_line_spacing,
-                padding=2,
-            )
-
-            label_y = (
-                timeline_y
-                - label_y_gap
-                - label_layout["height"]
-            )
-            content_y = timeline_y + content_y_gap
-
-            max_bottom = max(
-                max_bottom,
-                content_y + content_layout["height"],
-            )
-
-            item_layouts.append(
-                {
-                    "dot_x": dot_x,
-                    "text_x": text_x,
-                    "text_width": item_text_width,
-                    "label": label_layout,
-                    "label_y": label_y,
-                    "content": content_layout,
-                    "content_y": content_y,
-                }
-            )
-
-        return {
-            "items": item_layouts,
-            "max_bottom": max_bottom,
-        }
-
-    timeline_layout = calculate_timeline_layouts(
-        label_font_size,
-        content_font_size,
-    )
-
-    for _ in range(160):
-        if timeline_layout["max_bottom"] <= content_bottom_limit:
-            break
-
-        changed = False
-
-        if AUTO_SHRINK_TEXT and content_font_size > content_min_font_size:
-            content_font_size = max(
-                content_min_font_size,
-                content_font_size - 0.5,
-            )
-            changed = True
-
-        elif AUTO_SHRINK_TEXT and label_font_size > label_min_font_size:
-            label_font_size = max(
-                label_min_font_size,
-                label_font_size - 0.5,
-            )
-            changed = True
-
-        if not changed:
-            break
-
-        timeline_layout = calculate_timeline_layouts(
-            label_font_size,
-            content_font_size,
-        )
-
-    # =====================================================
-    # Build XML
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    svg_node = add(
-        "svg",
-        x=decoration_x,
-        y=decoration_y,
-        width=decoration_width,
-        height=decoration_height,
-        pixel_width=252,
-        pixel_height=284,
-    )
-    svg_node.text = decoration_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=title_layout["font_size"],
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_x,
-        y=subtitle_y,
-        width=subtitle_width,
-        height=subtitle_layout["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=subtitle_layout["font_size"],
-        bold="true",
-        color=subtitle_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=subtitle_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    add(
-        "line",
-        x1=timeline_start_x,
-        y1=timeline_y,
-        x2=timeline_end_x,
-        y2=timeline_y,
-        color=timeline_color,
-        width=1.0,
-    )
-
-    for item in timeline_layout["items"]:
-        add(
-            "shape",
-            type="circle",
-            x=item["dot_x"] - dot_radius,
-            y=timeline_y - dot_radius,
-            width=dot_radius * 2,
-            height=dot_radius * 2,
-            fill=timeline_color,
-            line_color="none",
-        )
-
-        textbox(
-            item["label"]["source_text"],
-            x=item["text_x"],
-            y=item["label_y"],
-            width=item["text_width"],
-            height=item["label"]["height"],
-            font=label_font_name,
-            font_path=str(label_font_path),
-            size=item["label"]["font_size"],
-            min_font_size=item["label"]["font_size"],
-            bold="true",
-            color=label_color,
-            align="center",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["label"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=label_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            item["content"]["source_text"],
-            x=item["text_x"],
-            y=item["content_y"],
-            width=item["text_width"],
-            height=item["content"]["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=item["content"]["font_size"],
-            min_font_size=item["content"]["font_size"],
-            bold="true",
-            color=content_color,
-            align="center",
-            vertical_align="top",
-            single_line="false",
-            max_lines=len(item["content"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=content_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_problem_slide_xml(
-    title: str = "The problem The problem The problem The problem",
-    description: str = (
-        "Keeping commercial spaces clean sounds simple—but many businesses Keeping commercial spaces clean sounds simple—but many businesses "
-        "struggle with:"
-    ),
-    problem_items: list[str] = [
-        "Missed cleaning tasks",
-        "Different cleaners every visit",
-        "Spaces that don’t stay clean for long",
-        "No clear accountability across teams",
-    ],
-    card_colors: list[str] = [
-        "#DDF2A6",
-        "#9ED98C",
-        "#00580A",
-        "#7BC96F",
-        "#4FA95C",
-    ],
-    card_text_colors: list[str] = [
-        "#07520B",
-        "#07520B",
-        "#FFFFFF",
-        "#07520B",
-        "#FFFFFF",
-    ],
-    background_color: str = "#F7F7F2",
-    title_color: str = "#07520B",
-    description_color: str = "#07520B",
-) -> str:
-    """
-    Generate XML for a problem statement slide.
-
-    The layout features a row of large rounded cards hanging from the
-    top edge, each containing a centered statement, with a title and
-    supporting description anchored in the lower-left area.
-
-    The text layout is adaptive: if the title, description, or card text
-    becomes longer, the function automatically changes width, font size,
-    spacing, and vertical placement to keep the slide balanced instead of
-    throwing a fitting error.
-    """
-
-    raw_problem_items = (
-        problem_items
-        if isinstance(problem_items, (list, tuple))
-        else [problem_items]
-    )
-    problem_items = [
-        str(item or "").strip()
-        for item in raw_problem_items
-    ] or [""]
-    card_colors = list(card_colors or []) or ["#DDF2A6"]
-    card_text_colors = list(card_text_colors or []) or ["#07520B"]
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    # =====================================================
-    # Font helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": "arial",
-            "Calibri": "calibri",
-            "Aptos": "aptos",
-            "Helvetica": "helvetica",
-            "Arial": "arial",
-            "Times New Roman": "times",
-        }
-
-        normalized = normalize_font_name(
-            aliases.get(font_name, font_name)
-        )
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if normalized not in stem:
-                    continue
-
-                score = 70
-
-                if stem == normalized:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 10
-                elif has_bold:
-                    score -= 10
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            return candidates[0][1]
-
-        fallback = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
-        font_path = _resolve_font_fallback_path(bold=bold)
-
-        return Path(_resolve_font_fallback_path(bold=bold))
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        result: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                result.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        result.append(current)
-                    current = word
-
-            if current:
-                result.append(current)
-
-        return result or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height + padding,
-        }
-
-    def fit_text_best_effort(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        width_candidates: list[float],
-        preferred_max_height: float,
-        absolute_min_font_size: float,
-        line_spacing: float,
-        padding: float = 3.0,
-    ) -> dict:
-        best_candidate = None
-
-        for width in width_candidates:
-            current_size = preferred_font_size
-
-            while current_size >= absolute_min_font_size:
-                try:
-                    candidate = layout_text(
-                        text,
-                        font_path=font_path,
-                        font_size=current_size,
-                        max_width=width,
-                        line_spacing=line_spacing,
-                        padding=padding,
-                    )
-                except Exception:
-                    break
-                    continue
-
-                candidate["width"] = width
-
-                score = (
-                    max(0.0, candidate["height"] - preferred_max_height) * 1000
-                    + max(0.0, preferred_font_size - current_size) * 10
-                    + (max(width_candidates) - width) * 0.01
-                )
-
-                if (
-                    best_candidate is None
-                    or score < best_candidate["score"]
-                ):
-                    candidate["score"] = score
-                    best_candidate = candidate
-
-                if (
-                    candidate["height"] <= preferred_max_height
-                    and current_size >= min_font_size
-                ):
-                    candidate["score"] = score
-                    return candidate
-
-                break
-
-        if best_candidate is None:
-            # Extremely defensive fallback.
-            fallback_width = max(width_candidates)
-            best_candidate = {
-                "source_text": text,
-                "text": text,
-                "lines": [text],
-                "font_size": preferred_font_size,
-                "height": preferred_max_height,
-                "width": fallback_width,
-                "score": 10**9,
-            }
-
-        return best_candidate
-
-    # =====================================================
-    # Typography
-    # =====================================================
-
-    title_font_name = "Arial"
-    description_font_name = "Arial"
-    card_font_name = "Arial"
-
-    title_font_path = resolve_font_path(title_font_name, bold=True)
-    description_font_path = resolve_font_path(
-        description_font_name,
-        bold=False,
-    )
-    card_font_path = resolve_font_path(card_font_name, bold=False)
-
-    title_color = title_color
-    description_color = description_color
-
-    title_font_size = 46.0
-    description_font_size = 22.0
-
-    title_line_spacing = 0.95
-    description_line_spacing = 1.16
-    card_line_spacing = 1.08
-
-    count = len(problem_items)
-
-    card_font_defaults = {
-        1: 34.0,
-        2: 29.0,
-        3: 25.0,
-        4: 19.0,
-        5: 16.0,
-    }
-    card_min_defaults = {
-        1: 22.0,
-        2: 20.0,
-        3: 17.0,
-        4: 11.5,
-        5: 9.5,
-    }
-
-    # =====================================================
-    # Dynamic cards geometry
-    # =====================================================
-
-    cards_area_x = 120.0
-    cards_area_width = 1440.0
-    cards_top_crop_base = -105.0
-
-    effective_gap = 28.0 if count <= 3 else 18.0 if count == 4 else 12.0
-    available_width = cards_area_width - effective_gap * (count - 1)
-    card_width = available_width / count
-
-    bottom_targets = {
-        1: [560.0],
-        2: [510.0, 580.0],
-        3: [470.0, 540.0, 620.0],
-        4: [455.0, 510.0, 570.0, 640.0],
-        5: [440.0, 485.0, 530.0, 585.0, 645.0],
-    }[count]
-
-    card_specs: list[dict] = []
-
-    for index in range(count):
-        x = cards_area_x + index * (card_width + effective_gap)
-        y = cards_top_crop_base + index * 12.0
-        bottom = bottom_targets[index]
-        height = bottom - y
-
-        side_padding = max(
-            18.0,
-            min(50.0, card_width * 0.10),
-        )
-
-        max_text_height = min(
-            230.0,
-            height - 70.0,
-        )
-
-        card_specs.append(
-            {
-                "x": x,
-                "y": y,
-                "width": card_width,
-                "height": height,
-                "text_center_y": y + height * 0.53,
-                "side_padding": side_padding,
-                "max_text_height": max_text_height,
-            }
-        )
-
-    # =====================================================
-    # Bottom-left text block - adaptive instead of hard fail
-    # =====================================================
-
-    text_block_left = 16.0
-    text_block_top_base = 610.0
-    text_block_bottom = 880.0
-    preferred_gap = 20.0
-
-    title_layout = None
-    description_layout = None
-    title_x = text_block_left
-    title_y = text_block_top_base
-    description_x = text_block_left
-    description_y = title_y
-
-    width_candidates = [760.0, 860.0, 980.0, 1100.0]
-
-    for width in width_candidates:
-        candidate_title = fit_text_best_effort(
-            title,
-            font_path=title_font_path,
-            preferred_font_size=title_font_size,
-            min_font_size=34.0,
-            width_candidates=[width],
-            preferred_max_height=115.0,
-            absolute_min_font_size=10.0,
-            line_spacing=title_line_spacing,
-        )
-
-        local_gap = 22.0 if candidate_title["height"] < 80 else 14.0
-        local_title_y = text_block_top_base
-
-        remaining_height = (
-            text_block_bottom
-            - (local_title_y + candidate_title["height"] + local_gap)
-        )
-
-        if remaining_height < 36.0:
-            local_title_y = max(
-                540.0,
-                text_block_bottom
-                - candidate_title["height"]
-                - local_gap
-                - 36.0,
-            )
-            remaining_height = (
-                text_block_bottom
-                - (local_title_y + candidate_title["height"] + local_gap)
-            )
-
-        candidate_description = fit_text_best_effort(
-            description,
-            font_path=description_font_path,
-            preferred_font_size=description_font_size,
-            min_font_size=15.0,
-            width_candidates=[width],
-            preferred_max_height=max(remaining_height, 36.0),
-            absolute_min_font_size=9.0,
-            line_spacing=description_line_spacing,
-        )
-
-        total_height = (
-            candidate_title["height"]
-            + local_gap
-            + candidate_description["height"]
-        )
-
-        score = (
-            max(0.0, total_height - (text_block_bottom - local_title_y)) * 1000
-            + max(0.0, title_font_size - candidate_title["font_size"]) * 10
-            + max(0.0, description_font_size - candidate_description["font_size"]) * 4
-            + (1100.0 - width) * 0.02
-        )
-
-        if title_layout is None or score < title_layout["combined_score"]:
-            candidate_title["combined_score"] = score
-            title_layout = candidate_title
-            description_layout = candidate_description
-            title_x = text_block_left
-            title_y = local_title_y
-            description_x = text_block_left
-            description_y = (
-                title_y
-                + title_layout["height"]
-                + local_gap
-            )
-
-    # Final defensive move: if the description still runs too low, shift both upward.
-    overflow = (
-        description_y
-        + description_layout["height"]
-        - text_block_bottom
-    )
-    if overflow > 0:
-        shift = min(
-            overflow,
-            max(0.0, title_y - 520.0),
-        )
-        title_y -= shift
-        description_y -= shift
-
-    # =====================================================
-    # Card text fitting
-    # =====================================================
-
-    card_layouts: list[dict] = []
-
-    for index, item in enumerate(problem_items):
-        spec = card_specs[index]
-        text_width = spec["width"] - 2 * spec["side_padding"]
-
-        card_layout = fit_text_best_effort(
-            item,
-            font_path=card_font_path,
-            preferred_font_size=card_font_defaults[count],
-            min_font_size=card_min_defaults[count],
-            width_candidates=[text_width],
-            preferred_max_height=spec["max_text_height"],
-            absolute_min_font_size=8.0,
-            line_spacing=card_line_spacing,
-        )
-
-        text_x = spec["x"] + spec["side_padding"]
-        text_y = spec["text_center_y"] - card_layout["height"] / 2
-
-        card_layouts.append(
-            {
-                "spec": spec,
-                "layout": card_layout,
-                "text_x": text_x,
-                "text_y": text_y,
-                "text_width": text_width,
-            }
-        )
-
-    # =====================================================
-    # XML assembly
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    for index, card_data in enumerate(card_layouts):
-        spec = card_data["spec"]
-        card_fill = card_colors[index % len(card_colors)]
-        card_text_color = card_text_colors[index % len(card_text_colors)]
-
-        add(
-            "shape",
-            type="rounded_rectangle",
-            x=spec["x"],
-            y=spec["y"],
-            width=spec["width"],
-            height=spec["height"],
-            fill=card_fill,
-            line_color="none",
-        )
-
-        textbox(
-            card_data["layout"]["source_text"],
-            x=card_data["text_x"],
-            y=card_data["text_y"],
-            width=card_data["text_width"],
-            height=card_data["layout"]["height"],
-            font=card_font_name,
-            font_path=str(card_font_path),
-            size=card_data["layout"]["font_size"],
-            min_font_size=max(8.0, card_data["layout"]["font_size"] - 1.0),
-            color=card_text_color,
-            align="center",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=len(card_data["layout"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=card_line_spacing,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_layout["width"],
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(10.0, title_layout["font_size"] - 1.0),
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=title_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        description_layout["source_text"],
-        x=description_x,
-        y=description_y,
-        width=description_layout["width"],
-        height=description_layout["height"],
-        font=description_font_name,
-        font_path=str(description_font_path),
-        size=description_layout["font_size"],
-        min_font_size=max(9.0, description_layout["font_size"] - 1.0),
-        color=description_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(description_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=description_line_spacing,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_topics_overview_slide_xml(
-    title: str = "Messi là cầu thủ vĩ đại nhất thế giới",
-    topics: list[dict[str, str]] = [
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-        },
-        {
-            "title": "Mesi là cầu thủ vĩ đại nhấtthế giới",
-            "description": "Briefly elaborate on what you want to discuss.",
-        },
-        
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-        },
-    ],
-    image_url_1: str = "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=85&w=1200&auto=format&fit=crop",
-    image_url_2: str = "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=85&w=1200&auto=format&fit=crop",
-    image_url_3: str = "https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=85&w=1200&auto=format&fit=crop",
-    background_color: str = "#CDD0C1",
-    title_color: str = "#3A3126",
-    item_title_color: str = "#3A3126",
-    item_description_color: str = "#3A3126",
-    accent_color: str = "#9AA382",
-) -> str:
-    """
-    Generate XML for a topics overview slide.
-
-    The layout features a muted neutral background with soft corner
-    accents, a large serif title near the top-left, and a flexible grid of
-    image-backed topic items with centered titles and descriptions.
-    """
-
-    fallback_image = (
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-        "?auto=compress&cs=tinysrgb&w=1600"
-    )
-    raw_topics = topics if isinstance(topics, (list, tuple)) else [topics]
-    normalized_topics: list[dict[str, str]] = []
-    for raw_topic in raw_topics:
-        topic = raw_topic if isinstance(raw_topic, dict) else {}
-        normalized_topics.append(
-            {
-                "title": str(topic.get("title") or "").strip(),
-                "description": str(topic.get("description") or "").strip(),
-            }
-        )
-    topics = normalized_topics or [
-        {
-            "title": "",
-            "description": "",
-        }
-    ]
-    image_urls = [
-        str(image_url or "").strip() or fallback_image
-        for image_url in (image_url_1, image_url_2, image_url_3)
-    ]
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    # =====================================================
-    # Font helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times"],
-            "Arial": ["arial"],
-            "Garamond": ["garamond"],
-            "Arial": ["arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Helvetica": ["helvetica", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(
-                    normalized in stem
-                    for normalized in normalized_names
-                ):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                        "demi",
-                    )
-                )
-                has_italic = any(
-                    token in stem
-                    for token in (
-                        "italic",
-                        "oblique",
-                        "it",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "timesbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "timesi.ttf",
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "garamond.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 2.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height + padding,
-            "width": max_width,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        padding: float = 2.0,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
-
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
-                padding=padding,
-            )
-
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
-
-            score = (
-                max(0.0, layout["height"] - max_height) * 1200
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 800
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best
-
-    # =====================================================
-    # Dynamic layout
-    # =====================================================
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(title_font_name, bold=True)
-    heading_font_path = resolve_font_path(heading_font_name, bold=True)
-    body_font_path = resolve_font_path(body_font_name)
-
-    count = len(topics)
-
-    title_x = 88.0
-    title_y = 94.0
-    title_width = 700.0
-    title_max_height = 150.0
-
-    title_layout = fit_text(
-        title.upper(),
-        font_path=title_font_path,
-        preferred_font_size=60.0,
-        min_font_size=40.0,
-        max_width=title_width,
-        max_height=title_max_height,
-        line_spacing=0.95,
-        padding=2.0,
-        max_lines=2,
-    )
-
-    if count <= 3:
-        columns = count
-    else:
-        columns = min(3, count)
-
-    rows = (count + columns - 1) // columns
-
-    grid_x = 50.0
-    grid_right = 1550.0
-    grid_width = grid_right - grid_x
-
-    # Move content up/down depending on title size and item count.
-    grid_top = 322.0 if rows == 1 else 272.0
-    grid_bottom = 760.0 if rows == 1 else 822.0
-    row_gap = 38.0 if rows == 1 else 30.0
-    col_gap = 30.0 if columns >= 3 else 48.0
-
-    item_width = (
-        grid_width
-        - col_gap * (columns - 1)
-    ) / columns
-
-    item_height = (
-        grid_bottom
-        - grid_top
-        - row_gap * (rows - 1)
-    ) / rows
-
-    image_ratio = 0.58 if rows == 1 else 0.52
-    image_height = item_height * image_ratio
-    text_gap = 34.0 if rows == 1 else 18.0
-
-    item_title_font = 25.0 if columns <= 3 else 23.0
-    item_desc_font = 21.0 if columns <= 3 else 17.0
-
-    title_text_layouts: list[dict] = []
-    desc_text_layouts: list[dict] = []
-
-    for topic in topics:
-        text_width = item_width * 0.82
-
-        heading_layout = fit_text(
-            topic["title"].strip().upper(),
-            font_path=heading_font_path,
-            preferred_font_size=item_title_font,
-            min_font_size=13.0,
-            max_width=item_width * 0.98,
-            max_height=item_height * 0.20,
-            line_spacing=1.0,
-            padding=1.0,
-            max_lines=1,
-        )
-
-        desc_layout = fit_text(
-            topic["description"].strip(),
-            font_path=body_font_path,
-            preferred_font_size=item_desc_font,
-            min_font_size=10.0,
-            max_width=text_width,
-            max_height=item_height * 0.22,
-            line_spacing=1.18,
-            padding=1.0,
-            max_lines=3 if rows == 1 else 2,
-        )
-
-        title_text_layouts.append(heading_layout)
-        desc_text_layouts.append(desc_layout)
-
-    # =====================================================
-    # XML assembly
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    background_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <radialGradient id="topLeft" cx="2%" cy="2%" r="42%">
-      <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.88"/>
-      <stop offset="55%" stop-color="{accent_color}" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bottomRight" cx="98%" cy="98%" r="42%">
-      <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.88"/>
-      <stop offset="55%" stop-color="{accent_color}" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect x="0" y="0" width="1600" height="900" fill="{background_color}"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#topLeft)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#bottomRight)"/>
-</svg>
-""".strip()
-
-    svg_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    svg_node.text = background_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(24.0, title_layout["font_size"] - 2.0),
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="top",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    for index, topic in enumerate(topics):
-        row = index // columns
-        col = index % columns
-
-        item_x = grid_x + col * (item_width + col_gap)
-        item_y = grid_top + row * (item_height + row_gap)
-
-        image_x = item_x
-        image_y = item_y
-        image_width = item_width
-        current_image_height = image_height
-
-        text_center_x = item_x + item_width / 2
-
-        add(
-            "image",
-            src=image_urls[index % len(image_urls)].strip(),
-            x=image_x,
-            y=image_y,
-            width=image_width,
-            height=current_image_height,
-        )
-
-        heading_layout = title_text_layouts[index]
-        desc_layout = desc_text_layouts[index]
-
-        heading_width = heading_layout["width"]
-        heading_x = text_center_x - heading_width / 2
-        heading_y = image_y + current_image_height + text_gap
-
-        desc_width = desc_layout["width"]
-        desc_x = text_center_x - desc_width / 2
-        desc_y = heading_y + heading_layout["height"] + 16.0
-
-        textbox(
-            heading_layout["source_text"],
-            x=heading_x,
-            y=heading_y,
-            width=heading_width,
-            height=heading_layout["height"],
-            font=heading_font_name,
-            font_path=str(heading_font_path),
-            size=heading_layout["font_size"],
-            min_font_size=max(11.0, heading_layout["font_size"] - 2.0),
-            bold="true",
-            color=item_title_color,
-            align="center",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=len(heading_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.0,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            desc_layout["source_text"],
-            x=desc_x,
-            y=desc_y,
-            width=desc_width,
-            height=desc_layout["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=desc_layout["font_size"],
-            min_font_size=max(9.0, desc_layout["font_size"] - 2.0),
-            color=item_description_color,
-            align="center",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=len(desc_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.18,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_timeline_gallery_slide_xml(
-    title: str = "TIMELINE Meeting Agenda Slide Template (Editable) | Free Download | SlideModel",
-    timeline_items: list[dict[str, str]] = [
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1517841905240-472988babdf9"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-        {
-            "title": "ADD A MAIN POINT Meeting Agenda Slide Template (Editable) | Free Download | SlideModel",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1496747611176-843222e1e57c"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1512316609839-ce289d3eba0a"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1524504388940-b1c1722653e1"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-    ],
-    background_color: str = "#CDD0C1",
-    title_color: str = "#3B3024",
-    text_color: str = "#3B3024",
-    timeline_color: str = "#9B8B6C",
-    accent_color: str = "#B7B199",
-) -> str:
-    """
-    Generate XML for a gallery timeline slide.
-
-    The layout features a muted neutral background, a large centered serif
-    title, a horizontal timeline with evenly distributed dots, and image/text
-    milestones alternating above and below the timeline.
-    """
-
-    fallback_image = (
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-        "?auto=compress&cs=tinysrgb&w=1600"
-    )
-    raw_timeline_items = (
-        timeline_items
-        if isinstance(timeline_items, (list, tuple))
-        else [timeline_items]
-    )
-    normalized_timeline_items: list[dict[str, str]] = []
-    for index, raw_item in enumerate(raw_timeline_items):
-        item = raw_item if isinstance(raw_item, dict) else {}
-        normalized_timeline_items.append(
-            {
-                "title": str(item.get("title") or "").strip(),
-                "description": str(item.get("description") or "").strip(),
-                "image_url": str(item.get("image_url") or "").strip() or fallback_image,
-            }
-        )
-    timeline_items = normalized_timeline_items or [
-        {
-            "title": "",
-            "description": "",
-            "image_url": fallback_image,
-        }
-    ]
-
-   
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    # =====================================================
-    # Font helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times"],
-            "Arial": ["arial"],
-            "Garamond": ["garamond"],
-            "Arial": ["arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Helvetica": ["helvetica", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(normalized in stem for normalized in normalized_names):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold:
-            fallback_paths = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "garamond.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 2.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "text": "\n".join(lines),
-            "lines": lines,
-            "font_size": font_size,
-            "height": len(lines) * line_height + padding,
-            "width": max_width,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
-
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
-            )
-
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
-
-            score = (
-                max(0.0, layout["height"] - max_height) * 1500
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 900
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best
-
-    # =====================================================
-    # Layout
-    # =====================================================
-
-    count = len(timeline_items)
-
-    title_font_name = "Arial"
-    heading_font_name = "Arial"
-    body_font_name = "Arial"
-
-    title_font_path = resolve_font_path(title_font_name, bold=True)
-    heading_font_path = resolve_font_path(heading_font_name, bold=True)
-    body_font_path = resolve_font_path(body_font_name)
-
-    title_layout = fit_text(
-        title.strip().upper(),
-        font_path=title_font_path,
-        preferred_font_size=54.0,
-        min_font_size=30.0,
-        max_width=1500.0,
-        max_height=130.0,
-        line_spacing=0.95,
-        max_lines=2,
-    )
-
-    title_x = canvas_width / 2 - 1500.0 / 2
-    title_y = 70.0
-
-    timeline_y = 500.0
-    timeline_start_x = 210.0
-    timeline_end_x = 1390.0
-
-    if count == 1:
-        dot_positions = [
-            (timeline_start_x + timeline_end_x) / 2
-        ]
-    else:
-        step_gap = (
-            timeline_end_x
-            - timeline_start_x
-        ) / (count - 1)
-
-        dot_positions = [
-            timeline_start_x + index * step_gap
-            for index in range(count)
-        ]
-
-    cell_width = (
-        timeline_end_x
-        - timeline_start_x
-    ) / max(1, count - 1)
-
-    if count == 1:
-        text_box_width = 360.0
-        image_width = 320.0
-    elif count <= 4:
-        text_box_width = 310.0
-        image_width = 310.0
-    elif count == 5:
-        text_box_width = 250.0
-        image_width = 250.0
-    else:
-        text_box_width = 220.0
-        image_width = 220.0
-
-    heading_width_limit = (
-        520.0
-        if count == 1
-        else (timeline_end_x - timeline_start_x) / (count - 1) - 12.0
-    )
-    heading_box_width = max(
-        text_box_width,
-        min(text_box_width + 60.0, heading_width_limit),
-    )
-
-    image_height = image_width * 0.68
-
-    top_image_y = 218.0
-    top_text_y = 330.0
-
-    bottom_text_y = 558.0
-    bottom_image_y = 612.0
-
-    dot_radius = 14.0
-
-    heading_font_size = 20.0 if count <= 4 else 16.0
-    description_font_size = 16.0 if count <= 4 else 12.5
-
-    timeline_layouts: list[dict] = []
-
-    for index, item in enumerate(timeline_items):
-        title_text = item["title"].strip().upper()
-        description_text = item["description"].strip()
-
-        heading_layout = fit_text(
-            title_text,
-            font_path=heading_font_path,
-            preferred_font_size=heading_font_size,
-            min_font_size=16.0,
-            max_width=heading_box_width,
-            max_height=96.0,
-            line_spacing=0.95,
-            max_lines=3,
-        )
-
-        description_layout = fit_text(
-            description_text,
-            font_path=body_font_path,
-            preferred_font_size=description_font_size,
-            min_font_size=12.0,
-            max_width=text_box_width,
-            max_height=120.0,
-            line_spacing=1.15,
-            max_lines=4,
-        )
-
-        dot_x = dot_positions[index]
-
-        # Alternating layout similar to the reference:
-        # image above / text below, then text above / image below.
-        image_on_top = index % 2 == 0
-
-        image_x = dot_x - image_width / 2
-        text_x = dot_x - text_box_width / 2
-        heading_x = dot_x - heading_box_width / 2
-
-        image_x = max(
-            20.0,
-            min(
-                image_x,
-                canvas_width - image_width - 20.0,
-            ),
-        )
-
-        text_x = max(
-            20.0,
-            min(
-                text_x,
-                canvas_width - text_box_width - 20.0,
-            ),
-        )
-
-        heading_x = max(
-            20.0,
-            min(
-                heading_x,
-                canvas_width - heading_box_width - 20.0,
-            ),
-        )
-
-        content_height = (
-            heading_layout["height"]
-            + 10.0
-            + description_layout["height"]
-        )
-
-        if image_on_top:
-            image_y = top_image_y
-
-            # Use the free space below for longer content while preserving
-            # the requested font sizes.
-            extra_height = max(0.0, content_height - 120.0)
-            heading_y = min(
-                bottom_text_y + extra_height * 0.65,
-                canvas_height - 32.0 - content_height,
-            )
-            heading_y = max(bottom_text_y, heading_y)
-        else:
-            image_y = bottom_image_y
-
-            # Move a taller text block upward so it stays clear of the
-            # timeline instead of immediately reducing the font size.
-            heading_y = min(
-                top_text_y,
-                timeline_y - 18.0 - content_height,
-            )
-            heading_y = max(top_image_y - 8.0, heading_y)
-
-        description_y = (
-            heading_y
-            + heading_layout["height"]
-            + 10.0
-        )
-
-        timeline_layouts.append(
-            {
-                "image_url": item["image_url"].strip(),
-                "image_x": image_x,
-                "image_y": image_y,
-                "image_width": image_width,
-                "image_height": image_height,
-                "heading": heading_layout,
-                "heading_x": heading_x,
-                "heading_y": heading_y,
-                "description": description_layout,
-                "description_x": text_x,
-                "description_y": description_y,
-                "dot_x": dot_x,
-            }
-        )
-
-    # =====================================================
-    # XML assembly
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    background_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <radialGradient id="topRight" cx="100%" cy="0%" r="32%">
-      <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.62"/>
-      <stop offset="58%" stop-color="{accent_color}" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="bottomLeft" cx="0%" cy="100%" r="35%">
-      <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.48"/>
-      <stop offset="62%" stop-color="{accent_color}" stop-opacity="0.13"/>
-      <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect x="0" y="0" width="1600" height="900" fill="{background_color}"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#topRight)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#bottomLeft)"/>
-</svg>
-""".strip()
-
-    svg_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    svg_node.text = background_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=1500.0,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(28.0, title_layout["font_size"] - 2.0),
-        bold="true",
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    add(
-        "line",
-        x1=timeline_start_x,
-        y1=timeline_y,
-        x2=timeline_end_x,
-        y2=timeline_y,
-        color=timeline_color,
-        width=2.0,
-    )
-
-    for item in timeline_layouts:
-        add(
-            "shape",
-            type="circle",
-            x=item["dot_x"] - dot_radius,
-            y=timeline_y - dot_radius,
-            width=dot_radius * 2,
-            height=dot_radius * 2,
-            fill=timeline_color,
-            line_color="none",
-        )
-
-    for item in timeline_layouts:
-        add(
-            "image",
-            src=item["image_url"],
-            x=item["image_x"],
-            y=item["image_y"],
-            width=item["image_width"],
-            height=item["image_height"],
-            fit="cover",
-        )
-
-        textbox(
-            item["heading"]["source_text"],
-            x=item["heading_x"],
-            y=item["heading_y"],
-            width=item["heading"]["width"],
-            height=item["heading"]["height"],
-            font=heading_font_name,
-            font_path=str(heading_font_path),
-            size=item["heading"]["font_size"],
-            min_font_size=max(15.0, item["heading"]["font_size"] - 2.0),
-            bold="true",
-            color=text_color,
-            align="center",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=len(item["heading"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=0.95,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-        textbox(
-            item["description"]["source_text"],
-            x=item["description_x"],
-            y=item["description_y"],
-            width=item["description"]["width"],
-            height=item["description"]["height"],
-            font=body_font_name,
-            font_path=str(body_font_path),
-            size=item["description"]["font_size"],
-            min_font_size=max(11.0, item["description"]["font_size"] - 2.0),
-            color=text_color,
-            align="center",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=len(item["description"]["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.15,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_memorial_introduction_slide_xml(
-    section_title: str = "Introduction",
-    main_title: str = "Honoring Name Honoring Name Honoring Name Honoring Name",
-    body_text: str = (
-        "Today, we gather to celebrate the life of\n"
-        "[Name]. As we reflect on the memories and\n"
-        "moments shared with [him/her], we find\n"
-        "solace in music, a universal language that\n"
-        "speaks to the heart."
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1544005313-94ddf0286df2"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    background_color: str = "#DDEEF2",
-    panel_color: str = "#E5CAC3",
-    frame_color: str = "#F1F7F8",
-    section_title_color: str = "#111111",
-    main_title_color: str = "#050505",
-    body_text_color: str = "#111111",
-) -> str:
-    """
-    Generate XML for a memorial introduction slide.
-
-    The layout places a large portrait image on the left and a soft pink
-    framed text panel on the right. The right panel contains a centered
-    section label, a large italic memorial title, and a centered body
-    paragraph with flexible text fitting.
-    """
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-            "Arial": ["arial", "timesnewroman", "times"],
-            "Arial": ["arial", "calibri", "aptos"],
-            "Calibri": ["calibri", "arial", "aptos"],
-        }
-
-        normalized_names = [
-            normalize_font_name(item)
-            for item in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 80 if any(name == stem for name in normalized_names) else 58
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 6
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 4
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "timesbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "timesi.ttf",
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for path in fallback_paths:
-            if not path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(path), 12)
-                return path
-            except OSError:
-                continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt)
-                    > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-            if current_chunk:
-                chunks.append(current_chunk)
-            return chunks or [word]
-
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-                    chunks = split_long_word(word)
-                    lines.extend(chunks[:-1])
-                    current = chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best_layout = None
-
-        while current_font_size >= min_font_size:
-            lines = wrap_text(
-                text,
-                font_path,
-                current_font_size,
-                max_width,
-            )
-            line_height = measure_line_height(
-                font_path,
-                current_font_size,
-                line_spacing,
-            )
-            height = len(lines) * line_height
-
-            too_many_lines = (
-                max_lines is not None
-                and len(lines) > max_lines
-            )
-
-            overflow_height = max(0.0, height - max_height)
-            score = (
-                overflow_height * 2000
-                + max(0, len(lines) - (max_lines or 999)) * 1500
-                + (preferred_font_size - current_font_size) * 10
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_font_size,
-                "width": max_width,
-                "height": height,
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best_layout
-
-    section_font_name = "Times New Roman"
-    title_font_name = "Times New Roman"
-    body_font_name = "Arial"
-
-    section_font_path = resolve_font_path(section_font_name, bold=False, italic=False)
-    title_font_path = resolve_font_path(title_font_name, bold=False, italic=True)
-    body_font_path = resolve_font_path(body_font_name, bold=False, italic=False)
-
-    image_x = 72.0
-    image_y = 82.0
-    image_w = 620.0
-    image_h = 736.0
-
-    panel_x = 748.0
-    panel_y = 82.0
-    panel_w = 724.0
-    panel_h = 736.0
-
-    text_box_x = panel_x + 112.0
-    text_box_width = panel_w - 224.0
-    content_top = panel_y + 48.0
-    content_bottom = panel_y + panel_h - 48.0
-    content_height = content_bottom - content_top
-    text_gaps = (34.0, 42.0)
-
-    def build_text_layouts(scale: float) -> tuple[dict, dict, dict]:
-        section_layout = fit_text(
-            section_title.strip(),
-            font_path=section_font_path,
-            preferred_font_size=max(12.0, 22.0 * scale),
-            min_font_size=12.0,
-            max_width=text_box_width,
-            max_height=72.0,
-            line_spacing=1.0,
-            max_lines=2,
-        )
-        title_layout = fit_text(
-            main_title.strip(),
-            font_path=title_font_path,
-            preferred_font_size=max(20.0, 46.0 * scale),
-            min_font_size=22.0,
-            max_width=text_box_width,
-            max_height=230.0,
-            line_spacing=0.92,
-            max_lines=4,
-        )
-        body_layout = fit_text(
-            body_text.strip(),
-            font_path=body_font_path,
-            preferred_font_size=max(10.0, 17.5 * scale),
-            min_font_size=9.0,
-            max_width=text_box_width,
-            max_height=330.0,
-            line_spacing=1.42,
-            max_lines=10,
-        )
-        return section_layout, title_layout, body_layout
-
-    # The panel has one managed text stack. It uses available vertical space
-    # first; font reduction is only used when the complete stack cannot fit.
-    text_scale = 1.0
-    section_layout, title_layout, body_layout = build_text_layouts(text_scale)
-    for _ in range(60):
-        stack_height = (
-            section_layout["height"]
-            + text_gaps[0]
-            + title_layout["height"]
-            + text_gaps[1]
-            + body_layout["height"]
-        )
-        if stack_height <= content_height:
-            break
-        text_scale = max(0.42, text_scale - 0.02)
-        section_layout, title_layout, body_layout = build_text_layouts(text_scale)
-
-    stack_height = (
-        section_layout["height"]
-        + text_gaps[0]
-        + title_layout["height"]
-        + text_gaps[1]
-        + body_layout["height"]
-    )
-    stack_y = content_top + max(0.0, (content_height - stack_height) / 2.0)
-    section_y = stack_y
-    title_y = section_y + section_layout["height"] + text_gaps[0]
-    body_y = title_y + title_layout["height"] + text_gaps[1]
-
-    stripe_w = 26.0
-    stripe_margin = 30.0
-    stripe_y = panel_y + 40.0
-    stripe_h = panel_h - 80.0
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=background_color,
-        line_color="none",
-    )
-
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_w,
-        height=image_h,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.42,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=panel_x,
-        y=panel_y,
-        width=panel_w,
-        height=panel_h,
-        fill=panel_color,
-        line_color="none",
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=panel_x + stripe_margin,
-        y=stripe_y,
-        width=stripe_w,
-        height=stripe_h,
-        fill=frame_color,
-        line_color="none",
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=panel_x + panel_w - stripe_margin - stripe_w,
-        y=stripe_y,
-        width=stripe_w,
-        height=stripe_h,
-        fill=frame_color,
-        line_color="none",
-    )
-
-    textbox(
-        section_layout["source_text"],
-        x=text_box_x,
-        y=section_y,
-        width=text_box_width,
-        height=section_layout["height"],
-        font=section_font_name,
-        font_path=str(section_font_path),
-        size=section_layout["font_size"],
-        min_font_size=12.0,
-        color=section_title_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=text_box_x,
-        y=title_y,
-        width=text_box_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=22.0,
-        color=main_title_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="true",
-        single_line="false",
-        max_lines=4,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.92,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    textbox(
-        body_layout["source_text"],
-        x=text_box_x,
-        y=body_y,
-        width=text_box_width,
-        height=body_layout["height"],
-        font=body_font_name,
-        font_path=str(body_font_path),
-        size=body_layout["font_size"],
-        min_font_size=9.0,
-        color=body_text_color,
-        align="center",
-        vertical_align="top",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=10,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.42,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_legacy_of_love_slide_xml(
-    title: str = "Messi Legacy of Love and Kindness",
-    left_text: str = (
-        "Though [Name] may no longer be with us\n"
-        "in person, their legacy of love and kindness\n"
-        "lives on. Let us carry forward the lessons\n"
-        "they taught us and the love they bestowed\n"
-        "upon us, keeping their memory alive in our\n"
-        "thoughts and actions."
-    ),
-    right_text: str = (
-        "Let us also honor their memory by embracing the\n"
-        "values they held dear. Through acts of\n"
-        "compassion, generosity, and understanding, we\n"
-        "can perpetuate the essence of who they were,\n"
-        "ensuring that their presence continues to\n"
-        "illuminate our lives and those of others."
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1500530855697-b586d89ba3ee"
-        "?q=85&w=1600&auto=format&fit=crop&sat=-100"
-    ),
-    background_color: str = "#F1F1F1",
-    panel_color: str = "#E5CAC3",
-    border_color: str = "#DDEEF2",
-    title_color: str = "#050505",
-    body_color: str = "#111111",
-    image_overlay_color: str = "#FFFFFF",
-    image_overlay_opacity: float = 0.12,
-) -> str:
-    """
-    Generate XML for a memorial legacy slide.
-
-    The layout uses a full-bleed grayscale landscape image, a wide framed
-    title band near the top, and a large framed content panel with two
-    balanced text columns.
-    """
-
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
+    def font_directories() -> list[str]:
+        from pathlib import Path
         directories: list[Path] = []
         windir = os.environ.get("WINDIR")
         if windir:
@@ -19221,18 +54,23 @@ def generate_legacy_of_love_slide_xml(
             Path.home() / "Library/Fonts",
             Path("/Library/Fonts"),
         ])
-        return [directory for directory in directories if directory.exists()]
+        return [path for path in directories if path.exists()]
 
-    def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
+    def resolve_font_path(
+        font_name: str,
+        bold: bool = False,
+        italic: bool = False,
+    ):
+        from pathlib import Path
         aliases = {
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-            "Arial": ["arial", "timesnewroman", "times"],
-            "Arial": ["arial", "calibri", "aptos"],
-            "Calibri": ["calibri", "arial", "aptos"],
+            "Arial": "arial",
+            "Georgia": "georgia",
+            "Calibri": "calibri",
+            "Aptos": "aptos",
+            "Times New Roman": "times",
         }
-        normalized_names = [normalize_font_name(item) for item in aliases.get(font_name, [font_name])]
-        candidates: list[tuple[int, Path]] = []
-
+        normalized = normalize_font_name(aliases.get(font_name, font_name))
+        candidates = []
         for directory in font_directories():
             try:
                 files = directory.rglob("*")
@@ -19242,4297 +80,4261 @@ def generate_legacy_of_love_slide_xml(
                 if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
                     continue
                 stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
+                if normalized not in stem:
                     continue
-                score = 80 if any(name == stem for name in normalized_names) else 58
-                has_bold = any(token in stem for token in ("bold", "bd", "semibold", "demi"))
-                has_italic = any(token in stem for token in ("italic", "oblique", "it"))
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 6
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 4
+                score = 70
+                if stem == normalized:
+                    score += 30
+                has_bold = any(token in stem for token in ("bold", "bd", "semibold"))
+                has_italic = any(token in stem for token in ("italic", "it", "oblique"))
+                if bold and has_bold: score += 20
+                elif bold: score -= 10
+                elif has_bold: score -= 10
+                if italic and has_italic: score += 20
+                elif italic: score -= 10
+                elif has_italic: score -= 10
                 candidates.append((score, path))
-
         if candidates:
             candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
+            return candidates[0][1]
 
-        windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
-        if bold and italic:
-            fallback_paths = [windows_fonts / "timesbi.ttf", windows_fonts / "arialbi.ttf", windows_fonts / "arialbi.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf")]
-        elif italic:
-            fallback_paths = [windows_fonts / "timesi.ttf", windows_fonts / "ariali.ttf", windows_fonts / "ariali.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf")]
-        elif bold:
-            fallback_paths = [windows_fonts / "timesbd.ttf", windows_fonts / "arialbd.ttf", windows_fonts / "arialbd.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")]
-        else:
-            fallback_paths = [windows_fonts / "times.ttf", windows_fonts / "arial.ttf", windows_fonts / "arial.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")]
-        for path in fallback_paths:
-            if path.exists():
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
+        from PIL import ImageFont
+        fallback_name = (
+            "DejaVuSans-BoldOblique.ttf" if bold and italic else
+            "DejaVuSans-Bold.ttf" if bold else
+            "DejaVuSans-Oblique.ttf" if italic else "DejaVuSans.ttf"
+        )
+        font = ImageFont.truetype(fallback_name, 12)
+        font_path = getattr(font, "path", None)
+        if not font_path:
+            raise ValueError(f"Không tìm thấy font '{font_name}'")
+        return Path(font_path)
 
+    canvas_dpi = 120.0
     def pt_to_canvas(point_size: float) -> float:
         return point_size * canvas_dpi / 72.0
 
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
+    def load_font(font_path, font_size_pt: float):
+        from PIL import ImageFont
         return ImageFont.truetype(str(font_path), max(1, round(pt_to_canvas(font_size_pt))))
 
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
+    def measure_text_width(text: str, font_path, font_size_pt: float) -> float:
         font = load_font(font_path, font_size_pt)
         if hasattr(font, "getlength"):
             return float(font.getlength(text))
         left, _, right, _ = font.getbbox(text)
         return float(right - left)
 
-    def measure_line_height(font_path: Path, font_size_pt: float, line_spacing: float) -> float:
+    def measure_line_height(font_path, font_size_pt: float, line_spacing: float) -> float:
         font = load_font(font_path, font_size_pt)
         ascent, descent = font.getmetrics()
         return float(ascent + descent) * line_spacing
 
-    def wrap_text(text: str, font_path: Path, font_size_pt: float, max_width: float) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt) > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-            if current_chunk:
-                chunks.append(current_chunk)
-            return chunks or [word]
+    def break_long_word(word: str, font_path, font_size_pt: float, max_width: float) -> list[str]:
+        parts = []
+        current = ""
+        for char in word:
+            candidate = current + char
+            if current and measure_text_width(candidate, font_path, font_size_pt) > max_width:
+                parts.append(current)
+                current = char
+            else:
+                current = candidate
+        if current:
+            parts.append(current)
+        return parts or [""]
 
-        lines: list[str] = []
+    def wrap_text(text: str, font_path, font_size_pt: float, max_width: float) -> list[str]:
+        result = []
         for paragraph in text.splitlines() or [text]:
             words = paragraph.split()
             if not words:
-                lines.append("")
+                result.append("")
                 continue
             current = ""
             for word in words:
                 if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-                    chunks = split_long_word(word)
-                    lines.extend(chunks[:-1])
-                    current = chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-                if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
-                    current = candidate
+                    pieces = break_long_word(word, font_path, font_size_pt, max_width)
                 else:
-                    if current:
-                        lines.append(current)
-                    current = word
+                    pieces = [word]
+                for piece in pieces:
+                    candidate = piece if not current else f"{current} {piece}"
+                    if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
+                        current = candidate
+                    else:
+                        result.append(current)
+                        current = piece
             if current:
-                lines.append(current)
-        return lines or [""]
+                result.append(current)
+        return result or [""]
 
-    def fit_text(text: str, *, font_path: Path, preferred_font_size: float, min_font_size: float, max_width: float, max_height: float, line_spacing: float, max_lines: int | None = None) -> dict:
-        current_font_size = preferred_font_size
-        best_layout = None
-        while current_font_size >= min_font_size:
-            lines = wrap_text(text, font_path, current_font_size, max_width)
-            line_height = measure_line_height(font_path, current_font_size, line_spacing)
-            height = len(lines) * line_height
-            too_many_lines = max_lines is not None and len(lines) > max_lines
-            overflow_height = max(0.0, height - max_height)
-            score = overflow_height * 2000 + max(0, len(lines) - (max_lines or 999)) * 1500 + (preferred_font_size - current_font_size) * 10
-            layout = {"source_text": text, "lines": lines, "font_size": current_font_size, "width": max_width, "height": min(height, max_height), "score": score}
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-            if height <= max_height and not too_many_lines:
-                return layout
+    def layout_text(text: str, font_path, font_size: float, max_width: float, line_spacing: float, padding: float = 6):
+        lines = wrap_text(text, font_path, font_size, max_width)
+        line_height = measure_line_height(font_path, font_size, line_spacing)
+        return {
+            "source_text": text,
+            "text": "\n".join(lines),
+            "lines": lines,
+            "font_size": font_size,
+            "height": len(lines) * line_height + padding,
+        }
+
+    title_font_name = "Arial"
+    subtitle_font_name = "Arial"
+
+    title_font_path = resolve_font_path(title_font_name, bold=True)
+    subtitle_font_path = resolve_font_path(subtitle_font_name, bold=False)
+
+    title_font_size = 96.0
+    title_min_font_size = 48.0
+    subtitle_font_size = 36.0
+    subtitle_min_font_size = 20.0
+
+    title_line_spacing = 1.05
+    subtitle_line_spacing = 1.1
+
+    gap = 40.0
+    minimum_gap = 20.0
+
+    def calculate_layouts(c_title_size, c_subtitle_size):
+        t_layout = layout_text(title, title_font_path, c_title_size, content_max_width, title_line_spacing, 10)
+        s_layout = layout_text(subtitle, subtitle_font_path, c_subtitle_size, content_max_width, subtitle_line_spacing, 10)
+        return t_layout, s_layout
+
+    t_layout, s_layout = calculate_layouts(title_font_size, subtitle_font_size)
+    total_height = t_layout["height"] + gap + s_layout["height"] if subtitle.strip() else t_layout["height"]
+
+    for _ in range(200):
+        if total_height <= content_max_height:
             break
-        return best_layout
+        changed = False
+        if gap > minimum_gap:
+            gap = max(minimum_gap, gap - 2)
+            changed = True
+        elif subtitle_font_size > subtitle_min_font_size:
+            subtitle_font_size = max(subtitle_min_font_size, subtitle_font_size - 1)
+            changed = True
+        elif title_font_size > title_min_font_size:
+            title_font_size = max(title_min_font_size, title_font_size - 1)
+            changed = True
+        
+        if not changed:
+            break
+        
+        t_layout, s_layout = calculate_layouts(title_font_size, subtitle_font_size)
+        total_height = t_layout["height"] + gap + s_layout["height"] if subtitle.strip() else t_layout["height"]
 
-    title_font_name = "Times New Roman"
-    body_font_name = "Arial"
-    title_font_path = resolve_font_path(title_font_name, bold=False, italic=True)
-    body_font_path = resolve_font_path(body_font_name, bold=False, italic=False)
+    if total_height > content_max_height:
+        raise ValueError("Nội dung quá dài để đặt vừa slide.")
 
-    title_layout = fit_text(title.strip(), font_path=title_font_path, preferred_font_size=50.0, min_font_size=20.0, max_width=1260.0, max_height=200.0, line_spacing=0.95, max_lines=2)
-    left_layout = fit_text(left_text.strip(), font_path=body_font_path, preferred_font_size=18.5, min_font_size=10.0, max_width=560.0, max_height=380.0, line_spacing=1.42, max_lines=12)
-    right_layout = fit_text(right_text.strip(), font_path=body_font_path, preferred_font_size=18.5, min_font_size=10.0, max_width=560.0, max_height=380.0, line_spacing=1.42, max_lines=12)
+    group_y = (canvas_height - total_height) / 2
+    title_y = group_y
+    subtitle_y = group_y + t_layout["height"] + gap
 
-    top_panel_x = 92.0
-    top_panel_y = 138.0
-    top_panel_w = 1415.0
-    top_panel_h = min(
-        230.0,
-        max(172.0, title_layout["height"] + 48.0),
-    )
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
 
-    lower_panel_x = 92.0
-    lower_panel_y = max(416.0, top_panel_y + top_panel_h + 74.0)
-    lower_panel_w = 1415.0
-    max_lower_panel_h = canvas_height - lower_panel_y - 32.0
-    lower_panel_h = min(
-        max_lower_panel_h,
-        max(354.0, max(left_layout["height"], right_layout["height"]) + 64.0),
-    )
-    body_content_top = lower_panel_y + 18.0
-    body_content_bottom = lower_panel_y + lower_panel_h - 18.0
-    body_content_height = body_content_bottom - body_content_top
-    body_stack_height = max(left_layout["height"], right_layout["height"])
-    body_y = body_content_top + max(
-        0.0,
-        (body_content_height - body_stack_height) / 2.0,
-    )
+    presentation = ET.Element("presentation", {
+        "schemaVersion": "1.0",
+        "width": str(canvas_width),
+        "height": str(canvas_height),
+        "slideWidthInches": "13.333",
+        "slideHeightInches": "7.5",
+    })
 
-    presentation = ET.Element("presentation", {"schemaVersion": "1.0", "width": str(canvas_width), "height": str(canvas_height), "slideWidthInches": "13.333", "slideHeightInches": "7.5"})
     slide = ET.SubElement(presentation, "slide", {"background": background_color})
 
     def add(tag: str, **attrs):
         return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items() if value is not None})
 
-    def textbox(text: str, **attrs):
+    def add_textbox(text: str, **attrs):
         node = add("textbox", **attrs)
         node.text = text
         return node
 
-    add("image", src=image_url, x=0, y=0, width=canvas_width, height=canvas_height, fit="cover", crop_x=0.5, crop_y=0.45)
-    add("shape", type="rect", x=0, y=0, width=canvas_width, height=canvas_height, fill=image_overlay_color, opacity=image_overlay_opacity, line_color="none")
+    svg_node = add(
+        "svg",
+        x="0", y="0",
+        width=str(canvas_width), height=str(canvas_height),
+        pixel_width=str(canvas_width), pixel_height=str(canvas_height)
+    )
+    svg_node.text = """
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" style="background: transparent;">
+  <rect width="1600" height="900" fill="#F4F6F7" />
+  <path d="M0,0 L0,300 C150,250 200,100 400,0 Z" fill="#E2E8EC" />
+  <path d="M0,550 C150,550 250,750 550,900 L0,900 Z" fill="#9ACAED" />
+  <path d="M0,750 C100,750 150,850 350,900 L0,900 Z" fill="#1C4670" />
+  <path d="M1200,0 C1250,150 1450,200 1600,300 L1600,0 Z" fill="#9ACAED" />
+  <path d="M1350,0 C1350,80 1450,120 1600,150 L1600,0 Z" fill="#1C4670" />
+  <path d="M1300,900 C1350,700 1500,600 1600,550 L1600,900 Z" fill="#E2E8EC" />
+  <circle cx="280" cy="680" r="10" fill="#1C4670" />
+  <circle cx="580" cy="830" r="15" fill="#1C4670" />
+  <circle cx="170" cy="730" r="8" fill="#9ACAED" />
+  <circle cx="1000" cy="50" r="18" fill="#1C4670" />
+  <circle cx="1400" cy="200" r="10" fill="#9ACAED" />
+  <circle cx="1580" cy="350" r="15" fill="#1C4670" />
+  <circle cx="750" cy="850" r="8" fill="#9ACAED" />
+</svg>
+""".strip()
 
-    # Top title frame and panel
-    add("shape", type="rect", x=top_panel_x, y=top_panel_y - 32.0, width=top_panel_w, height=top_panel_h + 64.0, fill=border_color, line_color="none", opacity=0.98)
-    add("shape", type="rect", x=top_panel_x, y=top_panel_y, width=top_panel_w, height=top_panel_h, fill=panel_color, line_color="none", opacity=0.96)
+    add_textbox(
+        t_layout["source_text"],
+        x=content_x, y=title_y,
+        width=content_max_width, height=t_layout["height"],
+        font=title_font_name, size=t_layout["font_size"], min_font_size=t_layout["font_size"],
+        color=title_color, bold="true", align="center", vertical_align="middle",
+        single_line="false", max_lines=len(t_layout["lines"]), overflow="clip",
+        line_spacing=title_line_spacing, safety_ratio=1.0,
+        margin_left=0, margin_right=0, margin_top=0, margin_bottom=0
+    )
 
-    # Lower content frame and panel
-    add("shape", type="rect", x=lower_panel_x, y=lower_panel_y - 32.0, width=lower_panel_w, height=lower_panel_h + 64.0, fill=border_color, line_color="none", opacity=0.98)
-    add("shape", type="rect", x=lower_panel_x, y=lower_panel_y, width=lower_panel_w, height=lower_panel_h, fill=panel_color, line_color="none", opacity=0.96)
+    if subtitle.strip():
+        add_textbox(
+            s_layout["source_text"],
+            x=content_x, y=subtitle_y,
+            width=content_max_width, height=s_layout["height"],
+            font=subtitle_font_name, size=s_layout["font_size"], min_font_size=s_layout["font_size"],
+            color=subtitle_color, align="center", vertical_align="middle",
+            single_line="false", max_lines=len(s_layout["lines"]), overflow="clip",
+            line_spacing=subtitle_line_spacing, safety_ratio=1.0,
+            margin_left=0, margin_right=0, margin_top=0, margin_bottom=0
+        )
 
-    textbox(title_layout["source_text"], x=170, y=top_panel_y + 24.0, width=1260, height=title_layout["height"], font=title_font_name, font_path=str(title_font_path), size=title_layout["font_size"], min_font_size=20.0, color=title_color, align="center", vertical_align="middle", bold="false", italic="true", single_line="false", max_lines=2, overflow="clip", reflow_on_resize="true", line_spacing=0.95, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
-    textbox(left_layout["source_text"], x=160, y=body_y, width=560, height=left_layout["height"], font=body_font_name, font_path=str(body_font_path), size=left_layout["font_size"], min_font_size=10.0, color=body_color, align="center", vertical_align="top", bold="false", italic="false", single_line="false", max_lines=12, overflow="clip", reflow_on_resize="true", line_spacing=1.42, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
-    textbox(right_layout["source_text"], x=880, y=body_y, width=560, height=right_layout["height"], font=body_font_name, font_path=str(body_font_path), size=right_layout["font_size"], min_font_size=10.0, color=body_color, align="center", vertical_align="top", bold="false", italic="false", single_line="false", max_lines=12, overflow="clip", reflow_on_resize="true", line_spacing=1.42, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    return minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+
+
+
+# ==========================================================
+# 2. SLIDE WARM INTRO (Tông màu ấm, lề phải)
+# ==========================================================
+def generate_warm_intro_slide_xml(
+    title: str = "Intro Template",
+    subtitle: str = "Choose a topic and audience to generate a tailored introductory presentation",
+    background_color: str = "#F2E6DF",
+    title_color: str = "#5C4640",
+    subtitle_color: str = "#A0716A",
+) -> str:
+    """
+    Sinh ra file XML cho slide Warm Intro với SVG background tông ấm (Be, Đào, Nâu) 
+    và các khối văn bản căn lề phải, hỗ trợ tự động co chữ, ngắt dòng.
+    """
+    slide_width = 1600
+    slide_height = 900
+
+    presentation = ET.Element(
+        "presentation",
+        schemaVersion="1.0",
+        width=str(slide_width),
+        height=str(slide_height),
+        slideWidthInches="13.333",
+        slideHeightInches="7.5",
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        background=background_color,
+    )
+
+    # 1. Background (Watercolor blobs)
+    svg_node = ET.SubElement(
+        slide,
+        "svg",
+        x="0", y="0",
+        width=str(slide_width), height=str(slide_height),
+        pixel_width=str(slide_width), pixel_height=str(slide_height)
+    )
+    svg_node.text = f"""
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="100%" height="100%">
+    <!-- Top Right Pink Blob -->
+    <path d="M 1200 -50 C 1200 -50 1450 100 1650 50 C 1650 50 1650 400 1500 350 C 1350 300 1350 -50 1200 -50 Z" fill="#F4BDB3" opacity="0.8"/>
+    
+    <!-- Bottom Right Taupe Blob -->
+    <path d="M 1400 1000 C 1400 1000 1450 750 1650 700 C 1650 700 1700 1000 1400 1000 Z" fill="#C2B7B2" opacity="0.8"/>
+    
+    <!-- Bottom Left Orange/Peach Blob -->
+    <path d="M -50 950 C -50 950 100 650 300 850 C 500 1050 800 900 800 1050 C 800 1050 -50 1050 -50 950 Z" fill="#F5C4A6" opacity="0.7"/>
+    
+    <!-- Top Left Giant Brown Blob -->
+    <path d="M -150 -150 C -150 -150 400 -50 550 100 C 700 250 550 500 400 650 C 250 800 -50 900 -200 900 Z" fill="#755E59" opacity="0.9"/>
+    
+    <!-- Overlay Bottom Left Dark Brown Blob -->
+    <path d="M -100 550 C -100 550 200 500 250 800 C 300 1100 -50 1100 -100 550 Z" fill="#885A48" opacity="0.9"/>
+</svg>
+""".strip()
+
+    # 2. Xử lý Textbox với tính năng Ruler (Ràng buộc lề phải)
+    def textbox(
+        text: str,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        font: str,
+        font_path: str,
+        size: float,
+        min_font_size: float,
+        color: str,
+        align: str,
+        vertical_align: str,
+        single_line: bool,
+        max_lines: int,
+        overflow: str,
+        reflow_on_resize: str,
+        line_spacing: float,
+        safety_ratio: float,
+        margin_left: float,
+        margin_right: float,
+        margin_top: float,
+        margin_bottom: float,
+        bold: bool = False,
+    ):
+        try:
+            image_font = ImageFont.truetype(font_path, int(size))
+        except Exception:
+            try:
+                import sys
+                fallback_path = "C:/Windows/Fonts/arial.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial.ttf"
+                image_font = ImageFont.truetype(fallback_path, int(size))
+            except Exception:
+                image_font = ImageFont.load_default()
+        
+        words = str(text).split()
+        if not words:
+            return
+
+        current_size = size
+        lines = []
+
+        while current_size >= min_font_size:
+            try:
+                test_font = ImageFont.truetype(font_path, int(current_size))
+            except Exception:
+                test_font = ImageFont.load_default()
+            
+            lines = []
+            current_line = []
+            
+            for word in words:
+                test_line = " ".join(current_line + [word])
+                bbox = test_font.getbbox(test_line)
+                w = bbox[2] - bbox[0]
+                
+                if w <= width:
+                    current_line.append(word)
+                else:
+                    if current_line:
+                        lines.append(" ".join(current_line))
+                        current_line = [word]
+                    else:
+                        lines.append(word)
+                        current_line = []
+            
+            if current_line:
+                lines.append(" ".join(current_line))
+                
+            if len(lines) <= max_lines:
+                break
+                
+            current_size -= 2
+
+        tb = ET.SubElement(
+            slide,
+            "textbox",
+            x=str(x),
+            y=str(y),
+            width=str(width),
+            height=str(height),
+            font=font,
+            size=str(current_size),
+            min_font_size=str(min_font_size),
+            color=color,
+            align=align,
+            vertical_align=vertical_align,
+            single_line=str(single_line).lower(),
+            max_lines=str(max_lines),
+            overflow=overflow,
+            reflow_on_resize=reflow_on_resize,
+            line_spacing=str(line_spacing),
+            safety_ratio=str(safety_ratio),
+            margin_left=str(margin_left),
+            margin_right=str(margin_right),
+            margin_top=str(margin_top),
+            margin_bottom=str(margin_bottom),
+        )
+        if bold:
+            tb.set("bold", "true")
+        tb.text = text
+
+    # Các hằng số layout
+    import sys
+    # Sử dụng font mảnh, thanh lịch cho slide Warm Intro thay vì Arial thô cứng
+    font_path_regular = "C:/Windows/Fonts/segoeuil.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial.ttf"
+    font_name = "Segoe UI Light"
+
+    # Text container ở nửa bên phải (right-aligned)
+    text_container_width = 800
+    text_container_x = slide_width - text_container_width - 80 # Margin right = 80
+    
+    # Tính y_offset (chữ ở giữa theo chiều dọc)
+    y_offset = slide_height / 2 + 50
+    
+    # Subtitle
+    textbox(
+        subtitle,
+        x=text_container_x,
+        y=y_offset + 20,
+        width=text_container_width,
+        height=200,
+        font=font_name,
+        font_path=font_path_regular,
+        size=40,
+        min_font_size=24,
+        color=subtitle_color,
+        align="right",
+        vertical_align="top",
+        single_line=False,
+        max_lines=2,
+        overflow="shrink",
+        reflow_on_resize="true",
+        line_spacing=1.1,
+        safety_ratio=1.0,
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+    
+    # Title (Nằm ngay bên trên Subtitle)
+    textbox(
+        title,
+        x=text_container_x,
+        y=y_offset - 100,
+        width=text_container_width,
+        height=120,
+        font=font_name,
+        font_path=font_path_regular,
+        size=96,
+        min_font_size=64,
+        color=title_color,
+        align="right",
+        vertical_align="bottom",
+        single_line=False,
+        max_lines=1,
+        overflow="shrink",
+        reflow_on_resize="true",
+        line_spacing=1.0,
+        safety_ratio=1.0,
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+        bold=False,  # Bỏ in đậm để nhìn mảnh mai, sang trọng hơn
+    )
+
+    raw_xml = ET.tostring(
+        presentation,
+        encoding="utf-8",
+    )
+
+    xml_content = minidom.parseString(
+        raw_xml
+    ).toprettyxml(
+        indent="  ",
+        encoding="UTF-8",
+    ).decode("utf-8")
+
+    return xml_content
+
+
+# ==========================================================
+# 3. SLIDE CREATIVE TEAM (Đội ngũ sáng tạo)
+# ==========================================================
+def generate_creative_team_slide_xml(
+    title: str = "Our Creative Team",
+    members: list[dict] = None,
+    background_color: str = "#F0F0F0",
+    title_color: str = "#594A42",
+) -> str:
+    """
+    Sinh ra file XML cho slide Our Creative Team với 4 thẻ ảnh Polaroid nằm nghiêng nghệ thuật.
+    """
+    if members is None:
+        members = [
+            {"name": "Olivia Chen", "role": "Lead Designer", "image_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop"},
+            {"name": "Ben Carter", "role": "Photographer", "image_url": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=500&fit=crop"},
+            {"name": "Aisha Khan", "role": "Content Strategist", "image_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&h=500&fit=crop"},
+            {"name": "Leo Martinez", "role": "Illustrator", "image_url": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=500&h=500&fit=crop"},
+        ]
+        
+    # Giới hạn tối đa 4 thành viên cho layout này
+    members = members[:4]
+
+    slide_width = 1600
+    slide_height = 900
+
+    presentation = ET.Element(
+        "presentation",
+        schemaVersion="1.0",
+        width=str(slide_width),
+        height=str(slide_height),
+        slideWidthInches="13.333",
+        slideHeightInches="7.5",
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        background=background_color,
+    )
+
+    # Các hằng số layout
+    import sys
+    font_path_regular = "C:/Windows/Fonts/comic.ttf" if sys.platform == "win32" else "/Library/Fonts/Comic Sans MS.ttf"
+    font_path_bold = "C:/Windows/Fonts/comicbd.ttf" if sys.platform == "win32" else "/Library/Fonts/Comic Sans MS Bold.ttf"
+
+    def add_textbox(**kwargs):
+        tb = ET.SubElement(slide, "textbox")
+        for k, v in kwargs.items():
+            if k == 'text':
+                tb.text = str(v)
+            else:
+                tb.set(k, str(v))
+        return tb
+
+    # 1. Title
+    add_textbox(
+        text=title,
+        x=0,
+        y=70,
+        width=slide_width,
+        height=120,
+        font="Comic Sans MS",
+        font_path=font_path_bold,
+        size=72,
+        min_font_size=48,
+        color=title_color,
+        align="center",
+        vertical_align="middle",
+        single_line="true",
+        max_lines=1,
+        overflow="shrink",
+        reflow_on_resize="true",
+        line_spacing=1.0,
+        safety_ratio=1.0,
+        margin_left=0, margin_right=0, margin_top=0, margin_bottom=0,
+        bold="true",
+    )
+
+    # 2. Polaroids
+    # Khung chứa 4 thẻ
+    total_cards = len(members)
+    card_width = 300
+    card_height = 440
+    gap = 40
+    total_width = total_cards * card_width + (total_cards - 1) * gap
+    start_x = (slide_width - total_width) / 2
+    start_y = 230
+    
+    # Góc nghiêng cho 4 thẻ để tạo cảm giác tự nhiên ngẫu nhiên
+    rotations = [-3, 2, -1, 4]
+
+    for i, member in enumerate(members):
+        x = start_x + i * (card_width + gap)
+        y = start_y
+        rot = rotations[i % len(rotations)]
+        
+        # Shadow giả lập đằng sau (Hình chữ nhật xám mờ bị dịch xuống và sang phải)
+        rect_shadow = ET.SubElement(
+            slide,
+            "shape",
+            type="rectangle",
+            x=str(x + 8),
+            y=str(y + 12),
+            width=str(card_width),
+            height=str(card_height),
+            fill="#CCCCCC",
+            rotation=str(rot),
+        )
+        
+        # Polaroid Card Background (Hình chữ nhật trắng)
+        rect_bg = ET.SubElement(
+            slide,
+            "shape",
+            type="rectangle",
+            x=str(x),
+            y=str(y),
+            width=str(card_width),
+            height=str(card_height),
+            fill="#FFFFFF",
+            rotation=str(rot),
+        )
+        
+        # Ảnh đại diện (vuông)
+        img_size = 260
+        img_x = x + 20
+        img_y = y + 20
+        
+        img = ET.SubElement(
+            slide,
+            "image",
+            x=str(img_x),
+            y=str(img_y),
+            width=str(img_size),
+            height=str(img_size),
+            src=member.get("image_url", ""),
+            rotation=str(rot),
+        )
+        
+        # Tên nhân sự
+        name_y = img_y + img_size + 25
+        add_textbox(
+            text=member.get("name", "Name"),
+            x=x,
+            y=name_y,
+            width=card_width,
+            height=40,
+            font="Comic Sans MS",
+            font_path=font_path_bold,
+            size=28,
+            min_font_size=20,
+            color="#333333",
+            align="center",
+            vertical_align="middle",
+            single_line="true",
+            max_lines=1,
+            overflow="shrink",
+            reflow_on_resize="true",
+            line_spacing=1.0,
+            safety_ratio=1.0,
+            margin_left=0, margin_right=0, margin_top=0, margin_bottom=0,
+            bold="true",
+            rotation=str(rot),
+        )
+        
+        # Chức danh
+        role_y = name_y + 45
+        add_textbox(
+            text=member.get("role", "Role"),
+            x=x,
+            y=role_y,
+            width=card_width,
+            height=30,
+            font="Comic Sans MS",
+            font_path=font_path_regular,
+            size=18,
+            min_font_size=14,
+            color="#777777",
+            align="center",
+            vertical_align="middle",
+            single_line="true",
+            max_lines=1,
+            overflow="shrink",
+            reflow_on_resize="true",
+            line_spacing=1.0,
+            safety_ratio=1.0,
+            margin_left=0, margin_right=0, margin_top=0, margin_bottom=0,
+            rotation=str(rot),
+        )
+
+    raw_xml = ET.tostring(
+        presentation,
+        encoding="utf-8",
+    )
+
+    xml_content = minidom.parseString(
+        raw_xml
+    ).toprettyxml(
+        indent="  ",
+        encoding="UTF-8",
+    ).decode("utf-8")
+
+    return xml_content
+
+
+# ==========================================================
+# 4. SLIDE GRID TEAM (2x2 Grid)
+# ==========================================================
+def generate_grid_team_slide_xml(
+    title: str = "Add a Team\nMembers\nPage",
+    members: list[dict] = None,
+    background_color: str = "#F3F6F9",
+    title_color: str = "#1A2530",
+) -> str:
+    """
+    Sinh ra file XML cho slide Add a Team Members Page với Grid 2x2.
+    """
+    if members is None:
+        members = [
+            {"name": "Olivia Chen", "role": "Lead Designer", "image_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop"},
+            {"name": "Ben Carter", "role": "Frontend Developer", "image_url": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop"},
+            {"name": "Aisha Khan", "role": "Project Manager", "image_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop"},
+            {"name": "Leo Martinez", "role": "Marketing Head", "image_url": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop"},
+        ]
+        
+    members = members[:4]
+
+    slide_width = 1600
+    slide_height = 900
+
+    presentation = ET.Element(
+        "presentation",
+        schemaVersion="1.0",
+        width=str(slide_width),
+        height=str(slide_height),
+        slideWidthInches="13.333",
+        slideHeightInches="7.5",
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        background=background_color,
+    )
+
+    import sys
+    font_path_regular = "C:/Windows/Fonts/segoeui.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial.ttf"
+    font_path_bold = "C:/Windows/Fonts/segoeuib.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial Bold.ttf"
+    font_path_black = "C:/Windows/Fonts/ariblk.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial Black.ttf"
+
+    def add_textbox(**kwargs):
+        tb = ET.SubElement(slide, "textbox")
+        for k, v in kwargs.items():
+            if k == 'text':
+                tb.text = str(v)
+            else:
+                tb.set(k, str(v))
+        return tb
+
+    # 1. Title (Left side)
+    add_textbox(
+        text=title,
+        x=120,
+        y=220,
+        width=650,
+        height=340,
+        font="Arial Black",
+        font_path=font_path_black,
+        size=72,
+        min_font_size=48,
+        color=title_color,
+        align="left",
+        vertical_align="bottom",
+        single_line="false",
+        max_lines=3,
+        overflow="shrink",
+        reflow_on_resize="true",
+        line_spacing=1.0,
+        safety_ratio=1.0,
+        margin_left=0, margin_right=0, margin_top=0, margin_bottom=0,
+        bold="true",
+    )
+    
+    # Colorful gradient line below title
+    colors = ["#8E44AD", "#27AE60", "#E74C3C", "#F1C40F"]
+    line_y = 575
+    for i, color in enumerate(colors):
+        ET.SubElement(
+            slide, "shape", type="rectangle",
+            x=str(120 + i * 20), y=str(line_y),
+            width="20", height="6",
+            fill=color,
+            line_color="none"
+        )
+
+    # 2. Grid (Right side)
+    card_width = 320
+    card_height = 180
+    img_size = 120
+    col_gap = 40
+    row_gap = 100
+    
+    start_x = 750
+    start_y = 200
+
+    for i, member in enumerate(members):
+        col = i % 2
+        row = i // 2
+        
+        x = start_x + col * (card_width + col_gap)
+        y = start_y + row * (card_height + row_gap)
+        color = colors[i % len(colors)]
+        
+        # Shadow
+        ET.SubElement(
+            slide, "shape", type="rounded_rectangle",
+            x=str(x + 8), y=str(y + 12),
+            width=str(card_width), height=str(card_height),
+            fill="#E1E5EB",
+            line_color="none"
+        )
+        
+        # White Card
+        ET.SubElement(
+            slide, "shape", type="rounded_rectangle",
+            x=str(x), y=str(y),
+            width=str(card_width), height=str(card_height),
+            fill="#FFFFFF",
+            line_color="none"
+        )
+        
+        # Image Border Ring
+        img_x = x + (card_width - img_size) / 2
+        img_y = y - (img_size / 2)
+        ET.SubElement(
+            slide, "shape", type="circle",
+            x=str(img_x - 6), y=str(img_y - 6),
+            width=str(img_size + 12), height=str(img_size + 12),
+            fill=color,
+            line_color="none"
+        )
+        # Inner white ring
+        ET.SubElement(
+            slide, "shape", type="circle",
+            x=str(img_x - 3), y=str(img_y - 3),
+            width=str(img_size + 6), height=str(img_size + 6),
+            fill="#FFFFFF",
+            line_color="none"
+        )
+        
+        # Image (circle shaped)
+        ET.SubElement(
+            slide, "image",
+            x=str(img_x), y=str(img_y),
+            width=str(img_size), height=str(img_size),
+            src=member.get("image_url", ""),
+            shape="circle"
+        )
+        
+        # Name
+        name_y = img_y + img_size + 20
+        add_textbox(
+            text=member.get("name", "Name"),
+            x=x, y=name_y,
+            width=card_width, height=35,
+            font="Segoe UI", font_path=font_path_bold,
+            size=24, min_font_size=18,
+            color="#2C3E50", align="center", vertical_align="middle",
+            single_line="true", max_lines=1, overflow="shrink", reflow_on_resize="true",
+            line_spacing=1.0, safety_ratio=1.0,
+            margin_left=0, margin_right=0, margin_top=0, margin_bottom=0,
+            bold="true",
+        )
+        
+        # Role
+        role_y = name_y + 35
+        add_textbox(
+            text=member.get("role", "Role"),
+            x=x, y=role_y,
+            width=card_width, height=30,
+            font="Segoe UI", font_path=font_path_regular,
+            size=16, min_font_size=12,
+            color="#7F8C8D", align="center", vertical_align="middle",
+            single_line="true", max_lines=1, overflow="shrink", reflow_on_resize="true",
+            line_spacing=1.0, safety_ratio=1.0,
+            margin_left=0, margin_right=0, margin_top=0, margin_bottom=0,
+        )
 
     raw_xml = ET.tostring(presentation, encoding="utf-8")
     xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
     return xml_content
 
-def generate_social_media_points_slide_xml(
-    title: str = "Write your topic or  wirta á  idea on social media thank for using this tool",
-    cards: list[dict[str, str]]  = [
-            {
-                "title": "ADD A MAIN POINT ADD A MAIN POINT ADD A MAIN POINT",
-                "description": "Briefly elaborate on what you want to discuss.",
-            },
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Briefly elaborate on what you want to discuss. Briefly elaborate on what you want to discuss. Briefly elaborate on what you want to discuss.",
-            },
-            
-        ],
-    background_color: str = "#FFFFFF",
-    accent_color: str = "#6F8369",
-    card_color: str = "#E9EDE9",
-    title_color: str = "#000000",
-    card_title_color: str = "#000000",
-    card_body_color: str = "#000000",
-    star_color: str = "#FFFFFF",
-    divider_color: str = "#7C7C7C",
-) -> str:
-    """
-    Generate XML for a clean social media key-points slide.
+# ==========================================================
+# 5. ELEGANT EDUCATION TITLE SLIDE
+# ==========================================================
+def cubic_bezier(t, p0, p1, p2, p3):
+    x = (1-t)**3 * p0[0] + 3*(1-t)**2 * t * p1[0] + 3*(1-t) * t**2 * p2[0] + t**3 * p3[0]
+    y = (1-t)**3 * p0[1] + 3*(1-t)**2 * t * p1[1] + 3*(1-t) * t**2 * p2[1] + t**3 * p3[1]
+    return x, y
 
-    The layout uses a white background, a small top divider, one editable
-    headline, and a row of content cards with green headers and star icons.
-    Cards are generated from a list and the layout adjusts spacing and text
-    size to fit the available area.
-    """
-
-    clean_cards: list[dict[str, str]] = []
-    for card in cards[:3]:
-        card_title = str(card.get("title", "")).strip()
-        description = str(card.get("description", "")).strip()
-
-        if not card_title and not description:
-            continue
-
-        clean_cards.append(
-            {
-                "title": card_title or "ADD A MAIN POINT",
-                "description": description or "Briefly elaborate on what you want to discuss.",
-            }
-        )
-
-    if not clean_cards:
-        clean_cards = [
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Briefly elaborate on what you want to discuss.",
-            }
-        ]
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-
-        normalized_names = [normalize_font_name(name) for name in aliases.get(font_name, [font_name])]
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(token in stem for token in ("bold", "bd", "semibold", "demi"))
-                has_italic = any(token in stem for token in ("italic", "oblique", "it"))
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
+def clip_line(x1, y1, x2, y2, xmin, ymin, xmax, ymax):
+    t0 = 0.0
+    t1 = 1.0
+    dx = x2 - x1
+    dy = y2 - y1
+    p = [-dx, dx, -dy, dy]
+    q = [x1 - xmin, xmax - x1, y1 - ymin, ymax - y1]
+    for i in range(4):
+        if p[i] == 0:
+            if q[i] < 0: return None
         else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for path in fallback_paths:
-            if path.exists():
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        if not text:
-            return 0.0
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(font_path: Path, font_size_pt: float, line_spacing: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(text: str, font_path: Path, font_size_pt: float, max_width: float) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-                if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_size: float,
-        min_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_size = preferred_size
-        best_layout = None
-
-        while current_size >= min_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-            too_many = max_lines is not None and len(lines) > max_lines
-            overflow = max(0.0, height - max_height)
-
-            score = (
-                overflow * 1800
-                + max(0, len(lines) - (max_lines or 999)) * 1200
-                + (preferred_size - current_size) * 8
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many:
-                return layout
-
-            break
-
-        return best_layout
-
-    title_font_name = "Arial"
-    title_font_path = resolve_font_path(title_font_name, bold=True, italic=False)
-    title_layout = fit_text(
-        title,
-        font_path=title_font_path,
-        preferred_size=44.0,
-        min_size=22.0,
-        max_width=1400.0,
-        max_height=120.0,
-        line_spacing=1.0,
-        max_lines=2,
-    )
-
-    card_count = len(clean_cards)
-    if card_count == 1:
-        columns = 1
-    elif card_count == 2:
-        columns = 2
-    else:
-        columns = 3
-
-    rows = (card_count + columns - 1) // columns
-
-    horizontal_margin = 26.0
-    gap_x = 88.0 if columns == 3 else 72.0
-    available_w = canvas_width - horizontal_margin * 2 - gap_x * (columns - 1)
-    card_w = available_w / columns
-
-    card_area_y = 336.0
-    card_area_h = 485.0
-    gap_y = 34.0
-    card_h = (card_area_h - gap_y * (rows - 1)) / rows
-    header_h = min(98.0, card_h * 0.24)
-
-    card_title_font_path = resolve_font_path("Arial", bold=True)
-    card_body_font_path = resolve_font_path("Arial", bold=False)
-
-    card_layouts: list[dict[str, object]] = []
-    for index, card in enumerate(clean_cards):
-        card_title_layout = fit_text(
-            card["title"],
-            font_path=card_title_font_path,
-        preferred_size=18.0,
-            min_size=18,
-            max_width=card_w - 70,
-            max_height=max(30.0, card_h * 0.18),
-            line_spacing=1.05,
-            max_lines=2,
-        )
-
-        body_layout = fit_text(
-            card["description"],
-            font_path=card_body_font_path,
-        preferred_size=16,
-            min_size=15,
-            max_width=card_w - 70,
-            max_height=max(54.0, card_h - header_h - 120.0),
-            line_spacing=1.22,
-            max_lines=None,
-        )
-
-        row = index // columns
-        col = index % columns
-        x = horizontal_margin + col * (card_w + gap_x)
-        y = card_area_y + row * (card_h + gap_y)
-
-        card_layouts.append(
-            {
-                "x": x,
-                "y": y,
-                "title": card_title_layout,
-                "body": body_layout,
-            }
-        )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=background_color,
-        line_color="none",
-    )
-
-    add(
-        "line",
-        x1=800,
-        y1=0,
-        x2=800,
-        y2=94,
-        color=divider_color,
-        width=1.1,
-    )
-
-    # One editable centered title string.
-    title_width = 1400.0
-    title_y = 165.0
-    textbox(
-        title_layout["source_text"],
-        x=(canvas_width - title_width) / 2.0,
-        y=title_y,
-        width=title_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=22.0,
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        bold="true",
-        italic="false",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    star_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
-  <path d="M36 5 L44.3 26.2 L67 26.2 L48.8 40.1 L55.8 66 L36 50.3 L16.2 66 L23.2 40.1 L5 26.2 L27.7 26.2 Z"
-        fill="{star_color}"/>
-</svg>
-""".strip()
-
-    for card in card_layouts:
-        x = float(card["x"])
-        y = float(card["y"])
-
-        add(
-            "shape",
-            type="rect",
-            x=x,
-            y=y,
-            width=card_w,
-            height=card_h,
-            fill=card_color,
-            line_color="none",
-        )
-
-        add(
-            "shape",
-            type="rect",
-            x=x,
-            y=y,
-            width=card_w,
-            height=header_h,
-            fill=accent_color,
-            line_color="none",
-        )
-
-        star_node = add(
-            "svg",
-            name="card_star",
-            x=x + card_w / 2 - 28,
-            y=y + header_h / 2 - 28,
-            width=56,
-            height=56,
-            pixel_width=216,
-            pixel_height=216,
-        )
-        star_node.text = star_svg
-
-        title_layout = card["title"]
-        body_layout = card["body"]
-
-        # Keep card content closer to the colored header while preserving a
-        # small breathing gap below the header.
-        content_top = y + header_h + 60.0
-        title_y = content_top
-        body_y = title_y + title_layout["height"] + 34.0
-
-        textbox(
-            title_layout["source_text"],
-            x=x + 35,
-            y=title_y,
-            width=card_w - 70,
-            height=title_layout["height"],
-            font="Arial",
-            font_path=str(card_title_font_path),
-            size=title_layout["font_size"],
-            min_font_size=max(7.0, title_layout["font_size"] - 2.0),
-            color=card_title_color,
-            align="center",
-            vertical_align="middle",
-            bold="true",
-            italic="false",
-            single_line="false",
-            max_lines=len(title_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.05,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-        textbox(
-            body_layout["source_text"],
-            x=x + 35,
-            y=body_y,
-            width=card_w - 70,
-            height=body_layout["height"],
-            font="Arial",
-            font_path=str(card_body_font_path),
-            size=body_layout["font_size"],
-            min_font_size=max(7.0, body_layout["font_size"] - 2.0),
-            color=card_body_color,
-            align="center",
-            vertical_align="top",
-            bold="false",
-            italic="false",
-            single_line="false",
-            max_lines=len(body_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.22,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_numbered_social_media_points_slide_xml(
-    title: str = "Write Your Topic or Idea on Social Media Idea on Social Media Idea on Social Media",
-    items: list[dict[str, str]]  = [
-            {
-                "title": "Messi is the GOAT of soccer Messi is the GOAT of soccer ",
-                "description": "Elaborate on what you want to discuss Elaborate on what you want to discuss  Elaborate on what you want to discuss  Elaborate on what you want to discuss Elaborate on what you want to discuss Elaborate on what you want to discuss.",
-            },
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Elaborate on what you want to discuss.",
-            },
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Elaborate on what you want to discuss.",
-            },
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Elaborate on what you want to discuss.",
-            },
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Elaborate on what you want to discuss.",
-            },
-            {
-                "title": "ADD A MAIN POINT",
-                "description": "Elaborate on what you want to discuss.",
-            },
-        ],
-    background_color: str = "#FFFFFF",
-    content_background_color: str = "#F0F3F0",
-    accent_color: str = "#6F8369",
-    title_color: str = "#000000",
-    item_title_color: str = "#000000",
-    item_body_color: str = "#000000",
-    divider_color: str = "#777777",
-) -> str:
-    """
-    Generate XML for a numbered social media points slide.
-
-    The layout uses one large title string at the top and places numbered
-    content items in a balanced grid on a soft green-gray content background.
-    Item numbers are generated from item order and are not separate input
-    content.
-    """
-
-    clean_title = str(title or "").strip()
-
-    raw_items = items if isinstance(items, (list, tuple)) else [items]
-    normalized_items: list[dict[str, str]] = []
-    for raw_item in raw_items:
-        item = raw_item if isinstance(raw_item, dict) else {}
-        normalized_items.append(
-            {
-                "title": str(item.get("title") or "").strip(),
-                "description": str(item.get("description") or "").strip(),
-            }
-        )
-    items = normalized_items or [
-        {
-            "title": "",
-            "description": "",
-        }
-    ]
-
-   
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        if not text:
-            return 0.0
-
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt) > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-            return chunks + [current_chunk] if current_chunk else chunks or [word]
-
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-                    chunks = split_long_word(word)
-                    lines.extend(chunks[:-1])
-                    current = chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt)
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_size: float,
-        min_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_size = preferred_size
-        best_layout = None
-
-        while current_size >= min_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-            too_many = max_lines is not None and len(lines) > max_lines
-            overflow = max(0.0, height - max_height)
-
-            score = (
-                overflow * 1800
-                + max(0, len(lines) - (max_lines or 999)) * 1200
-                + (preferred_size - current_size) * 8
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many:
-                return layout
-
-            break
-
-        return best_layout
-
-    font_name = "Arial"
-    title_font_path = resolve_font_path(font_name, bold=True)
-    item_title_font_path = resolve_font_path(font_name, bold=True)
-    item_body_font_path = resolve_font_path(font_name, bold=False)
-    item_number_font_path = resolve_font_path(font_name, bold=True)
-
-    title_layout = fit_text(
-        clean_title,
-        font_path=title_font_path,
-        preferred_size=36.0,
-        min_size=18.0,
-        max_width=1400.0,
-        max_height=128.0,
-        line_spacing=1.04,
-        max_lines=None,
-    )
-
-    item_count = len(items)
-
-    if item_count == 1:
-        columns = 1
-    elif item_count == 2:
-        columns = 2
-    else:
-        columns = 3
-
-    rows = (item_count + columns - 1) // columns
-
-    panel_x = 0.0
-    panel_y = 372.0
-    panel_w = canvas_width
-    panel_h = 548.0
-
-    content_left = 94.0
-    content_right = 94.0
-    content_top = panel_y + 98.0
-    content_bottom = 88.0
-    item_area_w = canvas_width - content_left - content_right
-    item_area_h = panel_h - 98.0 - content_bottom
-
-    gap_x = 88.0 if columns == 3 else 76.0
-    gap_y = 92.0 if rows == 2 else 50.0
-
-    cell_w = (item_area_w - gap_x * (columns - 1)) / columns
-    cell_h = (item_area_h - gap_y * (rows - 1)) / rows
-
-    number_w = 62.0
-    title_gap = 18.0
-    text_w = cell_w - number_w - title_gap
-    title_body_gap = 14.0
-    card_bottom_padding = 12.0
-    minimum_body_height = 40.0
-    item_layouts: list[dict[str, object]] = []
-    for index, item in enumerate(items):
-        row = index // columns
-        col = index % columns
-
-        x = content_left + col * (cell_w + gap_x)
-        y = content_top + row * (cell_h + gap_y)
-
-        # A row may use the gap before the next row. The last row may use the
-        # remaining panel space. This delays font reduction until the text is
-        # actually close to another card or to the panel boundary.
-        next_row_y = (
-            y + cell_h + gap_y
-            if row < rows - 1
-            else panel_y + panel_h - content_bottom
-        )
-        available_item_height = max(1.0, next_row_y - y)
-        maximum_card_title_height = max(
-            28.0,
-            available_item_height
-            - title_body_gap
-            - card_bottom_padding
-            - minimum_body_height,
-        )
-
-        title_item_layout = fit_text(
-            item["title"],
-            font_path=item_title_font_path,
-        preferred_size=15.0,
-            min_size=8.0,
-            max_width=text_w,
-            max_height=maximum_card_title_height,
-            line_spacing=1.05,
-            max_lines=3,
-        )
-
-        body_item_layout = fit_text(
-            item["description"],
-            font_path=item_body_font_path,
-        preferred_size=13.0,
-            min_size=7.5,
-            max_width=text_w,
-            max_height=max(
-                minimum_body_height,
-                available_item_height
-                - title_item_layout["height"]
-                - title_body_gap
-                - card_bottom_padding,
-            ),
-            line_spacing=1.28,
-            max_lines=None,
-        )
-
-        item_layouts.append(
-            {
-                "x": x,
-                "y": y,
-                "number": f"{index + 1:02d}",
-                "title": title_item_layout,
-                "body": body_item_layout,
-            }
-        )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=background_color,
-        line_color="none",
-    )
-
-    add(
-        "line",
-        x1=canvas_width / 2,
-        y1=0,
-        x2=canvas_width / 2,
-        y2=92,
-        color=divider_color,
-        width=1.2,
-        opacity=0.72,
-    )
-
-    # Keep the title as one string and one textbox. Wrapping is handled by the
-    # textbox layout instead of creating a separate textbox for every word.
-    textbox(
-        title_layout["source_text"],
-        x=100.0,
-        y=176.0,
-        width=1400.0,
-        height=title_layout["height"],
-        font=font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(16.0, title_layout["font_size"] - 2.0),
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        bold="true",
-        italic="false",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.04,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    add(
-        "shape",
-        type="rect",
-        x=panel_x,
-        y=panel_y,
-        width=panel_w,
-        height=panel_h,
-        fill=content_background_color,
-        line_color="none",
-    )
-
-    for layout in item_layouts:
-        x = float(layout["x"])
-        y = float(layout["y"])
-
-        textbox(
-            str(layout["number"]),
-            x=x,
-            y=y,
-            width=number_w,
-            height=34.0,
-            font=font_name,
-            font_path=str(item_number_font_path),
-            size=16.0,
-            min_font_size=10.0,
-            color=accent_color,
-            align="left",
-            vertical_align="middle",
-            bold="true",
-            italic="false",
-            single_line="true",
-            max_lines=1,
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-        title_item = layout["title"]
-        body_item = layout["body"]
-
-        text_x = x + number_w + title_gap
-
-        textbox(
-            title_item["source_text"],
-            x=text_x,
-            y=y,
-            width=text_w,
-            height=title_item["height"],
-            font=font_name,
-            font_path=str(item_title_font_path),
-            size=title_item["font_size"],
-            min_font_size=max(7.0, title_item["font_size"] - 2.0),
-            color=item_title_color,
-            align="left",
-            vertical_align="top",
-            bold="true",
-            italic="false",
-            single_line="false",
-            max_lines=len(title_item["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.05,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-        textbox(
-            body_item["source_text"],
-            x=text_x,
-            y=y + title_item["height"] + title_body_gap,
-            width=text_w,
-            height=body_item["height"],
-            font=font_name,
-            font_path=str(item_body_font_path),
-            size=body_item["font_size"],
-            min_font_size=max(7.0, body_item["font_size"] - 2.0),
-            color=item_body_color,
-            align="left",
-            vertical_align="top",
-            bold="false",
-            italic="false",
-            single_line="false",
-            max_lines=len(body_item["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.28,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_platform_instructions_slide_xml(
-    items: list[dict[str, object]]  = [
-            {
-                "title": "GOOGLE SLIDES",
-                "icon": "team",
-                "accent_color": "#F04425",
-                "subtitle": (
-                    "Click on the \"Google Slides\" button\n"
-                    "below this presentation preview.\n\n"
-                    "Click on \"Make a copy.\"\n"
-                    "Start editing your presentation.\n\n"
-                    "You need to sign in to\n"
-                    "your Google account."
-                ),
-            },
-            {
-                "title": "POWERPOINT",
-                "icon": "idea",
-                "accent_color": "#FFC817",
-                "subtitle": (
-                    "Click on the \"PowerPoint\" button\n"
-                    "below this presentation preview.\n\n"
-                    "Start editing your presentation.\n\n"
-                    "Download and install\n"
-                    "the fonts used in this presentation\n"
-                    "as listed on the next page."
-                ),
-            },
-            {
-                "title": "CANVA",
-                "icon": "target",
-                "accent_color": "#70BFD6",
-                "subtitle": (
-                    "Click on the \"Canva\" button under\n"
-                    "this presentation preview.\n\n"
-                    "Start editing your presentation.\n\n"
-                    "You need to sign in to\n"
-                    "your Canva account."
-                ),
-            },
-    ],
-    background_color: str = "#F4F2EF",
-    text_color: str = "#050505",
-    line_color: str = "#050505",
-) -> str:
-    """
-    Generate XML for a platform instruction slide.
-
-    The layout uses evenly spaced instruction columns with a short colored
-    accent line, a bold platform title, an organic color blob with a simple
-    icon, and centered instructional text. The layout adapts to the number
-    of platform items while preserving the requested text sizes.
-    """
-
-
-    clean_items: list[dict[str, object]] = []
-
-    def flatten_text(value: object) -> str:
-        # Treat both real newlines and the literal ``\\n`` sequence as spaces.
-        return " ".join(str(value).replace("\\n", " ").split())
-
-    for index, item in enumerate(items):
-        title = flatten_text(item.get("title", ""))
-        subtitle = flatten_text(item.get("subtitle", ""))
-        icon = str(item.get("icon", "")).strip().lower()
-        accent_color = str(
-            item.get(
-                "accent_color",
-                line_color,
-            )
-        ).strip()
-
-        if not title:
-            title = f"PLATFORM {index + 1}"
-
-        if not subtitle:
-            subtitle = "Add instruction text for this platform."
-
-        if not icon:
-            icon = "star"
-
-        if not accent_color:
-            accent_color = line_color
-
-        clean_items.append(
-            {
-                "title": title,
-                "subtitle": subtitle,
-                "icon": icon,
-                "accent_color": accent_color,
-            }
-        )
-
-    if not clean_items:
-        clean_items = [
-            {
-                "title": "PLATFORM",
-                "subtitle": "Add instruction text for this platform.",
-                "icon": "star",
-                "accent_color": line_color,
-            }
-        ]
-
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if fallback_path.exists():
-                try:
-                    ImageFont.truetype(str(fallback_path), 12)
-                    return fallback_path
-                except OSError:
-                    continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        if not text:
-            return 0.0
-
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(candidate, font_path, font_size_pt)
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_size: float,
-        min_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_size = preferred_size
-        best_layout = None
-
-        while current_size >= min_size:
-            lines = wrap_text(text, font_path, current_size, max_width)
-            line_height = measure_line_height(font_path, current_size, line_spacing)
-            height = len(lines) * line_height
-            too_many = max_lines is not None and len(lines) > max_lines
-            overflow = max(0.0, height - max_height)
-
-            score = (
-                overflow * 1800
-                + max(0, len(lines) - (max_lines or 999)) * 1200
-                + (preferred_size - current_size) * 8
-            )
-
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many:
-                return layout
-
-            break
-
-        return best_layout
-
-    def organic_blob_path(shape_index: int) -> str:
-        paths = [
-            "M100 8 C137 5 168 27 194 61 C218 92 226 132 199 160 C170 190 128 204 87 191 C49 179 25 154 11 116 C-2 82 21 44 47 23 C62 11 78 10 100 8 Z",
-            "M109 10 C144 3 169 20 191 52 C217 91 207 147 181 172 C153 199 98 203 63 184 C32 167 10 119 20 80 C26 48 49 27 77 17 C87 14 98 12 109 10 Z",
-            "M105 4 C128 11 155 9 179 26 C210 47 214 72 212 115 C211 151 179 188 145 197 C108 207 52 197 25 171 C0 147 6 93 24 60 C42 27 70 -5 105 4 Z",
-            "M97 5 C132 3 160 20 188 49 C211 74 221 117 207 151 C190 192 145 204 100 196 C60 189 21 164 11 121 C2 82 21 39 51 18 C64 9 79 6 97 5 Z",
-        ]
-        return paths[shape_index % len(paths)]
-
-    def icon_svg(icon_name: str, accent_color: str, shape_index: int) -> str:
-        blob_path = organic_blob_path(shape_index)
-
-        if icon_name == "team":
-            icon = """
-<g fill="none" stroke="#000000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="110" cy="79" r="21"/>
-  <circle cx="72" cy="99" r="15"/>
-  <circle cx="150" cy="99" r="15"/>
-  <path d="M74 149 L74 127 C74 116 82 110 94 110 L126 110 C138 110 146 116 146 127 L146 149 Z"/>
-  <path d="M36 149 L36 130 C36 121 43 116 53 116 L76 116"/>
-  <path d="M144 116 L167 116 C177 116 184 121 184 130 L184 149"/>
-  <path d="M111 42 L111 25"/>
-  <path d="M82 54 L72 39"/>
-  <path d="M140 54 L150 39"/>
-  <path d="M63 74 L47 68"/>
-  <path d="M157 74 L173 68"/>
-</g>
-"""
-        elif icon_name == "idea":
-            icon = """
-<g fill="none" stroke="#000000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M111 40 C82 40 64 62 64 89 C64 109 75 121 87 134 C92 139 95 147 95 155 L127 155 C127 147 131 139 136 133 C148 120 158 108 158 88 C158 61 139 40 111 40 Z"/>
-  <path d="M96 173 L126 173"/>
-  <path d="M98 155 L124 155"/>
-  <path d="M110 23 L110 9"/>
-  <path d="M67 40 L57 27"/>
-  <path d="M154 40 L164 27"/>
-  <path d="M45 88 L31 88"/>
-  <path d="M177 88 L191 88"/>
-</g>
-"""
-        elif icon_name == "target":
-            icon = """
-<g fill="none" stroke="#000000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="108" cy="91" r="56"/>
-  <circle cx="108" cy="91" r="35"/>
-  <circle cx="108" cy="91" r="13"/>
-  <path d="M117 101 L164 148"/>
-  <path d="M164 148 L156 121"/>
-  <path d="M164 148 L137 141"/>
-</g>
-"""
-        elif icon_name == "download":
-            icon = """
-<g fill="none" stroke="#000000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M110 42 L110 130"/>
-  <path d="M78 101 L110 133 L142 101"/>
-  <path d="M55 162 L165 162"/>
-  <path d="M55 162 L55 136"/>
-  <path d="M165 162 L165 136"/>
-</g>
-"""
-        else:
-            icon = """
-<g fill="none" stroke="#000000" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M111 33 L128 78 L176 78 L137 106 L152 152 L111 124 L70 152 L85 106 L46 78 L94 78 Z"/>
-</g>
-"""
-
-        return f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="240" height="220" viewBox="0 0 240 220">
-  <path d="{blob_path}" fill="{accent_color}"/>
-  {icon}
-</svg>
-""".strip()
-
-    font_name = "Arial"
-    title_font_path = resolve_font_path(font_name, bold=True)
-    body_font_path = resolve_font_path(font_name, bold=True)
-
-    count = len(clean_items)
-
-    if count == 1:
-        columns = 1
-    elif count == 2:
-        columns = 2
-    else:
-        columns = 3
-
-    rows = (count + columns - 1) // columns
-
-    margin_x = 46.0
-    gap_x = 46.0 if columns == 3 else 58.0
-    top_y = 82.0
-    bottom_margin = 70.0
-    row_gap = 44.0 if rows > 1 else 0.0
-
-    available_width = canvas_width - margin_x * 2 - gap_x * (columns - 1)
-    cell_width = available_width / columns
-
-    available_height = canvas_height - top_y - bottom_margin - row_gap * (rows - 1)
-    cell_height = available_height / rows
-
-    title_y_offset = 38.0
-    accent_line_w = min(280.0, cell_width * 0.54)
-    accent_line_h = 9.0
-    blob_size = min(270.0, max(150.0, cell_width * 0.42), cell_height * 0.30)
-    body_top_gap = 42.0 if cell_height > 470 else 24.0
-
-    item_layouts: list[dict[str, object]] = []
-
-    for index, item in enumerate(clean_items):
-        title_layout = fit_text(
-            str(item["title"]).upper(),
-            font_path=title_font_path,
-            preferred_size=23.0,
-            min_size=10.0,
-            max_width=cell_width - 54.0,
-            max_height=max(35.0, cell_height * 0.08),
-            line_spacing=0.95,
-            max_lines=2,
-        )
-
-        body_max_height = max(120.0, cell_height - 78.0 - title_layout["height"] - blob_size - body_top_gap)
-        body_layout = fit_text(
-            str(item["subtitle"]),
-            font_path=body_font_path,
-            preferred_size=16.0,
-            min_size=8.0,
-            max_width=cell_width - 24.0,
-            max_height=body_max_height,
-            line_spacing=1.22,
-            max_lines=None,
-        )
-
-        row = index // columns
-        col = index % columns
-        cell_x = margin_x + col * (cell_width + gap_x)
-        cell_y = top_y + row * (cell_height + row_gap)
-
-        item_layouts.append(
-            {
-                "x": cell_x,
-                "y": cell_y,
-                "title": title_layout,
-                "body": body_layout,
-                "item": item,
-                "index": index,
-            }
-        )
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "shape",
-        type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fill=background_color,
-        line_color="none",
-    )
-
-    for layout in item_layouts:
-        x = float(layout["x"])
-        y = float(layout["y"])
-        item = layout["item"]
-        title_layout = layout["title"]
-        body_layout = layout["body"]
-        index = int(layout["index"])
-
-        accent_color = str(item["accent_color"])
-
-        add(
-            "shape",
-            type="rect",
-            x=x + cell_width / 2 - accent_line_w / 2,
-            y=y,
-            width=accent_line_w,
-            height=accent_line_h,
-            fill=accent_color,
-            line_color="none",
-        )
-
-        textbox(
-            title_layout["source_text"],
-            x=x + 18.0,
-            y=y + title_y_offset,
-            width=cell_width - 36.0,
-            height=title_layout["height"],
-            font=font_name,
-            font_path=str(title_font_path),
-            size=title_layout["font_size"],
-            min_font_size=max(8.0, title_layout["font_size"] - 2.0),
-            color=text_color,
-            align="center",
-            vertical_align="middle",
-            bold="true",
-            italic="false",
-            single_line="false",
-            max_lines=len(title_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=0.95,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-        blob_y = y + title_y_offset + title_layout["height"] + 52.0
-        if rows > 1:
-            blob_y = y + title_y_offset + title_layout["height"] + 24.0
-
-        icon_node = add(
-            "svg",
-            name=f"platform_icon_{index + 1}",
-            x=x + cell_width / 2 - blob_size / 2,
-            y=blob_y,
-            width=blob_size,
-            height=blob_size * 0.92,
-            pixel_width=round(blob_size * 4),
-            pixel_height=round(blob_size * 0.92 * 4),
-        )
-        icon_node.text = icon_svg(
-            str(item["icon"]),
-            accent_color,
-            index,
-        )
-
-        body_y = blob_y + blob_size * 0.92 + body_top_gap
-
-        textbox(
-            body_layout["source_text"],
-            x=x + 10.0,
-            y=body_y,
-            width=cell_width - 20.0,
-            height=body_layout["height"],
-            font=font_name,
-            font_path=str(body_font_path),
-            size=body_layout["font_size"],
-            min_font_size=max(7.0, body_layout["font_size"] - 2.0),
-            color=line_color,
-            align="center",
-            vertical_align="top",
-            bold="true",
-            italic="false",
-            single_line="false",
-            max_lines=len(body_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.22,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-            safety_ratio=1.0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-
-
-#=======================   slde cam on
-def generate_hanging_thank_you_slide_xml(
-    title: str = "Cam On",
-    subtitle: str = (
-        "This is a sample text Insert your desired text here This is a sample text\n"
-        "Insert your desired text here Insert your desired text here"
-        "Insert your desired text here Insert your desired text here"
-    ),
-    background_top_left: str = "#F73556",
-    background_top_right: str = "#AC2D5F",
-    background_bottom_left: str = "#B92E60",
-    background_bottom_right: str = "#123064",
-    card_color_1: str = "#FF755E",
-    card_color_2: str = "#FFA31F",
-    card_text_color: str = "#FFFFFF",
-    string_color: str = "#111111",
-    subtitle_color: str = "#FFF4E6",
-) -> str:
-    """
-    Generate XML for a hanging thank-you slide.
-
-    The layout features a red-to-blue gradient background, black hanging
-    strings, individual warm gradient letter cards forming the main title,
-    and a centered subtitle beneath the hanging cards.
-    """
-
-
-    letters = [
-        character.upper()
-        for character in title.strip()
-        if not character.isspace()
-    ]
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    # =====================================================
-    # Font helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            ch.lower()
-            for ch in name
-            if ch.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Arial": ["arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(
-                    normalized in stem
-                    for normalized in normalized_names
-                ):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                        "demi",
-                    )
-                )
-                has_italic = any(
-                    token in stem
-                    for token in (
-                        "italic",
-                        "oblique",
-                        "it",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 8
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        if bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                windows_fonts / "aptos-bold.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                windows_fonts / "aptos.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(str(fallback_path), 12)
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 0.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "width": max_width,
-            "height": len(lines) * line_height + padding,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
-
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
-            )
-
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
-
-            score = (
-                max(0.0, layout["height"] - max_height) * 1600
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 1000
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-
-    letter_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    subtitle_font_path = resolve_font_path(
-        subtitle_font_name,
-        bold=False,
-    )
-
-    # =====================================================
-    # Dynamic letter card layout
-    # =====================================================
-
-    letter_count = len(letters)
-
-    card_max_width = 150.0
-    card_min_width = 78.0
-    card_gap = 24.0
-
-    card_width = (
-        card_max_width
-        if letter_count <= 8
-        else max(
-            card_min_width,
-            (1360.0 - (letter_count - 1) * 14.0) / letter_count,
-        )
-    )
-
-    if letter_count > 8:
-        card_gap = 14.0
-
-    total_cards_width = (
-        letter_count * card_width
-        + (letter_count - 1) * card_gap
-    )
-
-    while total_cards_width > 1350.0 and card_width > card_min_width:
-        card_width -= 2.0
-        total_cards_width = (
-            letter_count * card_width
-            + (letter_count - 1) * card_gap
-        )
-
-    card_height = min(
-        132.0,
-        max(92.0, card_width * 0.96),
-    )
-    card_radius = 10.0
-
-    cards_start_x = canvas_width / 2 - total_cards_width / 2
-    cards_base_y = 360.0
-
-    # The reference has alternating hanging cards, so use small vertical
-    # offsets while keeping all letters readable.
-    y_offsets = [0.0, 32.0, -10.0, 26.0, -2.0, -8.0, 32.0, -10.0]
-
-    letter_font_size = min(
-        54.0,
-        max(30.0, card_width * 0.42),
-    )
-
-    card_layouts: list[dict] = []
-
-    for index, letter in enumerate(letters):
-        x = cards_start_x + index * (card_width + card_gap)
-        y = cards_base_y + y_offsets[index % len(y_offsets)]
-
-        center_x = x + card_width / 2
-        string_top_y = -12.0
-        string_bottom_y = y + 6.0
-
-        card_layouts.append(
-            {
-                "letter": letter,
-                "x": x,
-                "y": y,
-                "width": card_width,
-                "height": card_height,
-                "center_x": center_x,
-                "string_top_y": string_top_y,
-                "string_bottom_y": string_bottom_y,
-            }
-        )
-
-    subtitle_layout = fit_text(
-        subtitle.strip(),
-        font_path=subtitle_font_path,
-        preferred_font_size=20.0,
-        min_font_size=20,
-        max_width=1000.0,
-        max_height=82.0,
-        line_spacing=1.15,
-        max_lines=3,
-    )
-
-    subtitle_x = canvas_width / 2 - subtitle_layout["width"] / 2
-    subtitle_y = 608.0
-
-    # =====================================================
-    # XML assembly
-    # =====================================================
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_bottom_right},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    background_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="{background_top_left}"/>
-      <stop offset="45%" stop-color="{background_top_right}"/>
-      <stop offset="100%" stop-color="{background_bottom_right}"/>
-    </linearGradient>
-    <radialGradient id="warm" cx="12%" cy="0%" r="62%">
-      <stop offset="0%" stop-color="{background_top_left}" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="{background_top_left}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="cool" cx="75%" cy="100%" r="56%">
-      <stop offset="0%" stop-color="{background_bottom_right}" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="{background_bottom_right}" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#bg)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#warm)"/>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#cool)"/>
-</svg>
-""".strip()
-
-    svg_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    svg_node.text = background_svg
-
-    def card_svg(
-        width: float,
-        height: float,
-        radius: float,
-    ) -> str:
-        return f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="{width:.0f}" height="{height:.0f}" viewBox="0 0 {width:.2f} {height:.2f}">
-  <defs>
-    <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="{card_color_1}"/>
-      <stop offset="100%" stop-color="{card_color_2}"/>
-    </linearGradient>
-    <filter id="shadow" x="-22%" y="-22%" width="144%" height="144%">
-      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000000" flood-opacity="0.30"/>
-    </filter>
-  </defs>
-  <rect x="0" y="0" width="{width:.2f}" height="{height:.2f}" rx="{radius:.2f}" ry="{radius:.2f}" fill="url(#cardGrad)" filter="url(#shadow)"/>
-</svg>
-""".strip()
-
-    # Strings are behind cards.
-    for card in card_layouts:
-        x = card["center_x"]
-
-        add(
-            "line",
-            x1=x - 4.0,
-            y1=card["string_top_y"],
-            x2=x - 4.0,
-            y2=card["string_bottom_y"],
-            color=string_color,
-            width=3.0,
-        )
-        add(
-            "line",
-            x1=x + 4.0,
-            y1=card["string_top_y"],
-            x2=x + 4.0,
-            y2=card["string_bottom_y"],
-            color=string_color,
-            width=3.0,
-        )
-
-    for card in card_layouts:
-        x = card["center_x"]
-        pin_y = card["y"] - 6.0
-
-        # Small dark hanging connector above each card.
-        add(
-            "shape",
-            type="circle",
-            x=x - 7.0,
-            y=pin_y,
-            width=14.0,
-            height=14.0,
-            fill="#0C0C0C",
-            line_color="none",
-        )
-
-        card_node = add(
-            "svg",
-            x=card["x"],
-            y=card["y"],
-            width=card["width"],
-            height=card["height"],
-            pixel_width=int(card["width"]),
-            pixel_height=int(card["height"]),
-        )
-        card_node.text = card_svg(
-            card["width"],
-            card["height"],
-            card_radius,
-        )
-
-        textbox(
-            card["letter"],
-            x=card["x"],
-            y=card["y"] + card["height"] * 0.18,
-            width=card["width"],
-            height=card["height"] * 0.68,
-            font=title_font_name,
-            font_path=str(letter_font_path),
-            size=letter_font_size,
-            min_font_size=max(24.0, letter_font_size - 2.0),
-            bold="true",
-            color=card_text_color,
-            align="center",
-            vertical_align="middle",
-            single_line="true",
-            max_lines=1,
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=0.95,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    if subtitle.strip():
-        textbox(
-            subtitle_layout["source_text"],
-            x=subtitle_x,
-            y=subtitle_y,
-            width=subtitle_layout["width"],
-            height=subtitle_layout["height"],
-            font=subtitle_font_name,
-            font_path=str(subtitle_font_path),
-            size=subtitle_layout["font_size"],
-            min_font_size=max(9.0, subtitle_layout["font_size"] - 2.0),
-            color=subtitle_color,
-            align="center",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=len(subtitle_layout["lines"]),
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.15,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_business_thank_you_slide_xml(
-    title: str = "Thank you",
-    description: str = (
-        "This slide is an editable slide with all your needs. Adapt it with "
-        "your needs and it will capture all the audience attention.\n"
-        "Capture your audience attention. Download this awesome creatives "
-        "and bring your presentation to life, with our creativity."
-        
-    ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1521791136064-7986c2920216"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#111111",
-    overlay_color: str = "#000000",
-    title_color: str = "#FFFFFF",
-    description_color: str = "#111111",
-    accent_color: str = "#00D6D9",
-    footer_bar_color: str = "#1697AA",
-    white_panel_color: str = "#FFFFFF",
-) -> str:
-    """
-    Generate XML for a business thank-you slide.
-
-    The layout features a dark full-width image hero area, a cyan geometric
-    outline accent, a large centered thank-you headline, a white description
-    panel, and a teal footer bar.
-    """
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    # =====================================================
-    # Font helpers
-    # =====================================================
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            ch.lower()
-            for ch in name
-            if ch.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [
-            directory
-            for directory in directories
-            if directory.exists()
-        ]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times"],
-            "Arial": ["arial"],
-            "Garamond": ["garamond"],
-            "Arial": ["arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Helvetica": ["helvetica", "arial"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(
-                font_name,
-                [font_name],
-            )
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(
-                    normalized in stem
-                    for normalized in normalized_names
-                ):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in (
-                        "bold",
-                        "bd",
-                        "semibold",
-                        "demi",
-                    )
-                )
-                has_italic = any(
-                    token in stem
-                    for token in (
-                        "italic",
-                        "oblique",
-                        "it",
-                    )
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(
-                key=lambda item: item[0],
-                reverse=True,
-            )
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(
-                        str(path),
-                        12,
-                    )
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(
-            os.environ.get(
-                "WINDIR",
-                "C:/Windows",
-            )
-        )
-        windows_fonts = windir / "Fonts"
-
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "timesbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "timesi.ttf",
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback_path in fallback_paths:
-            if not fallback_path.exists():
-                continue
-
-            try:
-                ImageFont.truetype(
-                    str(fallback_path),
-                    12,
-                )
-                return fallback_path
-            except OSError:
-                continue
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {
-                    ".ttf",
-                    ".otf",
-                    ".ttc",
-                }:
-                    continue
-
-                try:
-                    ImageFont.truetype(
-                        str(path),
-                        12,
-                    )
-                    return path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(
-                1,
-                round(pt_to_canvas(font_size_pt)),
-            ),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(
-            font_path,
-            font_size_pt,
-        )
-        ascent, descent = font.getmetrics()
-
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        lines: list[str] = []
-
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-
-            for word in words:
-                candidate = (
-                    word
-                    if not current
-                    else f"{current} {word}"
-                )
-
-                if (
-                    not current
-                    or measure_text_width(
-                        candidate,
-                        font_path,
-                        font_size_pt,
-                    )
-                    <= max_width
-                ):
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-        padding: float = 0.0,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
-        )
-
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
-        )
-
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "width": max_width,
-            "height": len(lines) * line_height + padding,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
-
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
-            )
-
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
-
-            score = (
-                max(0.0, layout["height"] - max_height) * 1600
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 850
-                + (preferred_font_size - current_font_size) * 8
-            )
-
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best
-
-    title_font_name = "Arial"
-    description_font_name = "Arial"
-
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
-    )
-    description_font_path = resolve_font_path(
-        description_font_name,
-    )
-
-    hero_height = 542.0
-    white_panel_y = hero_height
-    footer_height = 28.0
-    white_panel_height = canvas_height - white_panel_y - footer_height
-
-    title_box_width = 680.0
-
-    title_layout = fit_text(
-        title.strip(),
-        font_path=title_font_path,
-        preferred_font_size=52.0,
-        min_font_size=28.0,
-        max_width=title_box_width,
-        max_height=110.0,
-        line_spacing=0.95,
-        max_lines=2,
-    )
-
-    description_layout = fit_text(
-        description.strip(),
-        font_path=description_font_path,
-        preferred_font_size=22.0,
-        min_font_size=20,
-        max_width=1320.0,
-        max_height=180,
-        line_spacing=1.18,
-        max_lines=4,
-    )
-
-    title_x = 568.0
-    title_y = 232.0
-
-    description_x = canvas_width / 2 - description_layout["width"] / 2
-    description_y = white_panel_y + (white_panel_height - description_layout["height"]) / 2 - 6.0
-
-    accent_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="340" height="340" viewBox="0 0 340 340">
-  <path d="M156 8 L28 136 L156 264" fill="none" stroke="{accent_color}" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>
-  <path d="M199 8 L71 136 L199 264" fill="none" stroke="{accent_color}" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>
-  <path d="M156 264 L232 188" fill="none" stroke="{accent_color}" stroke-width="8" stroke-linecap="square"/>
-  <path d="M199 264 L275 188" fill="none" stroke="{accent_color}" stroke-width="8" stroke-linecap="square"/>
-  <path d="M156 8 L232 84" fill="none" stroke="{accent_color}" stroke-width="8" stroke-linecap="square"/>
-  <path d="M199 8 L275 84" fill="none" stroke="{accent_color}" stroke-width="8" stroke-linecap="square"/>
-</svg>
-""".strip()
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": background_color},
-    )
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=hero_height,
-        fit="cover",
-        crop_x=0.48,
-        crop_y=0.42,
-    )
-
-    overlay_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="542" viewBox="0 0 1600 542">
-  <rect x="0" y="0" width="1600" height="542" fill="{overlay_color}" opacity="0.68"/>
-</svg>
-""".strip()
-
-    overlay_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=hero_height,
-        pixel_width=1600,
-        pixel_height=542,
-    )
-    overlay_node.text = overlay_svg
-
-    svg_node = add(
-        "svg",
-        x=295,
-        y=102,
-        width=330,
-        height=330,
-        pixel_width=340,
-        pixel_height=340,
-    )
-    svg_node.text = accent_svg
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_box_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(24.0, title_layout["font_size"] - 2.0),
-        bold="true",
-        color=title_color,
-        align="left",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    add(
-        "shape",
-        type="rectangle",
-        x=0,
-        y=white_panel_y,
-        width=canvas_width,
-        height=white_panel_height,
-        fill=white_panel_color,
-        line_color="none",
-    )
-
-    textbox(
-        description_layout["source_text"],
-        x=description_x,
-        y=description_y,
-        width=description_layout["width"],
-        height=description_layout["height"],
-        font=description_font_name,
-        font_path=str(description_font_path),
-        size=description_layout["font_size"],
-        min_font_size=max(8.5, description_layout["font_size"] - 2.0),
-        color=description_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(description_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.18,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    add(
-        "shape",
-        type="rectangle",
-        x=0,
-        y=white_panel_y + white_panel_height,
-        width=canvas_width,
-        height=footer_height,
-        fill=footer_bar_color,
-        line_color="none",
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_dark_gold_thank_you_slide_xml(
-    title: str = "THANK YOU THANK YOU THANK YOU",
-    subtitle: str = (
-        "Lorem ipsum dolor sit amet consectetur adipiscing elit maecenas "
-        "porttitor congue massa fusce posuere magna sed pulvinar ultricies "
-        "purus lectus malesuada libero sit amet."
-    ),
-    phone_text: str = "(123) 456-7890",
-    email_text: str = "david.langford@email.com",
-    website_text: str = "davidlangford.com",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1486406146926-c627a92ad1ab"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#050505",
-    panel_color: str = "#000000",
-    title_color: str = "#F0B400",
-    subtitle_color: str = "#FFFFFF",
-    contact_color: str = "#F0B400",
-    divider_color: str = "#A37A10",
-    accent_color: str = "#7A6107",
-) -> str:
-    """
-    Generate XML for a dark thank-you slide.
-
-    The layout features a dimmed full-slide background image, a centered dark
-    content panel, a geometric line accent, a large centered thank-you title,
-    a supporting subtitle, a divider line, and three contact items aligned in
-    a single row near the bottom of the panel.
-    """
-
- 
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
-        aliases = {
-            "Arial": ["arial", "helvetica"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri", "aptos", "arial"],
-            "Aptos": ["aptos", "calibri", "arial"],
-            "Arial": ["arial", "times"],
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-        }
-        normalized_names = [normalize_font_name(name) for name in aliases.get(font_name, [font_name])]
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-                stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 70
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(token in stem for token in ("bold", "bd", "semibold", "demi"))
-                has_italic = any(token in stem for token in ("italic", "oblique", "it"))
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "calibriz.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "calibrib.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "calibrii.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "arial.ttf",
-                windows_fonts / "calibri.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for fallback in fallback_paths:
-            if fallback.exists():
-                try:
-                    ImageFont.truetype(str(fallback), 12)
-                    return fallback
-                except OSError:
-                    pass
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(size_pt: float) -> float:
-        return size_pt * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(str(font_path), max(1, round(pt_to_canvas(size_pt))))
-
-    def measure_text_width(text: str, font_path: Path, size_pt: float) -> float:
-        font = load_font(font_path, size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(font_path: Path, size_pt: float, line_spacing: float) -> float:
-        font = load_font(font_path, size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(text: str, font_path: Path, size_pt: float, max_width: float) -> list[str]:
-        lines: list[str] = []
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-            for word in words:
-                candidate = word if not current else f"{current} {word}"
-                if not current or measure_text_width(candidate, font_path, size_pt) <= max_width:
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-            if current:
-                lines.append(current)
-        return lines or [""]
-
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-    ) -> dict:
-        lines = wrap_text(text, font_path, font_size, max_width)
-        line_height = measure_line_height(font_path, font_size, line_spacing)
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "width": max_width,
-            "height": len(lines) * line_height,
-        }
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current = preferred_font_size
-        best = None
-        while current >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current,
-                max_width=max_width,
-                line_spacing=line_spacing,
-            )
-            too_many_lines = max_lines is not None and len(layout["lines"]) > max_lines
-            score = (
-                max(0.0, layout["height"] - max_height) * 2000
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 1500
-                + (preferred_font_size - current) * 8
-            )
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
-            break
-        return best
-
-    title_font_name = "Arial"
-    subtitle_font_name = "Arial"
-    contact_font_name = "Arial"
-
-    title_font_path = resolve_font_path(title_font_name, bold=True)
-    subtitle_font_path = resolve_font_path(subtitle_font_name, bold=False)
-    contact_font_path = resolve_font_path(contact_font_name, bold=False)
-
-    panel_x = 102.0
-    panel_y = 67.0
-    panel_width = 1396.0
-    panel_height = 618.0
-
-    divider_y = panel_y + 442.0
-    contact_y = panel_y + 500.0
-    icon_size = 44.0
-
-    # Keep the title/subtitle as one vertically managed group.  This lets the
-    # group move into available space before either textbox is forced smaller.
-    upper_content_top = panel_y + 155.0
-    upper_content_bottom = divider_y - 34.0
-    upper_content_height = upper_content_bottom - upper_content_top
-    title_subtitle_gap = 30.0
-
-    # Keep the requested sizes.  If the group is too tall, the renderer clips
-    # the text instead of silently reducing its font size.
-    title_preferred = 46.0
-    subtitle_preferred = 20.0
-    for _ in range(40 if AUTO_SHRINK_TEXT else 1):
-        title_layout = fit_text(
-            title.strip().upper(),
-            font_path=title_font_path,
-            preferred_font_size=title_preferred,
-            min_font_size=24.0,
-            max_width=1080.0,
-            max_height=128.0,
-            line_spacing=0.95,
-            max_lines=1,
-        )
-        subtitle_layout = fit_text(
-            subtitle.strip(),
-            font_path=subtitle_font_path,
-            preferred_font_size=subtitle_preferred,
-            min_font_size=12.0,
-            max_width=760.0,
-            max_height=92.0,
-            line_spacing=1.15,
-            max_lines=2,
-        )
-        group_height = title_layout["height"] + title_subtitle_gap + subtitle_layout["height"]
-        if group_height <= upper_content_height:
-            break
-        if AUTO_SHRINK_TEXT and subtitle_preferred > 12.0:
-            subtitle_preferred = max(12.0, subtitle_preferred - 1.0)
-        elif AUTO_SHRINK_TEXT and title_preferred > 24.0:
-            title_preferred = max(24.0, title_preferred - 1.0)
-
-    group_height = title_layout["height"] + title_subtitle_gap + subtitle_layout["height"]
-
-    title_box_width = 1080.0
-    title_x = panel_x + panel_width / 2 - title_box_width / 2
-    title_y = upper_content_top + max(0.0, (upper_content_height - group_height) / 2.0)
-
-    subtitle_x = panel_x + panel_width / 2 - subtitle_layout["width"] / 2
-    subtitle_y = title_y + title_layout["height"] + title_subtitle_gap
-
-    divider_x1 = panel_x + 136.0
-    divider_x2 = panel_x + panel_width - 136.0
-
-    contact_specs = [
-        {"icon": "phone", "text": phone_text.strip(), "max_width": 185.0},
-        {"icon": "email", "text": email_text.strip(), "max_width": 290.0},
-        {"icon": "website", "text": website_text.strip(), "max_width": 210.0},
-    ]
-
-    contact_layouts: list[dict] = []
-    for spec in contact_specs:
-        text_layout = fit_text(
-            spec["text"],
-            font_path=contact_font_path,
-            preferred_font_size=12.0,
-            min_font_size=8.0,
-            max_width=spec["max_width"],
-            max_height=18.0,
-            line_spacing=1.0,
-            max_lines=1,
-        )
-        contact_layouts.append(
-            {
-                "icon": spec["icon"],
-                "text_layout": text_layout,
-            }
-        )
-
-    contact_gap = 72.0
-    text_icon_gap = 20.0
-    contact_total_width = sum(
-        icon_size + text_icon_gap + item["text_layout"]["width"]
-        for item in contact_layouts
-    ) + contact_gap * (len(contact_layouts) - 1)
-    contact_cursor_x = panel_x + (panel_width - contact_total_width) / 2.0
-    for item in contact_layouts:
-        item["icon_x"] = contact_cursor_x
-        item["text_x"] = contact_cursor_x + icon_size + text_icon_gap
-        contact_cursor_x += icon_size + text_icon_gap + item["text_layout"]["width"] + contact_gap
-
-    overlay_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <rect x="0" y="0" width="1600" height="900" fill="#000000" opacity="0.60"/>
-  <radialGradient id="vignette" cx="50%" cy="35%" r="80%">
-    <stop offset="0%" stop-color="#000000" stop-opacity="0.08"/>
-    <stop offset="100%" stop-color="#000000" stop-opacity="0.48"/>
-  </radialGradient>
-  <rect x="0" y="0" width="1600" height="900" fill="url(#vignette)"/>
-</svg>
-""".strip()
-
-    corner_svg = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <path d="M0 670 C80 676 131 721 160 774 C184 817 223 866 280 900 L0 900 Z"
-        fill="{accent_color}" opacity="0.82"/>
-  <path d="M1513 0 C1513 58 1548 90 1600 99 L1600 0 Z"
-        fill="{accent_color}" opacity="0.82"/>
-</svg>
-""".strip()
-
-    def icon_svg(kind: str) -> str:
-        if kind == "phone":
-            path = f"""
-<path d="M39 50 C49 66 62 78 78 87 C83 90 87 89 91 85 L97 76 C100 72 99 67 95 64 L81 55 C77 52 73 52 69 56 L65 60 C56 53 47 44 40 34 L44 30 C48 27 49 22 46 18 L37 5 C34 1 29 0 25 4 L15 13 C11 17 10 22 12 26 C17 34 25 43 39 50 Z"
-      fill="none" stroke="{contact_color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-""".strip()
-        elif kind == "email":
-            path = f"""
-<rect x="18" y="27" width="84" height="58" rx="7" fill="none" stroke="{contact_color}" stroke-width="5"/>
-<path d="M22 33 L60 61 L98 33" fill="none" stroke="{contact_color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-""".strip()
-        else:
-            path = f"""
-<circle cx="60" cy="60" r="42" fill="none" stroke="{contact_color}" stroke-width="5"/>
-<path d="M18 60 H102" fill="none" stroke="{contact_color}" stroke-width="5" stroke-linecap="round"/>
-<path d="M60 19 C47 35 42 48 42 60 C42 72 47 86 60 101 C73 86 78 72 78 60 C78 48 73 35 60 19 Z"
-      fill="none" stroke="{contact_color}" stroke-width="5" stroke-linejoin="round"/>
-""".strip()
-
-        return f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
-  <circle cx="60" cy="60" r="43" fill="none" stroke="{contact_color}" stroke-width="3"/>
-  {path}
-</svg>
-""".strip()
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
-
-    def add(tag: str, **attrs):
-        return ET.SubElement(
-            slide,
-            tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
-        )
-
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
-        node.text = text
-        return node
-
-    add(
-        "image",
-        src=image_url,
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        fit="cover",
-        crop_x=0.50,
-        crop_y=0.36,
-    )
-
-    overlay_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    overlay_node.text = overlay_svg
-
-    corner_node = add(
-        "svg",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
-        pixel_width=1600,
-        pixel_height=900,
-    )
-    corner_node.text = corner_svg
-
-    add(
-        "shape",
-        type="rectangle",
-        x=panel_x,
-        y=panel_y,
-        width=panel_width,
-        height=panel_height,
-        fill=panel_color,
-        line_color="none",
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_box_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=24.0,
-        bold="true",
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_x,
-        y=subtitle_y,
-        width=subtitle_layout["width"],
-        height=subtitle_layout["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=12.0,
-        color=subtitle_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(subtitle_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.15,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    add(
-        "line",
-        x1=divider_x1,
-        y1=divider_y,
-        x2=divider_x2,
-        y2=divider_y,
-        color=divider_color,
-        width=1.1,
-    )
-
-    for item in contact_layouts:
-        icon_x = item["icon_x"]
-        text_x = item["text_x"]
-
-        icon_node = add(
-            "svg",
-            x=icon_x,
-            y=contact_y - icon_size / 2,
-            width=icon_size,
-            height=icon_size,
-            pixel_width=120,
-            pixel_height=120,
-        )
-        icon_node.text = icon_svg(item["icon"])
-
-        textbox(
-            item["text_layout"]["source_text"],
-            x=text_x,
-            y=contact_y - item["text_layout"]["height"] / 2,
-            width=item["text_layout"]["width"],
-            height=item["text_layout"]["height"],
-            font=contact_font_name,
-            font_path=str(contact_font_path),
-            size=item["text_layout"]["font_size"],
-            min_font_size=max(7.0, item["text_layout"]["font_size"] - 2.0),
-            color=contact_color,
-            align="left",
-            vertical_align="middle",
-            single_line="false",
-            max_lines=1,
-            overflow="clip",
-            reflow_on_resize="true",
-            line_spacing=1.0,
-            safety_ratio=1.0,
-            margin_left=0,
-            margin_right=0,
-            margin_top=0,
-            margin_bottom=0,
-        )
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
-    return xml_content
-
-def generate_paper_flight_thank_you_slide_xml(
-    title: str = "Cảm On mọi người đã lắng nghe",
-    background_color: str = "#F6F6F7",
-    title_color: str = "#6A7193",
-    cloud_color: str = "#E9EBF4",
-    cloud_shadow_color: str = "#C9CCDD",
-    mountain_color: str = "#E1E1E1",
-    mountain_dark_color: str = "#D2D2D2",
-    path_color: str = "#BCC0CF",
-    orange_color: str = "#F2A212",
-    envelope_color: str = "#75603C",
-    envelope_shadow_color: str = "#D08407",
-    paper_plane_color: str = "#D4D6DB",
-    paper_plane_dark_color: str = "#9FA2AA",
-    star_color: str = "#C4C7D1",
-) -> str:
-    """
-    Generate XML for an illustrated thank-you slide.
-
-    The slide uses separated decorative items such as mountains, clouds,
-    flight paths, stars, dots, envelopes, and a paper plane. The envelope
-    and paper plane keep one original vector design and are only rotated
-    and repositioned when reused.
-    """
-
-
-
-    canvas_width = 1600
-    canvas_height = 900
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(
-            character.lower()
-            for character in name
-            if character.isalnum()
-        )
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(
-        font_name: str,
-        bold: bool = False,
-        italic: bool = False,
-    ) -> Path:
-        aliases = {
-            "Arial": ["arial"],
-            "Helvetica": ["helvetica", "arial"],
-            "Calibri": ["calibri"],
-            "Aptos": ["aptos"],
-            "Arial": ["arial"],
-            "Times New Roman": ["timesnewroman", "times"],
-        }
-
-        normalized_names = [
-            normalize_font_name(name)
-            for name in aliases.get(font_name, [font_name])
-        ]
-
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-
-                stem = normalize_font_name(path.stem)
-
-                if not any(normalized in stem for normalized in normalized_names):
-                    continue
-
-                score = 70
-
-                if stem in normalized_names:
-                    score += 30
-
-                has_bold = any(
-                    token in stem
-                    for token in ("bold", "bd", "semibold", "demi")
-                )
-                has_italic = any(
-                    token in stem
-                    for token in ("italic", "oblique", "it")
-                )
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 7
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 5
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windir = Path(os.environ.get("WINDIR", "C:/Windows"))
-        windows_fonts = windir / "Fonts"
-
-        fallback_paths = []
-        if bold:
-            fallback_paths.extend(
-                [
-                    windows_fonts / "arialbd.ttf",
-                    windows_fonts / "calibrib.ttf",
-                    Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-                ]
-            )
-        else:
-            fallback_paths.extend(
-                [
-                    windows_fonts / "arial.ttf",
-                    windows_fonts / "calibri.ttf",
-                    Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-                ]
-            )
-
-        for fallback_path in fallback_paths:
-            if fallback_path.exists():
-                try:
-                    ImageFont.truetype(str(fallback_path), 12)
-                    return fallback_path
-                except OSError:
-                    continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    canvas_dpi = 120.0
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(
-        font_path: Path,
-        font_size_pt: float,
-    ) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(
-        font_path: Path,
-        font_size_pt: float,
-        line_spacing: float,
-    ) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(
-        text: str,
-        font_path: Path,
-        font_size_pt: float,
-        max_width: float,
-    ) -> list[str]:
-        words = text.split()
-
-        if not words:
-            return [""]
-
-        lines: list[str] = []
-        current = ""
-
-        for word in words:
-            candidate = word if not current else f"{current} {word}"
-
-            if (
-                not current
-                or measure_text_width(candidate, font_path, font_size_pt) <= max_width
-            ):
-                current = candidate
+            t = q[i] / p[i]
+            if p[i] < 0:
+                if t > t1: return None
+                if t > t0: t0 = t
             else:
-                lines.append(current)
-                current = word
+                if t < t0: return None
+                if t < t1: t1 = t
+    if t0 <= t1:
+        return (x1 + t0*dx, y1 + t0*dy, x1 + t1*dx, y1 + t1*dy)
+    return None
 
-        if current:
-            lines.append(current)
+def generate_elegant_education_slide_xml(
+    title: str = "Elegant Education\nPack for Students",
+    subtitle: str = "Here is where your presentation begins",
+    background_color: str = "#FFFFFF",
+    title_color: str = "#3F474A",
+    subtitle_color: str = "#515558",
+) -> str:
+    """
+    Sinh XML cho slide Elegant Education Title với SVG patterns và co giãn text tự động.
+    """
+    if not title.strip():
+        raise ValueError("title không được để trống")
 
-        return lines or [""]
+    import sys
+    import math
+    canvas_width = 1600
+    canvas_height = 900
+    content_max_width = 1300
+    content_max_height = 500
+    content_x = (canvas_width - content_max_width) / 2
 
-    def layout_text(
-        text: str,
-        *,
-        font_path: Path,
-        font_size: float,
-        max_width: float,
-        line_spacing: float,
-    ) -> dict:
-        lines = wrap_text(
-            text,
-            font_path,
-            font_size,
-            max_width,
+    font_path_regular = "C:/Windows/Fonts/segoeui.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial.ttf"
+    font_path_black = "C:/Windows/Fonts/ariblk.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial Black.ttf"
+
+    presentation = ET.Element(
+        "presentation",
+        schemaVersion="1.0",
+        width=str(canvas_width),
+        height=str(canvas_height),
+        slideWidthInches="13.333",
+        slideHeightInches="7.5",
+    )
+    slide = ET.SubElement(presentation, "slide", background=background_color)
+    
+    # ---------------- NATIVE SHAPES INSTEAD OF SVG ----------------
+    
+    # Top Left Gray Blob
+    pts = [(0, 0), (600, 0)]
+    for i in range(1, 21):
+        t = i / 20.0
+        x, y = cubic_bezier(t, (600, 0), (500, 250), (200, 200), (0, 500))
+        pts.append((int(x), int(y)))
+    top_left_points = " ".join([f"{x},{y}" for x, y in pts])
+    ET.SubElement(slide, "polygon", points=top_left_points, fill="#9D9C8D", line_color="none")
+    
+    # Bottom Left Gray Blob
+    ET.SubElement(slide, "shape", type="circle", x="200", y="650", width="100", height="130", fill="#A4A69B", line_color="none")
+    
+    # Right Brown Blob (clipped to right edge)
+    pts_brown = []
+    for deg in range(0, 360, 5):
+        rad = math.radians(deg)
+        x = 1525 + 175 * math.cos(rad)
+        y = 275 + 175 * math.sin(rad)
+        if x > 1600:
+            x = 1600
+        pts_brown.append((int(x), int(y)))
+    brown_points = " ".join([f"{x},{y}" for x, y in pts_brown])
+    ET.SubElement(slide, "polygon", points=brown_points, fill="#CDA590", line_color="none")
+    
+    # Bottom Brown Bar
+    ET.SubElement(slide, "shape", type="rectangle", x="0", y="840", width="1600", height="60", fill="#C8A590", line_color="none")
+    
+    # Top Right Geometric Pattern (Honeycomb grid using native <line> elements to avoid opaque fill)
+    lines_to_draw = []
+    
+    R = 45
+    dx = R * math.sqrt(3)  # ~78
+    dy = R * 1.5           # 67.5
+    
+    start_x = 1250
+    start_y = 0
+    centers = []
+    for row in range(5):
+        y = start_y + row * dy
+        x_offset = start_x if row % 2 == 0 else start_x + dx / 2
+        for col in range(6):
+            x = x_offset + col * dx
+            centers.append((x, y))
+            
+    for cx, cy in centers:
+        hex_pts = []
+        for i in range(6):
+            angle_deg = 60 * i - 30
+            angle_rad = math.pi / 180 * angle_deg
+            hex_pts.append((cx + R * math.cos(angle_rad), cy + R * math.sin(angle_rad)))
+        
+        for i in range(6):
+            p1 = hex_pts[i]
+            p2 = hex_pts[(i+1)%6]
+            lines_to_draw.append((p1[0], p1[1], p2[0], p2[1]))
+
+    for x1, y1, x2, y2 in lines_to_draw:
+        # Clip to the slide canvas so they don't overflow
+        clipped = clip_line(x1, y1, x2, y2, 0, 0, 1600, 900)
+        if clipped:
+            cx1, cy1, cx2, cy2 = clipped
+            ET.SubElement(slide, "line", x1=str(int(cx1)), y1=str(int(cy1)), x2=str(int(cx2)), y2=str(int(cy2)), color="#3F474A", width="1")
+
+    # Title TextBox
+    title_tb = ET.SubElement(
+        slide, "textbox",
+        x=str(content_x), y="320",
+        width=str(content_max_width), height="200",
+        font="Arial Black", font_path=font_path_black,
+        size="100", min_font_size="48",
+        color=title_color, align="center", vertical_align="bottom",
+        single_line="false", max_lines="3", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.1", bold="true"
+    )
+    title_tb.text = title
+
+    # Subtitle TextBox
+    if subtitle.strip():
+        sub_tb = ET.SubElement(
+            slide, "textbox",
+            x=str(content_x), y="550",
+            width=str(content_max_width), height="100",
+            font="Segoe UI", font_path=font_path_regular,
+            size="40", min_font_size="24",
+            color=subtitle_color, align="center", vertical_align="top",
+            single_line="false", max_lines="2", overflow="shrink", reflow_on_resize="true",
+            line_spacing="1.2"
         )
+        sub_tb.text = subtitle
 
-        line_height = measure_line_height(
-            font_path,
-            font_size,
-            line_spacing,
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    return minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+
+# ==========================================================
+# 6. ONLINE NOTEBOOK TITLE SLIDE
+# ==========================================================
+def rot(x, y, cx, cy, deg):
+    import math
+    rad = math.radians(deg)
+    nx = cx + (x - cx)*math.cos(rad) - (y - cy)*math.sin(rad)
+    ny = cy + (x - cx)*math.sin(rad) + (y - cy)*math.cos(rad)
+    return int(nx), int(ny)
+
+def generate_online_notebook_slide_xml(
+    title: str = "ONLINE NOTEBOOK",
+    subtitle: str = "Here is where your presentation begins",
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1E4E8C",
+    subtitle_color: str = "#2C3E50",
+) -> str:
+    """
+    Sinh XML cho slide Online Notebook Title với các rule co giãn text nghiêm ngặt.
+    Phiên bản Premium: faked shadows, inward circular corners, realistic props, Arial Rounded font.
+    """
+    import sys
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    import math
+
+    if not title.strip():
+        raise ValueError("title không được để trống")
+        
+    words = title.strip().split(" ", 1)
+    title1 = words[0]
+    title2 = words[1] if len(words) > 1 else ""
+
+    canvas_width = 1600
+    canvas_height = 900
+
+    # Fonts
+    font_path_regular = "C:/Windows/Fonts/segoeui.ttf" if sys.platform == "win32" else "/Library/Fonts/Arial.ttf"
+    # Dùng Arial Rounded MT Bold cho cảm giác marker/notebook
+    font_path_bold = "C:/Windows/Fonts/ARLRDBD.TTF" if sys.platform == "win32" else "/Library/Fonts/Arial Bold.ttf"
+
+    presentation = ET.Element(
+        "presentation",
+        schemaVersion="1.0",
+        width=str(canvas_width),
+        height=str(canvas_height),
+        slideWidthInches="13.333",
+        slideHeightInches="7.5",
+    )
+    slide = ET.SubElement(presentation, "slide", background=background_color)
+    
+    # 1. Background
+    # Left Polygon (Light Blue)
+    bg_pts = [(0, 0), (600, 0), (1600, 900), (0, 900)]
+    bg_points_str = " ".join([f"{x},{y}" for x, y in bg_pts])
+    ET.SubElement(slide, "polygon", points=bg_points_str, fill="#B8D3F8", line_color="none")
+    
+    # Left Dark Blue Bar
+    ET.SubElement(slide, "shape", type="rectangle", x="0", y="0", width="80", height="900", fill="#77A3EA", line_color="none")
+
+    # 2. Ticket Badge (with faked drop shadow)
+    R = 40
+    X, Y, W, H = 250, 150, 1100, 600
+    
+    # Build ticket points with circular arcs for inward corners
+    ticket_pts = []
+    # Top-left cutout: Center (X, Y), arc from 90 to 0 degrees
+    for deg in range(90, -1, -10):
+        rad = math.radians(deg)
+        ticket_pts.append((int(X + R*math.cos(rad)), int(Y + R*math.sin(rad))))
+    
+    # Top-right cutout: Center (X+W, Y), arc from 180 to 90 degrees
+    for deg in range(180, 89, -10):
+        rad = math.radians(deg)
+        ticket_pts.append((int(X+W + R*math.cos(rad)), int(Y + R*math.sin(rad))))
+        
+    # Bottom-right cutout: Center (X+W, Y+H), arc from 270 to 180 degrees
+    for deg in range(270, 179, -10):
+        rad = math.radians(deg)
+        ticket_pts.append((int(X+W + R*math.cos(rad)), int(Y+H + R*math.sin(rad))))
+        
+    # Bottom-left cutout: Center (X, Y+H), arc from 360 to 270 degrees
+    for deg in range(360, 269, -10):
+        rad = math.radians(deg)
+        ticket_pts.append((int(X + R*math.cos(rad)), int(Y+H + R*math.sin(rad))))
+
+    # Shadow for Ticket
+    shadow_pts = [(x+15, y+15) for x, y in ticket_pts]
+    shadow_str = " ".join([f"{x},{y}" for x, y in shadow_pts])
+    ET.SubElement(slide, "polygon", points=shadow_str, fill="#9ABAE5", line_color="none") # Drop shadow color blends with bg
+
+    # Ticket Base
+    ticket_points_str = " ".join([f"{x},{y}" for x, y in ticket_pts])
+    ET.SubElement(slide, "polygon", points=ticket_points_str, fill="#FFFFFF", line_color="#000000", line_width="2")
+
+    # 3. Eraser (Top Left)
+    eraser_cx, eraser_cy = 250, 80
+    eraser_deg = 20
+    ew, eh = 80, 120
+    
+    eraser_base = [(-ew/2, -eh/2), (ew/2, -eh/2), (ew/2, eh/2), (-ew/2, eh/2)]
+    eraser_top = [(-ew/2, -eh/2), (ew/2, -eh/2), (ew/2, 0), (-ew/2, 0)]
+    eraser_bot = [(-ew/2, 0), (ew/2, 0), (ew/2, eh/2), (-ew/2, eh/2)]
+    
+    # Shadow
+    e_shadow = [(x+10, y+10) for x, y in eraser_base]
+    e_shadow_rot = [rot(px, py, 0, 0, eraser_deg) for px, py in e_shadow]
+    e_shadow_str = " ".join([f"{int(x+eraser_cx)},{int(y+eraser_cy)}" for x, y in e_shadow_rot])
+    ET.SubElement(slide, "polygon", points=e_shadow_str, fill="#9ABAE5", line_color="none")
+    
+    # Pink top
+    e_top_rot = [rot(px, py, 0, 0, eraser_deg) for px, py in eraser_top]
+    e_top_str = " ".join([f"{int(x+eraser_cx)},{int(y+eraser_cy)}" for x, y in e_top_rot])
+    ET.SubElement(slide, "polygon", points=e_top_str, fill="#FFAFA3", line_color="#000000", line_width="2")
+    
+    # Beige bottom sleeve
+    e_bot_rot = [rot(px, py, 0, 0, eraser_deg) for px, py in eraser_bot]
+    e_bot_str = " ".join([f"{int(x+eraser_cx)},{int(y+eraser_cy)}" for x, y in e_bot_rot])
+    ET.SubElement(slide, "polygon", points=e_bot_str, fill="#FFE5D9", line_color="#000000", line_width="2")
+
+    # 4. Notebook Paper (Top Right)
+    paper_cx, paper_cy = 1350, 180
+    paper_deg = 12
+    pw, ph = 240, 320
+    paper_base = [(-pw/2, -ph/2), (pw/2, -ph/2), (pw/2, ph/2), (-pw/2, ph/2)]
+    
+    # Shadow
+    p_shadow = [(x+12, y+12) for x, y in paper_base]
+    p_shadow_rot = [rot(px, py, 0, 0, paper_deg) for px, py in p_shadow]
+    p_shadow_str = " ".join([f"{int(x+paper_cx)},{int(y+paper_cy)}" for x, y in p_shadow_rot])
+    # For white background, shadow needs to be light gray
+    ET.SubElement(slide, "polygon", points=p_shadow_str, fill="#E0E0E0", line_color="none")
+    
+    # Paper white base
+    p_base_rot = [rot(px, py, 0, 0, paper_deg) for px, py in paper_base]
+    p_base_str = " ".join([f"{int(x+paper_cx)},{int(y+paper_cy)}" for x, y in p_base_rot])
+    ET.SubElement(slide, "polygon", points=p_base_str, fill="#FFFFFF", line_color="#000000", line_width="2")
+    
+    # Lines inside paper
+    for i in range(1, 7):
+        line_y = -ph/2 + i * 45
+        x1, x2 = -pw/2 + 20, pw/2 - 20
+        rx1, ry1 = rot(x1, line_y, 0, 0, paper_deg)
+        rx2, ry2 = rot(x2, line_y, 0, 0, paper_deg)
+        ET.SubElement(slide, "line", 
+                      x1=str(int(rx1+paper_cx)), y1=str(int(ry1+paper_cy)), 
+                      x2=str(int(rx2+paper_cx)), y2=str(int(ry2+paper_cy)), 
+                      color="#000000", width="1")
+
+    # 5. Pen (Bottom Right)
+    pen_cx, pen_cy = 1300, 750
+    deg = -45
+    # Build parts of pen around 0,0 and rotate
+    pen_w = 26
+    pen_l = 360
+    
+    # Shadow for entire pen (use the body+cap bounding rect)
+    pen_shadow_pts = [(-pen_w/2+10, -pen_l/2+10), (pen_w/2+10, -pen_l/2+10), (pen_w/2+10, pen_l/2+10), (-pen_w/2+10, pen_l/2+10)]
+    ps_rot = [rot(px, py, 0, 0, deg) for px, py in pen_shadow_pts]
+    ps_str = " ".join([f"{int(x+pen_cx)},{int(y+pen_cy)}" for x, y in ps_rot])
+    ET.SubElement(slide, "polygon", points=ps_str, fill="#9ABAE5", line_color="none")
+
+    # Body
+    body_pts = [(-pen_w/2, -pen_l/2 + 60), (pen_w/2, -pen_l/2 + 60), (pen_w/2, pen_l/2), (-pen_w/2, pen_l/2)]
+    # Silver Cone Tip
+    cone_pts = [(-pen_w/2, -pen_l/2 + 60), (pen_w/2, -pen_l/2 + 60), (6, -pen_l/2 + 20), (-6, -pen_l/2 + 20)]
+    # Black tip
+    tip_pts = [(-6, -pen_l/2 + 20), (6, -pen_l/2 + 20), (0, -pen_l/2)]
+    # Cap (Top part of pen)
+    cap_pts = [(-pen_w/2, pen_l/2 - 100), (pen_w/2, pen_l/2 - 100), (pen_w/2, pen_l/2), (-pen_w/2, pen_l/2)]
+    # Clip (Silver piece on cap)
+    clip_pts = [(-pen_w/2 - 6, pen_l/2 - 80), (-pen_w/2, pen_l/2 - 80), (-pen_w/2, pen_l/2 - 20), (-pen_w/2 - 6, pen_l/2 - 20)]
+    
+    shapes = [
+        (tip_pts, "#000000"), 
+        (cone_pts, "#D9D9D9"), 
+        (body_pts, "#15466B"), 
+        (cap_pts, "#0C304A"), 
+        (clip_pts, "#D9D9D9")
+    ]
+    
+    for shape_pts, fill in shapes:
+        rot_pts = [rot(px, py, 0, 0, deg) for px, py in shape_pts]
+        final_pts = [(rx + pen_cx, ry + pen_cy) for rx, ry in rot_pts]
+        pts_str = " ".join([f"{int(x)},{int(y)}" for x, y in final_pts])
+        ET.SubElement(slide, "polygon", points=pts_str, fill=fill, line_color="#000000", line_width="2")
+
+    # Divider Line
+    if title2:
+        ET.SubElement(slide, "line", x1="450", y1="450", x2="1150", y2="450", color=title_color, width="4")
+
+    # Title Part 1
+    title1_tb = ET.SubElement(
+        slide, "textbox",
+        x="350", y="200",
+        width="900", height="240",
+        font="Arial Rounded MT Bold", font_path=font_path_bold,
+        size="120", min_font_size="40",
+        color=title_color, align="center", vertical_align="bottom",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="false"
+    )
+    title1_tb.text = title1
+
+    # Title Part 2
+    if title2:
+        title2_tb = ET.SubElement(
+            slide, "textbox",
+            x="350", y="460",
+            width="900", height="200",
+            font="Arial Rounded MT Bold", font_path=font_path_bold,
+            size="120", min_font_size="40",
+            color=title_color, align="center", vertical_align="top",
+            single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+            line_spacing="1.0", bold="false"
         )
+        title2_tb.text = title2
 
-        return {
-            "source_text": text,
-            "lines": lines,
-            "font_size": font_size,
-            "width": max_width,
-            "height": len(lines) * line_height,
-        }
+    # Subtitle TextBox
+    if subtitle.strip():
+        sub_tb = ET.SubElement(
+            slide, "textbox",
+            x="400", y="600" if not title2 else "660",
+            width="800", height="100",
+            font="Segoe UI", font_path=font_path_regular,
+            size="36", min_font_size="20",
+            color=subtitle_color, align="center", vertical_align="middle" if not title2 else "top",
+            single_line="false", max_lines="2", overflow="shrink", reflow_on_resize="true",
+            line_spacing="1.2"
+        )
+        sub_tb.text = subtitle
 
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best = None
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    return minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
 
-        while current_font_size >= min_font_size:
-            layout = layout_text(
-                text,
-                font_path=font_path,
-                font_size=current_font_size,
-                max_width=max_width,
-                line_spacing=line_spacing,
+# ==========================================================
+# 7. CLASSIC TABLE OF CONTENTS SLIDE
+# ==========================================================
+def generate_classic_toc_slide_xml(
+    title: str = "Table of contents",
+    items: list = None,
+    background_color: str = "#EBE4D5",
+    theme_color: str = "#4A3F35",
+) -> str:
+    """
+    Sinh XML cho slide Mục lục phong cách cổ điển (Classic/Vintage TOC).
+    Có khung viền hoàng gia và hỗ trợ lưới 2x3 (tối đa 6 mục).
+    """
+    import sys
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    
+    if items is None:
+        items = []
+
+    canvas_width = 1600
+    canvas_height = 900
+
+    # Fonts
+    # Ưu tiên các font Serif cổ điển
+    if sys.platform == "win32":
+        font_path_serif = "C:/Windows/Fonts/georgia.ttf"
+        font_path_serif_bold = "C:/Windows/Fonts/georgiab.ttf"
+    else:
+        font_path_serif = "/Library/Fonts/Georgia.ttf"
+        font_path_serif_bold = "/Library/Fonts/Georgia Bold.ttf"
+
+    presentation = ET.Element(
+        "presentation",
+        schemaVersion="1.0",
+        width=str(canvas_width),
+        height=str(canvas_height),
+        slideWidthInches="13.333",
+        slideHeightInches="7.5",
+    )
+    slide = ET.SubElement(presentation, "slide", background=background_color)
+    
+    # --- DECORATIVE BORDERS ---
+    # Outer Border
+    ox, oy, ow, oh = 40, 40, 1520, 820
+    ET.SubElement(slide, "shape", type="rectangle", x=str(ox), y=str(oy), width=str(ow), height=str(oh), fill="none", line_color=theme_color, line_width="2")
+    
+    # Inner Border
+    ix, iy, iw, ih = 60, 60, 1480, 780
+    ET.SubElement(slide, "shape", type="rectangle", x=str(ix), y=str(iy), width=str(iw), height=str(ih), fill="none", line_color=theme_color, line_width="1")
+    
+    # 4 Corner Squares
+    # Each square is placed such that its center is exactly where the outer and inner border would meet or just decorative.
+    # The image shows squares placed at the 4 corners between inner and outer borders.
+    sq_size = 30
+    corners = [
+        (ox - 5, oy - 5), # Top-left
+        (ox + ow - sq_size + 5, oy - 5), # Top-right
+        (ox - 5, oy + oh - sq_size + 5), # Bottom-left
+        (ox + ow - sq_size + 5, oy + oh - sq_size + 5) # Bottom-right
+    ]
+    for cx, cy in corners:
+        ET.SubElement(slide, "shape", type="rectangle", x=str(cx), y=str(cy), width=str(sq_size), height=str(sq_size), fill="none", line_color=theme_color, line_width="2")
+        
+    # --- MAIN TITLE ---
+    title_tb = ET.SubElement(
+        slide, "textbox",
+        x="400", y="120",
+        width="800", height="100",
+        font="Georgia", font_path=font_path_serif,
+        size="72", min_font_size="36",
+        color=theme_color, align="center", vertical_align="middle",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="false"
+    )
+    title_tb.text = title
+
+    # --- GRID ITEMS (Max 6) ---
+    max_items = 6
+    display_items = items[:max_items]
+    
+    # Tọa độ tâm các cột và hàng
+    centers_x = [300, 800, 1300]
+    centers_y = [340, 660]
+    
+    for idx, item in enumerate(display_items):
+        row = idx // 3
+        col = idx % 3
+        
+        cx = centers_x[col]
+        cy = centers_y[row]
+        
+        box_width = 380
+        start_x = cx - box_width // 2
+        
+        number = item.get("number", f"{idx+1:02d}")
+        item_title = item.get("title", f"Section {idx+1}")
+        description = item.get("description", "You can describe the topic of the section here")
+        
+        # Top line for number
+        ET.SubElement(slide, "line", x1=str(cx - 50), y1=str(cy - 90), x2=str(cx + 50), y2=str(cy - 90), color=theme_color, width="2")
+        
+        # Number Textbox
+        num_tb = ET.SubElement(
+            slide, "textbox",
+            x=str(start_x), y=str(cy - 80),
+            width=str(box_width), height="50",
+            font="Georgia", font_path=font_path_serif_bold,
+            size="40", min_font_size="20",
+            color=theme_color, align="center", vertical_align="middle",
+            single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+            line_spacing="1.0", bold="true"
+        )
+        num_tb.text = number
+        
+        # Bottom line for number
+        ET.SubElement(slide, "line", x1=str(cx - 50), y1=str(cy - 30), x2=str(cx + 50), y2=str(cy - 30), color=theme_color, width="2")
+        
+        # Item Title Textbox
+        it_tb = ET.SubElement(
+            slide, "textbox",
+            x=str(start_x), y=str(cy - 20),
+            width=str(box_width), height="80",
+            font="Georgia", font_path=font_path_serif_bold,
+            size="24", min_font_size="24",
+            color=theme_color, align="center", vertical_align="middle",
+            single_line="false", max_lines="2", overflow="shrink", reflow_on_resize="true",
+            line_spacing="1.0", bold="true"
+        )
+        it_tb.text = item_title
+        
+        # Description Textbox
+        desc_tb = ET.SubElement(
+            slide, "textbox",
+            x=str(start_x), y=str(cy + 70),
+            width=str(box_width), height="50",
+            font="Georgia", font_path=font_path_serif,
+            size="16", min_font_size="16",
+            color=theme_color, align="center", vertical_align="top",
+            single_line="false", max_lines="2", overflow="shrink", reflow_on_resize="true",
+            line_spacing="1.2", bold="false"
+        )
+        desc_tb.text = description
+
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    return minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+def generate_notebook_section_slide_xml(
+    number: str = "01",
+    title: str = "Introduction",
+    subtitle: str = "You can enter a subtitle here if you need it",
+    background_color: str = "#FFFFFF"
+) -> str:
+    """
+    Generate a 'Back to School' notebook section slide.
+    """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    import math
+
+    root = ET.Element("presentation")
+    slide = ET.SubElement(root, "slide")
+    
+    # White Background
+    ET.SubElement(slide, "polygon", points="0,0 1600,0 1600,900 0,900", fill=background_color, line_color="none")
+    
+    # Grid lines
+    grid_color = "#E8F0F4"
+    grid_size = 50
+    for x in range(0, 1600, grid_size):
+        ET.SubElement(slide, "line", x1=str(x), y1="0", x2=str(x), y2="900", color=grid_color, width="1")
+    for y in range(0, 900, grid_size):
+        ET.SubElement(slide, "line", x1="0", y1=str(y), x2="1600", y2=str(y), color=grid_color, width="1")
+
+    # Helper to draw a stylized leaf (6-point polygon)
+    def draw_leaf(parent, x, y, angle_deg, scale, color):
+        pts = [
+            (0, 0),
+            (10 * scale, -6 * scale),
+            (20 * scale, -6 * scale),
+            (30 * scale, 0),
+            (20 * scale, 6 * scale),
+            (10 * scale, 6 * scale)
+        ]
+        rad = math.radians(angle_deg)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        rotated_pts = []
+        for px, py in pts:
+            nx = x + px * cos_a - py * sin_a
+            ny = y + px * sin_a + py * cos_a
+            rotated_pts.append(f"{nx},{ny}")
+        ET.SubElement(parent, "polygon", points=" ".join(rotated_pts), fill=color, line_color="none")
+        
+    # Helper to draw tilted rectangle (crayon body)
+    def draw_tilted_rect(parent, cx, cy, w, h, angle_deg, color):
+        hw, hh = w/2, h/2
+        pts = [
+            (-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)
+        ]
+        rad = math.radians(angle_deg)
+        cos_a, sin_a = math.cos(rad), math.sin(rad)
+        rotated_pts = []
+        for px, py in pts:
+            nx = cx + px * cos_a - py * sin_a
+            ny = cy + px * sin_a + py * cos_a
+            rotated_pts.append(f"{nx},{ny}")
+        ET.SubElement(parent, "polygon", points=" ".join(rotated_pts), fill=color, line_color="none")
+
+    # Helper to draw crayon tip
+    def draw_tilted_triangle(parent, cx, cy, w, h, angle_deg, color):
+        # Base width w, height h pointing up
+        hw = w/2
+        pts = [
+            (-hw, 0), (hw, 0), (0, -h)
+        ]
+        rad = math.radians(angle_deg)
+        cos_a, sin_a = math.cos(rad), math.sin(rad)
+        rotated_pts = []
+        for px, py in pts:
+            nx = cx + px * cos_a - py * sin_a
+            ny = cy + px * sin_a + py * cos_a
+            rotated_pts.append(f"{nx},{ny}")
+        ET.SubElement(parent, "polygon", points=" ".join(rotated_pts), fill=color, line_color="none")
+
+    # 1. Top-Left Balloon
+    balloon_color = "#F9E2A0"
+    ET.SubElement(slide, "shape", type="circle", x="20", y="10", width="180", height="220", fill=balloon_color, line_color="none")
+    ET.SubElement(slide, "polygon", points="100,225 120,225 110,245", fill=balloon_color, line_color="none")
+    # String
+    ET.SubElement(slide, "line", x1="110", y1="240", x2="105", y2="340", color="#A0A0A0", width="2")
+
+    # 2. Top-Right Leaves (Autumn)
+    leaf_colors = ["#F47C20", "#F9A826", "#E34A27"]
+    draw_leaf(slide, 1470, 30, 130, 4.0, leaf_colors[0])
+    draw_leaf(slide, 1420, 70, 160, 3.0, leaf_colors[1])
+    draw_leaf(slide, 1500, 140, 100, 3.5, leaf_colors[2])
+    draw_leaf(slide, 1470, 200, 110, 2.5, leaf_colors[0])
+    draw_leaf(slide, 1390, 30, 170, 2.0, leaf_colors[2])
+
+    # 3. Bottom-Left Backpack
+    bp_x, bp_y = 30, 640
+    bp_blue = "#5499C7"
+    bp_dark = "#2980B9"
+    # Main body
+    ET.SubElement(slide, "shape", type="rounded_rectangle", x=str(bp_x), y=str(bp_y), width="220", height="240", fill=bp_blue, line_color="none")
+    # Flap
+    ET.SubElement(slide, "polygon", points=f"{bp_x},{bp_y+50} {bp_x+220},{bp_y+50} {bp_x+200},{bp_y+120} {bp_x+20},{bp_y+120}", fill=bp_dark, line_color="none")
+    # Front pocket
+    ET.SubElement(slide, "shape", type="rounded_rectangle", x=str(bp_x+20), y=str(bp_y+130), width="180", height="110", fill=bp_blue, line_color="none")
+    # Keychains/Fluff
+    ET.SubElement(slide, "shape", type="circle", x=str(bp_x+60), y=str(bp_y+150), width="40", height="40", fill="#F4D03F", line_color="none")
+    ET.SubElement(slide, "shape", type="circle", x=str(bp_x+100), y=str(bp_y+170), width="35", height="35", fill="#E74C3C", line_color="none")
+    # Straps (top handle)
+    ET.SubElement(slide, "shape", type="circle", x=str(bp_x+60), y=str(bp_y-30), width="100", height="60", fill="none", line_color=bp_dark, line_width="10")
+
+    # 4. Bottom-Right Crayons
+    # Crayon 1: Green
+    cx1, cy1, a1 = 1420, 720, -30
+    draw_tilted_rect(slide, cx1, cy1, 40, 160, a1, "#F4E5D4") # Wrapper
+    draw_tilted_rect(slide, cx1, cy1, 40, 40, a1, "#1E8449") # Band
+    # Crayon green tip (offsetting center along angle)
+    tx1 = cx1 + math.cos(math.radians(a1 - 90)) * 80
+    ty1 = cy1 + math.sin(math.radians(a1 - 90)) * 80
+    draw_tilted_triangle(slide, tx1, ty1, 40, 30, a1, "#1E8449")
+    
+    # Crayon 2: Blue
+    cx2, cy2, a2 = 1270, 820, 45
+    draw_tilted_rect(slide, cx2, cy2, 40, 160, a2, "#F4E5D4") # Wrapper
+    draw_tilted_rect(slide, cx2, cy2, 40, 40, a2, "#2874A6") # Band
+    tx2 = cx2 + math.cos(math.radians(a2 - 90)) * 80
+    ty2 = cy2 + math.sin(math.radians(a2 - 90)) * 80
+    draw_tilted_triangle(slide, tx2, ty2, 40, 30, a2, "#2874A6")
+
+    # 5. Splatters (Random blue circles)
+    splatters = [
+        (600, 50, 15), (630, 40, 8), (590, 80, 10), (620, 90, 12),
+        (1400, 500, 20), (1440, 480, 10), (1420, 530, 15),
+        (350, 800, 18), (300, 850, 12)
+    ]
+    for sx, sy, sr in splatters:
+        ET.SubElement(slide, "shape", type="circle", x=str(sx), y=str(sy), width=str(sr*2), height=str(sr*2), fill="#A9D9D9", line_color="none")
+        
+    # Sprinkles (Plus signs)
+    def draw_plus(parent, cx, cy, size, color, width):
+        ET.SubElement(parent, "line", x1=str(cx - size), y1=str(cy), x2=str(cx + size), y2=str(cy), color=color, width=width)
+        ET.SubElement(parent, "line", x1=str(cx), y1=str(cy - size), x2=str(cx), y2=str(cy + size), color=color, width=width)
+        
+    draw_plus(slide, 320, 180, 15, "#F39C12", "3")
+    draw_plus(slide, 1300, 250, 10, "#E74C3C", "3")
+    draw_plus(slide, 1200, 750, 12, "#F39C12", "3")
+
+    # --- TEXT BOXES ---
+    # Number
+    num_tb = ET.SubElement(
+        slide, "textbox",
+        x="600", y="230",
+        width="400", height="120",
+        font="Segoe UI", font_path="",
+        size="96", min_font_size="60",
+        color="#D56259", align="center", vertical_align="middle",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true", italic="false"
+    )
+    num_tb.text = number
+
+    # Title
+    title_tb = ET.SubElement(
+        slide, "textbox",
+        x="200", y="380",
+        width="1200", height="160",
+        font="Arial", font_path="",
+        size="110", min_font_size="50",
+        color="#2E2E2E", align="center", vertical_align="middle",
+        single_line="false", max_lines="2", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true", italic="false"
+    )
+    title_tb.text = title
+
+    # Subtitle
+    sub_tb = ET.SubElement(
+        slide, "textbox",
+        x="300", y="600",
+        width="1000", height="80",
+        font="Segoe UI", font_path="",
+        size="32", min_font_size="20",
+        color="#555555", align="center", vertical_align="middle",
+        single_line="false", max_lines="2", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.2", bold="false", italic="false"
+    )
+    sub_tb.text = subtitle
+
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+    return xml_str
+def generate_science_2col_slide_xml(
+    main_title: str = "From molecules to life",
+    col1_title: str = "Column 1",
+    col1_desc: str = "Description for the first column.",
+    col2_title: str = "Column 2",
+    col2_desc: str = "Description for the second column.",
+) -> str:
+    """
+    Generate a 2-column science/biology style slide with pale green background, hexagon patterns, and a molecule graphic. Good for comparisons or side-by-side content.
+    """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    import sys
+
+    # Font handling
+    if sys.platform == "win32":
+        font_path = "C:/Windows/Fonts/arial.ttf"
+        font_path_bold = "C:/Windows/Fonts/arialbd.ttf"
+    else:
+        font_path = "/Library/Fonts/Arial.ttf"
+        font_path_bold = "/Library/Fonts/Arial Bold.ttf"
+
+    root = ET.Element("presentation")
+    slide = ET.SubElement(root, "slide")
+    
+    # 1. Background
+    bg_color = "#DCE6D3"
+    ET.SubElement(slide, "polygon", points="0,0 1600,0 1600,900 0,900", fill=bg_color, line_color="none")
+    
+    # 2. Hexagon Patterns (Clipped to slide bounds using polygon)
+    # Top-Left Hexagon
+    ET.SubElement(slide, "polygon", points="25.0,130.0 115.0,85.0 115.0,0.0 0.0,0.0 0.0,117.5", fill="#4A775C", line_color="none")
+    
+    # Top-Right Hexagon
+    ET.SubElement(slide, "polygon", points="1485.0,75.0 1575.0,120.0 1600.0,107.5 1600.0,0.0 1485.0,0.0", fill="#9EB1A8", line_color="none")
+    
+    # Bottom-Right Cluster (3 hexagons)
+    ET.SubElement(slide, "polygon", points="1525.0,715.0 1450.0,752.5 1450.0,827.5 1525.0,865.0 1600.0,827.5 1600.0,752.5", fill="#A1C2B0", line_color="none")
+    ET.SubElement(slide, "polygon", points="1540.0,852.5 1540.0,900.0 1600.0,900.0 1600.0,822.5", fill="#C48E59", line_color="none")
+    ET.SubElement(slide, "polygon", points="1540.0,672.5 1540.0,747.5 1600.0,777.5 1600.0,642.5", fill="#888172", line_color="none")
+
+    # Bottom-Left Borders (Hexagons cut off)
+    ET.SubElement(slide, "polygon", points="10.0,830.0 80.0,795.0 80.0,725.0 10.0,690.0 0.0,695.0 0.0,825.0", fill="#C48E59", line_color="none")
+    ET.SubElement(slide, "polygon", points="80.0,845.0 10.0,810.0 0.0,815.0 0.0,900.0 80.0,900.0", fill="#A1C2B0", line_color="none")
+
+    # 3. Molecule Graphic
+    # Center atom
+    mx, my = 220, 750
+    # Connecting Lines (White)
+    ET.SubElement(slide, "line", x1=str(mx), y1=str(my), x2=str(mx-80), y2=str(my+70), color="#FFFFFF", width="4")
+    ET.SubElement(slide, "line", x1=str(mx), y1=str(my), x2=str(mx-60), y2=str(my-50), color="#FFFFFF", width="4")
+    ET.SubElement(slide, "line", x1=str(mx-80), y1=str(my+70), x2=str(mx-100), y2=str(my-20), color="#FFFFFF", width="4")
+    ET.SubElement(slide, "line", x1=str(mx-80), y1=str(my+70), x2=str(mx-20), y2=str(my+120), color="#FFFFFF", width="4")
+
+    # Atoms (Circles)
+    def draw_atom(cx, cy, r, color):
+        ET.SubElement(slide, "shape", type="circle", x=str(cx-r), y=str(cy-r), width=str(r*2), height=str(r*2), fill=color, line_color="none")
+
+    draw_atom(mx, my, 45, "#785B3C") # Center big brown
+    draw_atom(mx-80, my+70, 35, "#785B3C") # Bottom left brown
+    draw_atom(mx-60, my-50, 25, "#4A775C") # Top green
+    draw_atom(mx-100, my-20, 20, "#4A775C") # Far left green
+    draw_atom(mx-20, my+120, 25, "#4A775C") # Bottom green
+
+    # 4. Text Boxes
+    text_color = "#312C28"
+
+    # Main Title
+    title_tb = ET.SubElement(
+        slide, "textbox",
+        x="300", y="100",
+        width="1000", height="100",
+        font="Georgia", font_path="",
+        size="60", min_font_size="40",
+        color=text_color, align="center", vertical_align="middle",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true"
+    )
+    title_tb.text = main_title
+
+    # --- COLUMN 1 (Left) ---
+    col1_x = 200
+    col_width = 550
+    col_title_y = 280
+    col_title_h = 50
+    col_content_y = 350
+    col_content_h = 300
+    
+    c1_title_tb = ET.SubElement(
+        slide, "textbox",
+        x=str(col1_x), y=str(col_title_y),
+        width=str(col_width), height=str(col_title_h),
+        font="Georgia", font_path="",
+        size="32", min_font_size="24",
+        color=text_color, align="left", vertical_align="bottom",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true"
+    )
+    c1_title_tb.text = col1_title
+
+    c1_desc_tb = ET.SubElement(
+        slide, "textbox",
+        x=str(col1_x), y=str(col_content_y),
+        width=str(col_width), height=str(col_content_h),
+        font="Segoe UI", font_path="",
+        size="18", min_font_size="14",
+        color=text_color, align="left", vertical_align="top",
+        single_line="false", max_lines="12", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.2", bold="false"
+    )
+    c1_desc_tb.text = col1_desc
+
+    # --- COLUMN 2 (Right) ---
+    col2_x = 850
+    
+    c2_title_tb = ET.SubElement(
+        slide, "textbox",
+        x=str(col2_x), y=str(col_title_y),
+        width=str(col_width), height=str(col_title_h),
+        font="Georgia", font_path="",
+        size="32", min_font_size="24",
+        color=text_color, align="left", vertical_align="bottom",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true"
+    )
+    c2_title_tb.text = col2_title
+
+    c2_desc_tb = ET.SubElement(
+        slide, "textbox",
+        x=str(col2_x), y=str(col_content_y),
+        width=str(col_width), height=str(col_content_h),
+        font="Segoe UI", font_path="",
+        size="18", min_font_size="14",
+        color=text_color, align="left", vertical_align="top",
+        single_line="false", max_lines="12", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.2", bold="false"
+    )
+    c2_desc_tb.text = col2_desc
+
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+    return xml_str
+def generate_thank_you_slide_xml(
+    title: str = "Thank You",
+    message: str = "We appreciate your trust and confidence in us. Your support is invaluable, and we look forward to serving you again.",
+) -> str:
+    """
+    Generate a handwritten watercolor style 'Thank You' slide with a large cursive title, floating hearts, and a bouquet of daisies.
+    """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    import math
+
+    root = ET.Element("presentation")
+    slide = ET.SubElement(root, "slide")
+    
+    # 1. Background
+    bg_color = "#FFFFFF"
+    ET.SubElement(slide, "polygon", points="0,0 1600,0 1600,900 0,900", fill=bg_color, line_color="none")
+
+    # Colors
+    yellow_dark = "#F5B041"
+    yellow_light = "#FAD7A1"
+    green_stem = "#7CB342"
+    text_dark = "#55534F"
+    text_light = "#A3A09A"
+
+    # 2. Splatters (Top Left and Bottom Right)
+    import random
+    random.seed(42) # For reproducible layout
+
+    def draw_splatters(origin_x, origin_y, dir_x, dir_y, count, spread, max_r, min_r):
+        for _ in range(count):
+            dx = random.uniform(-spread*0.2, spread) * dir_x
+            dy = random.uniform(-spread*0.2, spread) * dir_y
+            rx = origin_x + dx
+            ry = origin_y + dy
+            
+            d = math.hypot(dx, dy)
+            
+            # Larger dots closer to origin, smaller further away
+            ratio = max(0, 1 - (d / spread))
+            base_r = min_r + (max_r - min_r) * (ratio ** 1.5)
+            
+            # Add random variation
+            r = base_r * random.uniform(0.5, 1.5)
+            r = max(min_r, min(max_r, r))
+            
+            # Prevent overflowing slide bounds
+            rx = max(r + 2, min(1600 - r - 2, rx))
+            ry = max(r + 2, min(900 - r - 2, ry))
+            
+            color = random.choice([yellow_dark, yellow_light, "#FDEBD0"])
+            ET.SubElement(slide, "shape", type="circle", x=str(rx-r), y=str(ry-r), width=str(r*2), height=str(r*2), fill=color, line_color="none")
+
+    draw_splatters(100, 50, 1, 1, 80, 500, 16, 1.5)
+    draw_splatters(1500, 850, -1, -1, 50, 350, 12, 1.5)
+
+    # 3. Daisies (Bouquet)
+    def draw_daisy(cx, cy, scale, angle_offset, draw_stem_to_x):
+        # Stem
+        ET.SubElement(slide, "line", x1=str(cx), y1=str(cy), x2=str(draw_stem_to_x), y2="900", color=green_stem, width="5")
+        
+        # Leaves on stem
+        leaf_y = cy + (900 - cy) * 0.5
+        leaf_x = cx + (draw_stem_to_x - cx) * 0.5
+        ET.SubElement(slide, "shape", type="ellipse", x=str(leaf_x - 10*scale), y=str(leaf_y), width=str(20*scale), height=str(40*scale), fill=green_stem, line_color="none", rotation="45")
+        ET.SubElement(slide, "shape", type="ellipse", x=str(leaf_x + 10*scale), y=str(leaf_y + 20), width=str(20*scale), height=str(40*scale), fill=green_stem, line_color="none", rotation="-45")
+
+        # Petals
+        num_petals = 12
+        petal_w = 20 * scale
+        petal_h = 60 * scale
+        for i in range(num_petals):
+            angle = i * (360 / num_petals) + angle_offset
+            rad = math.radians(angle)
+            # Offset the petal slightly from the center
+            dist = 15 * scale
+            px = cx + math.sin(rad) * dist - petal_w / 2
+            py = cy - math.cos(rad) * dist - petal_h / 2
+            
+            ET.SubElement(
+                slide, "shape", type="ellipse", 
+                x=str(px), y=str(py), width=str(petal_w), height=str(petal_h), 
+                fill="#FFFFFF", line_color=yellow_light, rotation=str(angle)
             )
+        
+        # Center
+        center_r = 18 * scale
+        ET.SubElement(slide, "shape", type="circle", x=str(cx - center_r), y=str(cy - center_r), width=str(center_r*2), height=str(center_r*2), fill=yellow_dark, line_color="none")
 
-            too_many_lines = (
-                max_lines is not None
-                and len(layout["lines"]) > max_lines
-            )
+    daisies = [
+        (1000, 450, 1.2, 0, 1150),
+        (1150, 350, 1.0, 10, 1200),
+        (1300, 330, 1.3, 5, 1250),
+        (1400, 480, 1.0, 15, 1300),
+        (1100, 580, 0.9, 20, 1180),
+        (1250, 520, 1.1, -10, 1230),
+        (950, 620, 0.8, -5, 1120),
+        (1380, 650, 0.8, 12, 1280),
+    ]
 
-            score = (
-                max(0.0, layout["height"] - max_height) * 1700
-                + max(0, len(layout["lines"]) - (max_lines or 99)) * 1100
-                + (preferred_font_size - current_font_size) * 8
-            )
+    for dx, dy, dscale, dang, dstx in daisies:
+        draw_daisy(dx, dy, dscale, dang, dstx)
 
-            if best is None or score < best["score"]:
-                layout["score"] = score
-                best = layout
+    # 4. Hearts
+    def draw_heart(cx, cy, size, rotation):
+        ET.SubElement(slide, "shape", type="heart", x=str(cx - size/2), y=str(cy - size/2), width=str(size), height=str(size), fill=yellow_dark, line_color="none", rotation=str(rotation))
 
-            if layout["height"] <= max_height and not too_many_lines:
-                return layout
+    draw_heart(750, 200, 80, -20)
+    draw_heart(850, 280, 70, 15)
+    draw_heart(780, 380, 60, -10)
 
-            break
+    # 5. Text Boxes
+    # Main Title (Handwritten style)
+    title_tb = ET.SubElement(
+        slide, "textbox",
+        x="100", y="250",
+        width="800", height="300",
+        font="Segoe Print", font_path="C:/Windows/Fonts/segoepr.ttf",
+        size="140", min_font_size="60",
+        color=text_dark, align="left", vertical_align="middle",
+        single_line="true", max_lines="2", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true"
+    )
+    title_tb.text = title
 
-        return best
+    # Message
+    msg_tb = ET.SubElement(
+        slide, "textbox",
+        x="120", y="620",
+        width="800", height="200",
+        font="Georgia", font_path="",
+        size="14", min_font_size="10",
+        color=text_light, align="left", vertical_align="top",
+        single_line="false", max_lines="4", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.3", bold="false"
+    )
+    msg_tb.text = message
 
-    title_font_name = "Arial"
-    title_font_path = resolve_font_path(
-        title_font_name,
-        bold=True,
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+    return xml_str
+def generate_thank_you_watching_slide_xml(
+    title: str = "THANK YOU",
+    message: str = "for watching",
+) -> str:
+    """
+    Generate a boho/abstract 'Thank You for watching' slide with torn paper shapes, line-art branches, and 3D bold marker text.
+    """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+    import math
+
+    root = ET.Element("presentation")
+    slide = ET.SubElement(root, "slide")
+    
+    # 1. Background
+    bg_color = "#F9F6F0"
+    ET.SubElement(slide, "polygon", points="0,0 1600,0 1600,900 0,900", fill=bg_color, line_color="none")
+
+    # Colors
+    peach = "#F5D0B5"
+    dark_grey = "#4A4A4A"
+    brown = "#733F2E"
+    orange = "#B85C38"
+
+    # 2. Torn Paper Polygons
+    # Top Right
+    tr_points = "800.0,0.0 950.0,50.0 1050.0,20.0 1250.0,80.0 1350.0,50.0 1550.0,300.0 1600.0,350.0 1600.0,0.0"
+    ET.SubElement(slide, "polygon", points=tr_points, fill=peach, line_color="none")
+    
+    # Bottom Left
+    bl_points = "0.0,550.0 150.0,600.0 200.0,570.0 450.0,720.0 500.0,680.0 750.0,900.0 0.0,900.0"
+    ET.SubElement(slide, "polygon", points=bl_points, fill=peach, line_color="none")
+
+    # 3. Line-art Branches
+    def draw_branch(sx, sy, ex, ey, leaf_len=80, leaf_w=25, num_pairs=3):
+        ET.SubElement(slide, "line", x1=str(sx), y1=str(sy), x2=str(ex), y2=str(ey), color=brown, width="4")
+        dx = ex - sx
+        dy = ey - sy
+        angle = math.atan2(dy, dx)
+        
+        def add_leaf(cx, cy, leaf_angle_offset):
+            l_ang = angle + math.radians(leaf_angle_offset)
+            
+            # center of leaf
+            lx = cx + math.cos(l_ang) * (leaf_len / 2)
+            ly = cy + math.sin(l_ang) * (leaf_len / 2)
+            
+            # Clamp center so leaf stays inside
+            clx = max(leaf_len/2, min(1600 - leaf_len/2, lx))
+            cly = max(leaf_len/2, min(900 - leaf_len/2, ly))
+            
+            ET.SubElement(slide, "shape", type="ellipse", 
+                          x=str(clx - leaf_w/2), y=str(cly - leaf_len/2), 
+                          width=str(leaf_w), height=str(leaf_len), 
+                          fill="none", line_color=brown, 
+                          rotation=str(math.degrees(l_ang) + 90))
+            
+            # Vein goes from stem (cx, cy) to the tip of the leaf
+            tip_x = cx + math.cos(l_ang) * (leaf_len * 0.85)
+            tip_y = cy + math.sin(l_ang) * (leaf_len * 0.85)
+            
+            tip_x = max(5, min(1595, tip_x))
+            tip_y = max(5, min(895, tip_y))
+            
+            ET.SubElement(slide, "line", 
+                          x1=str(cx), y1=str(cy), 
+                          x2=str(tip_x), y2=str(tip_y), 
+                          color=brown, width="2")
+
+        # Tip leaf points exactly along the stem
+        add_leaf(ex, ey, 0)
+        
+        # Side leaves spread beautifully along the stem
+        for i in range(num_pairs):
+            # t goes from 0.2 to 0.8
+            t_val = 0.2 + 0.6 * (i / max(1, num_pairs - 1))
+            cx = sx + dx * t_val
+            cy = sy + dy * t_val
+            add_leaf(cx, cy, 35)
+            add_leaf(cx, cy, -35)
+
+    # Top-left branches (parallel to avoid overlap)
+    draw_branch(80, 0, 330, 250, leaf_len=80, leaf_w=25, num_pairs=3)
+    draw_branch(0, 150, 150, 300, leaf_len=60, leaf_w=20, num_pairs=2)
+    
+    # Bottom-right branches (parallel to avoid overlap)
+    draw_branch(1520, 900, 1270, 650, leaf_len=80, leaf_w=25, num_pairs=3)
+    draw_branch(1600, 750, 1450, 600, leaf_len=60, leaf_w=20, num_pairs=2)
+
+    # 4. Springs / Swirls
+    def draw_spring(cx, cy, r, loops, pitch, rotation_deg, color):
+        segments = int(30 * loops)
+        points = []
+        rad_rot = math.radians(rotation_deg)
+        for i in range(segments + 1):
+            t = i / 30 * math.pi * 2
+            px = r * math.cos(t)
+            py = r * math.sin(t) + (t / (2*math.pi)) * pitch
+            
+            # Rotate
+            rx = px * math.cos(rad_rot) - py * math.sin(rad_rot)
+            ry = px * math.sin(rad_rot) + py * math.cos(rad_rot)
+            
+            # Clamp to prevent overflow
+            px_clamped = max(5, min(1595, cx + rx))
+            py_clamped = max(5, min(895, cy + ry))
+            points.append((px_clamped, py_clamped))
+            
+        for i in range(len(points) - 1):
+            ET.SubElement(slide, "line", x1=str(points[i][0]), y1=str(points[i][1]), x2=str(points[i+1][0]), y2=str(points[i+1][1]), color=color, width="4")
+
+    draw_spring(180, 520, 25, 2.5, 40, -45, orange)
+    draw_spring(1400, 380, 25, 2.5, 50, 60, orange)
+    draw_spring(650, 750, 20, 2.0, 30, 15, orange)
+    draw_spring(400, 180, 18, 1.5, 25, 30, orange)
+    draw_spring(1200, 220, 20, 2.0, 35, -30, orange)
+    
+    # White swirls over abstract background
+    draw_spring(300, 850, 30, 2.5, 40, -10, "#FFFFFF")
+    draw_spring(1450, 100, 40, 2.5, 50, 45, "#FFFFFF")
+
+    # 5. Stars
+    def draw_star(cx, cy, size, color):
+        pts = []
+        for i in range(8):
+            angle = i * math.pi / 4
+            r = size if i % 2 == 0 else size * 0.3
+            pts.append(f"{cx + r * math.cos(angle):.1f},{cy + r * math.sin(angle):.1f}")
+        ET.SubElement(slide, "polygon", points=" ".join(pts), fill=color, line_color="none")
+
+    draw_star(350, 750, 60, "#FFFFFF")
+    draw_star(300, 180, 50, "#FFFFFF")
+
+    # 6. Typography (Title and Message)
+    title_w = 1200
+    title_h = 250
+    title_x = 200
+    title_y = 350
+    
+    # Shadow text (offset by +8px)
+    title_shadow = ET.SubElement(
+        slide, "textbox",
+        x=str(title_x + 8), y=str(title_y + 8),
+        width=str(title_w), height=str(title_h),
+        font="Comic Sans MS", font_path="C:/Windows/Fonts/comic.ttf",
+        size="180", min_font_size="80",
+        color=brown, align="center", vertical_align="middle",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true"
+    )
+    title_shadow.text = title.upper()
+
+    # Main text
+    title_main = ET.SubElement(
+        slide, "textbox",
+        x=str(title_x), y=str(title_y),
+        width=str(title_w), height=str(title_h),
+        font="Comic Sans MS", font_path="C:/Windows/Fonts/comic.ttf",
+        size="180", min_font_size="80",
+        color=dark_grey, align="center", vertical_align="middle",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="true"
+    )
+    title_main.text = title.upper()
+
+    # Message text (cursive)
+    msg_tb = ET.SubElement(
+        slide, "textbox",
+        x="800", y="580",
+        width="400", height="100",
+        font="Segoe Print", font_path="C:/Windows/Fonts/segoepr.ttf",
+        size="48", min_font_size="24",
+        color=brown, align="center", vertical_align="top",
+        single_line="true", max_lines="1", overflow="shrink", reflow_on_resize="true",
+        line_spacing="1.0", bold="false"
+    )
+    msg_tb.text = message
+
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+    return xml_str
+
+
+def generate_about_me_slide_xml(
+    title: str = "About Me",
+    paragraph: str = "Lorem ipsum dolor amet, consectetur adipiscing elit, sed eiusmod tempor incididunt ut labore dolore magna aliqua. Lorem ipsum dolor amet, consectetur adipiscing elit, sed eiusmod tempor incididunt ut labore dolore magna aliqua.",
+    image_url: str = "https://picsum.photos/seed/portrait/600/800"
+) -> str:
+    """
+    Generate a minimalist elegant 'About Me' slide with a left text area, organic wavy corner blobs, and an oval portrait frame.
+    """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    root = ET.Element("presentation")
+    slide = ET.SubElement(root, "slide")
+    
+    # Helpers for organic shapes
+    def evaluate_bezier(p0, p1, p2, p3, steps=20):
+        pts = []
+        for i in range(steps):
+            t = i / steps
+            x = (1-t)**3 * p0[0] + 3*(1-t)**2 * t * p1[0] + 3*(1-t) * t**2 * p2[0] + t**3 * p3[0]
+            y = (1-t)**3 * p0[1] + 3*(1-t)**2 * t * p1[1] + 3*(1-t) * t**2 * p2[1] + t**3 * p3[1]
+            pts.append((x, y))
+        return pts
+
+    def generate_wavy_curve(points, steps=15):
+        res = []
+        n = len(points)
+        for i in range(n - 1):
+            p0 = points[max(0, i - 1)]
+            p1 = points[i]
+            p2 = points[i + 1]
+            p3 = points[min(n - 1, i + 2)]
+            cp1 = (p1[0] + (p2[0] - p0[0])/6, p1[1] + (p2[1] - p0[1])/6)
+            cp2 = (p2[0] - (p3[0] - p1[0])/6, p2[1] - (p3[1] - p1[1])/6)
+            res.extend(evaluate_bezier(p1, cp1, cp2, p2, steps))
+        res.append(points[-1])
+        return res
+
+    def clamp(val, min_val, max_val):
+        return max(min_val, min(max_val, val))
+
+    def draw_organic_blob(polygon_pts, fill_color):
+        clamped_pts = [(clamp(p[0], 0, 1600), clamp(p[1], 0, 900)) for p in polygon_pts]
+        pts_str = " ".join([f"{p[0]},{p[1]}" for p in clamped_pts])
+        ET.SubElement(slide, "polygon", points=pts_str, fill=fill_color, line_color="none")
+
+    def draw_wavy_line(line_pts, color, width="2"):
+        clamped_pts = [(clamp(p[0], 0, 1600), clamp(p[1], 0, 900)) for p in line_pts]
+        pts_str = " ".join([f"{p[0]},{p[1]}" for p in clamped_pts])
+        # Use polyline so the line is continuous and smoothly jointed
+        ET.SubElement(slide, "polyline", points=pts_str, line_color=color, line_width=width, fill="none")
+
+    # 1. Background (Beige)
+    bg_color = "#F7F2EB"
+    ET.SubElement(slide, "polygon", points="0,0 1600,0 1600,900 0,900", fill=bg_color, line_color="none")
+
+    # 2. Organic Corner Blobs (Decorations)
+    blob_color = "#EADBCD"
+    line_color = "#997458"
+    
+    # Top Right Blob
+    tr_curve = generate_wavy_curve([(1150, 0), (1250, 150), (1450, 200), (1600, 100)])
+    tr_poly = tr_curve + [(1600, 0), (1150, 0)]
+    draw_organic_blob(tr_poly, blob_color)
+    
+    # Top Right Wavy Line
+    tr_line_curve = generate_wavy_curve([(1450, 0), (1350, 100), (1500, 250), (1600, 250)])
+    draw_wavy_line(tr_line_curve, line_color, "4")
+
+    # Bottom Left Blob
+    bl_curve = generate_wavy_curve([(0, 650), (100, 700), (250, 800), (200, 900)])
+    bl_poly = bl_curve + [(0, 900), (0, 650)]
+    draw_organic_blob(bl_poly, blob_color)
+    
+    # Bottom Left Wavy Line
+    bl_line_curve = generate_wavy_curve([(0, 780), (150, 800), (250, 850), (250, 900)])
+    draw_wavy_line(bl_line_curve, line_color, "4")
+
+    # 3. Left Text Content
+    ET.SubElement(slide, "textbox", x="130", y="260", width="600", height="120", font="Segoe UI Light", size="80", color="#3E281C", align="left", vertical_align="middle", single_line="true", max_lines="1", reflow_on_resize="true", line_spacing="1.0", bold="false").text = title
+
+    ET.SubElement(slide, "textbox", x="130", y="400", width="700", height="400", font="Segoe UI", size="26", color="#665246", align="left", vertical_align="top", single_line="false", max_lines="7", overflow="shrink", reflow_on_resize="true", line_spacing="1.3", bold="false").text = paragraph
+
+    # 4. Oval Portrait Frame (Right side)
+    # Reduced image frame size from 600x700 to 500x600, and moved slightly right.
+    ix, iy, iw, ih = 950, 150, 500, 600
+    
+    border_w = 6
+    ET.SubElement(slide, "shape", type="ellipse", x=str(ix - border_w), y=str(iy - border_w), width=str(iw + border_w * 2), height=str(ih + border_w * 2), fill=line_color, line_color="none")
+
+    # Image
+    ET.SubElement(slide, "image", src=image_url, x=str(ix), y=str(iy), width=str(iw), height=str(ih), shape="ellipse")
+
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+    return xml_str
+
+
+def generate_content_2col_slide_xml(
+    title: str = "CONTENT",
+    subtitle_1: str = "PRIMARY REFERENCE TITLE",
+    paragraph_1: str = "Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.",
+    subtitle_2: str = "SECONDARY REFERENCE TITLE",
+    paragraph_2: str = "Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.",
+    image_url: str = "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop"
+) -> str:
+    """
+    Generate a clean 2-column content slide with a large title, accent line, two text sections on the left, and a full-height image on the right.
+    """
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    root = ET.Element("presentation")
+    slide = ET.SubElement(root, "slide")
+    
+    # 1. Background (White)
+    bg_color = "#FFFFFF"
+    ET.SubElement(slide, "polygon", points="0,0 1600,0 1600,900 0,900", fill=bg_color, line_color="none")
+
+    # 2. Left Column Content
+    text_color_dark = "#162235"
+    text_color_light = "#575F6A"
+    accent_color = "#4285F4"
+    left_x = "100"
+    content_width = "620"
+    
+    # Main Title
+    ET.SubElement(slide, "textbox", x=left_x, y="150", width="600", height="100", font="Segoe UI", size="60", color=text_color_dark, align="left", vertical_align="middle", single_line="true", max_lines="1", reflow_on_resize="true", line_spacing="1.0", bold="true").text = title
+
+    # Accent Line
+    # A short thick blue line under the title
+    ET.SubElement(slide, "line", x1=left_x, y1="260", x2="250", y2="260", color=accent_color, width="6")
+
+    # Section 1
+    ET.SubElement(slide, "textbox", x=left_x, y="340", width=content_width, height="50", font="Segoe UI", size="24", color=text_color_dark, align="left", vertical_align="middle", single_line="true", max_lines="1", reflow_on_resize="true", line_spacing="1.0", bold="true").text = subtitle_1
+
+    ET.SubElement(slide, "textbox", x=left_x, y="400", width=content_width, height="120", font="Segoe UI", size="18", color=text_color_light, align="left", vertical_align="top", single_line="false", max_lines="4", overflow="shrink", reflow_on_resize="true", line_spacing="1.5", bold="false").text = paragraph_1
+
+    # Section 2
+    ET.SubElement(slide, "textbox", x=left_x, y="580", width=content_width, height="50", font="Segoe UI", size="24", color=text_color_dark, align="left", vertical_align="middle", single_line="true", max_lines="1", reflow_on_resize="true", line_spacing="1.0", bold="true").text = subtitle_2
+
+    ET.SubElement(slide, "textbox", x=left_x, y="640", width=content_width, height="120", font="Segoe UI", size="18", color=text_color_light, align="left", vertical_align="top", single_line="false", max_lines="4", overflow="shrink", reflow_on_resize="true", line_spacing="1.5", bold="false").text = paragraph_2
+
+    # 3. Right Column Image (Full height)
+    # 1600x900 slide, left half is 800, right half is 800
+    # crop="true" ensures the image is scaled and center-cropped to fill 800x900 without distortion
+    ET.SubElement(slide, "image", src=image_url, x="800", y="0", width="800", height="900", crop="true")
+
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+    return xml_str
+
+
+
+def generate_pie_chart_slide_xml(
+    title: str = "Budget Pie Chart",
+    subtitle: str = "Monthly Budget",
+    items: list = None,
+    colors: list = None,
+    background_color: str = "#FAF7F0",
+    title_color: str = "#FFFFFF",
+    subtitle_color: str = "#B6AE97",
+    header_color: str = "#354F42",
+    legend_bg_color: str = "#2F2E2C",
+) -> str:
+    """
+    Generate an XML slide with a pie chart.
+    `items` is a list of dicts: [{"label": "Savings", "value": 24.8, "description": "Details..."}, ...]
+    """
+    import math
+    import html as html_mod
+
+    if items is None:
+        items = [
+            {"label": "Savings", "value": 24.8, "description": "Monthly savings allocation"},
+            {"label": "Rent", "value": 35.0, "description": "Housing and rent expenses"},
+            {"label": "Food", "value": 20.2, "description": "Groceries and dining"},
+            {"label": "Transport", "value": 12.0, "description": "Commuting costs"},
+            {"label": "Others", "value": 8.0, "description": "Miscellaneous spending"},
+        ]
+    if colors is None:
+        colors = ["#354F42", "#556B55", "#89947A", "#B6AE97", "#EBE2D0", "#D9C8A9", "#A49987"]
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <polygon points="50,50 1550,50 1550,250 50,250" fill="{header_color}"/>
+    <textbox x="50" y="80" width="1500" height="80" font="Segoe UI" size="70" color="{title_color}" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="50" y="170" width="1500" height="50" font="Segoe UI" size="36" color="{subtitle_color}" italic="true" align="center" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <polygon points="50,300 700,300 700,850 50,850" fill="{legend_bg_color}"/>
+'''
+
+    y_start = 320
+    for i, item in enumerate(items[:6]):
+        color = colors[i % len(colors)]
+        label = item.get('label', '')
+        desc = item.get('description', '')
+
+        xml += f'''
+    <polygon points="80,{y_start+10} 100,{y_start+10} 100,{y_start+70} 80,{y_start+70}" fill="{color}"/>
+    <textbox x="130" y="{y_start}" width="530" height="40" font="Segoe UI" size="26" color="#FFFFFF" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{label}</textbox>
+    <textbox x="130" y="{y_start+45}" width="530" height="60" font="Segoe UI" size="16" color="#D0D0D0" align="left" vertical_align="top" single_line="false" max_lines="2" reflow_on_resize="true" line_spacing="1.2">{desc}</textbox>
+'''
+        y_start += 105
+
+    total_val = sum([item.get('value', 0) for item in items])
+    if total_val == 0: total_val = 1
+
+    cx, cy, r = 400, 275, 100
+    stroke_width = 200
+    circumference = 2 * math.pi * r
+    label_r = r + stroke_width / 2 + 40
+
+    svg_elements = []
+    current_angle_deg = -90
+
+    for i, item in enumerate(items):
+        color = colors[i % len(colors)]
+        val = item.get('value', 0)
+        percentage = (val / total_val) * 100
+        dash = (percentage / 100) * circumference
+
+        circle_svg = f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="transparent" stroke="{color}" stroke-width="{stroke_width}" stroke-dasharray="{dash} {circumference}" transform="rotate({current_angle_deg} {cx} {cy})" />'
+        svg_elements.append(circle_svg)
+
+        slice_angle = (percentage / 100) * 360
+        mid_angle_deg = current_angle_deg + slice_angle / 2
+        mid_angle_rad = math.radians(mid_angle_deg)
+
+        lx = cx + label_r * math.cos(mid_angle_rad)
+        ly = cy + label_r * math.sin(mid_angle_rad)
+
+        text_anchor = "start" if math.cos(mid_angle_rad) >= 0 else "end"
+        pct_color = legend_bg_color
+        text_svg = f'<text x="{lx}" y="{ly}" font-family="Segoe UI" font-size="22" font-weight="bold" fill="{pct_color}" text-anchor="{text_anchor}" dominant-baseline="middle">{percentage:.1f}%</text>'
+        svg_elements.append(text_svg)
+
+        current_angle_deg += slice_angle
+
+    svg_content = "".join(svg_elements)
+
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="550" viewBox="0 0 800 550">{svg_content}</svg>')
+
+    xml += f'''
+    <svg x="750" y="300" width="800" height="550" pixel_width="800" pixel_height="550">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_donut_chart_slide_xml(
+    title: str = "ELEGANCE CLASSY",
+    subtitle: str = "Style Agency Infographics",
+    items: list = None,
+    colors: list = None,
+    background_color: str = "#FCFBF9",
+    title_color: str = "#333230",
+    subtitle_color: str = "#8C8984",
+    accent_color: str = "#9E8470",
+    donut_bg_color: str = "#6E7266",
+    donut_fg_color: str = "#CDAE9B",
+) -> str:
+    """
+    Generate an XML slide with 3 horizontal donut progress charts.
+    `items` is a list of exactly 3 dicts: [{"label": "JUPITER", "description": "...", "value": 75}, ...]
+    """
+    import math
+    import html as html_mod
+
+    if items is None:
+        items = [
+            {"label": "JUPITER", "value": 75, "description": "Jupiter is the largest planet in the solar system"},
+            {"label": "SATURN", "value": 60, "description": "Saturn is known for its beautiful ring system"},
+            {"label": "MARS", "value": 45, "description": "Mars is often called the Red Planet"},
+        ]
+    if colors is None:
+        colors = [donut_fg_color] * 3
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <polygon points="0,0 45,0 45,900 0,900" fill="{accent_color}" line_color="none"/>
+    <polygon points="1400,20 1600,20 1600,80 1400,80" fill="#B3B9AE" line_color="none"/>
+    <polygon points="1230,840 1600,840 1600,900 1230,900" fill="#7A7E74" line_color="none"/>
+    <textbox x="120" y="110" width="1200" height="100" font="Segoe UI" size="76" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true" line_spacing="1.0">{title}</textbox>
+    <textbox x="120" y="210" width="1200" height="50" font="Segoe UI" size="30" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true" line_spacing="1.0">{subtitle}</textbox>
+'''
+
+    cx_list = [350, 800, 1250]
+    r = 90
+    stroke_width = 60
+    circumference = 2 * math.pi * r
+
+    svg_elements = []
+
+    for i, item in enumerate(items[:3]):
+        cx = cx_list[i]
+        cy = 150
+        val = item.get('value', 0)
+        percentage = min(max(val, 0), 100)
+        dash = (percentage / 100) * circumference
+        fg_color = colors[i % len(colors)]
+
+        bg_circle = f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{donut_bg_color}" stroke-width="{stroke_width}" />'
+        fg_circle = f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{fg_color}" stroke-width="{stroke_width}" stroke-dasharray="{dash} {circumference}" />'
+
+        group = f'<g transform="rotate(180 {cx} {cy})">{bg_circle}{fg_circle}</g>'
+        svg_elements.append(group)
+
+        text = f'<text x="{cx}" y="{cy+15}" font-family="Arial" font-size="42" font-weight="bold" fill="{title_color}" text-anchor="middle">{int(percentage)}%</text>'
+        svg_elements.append(text)
+
+        label = item.get('label', '')
+        desc = item.get('description', '')
+        tx = cx - 200
+        xml += f'''
+    <textbox x="{tx}" y="640" width="400" height="40" font="Segoe UI" size="24" color="{title_color}" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{label}</textbox>
+    <textbox x="{tx}" y="690" width="400" height="80" font="Segoe UI" size="18" color="{subtitle_color}" align="center" vertical_align="top" single_line="false" max_lines="3" reflow_on_resize="true" line_spacing="1.4">{desc}</textbox>
+'''
+
+    svg_content = "".join(svg_elements)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="300" viewBox="0 0 1600 300">{svg_content}</svg>')
+
+    xml += f'''
+    <svg x="0" y="320" width="1600" height="300" pixel_width="1600" pixel_height="300">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_bar_chart_slide_xml(
+    title: str = "Quarterly Performance",
+    subtitle: str = "Performance metrics overview",
+    categories: list = None,
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+    y_axis_label: str = "Value",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic vertical bar chart.
+    '''
+    import html as html_mod
+
+    if categories is None:
+        categories = ["Q1", "Q2", "Q3", "Q4"]
+    if series is None:
+        series = [{"name": "Revenue", "data": [45, 52, 68, 58]}]
+    if colors is None:
+        colors = ["#1B2559", "#FF6B35", "#4B9CD3", "#9CA3AF", "#34D399", "#F59E0B"]
+
+    svg_w, svg_h = 1200, 600
+    margin_top, margin_bottom, margin_left, margin_right = 40, 70, 80, 40
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    all_vals = [v for s in series for v in s.get("data", [])]
+    val_max = max(all_vals) if all_vals else 100
+    val_min = 0
+    step = 10 ** (len(str(int(val_max))) - 1) if val_max > 0 else 10
+    val_max = ((int(val_max) // step) + 1) * step
+
+    num_cats = len(categories)
+    num_series = len(series)
+    slot_width = chart_w / max(num_cats, 1)
+    bar_width = (slot_width * 0.7) / max(num_series, 1)
+    padding = (slot_width * 0.3) / 2
+
+    svg_parts = []
+    num_grid = 5
+    for i in range(num_grid + 1):
+        y_ratio = i / num_grid
+        y_pos = svg_h - margin_bottom - (y_ratio * chart_h)
+        val_label = val_min + (val_max - val_min) * y_ratio
+        svg_parts.append(f'<line x1="{margin_left}" y1="{y_pos:.1f}" x2="{svg_w - margin_right}" y2="{y_pos:.1f}" stroke="#E5E7EB" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{y_pos + 5:.1f}" font-family="Segoe UI" font-size="14" fill="#9CA3AF" text-anchor="end">{int(val_label)}</text>')
+
+    for i, cat in enumerate(categories):
+        for j, s in enumerate(series):
+            data_val = s["data"][i] if i < len(s.get("data", [])) else 0
+            bar_height = ((data_val - val_min) / max(val_max - val_min, 1)) * chart_h
+            if bar_height < 0:
+                bar_height = 0
+            x_pos = margin_left + (i * slot_width) + padding + (j * bar_width)
+            y_pos = svg_h - margin_bottom - bar_height
+            color = colors[j % len(colors)]
+            svg_parts.append(f'<rect x="{x_pos:.1f}" y="{y_pos:.1f}" width="{bar_width * 0.85:.1f}" height="{bar_height:.1f}" fill="{color}" rx="3"/>')
+            svg_parts.append(f'<text x="{x_pos + bar_width * 0.42:.1f}" y="{y_pos - 6:.1f}" font-family="Segoe UI" font-size="12" fill="{color}" font-weight="bold" text-anchor="middle">{data_val}</text>')
+        cat_x = margin_left + (i * slot_width) + (slot_width / 2)
+        svg_parts.append(f'<text x="{cat_x:.1f}" y="{svg_h - margin_bottom + 25:.1f}" font-family="Segoe UI" font-size="14" fill="{title_color}" font-weight="bold" text-anchor="middle">{cat}</text>')
+
+    if y_axis_label:
+        svg_parts.append(f'<text transform="rotate(-90)" x="{-svg_h/2:.1f}" y="20" font-family="Segoe UI" font-size="14" fill="{subtitle_color}" text-anchor="middle">{y_axis_label}</text>')
+
+    legend_parts = []
+    for j, s in enumerate(series):
+        lx = margin_left + j * 150
+        color = colors[j % len(colors)]
+        legend_parts.append(f'<rect x="{lx}" y="10" width="14" height="14" fill="{color}" rx="2"/>')
+        legend_parts.append(f'<text x="{lx + 20}" y="22" font-family="Segoe UI" font-size="13" fill="{title_color}">{s.get("name", "Series")}</text>')
+    svg_parts.extend(legend_parts)
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="180" y="180" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_horizontal_bar_chart_slide_xml(
+    title: str = "Market Comparison",
+    subtitle: str = "Horizontal bar analysis",
+    categories: list = None,
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#050505",
+    title_color: str = "#FFFFFF",
+    subtitle_color: str = "#DFFF00",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic horizontal bar chart.
+    '''
+    import html as html_mod
+
+    if categories is None:
+        categories = ["North America", "Europe", "Asia"]
+    if series is None:
+        series = [{"name": "2024", "data": [3, 6, 16]}, {"name": "2025", "data": [6, 14, 18]}]
+    if colors is None:
+        colors = ["#DFFF00", "#7B8C00", "#4B9CD3", "#FF6B35"]
+
+    svg_w, svg_h = 1000, 700
+    margin_top, margin_bottom, margin_left, margin_right = 60, 60, 220, 50
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    all_vals = [v for s in series for v in s.get("data", [])]
+    val_max = max(all_vals) if all_vals else 100
+    step = 10 ** (len(str(int(val_max))) - 1) if val_max > 0 else 10
+    val_max = ((int(val_max) // step) + 1) * step
+
+    num_cats = len(categories)
+    num_series = len(series)
+    slot_height = chart_h / max(num_cats, 1)
+    bar_height = (slot_height * 0.6) / max(num_series, 1)
+
+    svg_parts = []
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        lx = margin_left + j * 140
+        svg_parts.append(f'<circle cx="{lx}" cy="30" r="8" fill="{color}"/>')
+        svg_parts.append(f'<text x="{lx + 15}" y="36" font-family="Segoe UI" font-size="16" fill="#FFFFFF">{s.get("name", "Series")}</text>')
+
+    num_grid = 5
+    for i in range(num_grid + 1):
+        x_ratio = i / num_grid
+        x_pos = margin_left + x_ratio * chart_w
+        val_label = val_max * x_ratio
+        svg_parts.append(f'<line x1="{x_pos:.1f}" y1="{margin_top}" x2="{x_pos:.1f}" y2="{svg_h - margin_bottom}" stroke="#222222" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{x_pos:.1f}" y="{svg_h - margin_bottom + 25}" font-family="Segoe UI" font-size="14" fill="#F0F0F0" text-anchor="middle">{int(val_label)}</text>')
+
+    for i, cat in enumerate(categories):
+        slot_y = margin_top + i * slot_height
+        padding = (slot_height - num_series * bar_height) / 2
+        label_y = slot_y + slot_height / 2
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{label_y + 5:.1f}" font-family="Segoe UI" font-size="16" fill="#F0F0F0" text-anchor="end">{cat}</text>')
+        for j, s in enumerate(series):
+            data_val = s["data"][i] if i < len(s.get("data", [])) else 0
+            bar_w = (data_val / max(val_max, 1)) * chart_w
+            y_pos = slot_y + padding + j * bar_height
+            color = colors[j % len(colors)]
+            svg_parts.append(f'<rect x="{margin_left}" y="{y_pos:.1f}" width="{bar_w:.1f}" height="{bar_height * 0.85:.1f}" fill="{color}" rx="4"/>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="50" width="600" height="80" font="Segoe UI" size="52" color="{title_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="140" width="600" height="60" font="Segoe UI" size="28" color="{subtitle_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="500" y="80" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_line_chart_slide_xml(
+    title: str = "Revenue Trend",
+    subtitle: str = "Monthly performance tracking",
+    categories: list = None,
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic line chart.
+    '''
+    import html as html_mod
+
+    if categories is None:
+        categories = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    if series is None:
+        series = [{"name": "Revenue", "data": [10, 25, 18, 30, 22, 40]}]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"]
+
+    svg_w, svg_h = 1200, 550
+    margin_top, margin_bottom, margin_left, margin_right = 50, 60, 80, 50
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    all_vals = [v for s in series for v in s.get("data", [])]
+    val_max = max(all_vals) if all_vals else 100
+    val_min = min(all_vals) if all_vals else 0
+    if val_min > 0:
+        val_min = 0
+    val_range = val_max - val_min
+    step = 10 ** (len(str(int(val_range))) - 1) if val_range > 0 else 10
+    val_max = ((int(val_max) // step) + 1) * step
+
+    num_cats = len(categories)
+    svg_parts = []
+
+    num_grid = 5
+    for i in range(num_grid + 1):
+        y_ratio = i / num_grid
+        y_pos = svg_h - margin_bottom - y_ratio * chart_h
+        val_label = val_min + (val_max - val_min) * y_ratio
+        svg_parts.append(f'<line x1="{margin_left}" y1="{y_pos:.1f}" x2="{svg_w - margin_right}" y2="{y_pos:.1f}" stroke="#E5E7EB" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{y_pos + 5:.1f}" font-family="Segoe UI" font-size="13" fill="#9CA3AF" text-anchor="end">{int(val_label)}</text>')
+
+    for i, cat in enumerate(categories):
+        x_pos = margin_left + (i / max(num_cats - 1, 1)) * chart_w
+        svg_parts.append(f'<text x="{x_pos:.1f}" y="{svg_h - margin_bottom + 25}" font-family="Segoe UI" font-size="13" fill="#6B7280" text-anchor="middle">{cat}</text>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        data = s.get("data", [])
+        points = []
+        for i, val in enumerate(data):
+            x = margin_left + (i / max(len(data) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - ((val - val_min) / max(val_max - val_min, 1)) * chart_h
+            points.append(f"{x:.1f},{y:.1f}")
+        if points:
+            path_d = "M " + " L ".join(points)
+            svg_parts.append(f'<path d="{path_d}" fill="none" stroke="{color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>')
+            for i, val in enumerate(data):
+                x = margin_left + (i / max(len(data) - 1, 1)) * chart_w
+                y = svg_h - margin_bottom - ((val - val_min) / max(val_max - val_min, 1)) * chart_h
+                svg_parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="{color}"/>')
+                svg_parts.append(f'<text x="{x:.1f}" y="{y - 12:.1f}" font-family="Segoe UI" font-size="11" fill="{color}" font-weight="bold" text-anchor="middle">{val}</text>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        lx = margin_left + j * 140
+        svg_parts.append(f'<line x1="{lx}" y1="15" x2="{lx + 20}" y2="15" stroke="{color}" stroke-width="3"/>')
+        svg_parts.append(f'<text x="{lx + 28}" y="20" font-family="Segoe UI" font-size="13" fill="{title_color}">{s.get("name", "Series")}</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="180" y="220" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_scatter_chart_slide_xml(
+    title: str = "Correlation Analysis",
+    subtitle: str = "Scatter plot visualization",
+    x_label: str = "X Axis",
+    y_label: str = "Y Axis",
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic scatter plot.
+    '''
+    import html as html_mod
+
+    if series is None:
+        series = [{"name": "Group A", "data": [[10, 20], [15, 35], [25, 15], [30, 40], [45, 25]]}]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444"]
+
+    svg_w, svg_h = 1100, 550
+    margin_top, margin_bottom, margin_left, margin_right = 50, 60, 80, 50
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    all_x = [p[0] for s in series for p in s.get("data", [])]
+    all_y = [p[1] for s in series for p in s.get("data", [])]
+    x_min, x_max = (min(all_x), max(all_x)) if all_x else (0, 100)
+    y_min, y_max = (min(all_y), max(all_y)) if all_y else (0, 100)
+    if x_min > 0: x_min = 0
+    if y_min > 0: y_min = 0
+    x_step = 10 ** (len(str(int(x_max))) - 1) if x_max > 0 else 10
+    y_step = 10 ** (len(str(int(y_max))) - 1) if y_max > 0 else 10
+    x_max = ((int(x_max) // x_step) + 1) * x_step
+    y_max = ((int(y_max) // y_step) + 1) * y_step
+
+    svg_parts = []
+    for i in range(6):
+        y_ratio = i / 5
+        y_pos = svg_h - margin_bottom - y_ratio * chart_h
+        val = y_min + (y_max - y_min) * y_ratio
+        svg_parts.append(f'<line x1="{margin_left}" y1="{y_pos:.1f}" x2="{svg_w - margin_right}" y2="{y_pos:.1f}" stroke="#E5E7EB" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{y_pos + 5:.1f}" font-family="Segoe UI" font-size="12" fill="#9CA3AF" text-anchor="end">{int(val)}</text>')
+    for i in range(6):
+        x_ratio = i / 5
+        x_pos = margin_left + x_ratio * chart_w
+        val = x_min + (x_max - x_min) * x_ratio
+        svg_parts.append(f'<text x="{x_pos:.1f}" y="{svg_h - margin_bottom + 22}" font-family="Segoe UI" font-size="12" fill="#9CA3AF" text-anchor="middle">{int(val)}</text>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        for pt in s.get("data", []):
+            px = margin_left + ((pt[0] - x_min) / max(x_max - x_min, 1)) * chart_w
+            py = svg_h - margin_bottom - ((pt[1] - y_min) / max(y_max - y_min, 1)) * chart_h
+            svg_parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="7" fill="{color}" opacity="0.75"/>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        lx = margin_left + j * 140
+        svg_parts.append(f'<circle cx="{lx + 7}" cy="15" r="6" fill="{color}"/>')
+        svg_parts.append(f'<text x="{lx + 20}" y="20" font-family="Segoe UI" font-size="13" fill="{title_color}">{s.get("name", "Series")}</text>')
+
+    svg_parts.append(f'<text x="{svg_w / 2:.1f}" y="{svg_h - 10}" font-family="Segoe UI" font-size="14" fill="{subtitle_color}" text-anchor="middle">{x_label}</text>')
+    svg_parts.append(f'<text transform="rotate(-90)" x="{-svg_h / 2:.1f}" y="20" font-family="Segoe UI" font-size="14" fill="{subtitle_color}" text-anchor="middle">{y_label}</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="220" y="220" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_stacked_bar_chart_slide_xml(
+    title: str = "Budget Allocation",
+    subtitle: str = "Stacked bar breakdown by category",
+    categories: list = None,
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic stacked bar chart.
+    '''
+    import html as html_mod
+
+    if categories is None:
+        categories = ["2022", "2023", "2024"]
+    if series is None:
+        series = [{"name": "Marketing", "data": [20, 30, 25]}, {"name": "R&D", "data": [40, 35, 50]}, {"name": "Sales", "data": [15, 20, 18]}]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"]
+
+    svg_w, svg_h = 1100, 550
+    margin_top, margin_bottom, margin_left, margin_right = 50, 60, 80, 50
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    num_cats = len(categories)
+    stacked_totals = []
+    for i in range(num_cats):
+        total = sum(s["data"][i] if i < len(s.get("data", [])) else 0 for s in series)
+        stacked_totals.append(total)
+    val_max = max(stacked_totals) if stacked_totals else 100
+    step = 10 ** (len(str(int(val_max))) - 1) if val_max > 0 else 10
+    val_max = ((int(val_max) // step) + 1) * step
+
+    slot_width = chart_w / max(num_cats, 1)
+    bar_width = slot_width * 0.6
+
+    svg_parts = []
+    for i in range(6):
+        y_ratio = i / 5
+        y_pos = svg_h - margin_bottom - y_ratio * chart_h
+        val = val_max * y_ratio
+        svg_parts.append(f'<line x1="{margin_left}" y1="{y_pos:.1f}" x2="{svg_w - margin_right}" y2="{y_pos:.1f}" stroke="#E5E7EB" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{y_pos + 5:.1f}" font-family="Segoe UI" font-size="13" fill="#9CA3AF" text-anchor="end">{int(val)}</text>')
+
+    for i, cat in enumerate(categories):
+        x_pos = margin_left + i * slot_width + (slot_width - bar_width) / 2
+        y_bottom = svg_h - margin_bottom
+        for j, s in enumerate(series):
+            data_val = s["data"][i] if i < len(s.get("data", [])) else 0
+            bar_h = (data_val / max(val_max, 1)) * chart_h
+            y_top = y_bottom - bar_h
+            color = colors[j % len(colors)]
+            svg_parts.append(f'<rect x="{x_pos:.1f}" y="{y_top:.1f}" width="{bar_width:.1f}" height="{bar_h:.1f}" fill="{color}"/>')
+            if bar_h > 18:
+                svg_parts.append(f'<text x="{x_pos + bar_width / 2:.1f}" y="{y_top + bar_h / 2 + 5:.1f}" font-family="Segoe UI" font-size="12" fill="#FFFFFF" font-weight="bold" text-anchor="middle">{data_val}</text>')
+            y_bottom = y_top
+        svg_parts.append(f'<text x="{x_pos + bar_width / 2:.1f}" y="{svg_h - margin_bottom + 22}" font-family="Segoe UI" font-size="14" fill="{title_color}" font-weight="bold" text-anchor="middle">{cat}</text>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        lx = margin_left + j * 130
+        svg_parts.append(f'<rect x="{lx}" y="10" width="14" height="14" fill="{color}" rx="2"/>')
+        svg_parts.append(f'<text x="{lx + 20}" y="22" font-family="Segoe UI" font-size="13" fill="{title_color}">{s.get("name", "Series")}</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="220" y="220" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_waterfall_chart_slide_xml(
+    title: str = "Revenue Waterfall",
+    subtitle: str = "From start to end breakdown",
+    items: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic waterfall chart.
+    '''
+    import html as html_mod
+
+    if items is None:
+        items = [
+            {"label": "Start", "value": 100, "type": "total"},
+            {"label": "Growth", "value": 50, "type": "increase"},
+            {"label": "Returns", "value": -20, "type": "decrease"},
+            {"label": "Tax", "value": -15, "type": "decrease"},
+            {"label": "End", "value": 115, "type": "total"},
+        ]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#EF4444"]
+
+    svg_w, svg_h = 1100, 520
+    margin_top, margin_bottom, margin_left, margin_right = 40, 70, 80, 40
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    running = 0
+    all_tops = []
+    for item in items:
+        if item.get("type") == "total":
+            running = item["value"]
+        else:
+            running += item["value"]
+        all_tops.append(running)
+    val_max = max(max(all_tops), max(item["value"] for item in items if item.get("type") == "total")) if items else 100
+    step_size = 10 ** (len(str(int(val_max))) - 1) if val_max > 0 else 10
+    val_max = ((int(val_max) // step_size) + 1) * step_size
+
+    num_items = len(items)
+    slot_width = chart_w / max(num_items, 1)
+    bar_width = slot_width * 0.55
+
+    svg_parts = []
+    for i in range(6):
+        y_ratio = i / 5
+        y_pos = svg_h - margin_bottom - y_ratio * chart_h
+        val = val_max * y_ratio
+        svg_parts.append(f'<line x1="{margin_left}" y1="{y_pos:.1f}" x2="{svg_w - margin_right}" y2="{y_pos:.1f}" stroke="#E5E7EB" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{y_pos + 5:.1f}" font-family="Segoe UI" font-size="12" fill="#9CA3AF" text-anchor="end">{int(val)}</text>')
+
+    running = 0
+    for i, item in enumerate(items):
+        x_pos = margin_left + i * slot_width + (slot_width - bar_width) / 2
+        item_type = item.get("type", "increase")
+        val = item["value"]
+
+        if item_type == "total":
+            bar_h = (val / max(val_max, 1)) * chart_h
+            y_top = svg_h - margin_bottom - bar_h
+            color = colors[0]
+            running = val
+        elif item_type == "increase" or val > 0:
+            bar_h = (abs(val) / max(val_max, 1)) * chart_h
+            y_top = svg_h - margin_bottom - ((running + val) / max(val_max, 1)) * chart_h
+            color = colors[1]
+            running += val
+        else:
+            bar_h = (abs(val) / max(val_max, 1)) * chart_h
+            y_top = svg_h - margin_bottom - (running / max(val_max, 1)) * chart_h
+            color = colors[2]
+            running += val
+
+        svg_parts.append(f'<rect x="{x_pos:.1f}" y="{y_top:.1f}" width="{bar_width:.1f}" height="{max(bar_h, 1):.1f}" fill="{color}" rx="3"/>')
+        svg_parts.append(f'<text x="{x_pos + bar_width / 2:.1f}" y="{y_top - 8:.1f}" font-family="Segoe UI" font-size="13" fill="{color}" font-weight="bold" text-anchor="middle">{val}</text>')
+        svg_parts.append(f'<text x="{x_pos + bar_width / 2:.1f}" y="{svg_h - margin_bottom + 22}" font-family="Segoe UI" font-size="13" fill="{title_color}" text-anchor="middle">{item["label"]}</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="220" y="230" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_radar_chart_slide_xml(
+    title: str = "Skills Assessment",
+    subtitle: str = "Multi-dimensional performance radar",
+    labels: list = None,
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic radar/spider chart.
+    '''
+    import html as html_mod
+    import math
+
+    if labels is None:
+        labels = ["Speed", "Power", "Skill", "Defense", "Stamina"]
+    if series is None:
+        series = [{"name": "Player A", "data": [80, 65, 90, 70, 85]}]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444"]
+
+    svg_w, svg_h = 700, 600
+    cx, cy = svg_w / 2, svg_h / 2 + 20
+    max_r = 220
+    n = len(labels)
+
+    svg_parts = []
+    for level in range(1, 6):
+        r = max_r * level / 5
+        points_list = []
+        for i in range(n):
+            angle = (2 * math.pi * i / n) - math.pi / 2
+            px = cx + r * math.cos(angle)
+            py = cy + r * math.sin(angle)
+            points_list.append(f"{px:.1f},{py:.1f}")
+        polygon_str = " ".join(points_list)
+        svg_parts.append(f'<polygon points="{polygon_str}" fill="none" stroke="#E5E7EB" stroke-width="1"/>')
+
+    for i in range(n):
+        angle = (2 * math.pi * i / n) - math.pi / 2
+        ex = cx + max_r * math.cos(angle)
+        ey = cy + max_r * math.sin(angle)
+        svg_parts.append(f'<line x1="{cx:.1f}" y1="{cy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="#D1D5DB" stroke-width="1"/>')
+        lx = cx + (max_r + 28) * math.cos(angle)
+        ly = cy + (max_r + 28) * math.sin(angle)
+        anchor = "middle"
+        if math.cos(angle) > 0.3: anchor = "start"
+        elif math.cos(angle) < -0.3: anchor = "end"
+        svg_parts.append(f'<text x="{lx:.1f}" y="{ly + 5:.1f}" font-family="Segoe UI" font-size="14" fill="{title_color}" text-anchor="{anchor}">{labels[i]}</text>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        data = s.get("data", [])
+        pts = []
+        for i, val in enumerate(data):
+            r = max_r * min(val, 100) / 100
+            angle = (2 * math.pi * i / n) - math.pi / 2
+            px = cx + r * math.cos(angle)
+            py = cy + r * math.sin(angle)
+            pts.append(f"{px:.1f},{py:.1f}")
+        poly = " ".join(pts)
+        svg_parts.append(f'<polygon points="{poly}" fill="{color}" fill-opacity="0.2" stroke="{color}" stroke-width="2.5"/>')
+        for i, val in enumerate(data):
+            r = max_r * min(val, 100) / 100
+            angle = (2 * math.pi * i / n) - math.pi / 2
+            px = cx + r * math.cos(angle)
+            py = cy + r * math.sin(angle)
+            svg_parts.append(f'<circle cx="{px:.1f}" cy="{py:.1f}" r="4" fill="{color}"/>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        lx = 20 + j * 140
+        svg_parts.append(f'<rect x="{lx}" y="5" width="14" height="14" fill="{color}" rx="2"/>')
+        svg_parts.append(f'<text x="{lx + 20}" y="17" font-family="Segoe UI" font-size="13" fill="{title_color}">{s.get("name", "Series")}</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="430" y="200" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_area_chart_slide_xml(
+    title: str = "Growth Trends",
+    subtitle: str = "Area chart showing cumulative growth",
+    categories: list = None,
+    series: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+) -> str:
+    '''
+    Generate an XML slide with a dynamic area chart.
+    '''
+    import html as html_mod
+
+    if categories is None:
+        categories = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+    if series is None:
+        series = [{"name": "Users", "data": [100, 200, 180, 300, 250, 400]}]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#F59E0B"]
+
+    svg_w, svg_h = 1200, 550
+    margin_top, margin_bottom, margin_left, margin_right = 50, 60, 80, 50
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    all_vals = [v for s in series for v in s.get("data", [])]
+    val_max = max(all_vals) if all_vals else 100
+    val_min = 0
+    step = 10 ** (len(str(int(val_max))) - 1) if val_max > 0 else 10
+    val_max = ((int(val_max) // step) + 1) * step
+
+    svg_parts = []
+    for i in range(6):
+        y_ratio = i / 5
+        y_pos = svg_h - margin_bottom - y_ratio * chart_h
+        val = val_max * y_ratio
+        svg_parts.append(f'<line x1="{margin_left}" y1="{y_pos:.1f}" x2="{svg_w - margin_right}" y2="{y_pos:.1f}" stroke="#E5E7EB" stroke-width="1"/>')
+        svg_parts.append(f'<text x="{margin_left - 10}" y="{y_pos + 5:.1f}" font-family="Segoe UI" font-size="13" fill="#9CA3AF" text-anchor="end">{int(val)}</text>')
+
+    num_cats = len(categories)
+    for i, cat in enumerate(categories):
+        x_pos = margin_left + (i / max(num_cats - 1, 1)) * chart_w
+        svg_parts.append(f'<text x="{x_pos:.1f}" y="{svg_h - margin_bottom + 22}" font-family="Segoe UI" font-size="13" fill="#6B7280" text-anchor="middle">{cat}</text>')
+
+    baseline_y = svg_h - margin_bottom
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        data = s.get("data", [])
+        line_pts = []
+        for i, val in enumerate(data):
+            x = margin_left + (i / max(len(data) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - (val / max(val_max, 1)) * chart_h
+            line_pts.append((x, y))
+
+        if line_pts:
+            area_points = " ".join(f"{x:.1f},{y:.1f}" for x, y in line_pts)
+            area_points = f"{line_pts[0][0]:.1f},{baseline_y:.1f} " + area_points + f" {line_pts[-1][0]:.1f},{baseline_y:.1f}"
+            svg_parts.append(f'<polygon points="{area_points}" fill="{color}" fill-opacity="0.15"/>')
+            path_d = "M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in line_pts)
+            svg_parts.append(f'<path d="{path_d}" fill="none" stroke="{color}" stroke-width="2.5"/>')
+            for x, y in line_pts:
+                svg_parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{color}"/>')
+
+    for j, s in enumerate(series):
+        color = colors[j % len(colors)]
+        lx = margin_left + j * 140
+        svg_parts.append(f'<rect x="{lx}" y="10" width="14" height="14" fill="{color}" rx="2" fill-opacity="0.3"/>')
+        svg_parts.append(f'<text x="{lx + 20}" y="22" font-family="Segoe UI" font-size="13" fill="{title_color}">{s.get("name", "Series")}</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">{svg_inner}</svg>')
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="40" width="1400" height="70" font="Segoe UI" size="42" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="110" width="1400" height="40" font="Segoe UI" size="22" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="180" y="220" width="{svg_w}" height="{svg_h}" pixel_width="{svg_w}" pixel_height="{svg_h}">{escaped_svg}</svg>
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_simple_donut_chart_slide_xml(
+    title: str = "Market Share",
+    subtitle: str = "Distribution overview",
+    items: list = None,
+    colors: list = None,
+    background_color: str = "#FFFFFF",
+    title_color: str = "#333333",
+    subtitle_color: str = "#888888",
+) -> str:
+    '''
+    Generate an XML slide with a single large donut chart.
+    '''
+    import html as html_mod
+    import math
+
+    if items is None:
+        items = [{"label": "Product A", "value": 45}, {"label": "Product B", "value": 30}, {"label": "Product C", "value": 25}]
+    if colors is None:
+        colors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"]
+
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0:
+        total = 1
+
+    cx, cy, r = 300, 250, 140
+    stroke_w = 55
+    circumference = 2 * math.pi * r
+    svg_parts = []
+
+    svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#F3F4F6" stroke-width="{stroke_w}"/>')
+
+    current_angle = -90
+    for i, item in enumerate(items):
+        color = colors[i % len(colors)]
+        val = item.get("value", 0)
+        pct = (val / total) * 100
+        dash = (pct / 100) * circumference
+        svg_parts.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" stroke-width="{stroke_w}" stroke-dasharray="{dash:.2f} {circumference:.2f}" transform="rotate({current_angle:.1f} {cx} {cy})" stroke-linecap="round"/>')
+        current_angle += (pct / 100) * 360
+
+    svg_parts.append(f'<text x="{cx}" y="{cy - 5}" font-family="Segoe UI" font-size="36" font-weight="bold" fill="{title_color}" text-anchor="middle">{total}</text>')
+    svg_parts.append(f'<text x="{cx}" y="{cy + 25}" font-family="Segoe UI" font-size="16" fill="{subtitle_color}" text-anchor="middle">Total</text>')
+
+    svg_inner = "\\n".join(svg_parts)
+    escaped_svg = html_mod.escape(f'<svg xmlns="http://www.w3.org/2000/svg" width="600" height="500" viewBox="0 0 600 500">{svg_inner}</svg>')
+
+    legend_xml = ""
+    y_start = 300
+    for i, item in enumerate(items):
+        color = colors[i % len(colors)]
+        label = item.get("label", "")
+        val = item.get("value", 0)
+        pct_val = int((val / total) * 100)
+        legend_xml += f'''
+    <polygon points="1050,{y_start + 5} 1070,{y_start + 5} 1070,{y_start + 25} 1050,{y_start + 25}" fill="{color}"/>
+    <textbox x="1080" y="{y_start}" width="400" height="30" font="Segoe UI" size="20" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{label} ({pct_val}%)</textbox>
+'''
+        y_start += 45
+
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <textbox x="60" y="60" width="1400" height="80" font="Segoe UI" size="48" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="60" y="145" width="1400" height="40" font="Segoe UI" size="24" color="{subtitle_color}" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <svg x="250" y="220" width="600" height="500" pixel_width="600" pixel_height="500">{escaped_svg}</svg>{legend_xml}
+  </slide>
+</presentation>
+'''
+    return xml
+
+def generate_thynk_unlimited_thank_you_slide_xml(
+    company_name: str = "Thynk Unlimited",
+    title: str = "THANK YOU",
+    subtitle: str = "FOR YOUR ATTENTION",
+    date: str = "December 2023",
+    email: str = "hello@reallygreatsite.com",
+    website: str = "www.reallygreatsite.com",
+    image_url: str = "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop",
+) -> str:
+    """
+    Generate a Thank You slide for the Thynk Unlimited theme.
+    """
+    color_primary = "#064AD0"
+    color_light_blue = "#B8C8F1"
+    color_bg_grey = "#F4F5F7"
+    
+    xml_template = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    
+    <!-- Left Blue Bar -->
+    <shape type="rounded_rectangle" x="-50" y="0" width="150" height="900" fill="{color_primary}" />
+
+    <!-- Bottom Left Grey Area -->
+    <shape type="rectangle" x="100" y="620" width="950" height="280" fill="{color_bg_grey}" />
+
+    <!-- Right Side Image -->
+    <image src="{image_url.replace('&', '&amp;')}" x="1050" y="0" width="550" height="900" crop="true" />
+    
+    <!-- Right Blue Bars -->
+    <shape type="rectangle" x="1520" y="600" width="80" height="300" fill="{color_primary}" />
+    <shape type="rectangle" x="1520" y="0" width="80" height="100" fill="{color_primary}" />
+    
+    <!-- Light Blue Shapes -->
+    <!-- Top rounded box -->
+    <shape type="rounded_rectangle" x="950" y="70" width="140" height="140" fill="{color_light_blue}" />
+    
+    <!-- Bottom donut -->
+    <!-- Outer light blue circle -->
+    <shape type="circle" x="730" y="780" width="220" height="220" fill="{color_light_blue}" />
+    <!-- Inner grey circle (matches background grey) -->
+    <shape type="circle" x="770" y="820" width="140" height="140" fill="{color_bg_grey}" />
+
+    <!-- Thynk Unlimited Logo -->
+    <polygon points="140,70 160,50 180,70 170,80 160,70 150,80" fill="{color_primary}" />
+    <polygon points="140,90 160,70 180,90 170,100 160,90 150,100" fill="{color_primary}" />
+    <textbox x="190" y="45" width="400" height="60" font="Segoe UI" size="28" color="#000000" bold="true" align="left" vertical_align="middle">{company_name.replace('&', '&amp;')}</textbox>
+
+    <!-- Main Title -->
+    <textbox x="135" y="280" width="800" height="150" font="Segoe UI" size="110" color="#000000" bold="true" align="left" vertical_align="middle" single_line="true">{title.replace('&', '&amp;')}</textbox>
+    <textbox x="140" y="420" width="800" height="50" font="Segoe UI" size="32" color="#333333" align="left" vertical_align="middle" single_line="true">{subtitle.replace('&', '&amp;')}</textbox>
+
+    <!-- Date Pill -->
+    <shape type="rounded_rectangle" x="140" y="500" width="350" height="50" fill="{color_primary}" />
+    <textbox x="140" y="500" width="350" height="50" font="Segoe UI" size="22" color="#FFFFFF" align="center" vertical_align="middle">{date.replace('&', '&amp;')}</textbox>
+
+    <!-- Contact Info -->
+    <!-- Email -->
+    <shape type="circle" x="140" y="690" width="45" height="45" fill="{color_primary}" />
+    <textbox x="140" y="690" width="45" height="45" font="Segoe UI" size="22" color="#FFFFFF" bold="true" align="center" vertical_align="middle" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">?</textbox>
+    <textbox x="200" y="690" width="500" height="45" font="Segoe UI" size="24" color="#333333" align="left" vertical_align="middle">{email.replace('&', '&amp;')}</textbox>
+
+    <!-- Website -->
+    <shape type="circle" x="140" y="755" width="45" height="45" fill="{color_primary}" />
+    <textbox x="140" y="755" width="45" height="45" font="Segoe UI" size="22" color="#FFFFFF" bold="true" align="center" vertical_align="middle" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">??</textbox>
+    <textbox x="200" y="755" width="500" height="45" font="Segoe UI" size="24" color="#333333" align="left" vertical_align="middle">{website.replace('&', '&amp;')}</textbox>
+
+  </slide>
+</presentation>
+"""
+    return xml_template
+
+def generate_tech_pitch_deck_thank_you_slide_xml(
+    company_name="Arowwai\nIndustries",
+    title="THANK YOU!",
+    name="Aaron Loeb",
+    role="CEO & Founder",
+    phone="+123-456-7890",
+    website="www.reallygreatsite.com",
+    address="123 Anywhere St., Any City, State,\nCountry 12345",
+    profile_image_url="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=500&fit=crop",
+    image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop"
+) -> str:
+    color_blue = "#185b9d"
+    color_dark_text = "#0a2540"
+    color_light_blue = "#5380a5"
+    color_light_decor = "#d8e2eb"
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <!-- Right side Image -->
+    <image src="{image_url.replace('&', '&amp;')}" x="1080" y="80" width="520" height="740" />
+    <!-- Blue bars top and bottom right -->
+    <shape type="rectangle" x="1080" y="0" width="520" height="80" fill="{color_light_blue}" />
+    <shape type="rectangle" x="1080" y="820" width="520" height="80" fill="{color_light_blue}" />
+    
+    <!-- Left background decorations -->
+    <shape type="circle" x="-200" y="600" width="480" height="480" fill="{color_light_decor}" />
+    <shape type="circle" x="-80" y="650" width="400" height="400" fill="#ffffff" />
+    <shape type="circle" x="-250" y="650" width="400" height="400" fill="{color_light_decor}" />
+    
+    <!-- Logo -->
+    <polygon points="300,150 330,80 360,150" fill="{color_blue}" />
+    <polygon points="340,150 360,110 380,150" fill="{color_light_blue}" />
+    <textbox x="220" y="170" width="240" height="80" font="Arial" size="24" color="{color_blue}" bold="true" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true">{company_name.replace('&', '&amp;')}</textbox>
+    
+    <!-- Title -->
+    <textbox x="140" y="260" width="800" height="140" font="Arial" size="110" color="{color_dark_text}" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{title.replace('&', '&amp;')}</textbox>
+    
+    <!-- Profile section -->
+    <shape type="circle" x="245" y="415" width="230" height="230" fill="#ffffff" stroke="{color_blue}" stroke_width="6" />
+    <image src="{profile_image_url.replace('&', '&amp;')}" x="250" y="420" width="220" height="220" shape="circle" />
+    
+    <!-- Contact Info -->
+    <!-- Name and Role -->
+    <textbox x="500" y="420" width="450" height="40" font="Arial" size="36" color="{color_blue}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{name.replace('&', '&amp;')}</textbox>
+    <textbox x="500" y="465" width="450" height="30" font="Arial" size="24" color="{color_light_blue}" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{role.replace('&', '&amp;')}</textbox>
+    
+    <!-- Phone -->
+    <shape type="circle" x="500" y="505" width="36" height="36" fill="{color_blue}" />
+    <textbox x="500" y="505" width="36" height="36" font="Arial" size="22" color="#ffffff" bold="true" align="center" vertical_align="middle">??</textbox>
+    <textbox x="550" y="505" width="400" height="36" font="Arial" size="22" color="{color_light_blue}" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{phone.replace('&', '&amp;')}</textbox>
+
+    <!-- Website -->
+    <shape type="circle" x="500" y="555" width="36" height="36" fill="{color_blue}" />
+    <textbox x="500" y="555" width="36" height="36" font="Arial" size="22" color="#ffffff" bold="true" align="center" vertical_align="middle">??</textbox>
+    <textbox x="550" y="555" width="400" height="36" font="Arial" size="22" color="{color_light_blue}" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{website.replace('&', '&amp;')}</textbox>
+
+    <!-- Address -->
+    <shape type="circle" x="500" y="605" width="36" height="36" fill="{color_blue}" />
+    <textbox x="500" y="605" width="36" height="36" font="Arial" size="22" color="#ffffff" bold="true" align="center" vertical_align="middle">??</textbox>
+    <textbox x="550" y="605" width="400" height="70" font="Arial" size="22" color="{color_light_blue}" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true">{address.replace('&', '&amp;')}</textbox>
+
+  </slide>
+</presentation>
+"""
+    return xml
+
+
+def generate_business_proposal_cover_slide_xml(
+    brand_name: str = "Larana, Inc.",
+    title: str = "BUSINESS PROPOSAL",
+    website: str = "www.reallygreatsite.com",
+    email: str = "hello@reallygreatsite.com",
+    background_color: str = "#FFFFFF",
+    title_color: str = "#0B2B5E",
+    accent_color: str = "#0B2B5E",
+    image1_url: str = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop",
+    image2_url: str = "https://images.unsplash.com/photo-1577017040065-650ee4d43339?q=80&w=800&auto=format&fit=crop",
+    image3_url: str = "https://images.unsplash.com/photo-1460472178825-e5240623afd5?q=80&w=800&auto=format&fit=crop",
+) -> str:
+    """
+    Generate XML for a Business Proposal Cover slide with 3 diamond image placeholders.
+    """
+    xml_template = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <!-- Background -->
+    <polygon points="0,0 1600,0 1600,900 0,900" fill="{background_color}"/>
+    
+    <!-- Left Gradient or shape -->
+    <polygon points="0,250 120,250 120,650 0,650" fill="{accent_color}" opacity="0.8"/>
+    
+    <!-- Right side background block (Dark blue) -->
+    <polygon points="1200,900 1600,500 1600,900" fill="{accent_color}"/>
+    
+    <!-- Top Right Corner Shape -->
+    <polygon points="1600,0 1600,300 1300,0" fill="{accent_color}"/>
+    
+    <!-- Text Elements -->
+    <textbox x="160" y="120" width="400" height="50" font="Arial" size="24" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{{brand_name}}</textbox>
+    
+    <textbox x="160" y="300" width="800" height="200" font="Arial" size="85" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="2" line_spacing="1.1">{{title}}</textbox>
+    
+    <!-- Footer text -->
+    <textbox x="210" y="630" width="400" height="40" font="Arial" size="24" color="{title_color}" align="left" vertical_align="middle" single_line="true" max_lines="1">{{website}}</textbox>
+    <textbox x="210" y="690" width="400" height="40" font="Arial" size="24" color="{title_color}" align="left" vertical_align="middle" single_line="true" max_lines="1">{{email}}</textbox>
+    
+    <!-- Icons for Footer (Simple circles as placeholders) -->
+    <circle cx="180" cy="650" r="18" fill="{accent_color}"/>
+    <circle cx="180" cy="710" r="18" fill="{accent_color}"/>
+    
+    <!-- Diamond Images using <image> -->
+    <image url="{{image1_url}}" x="850" y="350" width="300" height="300" />
+    <image url="{{image2_url}}" x="1200" y="150" width="250" height="250" />
+    <image url="{{image3_url}}" x="1200" y="550" width="250" height="250" />
+    
+    <!-- Decorations (Arrows) -->
+    <polygon points="820,160 860,190 820,220" fill="{accent_color}"/>
+    <polygon points="880,160 920,190 880,220" fill="none" line_color="{accent_color}" line_width="3"/>
+    <polygon points="940,160 980,190 940,220" fill="{accent_color}"/>
+    
+  </slide>
+</presentation>
+"""
+    return xml_template.format(
+        brand_name=brand_name,
+        title=title,
+        website=website,
+        email=email,
+        image1_url=image1_url,
+        image2_url=image2_url,
+        image3_url=image3_url
     )
 
-    title_box_width = 1040.0
 
-    title_layout = fit_text(
-        title.strip().upper(),
-        font_path=title_font_path,
-        preferred_font_size=64.0,
-        min_font_size=30.0,
-        max_width=title_box_width,
-        max_height=130.0,
-        line_spacing=0.95,
-        max_lines=2,
-    )
+def generate_image_and_numbered_list_slide_xml(
+    title="The Polar Climate and\nIts Extremes",
+    image_url="https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&auto=format&fit=crop",
+    item1_number="01",
+    item1_title="Endless Cold",
+    item1_desc="Temperatures drop far below zero for months, testing both human and wildlife adaptation to freezing conditions",
+    item2_number="02",
+    item2_title="Midnight Sun &amp; Polar Night",
+    item2_desc="The Arctic experiences months of sunlight and darkness, shaping unique biological and cultural rhythms",
+    item3_number="03",
+    item3_title="Adapting to Extremes",
+    item3_desc="Animals like polar bears and arctic foxes have evolved to thrive in this challenging, ever-changing climate"
+) -> str:
+    color_slate = "#728AA1"
+    color_grey = "#9CA3AF"
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <!-- Image on the left -->
+    <image src="{image_url.replace('&', '&amp;')}" shape="circle" x="100" y="100" width="700" height="700" />
+    
+    <!-- Main Title -->
+    <textbox x="870" y="120" width="650" height="150" font="Arial" size="65" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="3" line_spacing="1.2">{title}</textbox>
+    
+    <!-- Item 1 -->
+    <shape type="circle" x="875" y="365" width="70" height="70" fill="{color_slate}" />
+    <textbox x="875" y="365" width="70" height="70" font="Arial" size="28" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">{item1_number}</textbox>
+    
+    <textbox x="970" y="355" width="550" height="40" font="Arial" size="28" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{item1_title}</textbox>
+    <textbox x="970" y="400" width="550" height="70" font="Arial" size="20" color="{color_grey}" bold="false" align="left" vertical_align="top" single_line="false" max_lines="3" line_spacing="1.2">{item1_desc}</textbox>
+    
+    <!-- Item 2 -->
+    <shape type="circle" x="875" y="515" width="70" height="70" fill="{color_slate}" />
+    <textbox x="875" y="515" width="70" height="70" font="Arial" size="28" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">{item2_number}</textbox>
+    
+    <textbox x="970" y="505" width="550" height="40" font="Arial" size="28" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{item2_title}</textbox>
+    <textbox x="970" y="550" width="550" height="70" font="Arial" size="20" color="{color_grey}" bold="false" align="left" vertical_align="top" single_line="false" max_lines="3" line_spacing="1.2">{item2_desc}</textbox>
+    
+    <!-- Item 3 -->
+    <shape type="circle" x="875" y="665" width="70" height="70" fill="{color_slate}" />
+    <textbox x="875" y="665" width="70" height="70" font="Arial" size="28" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">{item3_number}</textbox>
+    
+    <textbox x="970" y="655" width="550" height="40" font="Arial" size="28" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{item3_title}</textbox>
+    <textbox x="970" y="700" width="550" height="70" font="Arial" size="20" color="{color_grey}" bold="false" align="left" vertical_align="top" single_line="false" max_lines="3" line_spacing="1.2">{item3_desc}</textbox>
+    
+  </slide>
+</presentation>
+"""
+    return xml
 
-    title_x = canvas_width / 2 - title_box_width / 2
-    title_underline_y = 798.0
-    title_to_line_gap = 18.0
-    title_y = title_underline_y - title_layout["height"] - title_to_line_gap
+
+def generate_tech_pitch_deck_cover_slide_xml(
+    company_name="Arowwai\nIndustries",
+    title="Technology\nPitch Deck",
+    subtitle="By: Alexander Aronowitz",
+    image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop"
+) -> str:
+    color_blue = "#185b9d"
+    color_dark_text = "#0a2540"
+    color_light_blue = "#5380a5"
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <!-- Background Decor -->
+    <!-- Top left partial circle -->
+    <shape type="circle" x="20" y="-80" width="160" height="160" fill="{color_blue}" />
+    <!-- Top right partial circle -->
+    <shape type="circle" x="1400" y="-150" width="300" height="300" fill="{color_blue}" />
+    <!-- Bottom left partial circle -->
+    <shape type="circle" x="-100" y="750" width="250" height="250" fill="{color_blue}" />
+    <!-- Big bottom curve (giant circle) -->
+    <shape type="circle" x="500" y="450" width="1600" height="1600" fill="{color_blue}" />
+    
+    <!-- Logo -->
+    <polygon points="120,220 150,150 180,220" fill="{color_light_blue}" />
+    <polygon points="160,220 180,180 200,220" fill="{color_blue}" />
+    <textbox x="220" y="140" width="300" height="80" font="Arial" size="28" color="{color_light_blue}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="2">{company_name}</textbox>
+    
+    <!-- Texts -->
+    <textbox x="120" y="320" width="700" height="220" font="Arial" size="90" color="{color_dark_text}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="2" line_spacing="1.2">{title}</textbox>
+    <textbox x="120" y="580" width="600" height="50" font="Arial" size="32" color="{color_dark_text}" bold="false" align="left" vertical_align="middle" single_line="true" max_lines="1">{subtitle}</textbox>
+    
+    <!-- Laptop Graphic -->
+    <!-- Screen Bezel -->
+    <shape type="rounded_rectangle" x="830" y="280" width="640" height="430" fill="#222222" />
+    <!-- Screen Content (Image) -->
+    <image src="{image_url.replace('&', '&amp;')}" x="850" y="310" width="600" height="380" />
+    <!-- Laptop Base Top -->
+    <shape type="rounded_rectangle" x="750" y="710" width="800" height="15" fill="#e0e0e0" />
+    <!-- Laptop Base Bottom -->
+    <shape type="rounded_rectangle" x="780" y="725" width="740" height="10" fill="#a0a0a0" />
+  </slide>
+</presentation>
+"""
+    return xml
+
+
+def generate_outlook_dashboard_slide_xml(
+    title: str = "2026 Outlook",
+    subtitle: str = "Goals & Strategic Priorities",
+    progress_cards: list = None,
+    line_chart_title: str = "Increase AI-driven advisory adoption",
+    line_chart_labels: list = None,
+    line_chart_data: list = None,
+    regional_title: str = "New Regional Market",
+    regional_targets: list = None,
+    bg_color: str = "#EEF2F6"
+) -> str:
+    """
+    Generate XML for a dashboard slide containing progress cards, a line chart, and regional gauge charts.
+    """
+    import math
+    import html as html_mod
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    if progress_cards is None:
+        progress_cards = [
+            {"title": "Expand ESG-focused\\nfunds", "percentage": 25, "card_color": "#F6BE00", "bar_color": "#4A6CF7", "text_color": "#FFFFFF"},
+            {"title": "Enhance cybersecurity &\\ncompliance automation", "percentage": 100, "card_color": "#5A67D8", "bar_color": "#F6BE00", "text_color": "#FFFFFF"}
+        ]
+    if line_chart_labels is None:
+        line_chart_labels = ["2021", "2022", "2023", "2024", "2025", "2026"]
+    if line_chart_data is None:
+        line_chart_data = [9, 10, 13, 20, 22, 30]
+    if regional_targets is None:
+        regional_targets = [
+            {"name": "Target Regional 1", "region": "Vietnam", "percentage": 92, "color": "#F6BE00"},
+            {"name": "Target Regional 2", "region": "USA", "percentage": 95, "color": "#FF4B4B"}
+        ]
+
+    canvas_w = 1600
+    canvas_h = 900
 
     presentation = ET.Element(
         "presentation",
         {
             "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
+            "width": str(canvas_w),
+            "height": str(canvas_h),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+    slide = ET.SubElement(presentation, "slide", {"background": bg_color})
+
+    def add_element(tag, **attrs):
+        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
+
+    def add_textbox(text, **attrs):
+        node = add_element("textbox", **attrs)
+        node.text = text
+        return node
+
+    # Background
+    add_element("shape", type="rect", x=0, y=0, width=canvas_w, height=canvas_h, fill=bg_color, line_color="none")
+
+    # Title & Subtitle
+    add_textbox(title, x=80, y=80, width=800, height=80, font="Arial", size=72, bold="true", color="#333333", align="left", vertical_align="middle", single_line="true")
+    add_textbox(subtitle, x=80, y=170, width=800, height=40, font="Arial", size=32, bold="false", color="#555555", align="left", vertical_align="middle", single_line="true")
+
+    # Abstract Map (Dots) & Markers
+    map_x, map_y, map_w, map_h = 750, 40, 800, 350
+    map_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {map_w} {map_h}" width="{map_w}" height="{map_h}">'
+    
+    # Simple dotted map generator
+    map_pattern = [
+        "                xx   x x                ",
+        "             xxxxxx xxxxxx        xx    ",
+        "            xxxxxxxxxxxxxxxx     xxxx   ",
+        "           xxxxxxxxxxxxxxxxxx   xxxxxx  ",
+        "            xxxxxxxxxxxxxxxxxxxxxxxxxx  ",
+        "            xxxxxxxxxxxxxxxxxxxxxxxxxx  ",
+        "             xx xxxxxxxxxxxxxxxxxxxxx   ",
+        "              x  xxxx   xxxxxxxxxxx     ",
+        "                 xxx     xxxxx xxxx     ",
+        "                 xx       xxx   xx      ",
+        "                  x              x      ",
+        "                                 xx     "
+    ]
+    dot_r = 3
+    spacing_x = 18
+    spacing_y = 22
+    for r, row in enumerate(map_pattern):
+        for c, char in enumerate(row):
+            if char == 'x':
+                px = 50 + c * spacing_x
+                py = 50 + r * spacing_y
+                map_svg += f'<circle cx="{px}" cy="{py}" r="{dot_r}" fill="#999999" fill-opacity="0.5"/>'
+    
+    # Markers (USA and Vietnam approximations based on pattern)
+    markers = [
+        {"cx": 180, "cy": 160, "color": "#FF4B4B", "label": "USA"},
+        {"cx": 620, "cy": 220, "color": "#F6BE00", "label": "Vietnam"}
+    ]
+    for m in markers:
+        # Pill background
+        map_svg += f'<rect x="{m["cx"]-20}" y="{m["cy"]-15}" width="120" height="30" rx="15" fill="#FFFFFF" filter="drop-shadow(0px 4px 4px rgba(0,0,0,0.1))"/>'
+        # Dot
+        map_svg += f'<circle cx="{m["cx"]}" cy="{m["cy"]}" r="10" fill="{m["color"]}" />'
+        # Text
+        map_svg += f'<text x="{m["cx"]+20}" y="{m["cy"]+5}" font-family="Arial" font-size="14" font-weight="bold" fill="#333333">{m["label"]}</text>'
+        
+    map_svg += '</svg>'
+    map_el = add_element("shape", type="freeform", x=map_x, y=map_y, width=map_w, height=map_h, fill="none", line_color="none")
+    map_el.set("svg_data", html_mod.escape(map_svg))
+
+    # Progress Cards
+    card_y = 250
+    card_w = 400
+    card_h = 180
+    for i, card in enumerate(progress_cards):
+        cx = 80 + i * (card_w + 30)
+        # Card Background
+        add_element("shape", type="roundRect", x=cx, y=card_y, width=card_w, height=card_h, fill=card["card_color"], line_color="none")
+        # Title
+        add_textbox(card["title"], x=cx+30, y=card_y+30, width=card_w-60, height=80, font="Arial", size=24, bold="false", color=card["text_color"], align="left", vertical_align="top", single_line="false")
+        
+        # Progress Bar track
+        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=220, height=25, fill="#FFFFFF", line_color="none")
+        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=220, height=25, fill="#000000", line_color="none") # Will overlay transparency
+        # To make it look transparent white, we can just use a lighter version of the background or white with opacity. Since we can't easily do opacity in pure XML standard shapes, we just use a light grey.
+        # Actually, let's just use a solid light color for the track.
+        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=220, height=25, fill="#E2E8F0", line_color="none")
+        # Progress Bar fill
+        fill_w = max(20, int(220 * card["percentage"] / 100))
+        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=fill_w, height=25, fill=card["bar_color"], line_color="none")
+        
+        # Percentage Text
+        add_textbox(f"{card['percentage']}%", x=cx+270, y=card_y+105, width=100, height=45, font="Arial", size=32, bold="true", color=card["text_color"], align="left", vertical_align="middle", single_line="true")
+
+    # Line Chart Card
+    line_x, line_y, line_w, line_h = 80, 460, 750, 400
+    add_element("shape", type="roundRect", x=line_x, y=line_y, width=line_w, height=line_h, fill="#FFFFFF", line_color="none")
+    
+    add_textbox(line_chart_title, x=line_x+40, y=line_y+30, width=line_w-80, height=40, font="Arial", size=24, bold="false", color="#333333", align="left", vertical_align="middle", single_line="true")
+    
+    # SVG Line Chart
+    chart_svg_w, chart_svg_h = line_w - 60, line_h - 100
+    chart_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {chart_svg_w} {chart_svg_h}" width="{chart_svg_w}" height="{chart_svg_h}">'
+    
+    # Grid and Y axis
+    max_val = max(line_chart_data) if line_chart_data else 30
+    if max_val == 0: max_val = 1
+    y_steps = 6
+    grid_y_start = 20
+    grid_y_end = chart_svg_h - 40
+    chart_h_inner = grid_y_end - grid_y_start
+    
+    for i in range(y_steps + 1):
+        y_val = i * (max_val / y_steps)
+        py = grid_y_end - (i / y_steps) * chart_h_inner
+        chart_svg += f'<line x1="40" y1="{py}" x2="{chart_svg_w-20}" y2="{py}" stroke="#EEEEEE" stroke-width="1"/>'
+        chart_svg += f'<text x="30" y="{py+5}" font-family="Arial" font-size="14" fill="#999999" text-anchor="end">{int(y_val)}</text>'
+        
+    # Line path
+    num_pts = len(line_chart_data)
+    dx = (chart_svg_w - 80) / (num_pts - 1) if num_pts > 1 else 0
+    pts = []
+    for i, val in enumerate(line_chart_data):
+        px = 60 + i * dx
+        py = grid_y_end - (val / max_val) * chart_h_inner
+        pts.append((px, py))
+        
+    path_d = f"M {pts[0][0]} {pts[0][1]} "
+    for i in range(1, num_pts):
+        # Smooth bezier curve
+        cp1x = pts[i-1][0] + dx * 0.4
+        cp1y = pts[i-1][1]
+        cp2x = pts[i][0] - dx * 0.4
+        cp2y = pts[i][1]
+        path_d += f"C {cp1x} {cp1y}, {cp2x} {cp2y}, {pts[i][0]} {pts[i][1]} "
+        
+    chart_svg += f'<path d="{path_d}" fill="none" stroke="#F6BE00" stroke-width="3"/>'
+    
+    # Points
+    for px, py in pts:
+        chart_svg += f'<circle cx="{px}" cy="{py}" r="4" fill="#F6BE00" />'
+        
+    # Highlight last point
+    if pts:
+        last_px, last_py = pts[-1]
+        chart_svg += f'<circle cx="{last_px}" cy="{last_py}" r="12" fill="#F6BE00" fill-opacity="0.2"/>'
+        chart_svg += f'<circle cx="{last_px}" cy="{last_py}" r="6" fill="#F6BE00" />'
+        # Label box
+        box_w, box_h = 70, 40
+        chart_svg += f'<rect x="{last_px-box_w/2}" y="{last_py+15}" width="{box_w}" height="{box_h}" rx="8" fill="#F4F4F4" />'
+        chart_svg += f'<text x="{last_px}" y="{last_py+40}" font-family="Arial" font-size="18" font-weight="bold" fill="#333333" text-anchor="middle">{line_chart_data[-1]}%</text>'
+
+    # X axis labels
+    for i, label in enumerate(line_chart_labels):
+        px = 60 + i * dx
+        chart_svg += f'<text x="{px}" y="{chart_svg_h - 10}" font-family="Arial" font-size="14" fill="#999999" text-anchor="middle">{label}</text>'
+
+    chart_svg += '</svg>'
+    chart_el = add_element("shape", type="freeform", x=line_x+30, y=line_y+80, width=chart_svg_w, height=chart_svg_h, fill="none", line_color="none")
+    chart_el.set("svg_data", html_mod.escape(chart_svg))
+
+    # Regional Market Card
+    reg_x, reg_y, reg_w, reg_h = 860, 460, 680, 400
+    
+    add_textbox(regional_title, x=reg_x, y=reg_y-40, width=reg_w, height=40, font="Arial", size=24, bold="false", color="#555555", align="left", vertical_align="middle", single_line="true")
+    add_element("shape", type="roundRect", x=reg_x, y=reg_y, width=reg_w, height=reg_h, fill="#8B5CF6", line_color="none")
+    
+    gauge_svg_w, gauge_svg_h = reg_w, reg_h
+    gauge_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {gauge_svg_w} {gauge_svg_h}" width="{gauge_svg_w}" height="{gauge_svg_h}">'
+    
+    # Gauges
+    start_y = 60
+    for i, t in enumerate(regional_targets):
+        gy = start_y + i * 160
+        # Text
+        gauge_svg += f'<text x="50" y="{gy + 20}" font-family="Arial" font-size="24" fill="#FFFFFF">{t["name"]}</text>'
+        gauge_svg += f'<circle cx="65" cy="{gy + 65}" r="4" fill="#FFFFFF" />'
+        gauge_svg += f'<text x="80" y="{gy + 72}" font-family="Arial" font-size="20" fill="#E2E8F0">{t["region"]}</text>'
+        
+        # Half Donut (Gauge)
+        gcx, gcy = 500, gy + 100
+        rout = 80
+        rin = 50
+        
+        # Background arc (grayish)
+        gauge_svg += f'<path d="M {gcx-rout} {gcy} A {rout} {rout} 0 0 1 {gcx+rout} {gcy} L {gcx+rin} {gcy} A {rin} {rin} 0 0 0 {gcx-rin} {gcy} Z" fill="#F1F5F9" fill-opacity="0.8"/>'
+        
+        # Foreground arc
+        val = t["percentage"] / 100
+        angle = math.pi - (val * math.pi)
+        px_out = gcx + rout * math.cos(angle)
+        py_out = gcy - rout * math.sin(angle)
+        px_in = gcx + rin * math.cos(angle)
+        py_in = gcy - rin * math.sin(angle)
+        
+        gauge_svg += f'<path d="M {gcx-rout} {gcy} A {rout} {rout} 0 0 1 {px_out} {py_out} L {px_in} {py_in} A {rin} {rin} 0 0 0 {gcx-rin} {gcy} Z" fill="{t["color"]}"/>'
+        
+        # Percentage text
+        gauge_svg += f'<text x="{gcx}" y="{gcy - 15}" font-family="Arial" font-size="28" fill="#FFFFFF" text-anchor="middle">{t["percentage"]}%</text>'
+        
+    gauge_svg += '</svg>'
+    gauge_el = add_element("shape", type="freeform", x=reg_x, y=reg_y, width=gauge_svg_w, height=gauge_svg_h, fill="none", line_color="none")
+    gauge_el.set("svg_data", html_mod.escape(gauge_svg))
+
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+    return xml_content
+
+
+
+def generate_performance_review_slide_xml(
+    title: str = "ÄÃNH GIÃ HIá»†U SUáº¤T TOÃ€N DIá»†N",
+    radar_labels: list = None,
+    radar_series: list = None,
+    area_labels: list = None,
+    area_series: list = None,
+    bullet_points: list = None,
+    bg_color_top: str = "#FFFFFF",
+    bg_color_bottom: str = "#F0F7FA",
+    title_color: str = "#1E88E5",
+    text_color: str = "#333333"
+) -> str:
+    """
+    Generate XML for a performance review slide with a radar chart on the left and an area chart on the right.
+    """
+    import math
+    import html as html_mod
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    if radar_labels is None:
+        radar_labels = ["TÃ­nh nÄƒng", "Há»— trá»£", "Hiá»‡u quáº£ hoáº¡t Ä‘á»™ng", "Kháº£ nÄƒng sá»­ dá»¥ng", "GiÃ¡ trá»‹"]
+    if radar_series is None:
+        radar_series = [
+            {"name": "TiÃªu chuáº©n", "data": [4, 3, 5, 6, 7], "color": "#42A5F5"},
+            {"name": "Cao cáº¥p", "data": [8, 5, 8, 8, 4], "color": "#26C6DA"},
+            {"name": "Sang trá»ng", "data": [9, 7, 5, 6, 5], "color": "#F48FB1"}
+        ]
+    if area_labels is None:
+        area_labels = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"]
+    if area_series is None:
+        area_series = [
+            {"name": "MÃ¡y tÃ­nh Ä‘á»ƒ bÃ n", "data": [0, 15, 20, 30, 31, 32, 30, 25, 12, 8, 2, 0], "color": "#42A5F5"},
+            {"name": "Thiáº¿t bá»‹ di Ä‘á»™ng", "data": [0, 2, 8, 12, 23, 27, 40, 42, 48, 46, 24, 12], "color": "#F48FB1"}
+        ]
+    if bullet_points is None:
+        bullet_points = [
+            "DÃ²ng Ä‘Ã¡nh giÃ¡ vá» hiá»‡u suáº¥t",
+            "DÃ²ng Ä‘Ã¡nh giÃ¡ vá» hiá»‡u suáº¥t",
+            "DÃ²ng Ä‘Ã¡nh giÃ¡ vá» hiá»‡u suáº¥t"
+        ]
+
+    canvas_w = 1600
+    canvas_h = 900
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_w),
+            "height": str(canvas_h),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        {"background": bg_color_top},
+    )
+
+    def add_element(tag, **attrs):
+        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
+
+    def add_textbox(text, **attrs):
+        node = add_element("textbox", **attrs)
+        node.text = text
+        return node
+
+    # Background bottom
+    add_element("shape", type="rect", x=0, y=140, width=canvas_w, height=canvas_h-140, fill=bg_color_bottom, line_color="none")
+
+    # Title decor
+    add_element("shape", type="rect", x=40, y=40, width=60, height=60, fill="#1E88E5", line_color="none")
+    add_element("shape", type="rect", x=110, y=40, width=10, height=60, fill="#F48FB1", line_color="none")
+
+    # Title
+    add_textbox(
+        title.upper(),
+        x=140, y=40, width=1400, height=60,
+        font="Arial", size=48, bold="true", color=title_color,
+        align="left", vertical_align="middle", single_line="true"
+    )
+
+    # RADAR CHART (Left)
+    radar_cx, radar_cy = 450, 520
+    radar_r = 250
+    radar_max = 10
+    
+    svg_radar = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {canvas_w} {canvas_h}" width="{canvas_w}" height="{canvas_h}">'
+    
+    # Legend for Radar
+    leg_x = 200
+    leg_y = 180
+    for s in radar_series:
+        svg_radar += f'<circle cx="{leg_x}" cy="{leg_y}" r="8" fill="{s["color"]}" />'
+        svg_radar += f'<text x="{leg_x+15}" y="{leg_y+5}" font-family="Arial" font-size="20" fill="#333">{s["name"]}</text>'
+        leg_x += 180
+
+    num_axes = len(radar_labels)
+    angles = [i * 2 * math.pi / num_axes - math.pi / 2 for i in range(num_axes)]
+
+    # Draw grid (polygons)
+    for step in range(2, radar_max + 1, 2):
+        r_step = (step / radar_max) * radar_r
+        pts = []
+        for angle in angles:
+            px = radar_cx + r_step * math.cos(angle)
+            py = radar_cy + r_step * math.sin(angle)
+            pts.append(f"{px},{py}")
+        svg_radar += f'<polygon points="{" ".join(pts)}" fill="none" stroke="#CCCCCC" stroke-dasharray="4,4" stroke-width="1"/>'
+        # Add label for grid
+        svg_radar += f'<text x="{radar_cx}" y="{radar_cy - r_step + 15}" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">{step}</text>'
+    
+    # Draw axes
+    for i, angle in enumerate(angles):
+        px = radar_cx + radar_r * math.cos(angle)
+        py = radar_cy + radar_r * math.sin(angle)
+        svg_radar += f'<line x1="{radar_cx}" y1="{radar_cy}" x2="{px}" y2="{py}" stroke="#CCCCCC" stroke-dasharray="4,4" stroke-width="1"/>'
+        
+        # Label alignment
+        anchor = "middle"
+        dx, dy = 0, 0
+        if math.cos(angle) > 0.1: anchor = "start"; dx = 10
+        elif math.cos(angle) < -0.1: anchor = "end"; dx = -10
+        if math.sin(angle) > 0.1: dy = 25
+        elif math.sin(angle) < -0.1: dy = -10
+        svg_radar += f'<text x="{px+dx}" y="{py+dy}" font-family="Arial" font-size="18" fill="#333" text-anchor="{anchor}">{radar_labels[i]}</text>'
+
+    # Draw data polygons
+    for s in radar_series:
+        pts = []
+        for i, val in enumerate(s["data"]):
+            r_val = (val / radar_max) * radar_r
+            px = radar_cx + r_val * math.cos(angles[i])
+            py = radar_cy + r_val * math.sin(angles[i])
+            pts.append(f"{px},{py}")
+        svg_radar += f'<polygon points="{" ".join(pts)}" fill="{s["color"]}" fill-opacity="0.4" stroke="{s["color"]}" stroke-width="2"/>'
+
+    # AREA CHART (Right)
+    area_x, area_y = 950, 250
+    area_w, area_h = 600, 400
+    area_max = 50
+
+    # Legend for Area
+    leg_x = 1000
+    leg_y = 180
+    for s in area_series:
+        svg_radar += f'<circle cx="{leg_x}" cy="{leg_y}" r="6" fill="{s["color"]}" />'
+        svg_radar += f'<text x="{leg_x+15}" y="{leg_y+5}" font-family="Arial" font-size="16" fill="#333">{s["name"]}</text>'
+        leg_x += 160
+
+    # Area Grid
+    for step in range(0, area_max + 1, 10):
+        y_pos = area_y + area_h - (step / area_max) * area_h
+        svg_radar += f'<line x1="{area_x}" y1="{y_pos}" x2="{area_x+area_w}" y2="{y_pos}" stroke="#DDDDDD" stroke-width="1"/>'
+        svg_radar += f'<text x="{area_x-10}" y="{y_pos+5}" font-family="Arial" font-size="14" fill="#666" text-anchor="end">{step}</text>'
+
+    # Area Paths
+    num_pts = len(area_labels)
+    dx = area_w / (num_pts - 1) if num_pts > 1 else area_w
+    for s in area_series:
+        path_d = f"M {area_x} {area_y + area_h} "
+        for i, val in enumerate(s["data"]):
+            px = area_x + i * dx
+            py = area_y + area_h - (val / area_max) * area_h
+            path_d += f"L {px} {py} "
+        path_d += f"L {area_x + area_w} {area_y + area_h} Z"
+        svg_radar += f'<path d="{path_d}" fill="{s["color"]}" fill-opacity="0.6" stroke="{s["color"]}" stroke-width="2"/>'
+
+    # Area X labels
+    for i, label in enumerate(area_labels):
+        px = area_x + i * dx
+        svg_radar += f'<text x="{px}" y="{area_y + area_h + 20}" font-family="Arial" font-size="14" fill="#333" text-anchor="middle">{label}</text>'
+
+    svg_radar += '</svg>'
+    
+    chart_el = add_element("shape", type="freeform", x=0, y=0, width=canvas_w, height=canvas_h, fill="none", line_color="none")
+    chart_el.set("svg_data", html_mod.escape(svg_radar))
+
+    # Bullet Points (Bottom Right)
+    bullet_y = 700
+    for bullet in bullet_points:
+        add_element("shape", type="oval", x=950, y=bullet_y+12, width=10, height=10, fill="#555555", line_color="none")
+        add_textbox(
+            bullet,
+            x=980, y=bullet_y, width=580, height=40,
+            font="Arial", size=28, bold="true", italic="true", color="#444444",
+            align="left", vertical_align="middle", single_line="true"
+        )
+        bullet_y += 45
+
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+    return xml_content
+
+
+
+def generate_kpi_dashboard_slide_xml(
+    title: str = "Primary KPI Dashboard",
+    kpi_cards: list = None,
+    chart_labels: list = None,
+    chart_data: list = None,
+    bg_color: str = "#F8F9FA"
+) -> str:
+    """
+    Generate XML for a KPI dashboard slide with left-side progress cards and a right-side line chart.
+    """
+    import html as html_mod
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    if kpi_cards is None:
+        kpi_cards = [
+            {"title": "Revenue\\nand Sales", "percentage": 72, "color": "#F26D60"},
+            {"title": "Achieved\\nConversion Rate", "percentage": 60, "color": "#E85EAE"},
+            {"title": "Customer\\nRetention", "percentage": 86, "color": "#3BBA77"}
+        ]
+    if chart_labels is None:
+        chart_labels = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+    if chart_data is None:
+        chart_data = [200, 700, 600, 900, 300, 600, 900, 250, 600, 500, 700, 600]
+
+    canvas_w = 1600
+    canvas_h = 900
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_w),
+            "height": str(canvas_h),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+    slide = ET.SubElement(presentation, "slide", {"background": bg_color})
+
+    def add_element(tag, **attrs):
+        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
+
+    def add_textbox(text, **attrs):
+        node = add_element("textbox", **attrs)
+        node.text = text
+        return node
+
+    # Background
+    add_element("shape", type="rect", x=0, y=0, width=canvas_w, height=canvas_h, fill=bg_color, line_color="none")
+
+    # Abstract dots background (Top right and Bottom left)
+    dot_color = "#FAD2D2"
+    dot_r = 8
+    spacing = 25
+    # Top right cluster
+    for r in range(8):
+        for c in range(15):
+            if (r+c) > 6 and (c-r) > 2:
+                add_element("shape", type="oval", x=1200 + c*spacing, y=-50 + r*spacing, width=dot_r, height=dot_r, fill=dot_color, line_color="none")
+    
+    # Bottom left cluster
+    for r in range(12):
+        for c in range(8):
+            if (r-c) > 2:
+                add_element("shape", type="oval", x=-50 + c*spacing, y=600 + r*spacing, width=dot_r, height=dot_r, fill=dot_color, line_color="none")
+
+    # Title Area
+    add_element("shape", type="roundRect", x=600, y=100, width=100, height=10, fill="#F26D60", line_color="none")
+    add_textbox(title, x=600, y=140, width=900, height=80, font="Segoe UI", size=64, bold="true", color="#111111", align="left", vertical_align="middle", single_line="true")
+
+    # Left KPI Cards
+    card_x = 80
+    card_w = 450
+    card_h = 220
+    
+    for i, card in enumerate(kpi_cards):
+        cy = 80 + i * (card_h + 40)
+        
+        # Add shadow simulation (slightly offset light grey rect)
+        add_element("shape", type="roundRect", x=card_x+5, y=cy+5, width=card_w, height=card_h, fill="#E2E8F0", line_color="none")
+        # Card body
+        add_element("shape", type="roundRect", x=card_x, y=cy, width=card_w, height=card_h, fill="#FFFFFF", line_color="none")
+        
+        # Text
+        add_textbox(card["title"], x=card_x+40, y=cy+40, width=220, height=80, font="Segoe UI", size=26, bold="true", color="#222222", align="left", vertical_align="top", single_line="false")
+        
+        # Percentage
+        add_textbox(f"{card['percentage']}%", x=card_x+250, y=cy+35, width=160, height=80, font="Segoe UI", size=54, bold="true", color=card["color"], align="right", vertical_align="top", single_line="true")
+        
+        # Progress Bar
+        bar_y = cy + 140
+        bar_w = 370
+        bar_h = 28
+        # Track
+        add_element("shape", type="roundRect", x=card_x+40, y=bar_y, width=bar_w, height=bar_h, fill="#F1F5F9", line_color="none")
+        # Fill
+        fill_w = max(20, int(bar_w * card["percentage"] / 100))
+        add_element("shape", type="roundRect", x=card_x+40, y=bar_y, width=fill_w, height=bar_h, fill=card["color"], line_color="none")
+
+    # Right Chart Card
+    chart_bg_x, chart_bg_y, chart_bg_w, chart_bg_h = 600, 340, 920, 480
+    add_element("shape", type="roundRect", x=chart_bg_x+5, y=chart_bg_y+5, width=chart_bg_w, height=chart_bg_h, fill="#E2E8F0", line_color="none")
+    add_element("shape", type="roundRect", x=chart_bg_x, y=chart_bg_y, width=chart_bg_w, height=chart_bg_h, fill="#FFFFFF", line_color="none")
+    
+    # Chart SVG
+    svg_w, svg_h = chart_bg_w - 60, chart_bg_h - 60
+    svg_x, svg_y = chart_bg_x + 30, chart_bg_y + 30
+    chart_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {svg_w} {svg_h}" width="{svg_w}" height="{svg_h}">'
+    
+    max_val = max(chart_data) if chart_data else 1000
+    if max_val == 0: max_val = 1
+    # Round max_val up to nearest nice number (e.g. 1000)
+    import math
+    pow10 = 10 ** math.floor(math.log10(max_val))
+    max_val = math.ceil(max_val / pow10) * pow10
+    if max_val == max(chart_data) and max_val > 10:
+        max_val += pow10
+
+    grid_y_start = 20
+    grid_y_end = svg_h - 40
+    chart_h_inner = grid_y_end - grid_y_start
+    
+    y_steps = 5
+    for i in range(y_steps + 1):
+        y_val = i * (max_val / y_steps)
+        py = grid_y_end - (i / y_steps) * chart_h_inner
+        chart_svg += f'<line x1="60" y1="{py}" x2="{svg_w-20}" y2="{py}" stroke="#E2E8F0" stroke-width="1"/>'
+        chart_svg += f'<text x="50" y="{py+5}" font-family="Arial" font-size="16" fill="#555555" text-anchor="end">{int(y_val)}</text>'
+        
+    num_pts = len(chart_data)
+    dx = (svg_w - 100) / (num_pts - 1) if num_pts > 1 else 0
+    pts = []
+    for i, val in enumerate(chart_data):
+        px = 80 + i * dx
+        py = grid_y_end - (val / max_val) * chart_h_inner
+        pts.append((px, py))
+        
+    # Line
+    if pts:
+        path_d = f"M {pts[0][0]} {pts[0][1]} "
+        for i in range(1, num_pts):
+            path_d += f"L {pts[i][0]} {pts[i][1]} "
+        chart_svg += f'<path d="{path_d}" fill="none" stroke="#2B5FEA" stroke-width="6"/>'
+        
+        # Dots
+        for px, py in pts:
+            chart_svg += f'<circle cx="{px}" cy="{py}" r="10" fill="#2B5FEA" />'
+
+    # X axis labels
+    for i, label in enumerate(chart_labels):
+        px = 80 + i * dx
+        chart_svg += f'<text x="{px}" y="{svg_h - 10}" font-family="Arial" font-size="16" fill="#555555" text-anchor="middle">{label}</text>'
+
+    chart_svg += '</svg>'
+    
+    chart_el = add_element("shape", type="freeform", x=svg_x, y=svg_y, width=svg_w, height=svg_h, fill="none", line_color="none")
+    chart_el.set("svg_data", html_mod.escape(chart_svg))
+
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+    return xml_content
+
+
+
+def generate_revenue_target_slide_xml(
+    title: str = "Annual Revenue Target",
+    top_left_card: dict = None,
+    top_right_card: dict = None,
+    bottom_card: dict = None,
+    bar_chart_title: str = "Quarterly Revenue Data",
+    bar_chart_labels: list = None,
+    bar_chart_data: list = None,
+    bg_color: str = "#F5F6F8"
+) -> str:
+    """
+    Generate XML for an Annual Revenue Target slide with a donut chart and a bar chart.
+    """
+    import html as html_mod
+    import xml.etree.ElementTree as ET
+    import math
+    from xml.dom import minidom
+
+    if top_left_card is None:
+        top_left_card = {"title": "Annual Target", "value": "$15M", "subtitle": "on track"}
+    if top_right_card is None:
+        top_right_card = {"title": "Forecast Q4", "value": "+6-8%", "subtitle": "projected growth"}
+    if bottom_card is None:
+        bottom_card = {"title": "Current YTD (Q3)", "value": "$11.2M", "subtitle": "74% achieved", "percentage": 74}
+    if bar_chart_labels is None:
+        bar_chart_labels = ["Q1", "Q2", "Q3", "Q4"]
+    if bar_chart_data is None:
+        bar_chart_data = [3, 4, 6, 4]
+
+    canvas_w = 1600
+    canvas_h = 900
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_w),
+            "height": str(canvas_h),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+    slide = ET.SubElement(presentation, "slide", {"background": bg_color})
+
+    def add_element(tag, **attrs):
+        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
+
+    def add_textbox(text, **attrs):
+        node = add_element("textbox", **attrs)
+        node.text = text
+        return node
+
+    # Background
+    add_element("shape", type="rect", x=0, y=0, width=canvas_w, height=canvas_h, fill=bg_color, line_color="none")
+
+    # Abstract background wave simulation (just soft circles in corners)
+    add_element("shape", type="oval", x=1300, y=-200, width=500, height=500, fill="#Eef0f4", line_color="#E2e6ec")
+    add_element("shape", type="oval", x=1400, y=-100, width=400, height=400, fill="#Eef0f4", line_color="#E2e6ec")
+    add_element("shape", type="oval", x=-200, y=700, width=400, height=400, fill="#Eef0f4", line_color="#E2e6ec")
+
+    # Title
+    add_textbox(title, x=80, y=80, width=1000, height=80, font="Segoe UI", size=60, bold="true", color="#16333F", align="left", vertical_align="middle", single_line="true")
+
+    # Cards Base Layout
+    card_y_top = 220
+    card_y_bot = 530
+    
+    # Top Left Card
+    tl_x = 80
+    add_element("shape", type="roundRect", x=tl_x, y=card_y_top, width=340, height=280, fill="#0A93A6", line_color="none")
+    # Icon Box
+    add_element("shape", type="roundRect", x=tl_x+30, y=card_y_top+30, width=50, height=50, fill="#FCE679", line_color="none")
+    add_textbox("+", x=tl_x+30, y=card_y_top+30, width=50, height=50, font="Segoe UI", size=32, bold="true", color="#0A93A6", align="center", vertical_align="middle", single_line="true")
+    add_textbox(top_left_card["title"], x=tl_x+30, y=card_y_top+120, width=280, height=40, font="Segoe UI", size=22, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
+    add_textbox(top_left_card["value"], x=tl_x+30, y=card_y_top+160, width=280, height=60, font="Segoe UI", size=48, bold="true", color="#FFFFFF", align="left", vertical_align="middle", single_line="true")
+    add_textbox(top_left_card["subtitle"], x=tl_x+30, y=card_y_top+220, width=280, height=30, font="Segoe UI", size=18, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
+
+    # Top Right Card
+    tr_x = 450
+    add_element("shape", type="roundRect", x=tr_x, y=card_y_top, width=340, height=280, fill="#0A93A6", line_color="none")
+    add_element("shape", type="roundRect", x=tr_x+30, y=card_y_top+30, width=50, height=50, fill="#FCE679", line_color="none")
+    # A fire/flame symbol or triangle
+    add_textbox("â–²", x=tr_x+30, y=card_y_top+30, width=50, height=50, font="Segoe UI", size=24, bold="true", color="#0A93A6", align="center", vertical_align="middle", single_line="true")
+    add_textbox(top_right_card["title"], x=tr_x+30, y=card_y_top+120, width=280, height=40, font="Segoe UI", size=22, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
+    add_textbox(top_right_card["value"], x=tr_x+30, y=card_y_top+160, width=280, height=60, font="Segoe UI", size=48, bold="true", color="#FFFFFF", align="left", vertical_align="middle", single_line="true")
+    add_textbox(top_right_card["subtitle"], x=tr_x+30, y=card_y_top+220, width=280, height=30, font="Segoe UI", size=18, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
+
+    # Bottom Card
+    add_element("shape", type="roundRect", x=80, y=card_y_bot, width=710, height=300, fill="#FFFFFF", line_color="#E2E8F0")
+    add_element("shape", type="roundRect", x=110, y=card_y_bot+30, width=50, height=50, fill="#0D7685", line_color="none")
+    # Clock symbol or circle
+    add_textbox("âŠ™", x=110, y=card_y_bot+30, width=50, height=50, font="Segoe UI", size=28, bold="true", color="#FCE679", align="center", vertical_align="middle", single_line="true")
+    add_textbox(bottom_card["title"], x=110, y=card_y_bot+120, width=280, height=40, font="Segoe UI", size=22, bold="false", color="#555555", align="left", vertical_align="middle", single_line="true")
+    add_textbox(bottom_card["value"], x=110, y=card_y_bot+160, width=280, height=60, font="Segoe UI", size=48, bold="true", color="#111111", align="left", vertical_align="middle", single_line="true")
+    add_textbox(bottom_card["subtitle"], x=110, y=card_y_bot+220, width=280, height=30, font="Segoe UI", size=18, bold="false", color="#888888", align="left", vertical_align="middle", single_line="true")
+
+    # Donut Chart SVG
+    donut_pct = bottom_card.get("percentage", 75)
+    donut_w, donut_h = 240, 240
+    donut_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {donut_w} {donut_h}" width="{donut_w}" height="{donut_h}">'
+    cx, cy, r = donut_w//2, donut_h//2, 85
+    circum = 2 * math.pi * r
+    fill_len = (donut_pct / 100) * circum
+    
+    donut_svg += f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#FDE68A" stroke-width="35"/>'
+    donut_svg += f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#0D7685" stroke-width="35" stroke-dasharray="{fill_len} {circum}" transform="rotate(-90 {cx} {cy})"/>'
+    donut_svg += f'<text x="{cx}" y="{cy+15}" font-family="Arial" font-size="44" font-weight="bold" fill="#111111" text-anchor="middle">{donut_pct}%</text>'
+    donut_svg += '</svg>'
+    
+    donut_el = add_element("shape", type="freeform", x=480, y=card_y_bot+30, width=donut_w, height=donut_h, fill="none", line_color="none")
+    donut_el.set("svg_data", html_mod.escape(donut_svg))
+
+    # Right Bar Chart Card
+    chart_bg_x, chart_bg_y, chart_bg_w, chart_bg_h = 820, 220, 700, 610
+    add_element("shape", type="roundRect", x=chart_bg_x, y=chart_bg_y, width=chart_bg_w, height=chart_bg_h, fill="#FFFFFF", line_color="#E2E8F0")
+    add_textbox(bar_chart_title, x=chart_bg_x+40, y=chart_bg_y+30, width=600, height=40, font="Segoe UI", size=24, bold="false", color="#333333", align="left", vertical_align="middle", single_line="true")
+    add_textbox("Amount (in millions)", x=chart_bg_x-40, y=chart_bg_y+250, width=300, height=40, font="Segoe UI", size=18, bold="false", color="#777777", align="center", vertical_align="middle", single_line="true")
+    # In presentation tools it's hard to rotate standard text box accurately without full transform support, we will just use SVG for rotated text
+    
+    svg_w, svg_h = chart_bg_w - 60, chart_bg_h - 100
+    svg_x, svg_y = chart_bg_x + 30, chart_bg_y + 80
+    chart_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {svg_w} {svg_h}" width="{svg_w}" height="{svg_h}">'
+    
+    # Rotated Y-axis label
+    chart_svg += f'<text x="-{svg_h//2 + 50}" y="30" font-family="Arial" font-size="20" fill="#777777" transform="rotate(-90)" text-anchor="middle">Amount (in millions)</text>'
+
+    max_val = max(bar_chart_data) if bar_chart_data else 6
+    if max_val == 0: max_val = 1
+    import math
+    max_val = math.ceil(max_val)
+
+    grid_y_start = 20
+    grid_y_end = svg_h - 40
+    chart_h_inner = grid_y_end - grid_y_start
+    
+    # Draw Y axis grid
+    for i in range(max_val + 1):
+        py = grid_y_end - (i / max_val) * chart_h_inner
+        chart_svg += f'<line x1="80" y1="{py}" x2="{svg_w-20}" y2="{py}" stroke="#E2E8F0" stroke-width="1"/>'
+        chart_svg += f'<text x="60" y="{py+5}" font-family="Arial" font-size="18" fill="#555555" text-anchor="end">{i}</text>'
+        
+    num_bars = len(bar_chart_data)
+    if num_bars > 0:
+        bar_w = 80
+        dx = (svg_w - 120) / num_bars
+        colors = ["#63DFD8", "#06B6D4", "#0493A6", "#0D6F82", "#105563", "#16333F"]
+        
+        for i, val in enumerate(bar_chart_data):
+            bx = 100 + i * dx + (dx - bar_w) / 2
+            bh = (val / max_val) * chart_h_inner
+            by = grid_y_end - bh
+            color = colors[i % len(colors)]
+            chart_svg += f'<rect x="{bx}" y="{by}" width="{bar_w}" height="{bh}" fill="{color}" rx="5" />'
+            
+            # X label
+            if i < len(bar_chart_labels):
+                chart_svg += f'<text x="{bx + bar_w/2}" y="{svg_h - 10}" font-family="Arial" font-size="18" fill="#555555" text-anchor="middle">{bar_chart_labels[i]}</text>'
+
+    chart_svg += '</svg>'
+    
+    chart_el = add_element("shape", type="freeform", x=svg_x, y=svg_y, width=svg_w, height=svg_h, fill="none", line_color="none")
+    chart_el.set("svg_data", html_mod.escape(chart_svg))
+
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
+    return xml_content
+
+
+
+def generate_modern_donut_chart_slide_xml(
+    title: str = "NGUá»’N Lá»°C DOANH THU",
+    chart_labels: list = None,
+    chart_data: list = None,
+    colors: list = None,
+    background_color: str = "#F3FBFE",
+    title_color: str = "#4B61FF",
+    text_color: str = "#FFFFFF"
+) -> str:
+    """
+    Generate XML for a modern donut chart slide with horizontal label bars on the right.
+    """
+    import math
+    import html as html_mod
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
+
+    if chart_labels is None:
+        chart_labels = ["KhÃ¡ch hÃ ng doanh nghiá»‡p", "KhÃ¡ch hÃ ng cÃ¡ nhÃ¢n", "Äáº¡i lÃ½ & Ä‘á»‘i tÃ¡c", "KhÃ¡ch hÃ ng dá»± Ã¡n"]
+    if chart_data is None:
+        chart_data = [45, 30, 15, 10]
+    if colors is None:
+        colors = ["#00E5FF", "#0099FF", "#9D84FF", "#6E5BFF"]
+        
+    canvas_w = 1600
+    canvas_h = 900
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_w),
+            "height": str(canvas_h),
             "slideWidthInches": "13.333",
             "slideHeightInches": "7.5",
         },
@@ -23544,995 +4346,582 @@ def generate_paper_flight_thank_you_slide_xml(
         {"background": background_color},
     )
 
-    def add(tag: str, **attrs):
+    def add_element(tag, **attrs):
         return ET.SubElement(
             slide,
             tag,
-            {
-                key: str(value)
-                for key, value in attrs.items()
-                if value is not None
-            },
+            {key: str(value) for key, value in attrs.items()},
         )
 
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
+    def add_textbox(text, **attrs):
+        node = add_element("textbox", **attrs)
         node.text = text
         return node
 
-    def svg_node(
-        name: str,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
-        svg_body: str,
-        pixel_scale: float = 4.0,
-    ) -> None:
-        node = add(
-            "svg",
-            name=name,
-            x=x,
-            y=y,
-            width=width,
-            height=height,
-            pixel_width=max(1, round(width * pixel_scale)),
-            pixel_height=max(1, round(height * pixel_scale)),
-        )
-        node.text = svg_body.strip()
-
-    def simple_svg(
-        width: float,
-        height: float,
-        content: str,
-    ) -> str:
-        return f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="{width:g}" height="{height:g}" viewBox="0 0 {width:g} {height:g}">
-  {content}
-</svg>
-""".strip()
-
-    def asset_svg(
-        content_width: float,
-        content_height: float,
-        content: str,
-    ) -> str:
-        return simple_svg(content_width, content_height, content)
-
-    def add_asset_instance(
-        name: str,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
-        rotation: float,
-        asset_width: float,
-        asset_height: float,
-        asset_content: str,
-        pixel_scale: float,
-        inner_scale: float = 0.82,
-    ) -> None:
-        # Keep the original asset shape. The wrapper box is intentionally
-        # larger than the visible asset so stroke, shadow, and rotated corners
-        # are not clipped by the SVG boundary.
-        uniform_scale = min(
-            width / asset_width,
-            height / asset_height,
-        ) * inner_scale
-
-        wrapped = f"""
-<svg xmlns="http://www.w3.org/2000/svg" width="{width:g}" height="{height:g}" viewBox="0 0 {width:g} {height:g}" overflow="visible">
-  <g transform="translate({width / 2:g} {height / 2:g}) rotate({rotation:g}) scale({uniform_scale:g}) translate({-asset_width / 2:g} {-asset_height / 2:g})">
-    {asset_content}
-  </g>
-</svg>
-""".strip()
-        svg_node(
-            name,
-            x,
-            y,
-            width,
-            height,
-            wrapped,
-            pixel_scale=pixel_scale,
-        )
-
-    def add_cloud(
-        name: str,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
-        fill: str,
-        opacity: float,
-    ) -> None:
-        content = f"""
-<path d="
-  M 0 {height:g}
-  C {width * 0.05:g} {height * 0.58:g} {width * 0.24:g} {height * 0.44:g} {width * 0.39:g} {height * 0.52:g}
-  C {width * 0.48:g} {height * 0.12:g} {width * 0.82:g} {height * 0.09:g} {width * 0.91:g} {height * 0.56:g}
-  C {width * 1.04:g} {height * 0.57:g} {width * 1.10:g} {height * 0.75:g} {width:g} {height:g}
-  Z"
-  fill="{fill}"
-  opacity="{opacity:g}"
-/>
-"""
-        svg_node(
-            name,
-            x,
-            y,
-            width,
-            height,
-            simple_svg(width, height, content),
-            pixel_scale=4.0,
-        )
-
-    def add_star(
-        name: str,
-        center_x: float,
-        center_y: float,
-        size: float,
-        opacity: float,
-    ) -> None:
-        width = size
-        height = size
-        content = f"""
-<path d="
-  M {size * 0.5:g} 0
-  L {size * 0.62:g} {size * 0.38:g}
-  L {size:g} {size * 0.5:g}
-  L {size * 0.62:g} {size * 0.62:g}
-  L {size * 0.5:g} {size:g}
-  L {size * 0.38:g} {size * 0.62:g}
-  L 0 {size * 0.5:g}
-  L {size * 0.38:g} {size * 0.38:g}
-  Z"
-  fill="{star_color}"
-  opacity="{opacity:g}"
-/>
-"""
-        svg_node(
-            name,
-            center_x - width / 2,
-            center_y - height / 2,
-            width,
-            height,
-            simple_svg(width, height, content),
-            pixel_scale=4.5,
-        )
-
-    def add_dot(
-        name: str,
-        center_x: float,
-        center_y: float,
-        radius: float,
-        opacity: float,
-    ) -> None:
-        add(
-            "shape",
-            name=name,
-            type="circle",
-            x=center_x - radius,
-            y=center_y - radius,
-            width=radius * 2,
-            height=radius * 2,
-            fill=orange_color,
-            line_color="none",
-            opacity=opacity,
-        )
-
-    def add_line_segment(
-        name: str,
-        x1: float,
-        y1: float,
-        x2: float,
-        y2: float,
-        width: float,
-        opacity: float,
-    ) -> None:
-        add(
-            "line",
-            name=name,
-            x1=x1,
-            y1=y1,
-            x2=x2,
-            y2=y2,
-            color=title_color,
-            width=width,
-            opacity=opacity,
-        )
-
-    def add_path_svg(
-        name: str,
-        x: float,
-        y: float,
-        width: float,
-        height: float,
-        path_d: str,
-        stroke_width: float,
-    ) -> None:
-        content = f"""
-<path d="{path_d}"
-  fill="none"
-  stroke="{path_color}"
-  stroke-width="{stroke_width:g}"
-  stroke-dasharray="16 18"
-  stroke-linecap="round"
-  opacity="0.96"
-/>
-"""
-        svg_node(
-            name,
-            x,
-            y,
-            width,
-            height,
-            simple_svg(width, height, content),
-            pixel_scale=4.0,
-        )
-
-    envelope_asset_width = 160.0
-    envelope_asset_height = 110.0
-    envelope_asset_content = f"""
-<defs>
-  <filter id="shadow_env" x="-35%" y="-35%" width="170%" height="170%">
-    <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.12"/>
-  </filter>
-  <linearGradient id="frontGrad_env" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%" stop-color="#FFD98B"/>
-    <stop offset="58%" stop-color="{envelope_color}"/>
-    <stop offset="100%" stop-color="{orange_color}"/>
-  </linearGradient>
-</defs>
-<g filter="url(#shadow_env)">
-  <g transform="translate(20 18)">
-    <rect x="0" y="8" width="120" height="64" rx="7"
-          fill="url(#frontGrad_env)"
-          stroke="{envelope_shadow_color}" stroke-width="2.2"/>
-    <path d="M 2 14 L 60 43 L 118 14"
-          fill="none" stroke="{envelope_shadow_color}" stroke-width="2.4"
-          stroke-linejoin="round"/>
-    <path d="M 2 68 L 40 38"
-          fill="none" stroke="{envelope_shadow_color}" stroke-width="2"/>
-    <path d="M 118 68 L 80 38"
-          fill="none" stroke="{envelope_shadow_color}" stroke-width="2"/>
-    <path d="M 22 8 L 60 41 L 98 8"
-          fill="#F7B32F" stroke="{envelope_shadow_color}" stroke-width="1.5"/>
-    <path d="M 60 41 L 28 12"
-          fill="none" stroke="#E8A323" stroke-width="1.4"/>
-    <path d="M 60 41 L 92 12"
-          fill="none" stroke="#E8A323" stroke-width="1.4"/>
-  </g>
-</g>
-""".strip()
-
-    plane_asset_width = 145.0
-    plane_asset_height = 86.0
-    plane_asset_content = f"""
-<defs>
-  <filter id="shadow_plane" x="-20%" y="-20%" width="150%" height="150%">
-    <feDropShadow dx="0" dy="4" stdDeviation="2.8" flood-color="#000000" flood-opacity="0.12"/>
-  </filter>
-  <linearGradient id="planeGrad" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0%" stop-color="#F0F1F4"/>
-    <stop offset="100%" stop-color="{paper_plane_dark_color}"/>
-  </linearGradient>
-</defs>
-<g filter="url(#shadow_plane)">
-  <path d="M 2 {plane_asset_height * 0.38:g} L {plane_asset_width:g} 2 L {plane_asset_width * 0.42:g} {plane_asset_height:g} Z" fill="url(#planeGrad)"/>
-  <path d="M {plane_asset_width * 0.42:g} {plane_asset_height:g} L {plane_asset_width * 0.49:g} {plane_asset_height * 0.46:g} L {plane_asset_width:g} 2 Z" fill="{paper_plane_dark_color}" opacity="0.78"/>
-  <path d="M 2 {plane_asset_height * 0.38:g} L {plane_asset_width * 0.49:g} {plane_asset_height * 0.46:g} L {plane_asset_width * 0.42:g} {plane_asset_height:g} Z" fill="#DDE0E5"/>
-  <path d="M {plane_asset_width * 0.49:g} {plane_asset_height * 0.46:g} L {plane_asset_width * 0.22:g} {plane_asset_height * 0.66:g} L {plane_asset_width * 0.42:g} {plane_asset_height:g} Z" fill="#A8ABB3" opacity="0.84"/>
-  <path d="M {plane_asset_width * 0.49:g} {plane_asset_height * 0.46:g} L {plane_asset_width * 0.81:g} {plane_asset_height * 0.20:g}" fill="none" stroke="#B5B8BF" stroke-width="1.8"/>
-</g>
-""".strip()
-
-    add(
+    # Background
+    add_element(
         "shape",
-        name="background",
-        type="rectangle",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
+        type="rect",
+        x=0, y=0,
+        width=canvas_w, height=canvas_h,
         fill=background_color,
         line_color="none",
     )
 
-    svg_node(
-        "mountain_main",
-        100,
-        610,
-        1400,
-        170,
-        simple_svg(
-            1400,
-            170,
-            f"""
-<path d="M0 150 C98 98 154 24 240 18 C332 12 411 94 500 110 C612 130 695 96 778 120 C880 150 918 116 995 74 C1073 31 1132 -2 1217 16 C1295 32 1338 103 1400 148 L1400 170 L0 170 Z"
-      fill="{mountain_color}" opacity="0.96"/>
-""",
-        ),
-        pixel_scale=4.0,
+    # Title
+    add_textbox(
+        title.upper(),
+        x=80, y=80,
+        width=1440, height=100,
+        font="Arial", size=64, bold="true", color=title_color,
+        align="center", vertical_align="middle", single_line="true"
     )
 
-    svg_node(
-        "mountain_dark",
-        600,
-        670,
-        530,
-        110,
-        simple_svg(
-            530,
-            110,
-            f"""
-<path d="M0 110 C82 62 121 14 188 0 C250 -13 316 35 390 61 C439 79 477 92 530 83 L530 110 Z"
-      fill="{mountain_dark_color}" opacity="0.75"/>
-""",
-        ),
-        pixel_scale=4.0,
+    # Calculate Donut Chart SVG
+    donut_x = 100
+    donut_y = 230
+    donut_w = 650
+    donut_h = 650
+    cx, cy = donut_w / 2, donut_h / 2
+    r_out = 300
+    r_in = 150
+
+    total = sum(chart_data)
+    if total == 0:
+        total = 1
+    
+    svg_chart = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {donut_w} {donut_h}" width="{donut_w}" height="{donut_h}">'
+    
+    current_angle = -math.pi / 2  # Start at top
+    for val, color in zip(chart_data, colors):
+        angle = (val / total) * 2 * math.pi
+        
+        x1_out = cx + r_out * math.cos(current_angle)
+        y1_out = cy + r_out * math.sin(current_angle)
+        x2_out = cx + r_out * math.cos(current_angle + angle)
+        y2_out = cy + r_out * math.sin(current_angle + angle)
+        
+        x1_in = cx + r_in * math.cos(current_angle)
+        y1_in = cy + r_in * math.sin(current_angle)
+        x2_in = cx + r_in * math.cos(current_angle + angle)
+        y2_in = cy + r_in * math.sin(current_angle + angle)
+        
+        large_arc = 1 if angle > math.pi else 0
+        
+        path_d = (
+            f"M {x1_in} {y1_in} "
+            f"L {x1_out} {y1_out} "
+            f"A {r_out} {r_out} 0 {large_arc} 1 {x2_out} {y2_out} "
+            f"L {x2_in} {y2_in} "
+            f"A {r_in} {r_in} 0 {large_arc} 0 {x1_in} {y1_in} Z"
+        )
+        if val == total:
+            path_d = (
+                f"M {cx} {cy - r_out} "
+                f"A {r_out} {r_out} 0 1 1 {cx} {cy + r_out} "
+                f"A {r_out} {r_out} 0 1 1 {cx} {cy - r_out} "
+                f"M {cx} {cy - r_in} "
+                f"A {r_in} {r_in} 0 1 0 {cx} {cy + r_in} "
+                f"A {r_in} {r_in} 0 1 0 {cx} {cy - r_in} Z"
+            )
+        
+        svg_chart += f'<path d="{path_d}" fill="{color}" />'
+        current_angle += angle
+        
+    svg_chart += '</svg>'
+    
+    chart_el = add_element("shape", type="freeform", x=donut_x, y=donut_y, width=donut_w, height=donut_h, fill="none", line_color="none")
+    chart_el.set("svg_data", html_mod.escape(svg_chart))
+
+    # Right side horizontal bars
+    bar_x = 820
+    bar_y_start = 280
+    bar_w = 680
+    bar_h = 100
+    spacing = 130
+    
+    for i, (label, val, color) in enumerate(zip(chart_labels, chart_data, colors)):
+        y_pos = bar_y_start + i * spacing
+        
+        # Draw rounded rect for the bar
+        add_element(
+            "shape",
+            type="roundRect",
+            x=bar_x, y=y_pos,
+            width=bar_w, height=bar_h,
+            fill=color,
+            line_color="none",
+        )
+        
+        # The percentage text
+        percentage_text = f"{val:g} %"
+        add_textbox(
+            percentage_text,
+            x=bar_x + 30, y=y_pos + 10,
+            width=200, height=80,
+            font="Arial", size=56, bold="true", color=text_color,
+            align="left", vertical_align="middle", single_line="true"
+        )
+        
+        # The label text
+        add_textbox(
+            label,
+            x=bar_x + 220, y=y_pos + 25,
+            width=430, height=50,
+            font="Arial", size=26, bold="true", color=text_color,
+            align="left", vertical_align="middle", single_line="true"
+        )
+
+    # Decorative buildings
+    building_svg_left = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">'
+        f'<path d="M0 400 L0 250 L40 250 L40 180 L160 180 L160 250 L200 250 L200 400 Z" fill="#9D84FF" opacity="0.15"/>'
+        f'<rect x="20" y="200" width="160" height="200" fill="#00E5FF" opacity="0.3" rx="40"/>'
+        f'<rect x="40" y="220" width="120" height="180" fill="#FFFFFF" opacity="0.4" rx="20"/>'
+        f'<line x1="100" y1="220" x2="100" y2="400" stroke="#0099FF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="260" x2="160" y2="260" stroke="#0099FF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="300" x2="160" y2="300" stroke="#0099FF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="340" x2="160" y2="340" stroke="#0099FF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="380" x2="160" y2="380" stroke="#0099FF" stroke-width="4" opacity="0.3"/>'
+        f'</svg>'
     )
+    bldg_left = add_element("shape", type="freeform", x=0, y=550, width=180, height=350, fill="none", line_color="none")
+    bldg_left.set("svg_data", html_mod.escape(building_svg_left))
 
-    add_cloud("cloud_left", 270, 345, 255, 75, cloud_shadow_color, 0.92)
-    add_cloud("cloud_center", 490, 220, 275, 110, cloud_color, 0.95)
-    add_cloud("cloud_right", 1140, 362, 225, 70, cloud_color, 0.85)
-    add_cloud("cloud_right_small", 1030, 360, 140, 52, cloud_color, 0.65)
-
-    add_path_svg(
-        "path_top",
-        450,
-        155,
-        930,
-        330,
-        "M48 252 C-10 187 103 126 168 160 C232 194 156 308 84 277 C8 244 31 162 117 192 C214 227 241 173 255 100 C276 6 352 6 443 45 C564 97 604 151 722 142 C790 137 840 112 872 84 C888 70 899 53 908 38",
-        5,
+    building_svg_right = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 400" width="200" height="400">'
+        f'<path d="M0 400 L0 280 L40 280 L40 200 L160 200 L160 280 L200 280 L200 400 Z" fill="#9D84FF" opacity="0.15"/>'
+        f'<rect x="20" y="220" width="160" height="180" fill="#0099FF" opacity="0.3" rx="40"/>'
+        f'<rect x="40" y="240" width="120" height="160" fill="#FFFFFF" opacity="0.4" rx="20"/>'
+        f'<line x1="100" y1="240" x2="100" y2="400" stroke="#6E5BFF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="280" x2="160" y2="280" stroke="#6E5BFF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="320" x2="160" y2="320" stroke="#6E5BFF" stroke-width="4" opacity="0.3"/>'
+        f'<line x1="40" y1="360" x2="160" y2="360" stroke="#6E5BFF" stroke-width="4" opacity="0.3"/>'
+        f'</svg>'
     )
+    bldg_right = add_element("shape", type="freeform", x=1420, y=550, width=180, height=350, fill="none", line_color="none")
+    bldg_right.set("svg_data", html_mod.escape(building_svg_right))
 
-    add_path_svg(
-        "path_bottom",
-        505,
-        470,
-        600,
-        170,
-        "M0 0 C62 77 182 111 304 92 C409 76 484 95 550 170",
-        5,
-    )
-
-    add_asset_instance(
-        "envelope_left",
-        510,
-        388,
-        166,
-        118,
-        12,
-        envelope_asset_width,
-        envelope_asset_height,
-        envelope_asset_content,
-        pixel_scale=7.0,
-        inner_scale=0.96,
-    )
-
-    add_asset_instance(
-        "envelope_right",
-        988,
-        342,
-        136,
-        96,
-        -8,
-        envelope_asset_width,
-        envelope_asset_height,
-        envelope_asset_content,
-        pixel_scale=7.0,
-        inner_scale=0.94,
-    )
-
-    add_asset_instance(
-        "paper_plane",
-        1294,
-        108,
-        170,
-        102,
-        -15,
-        plane_asset_width,
-        plane_asset_height,
-        plane_asset_content,
-        pixel_scale=7.5,
-        inner_scale=0.90,
-    )
-
-    add_star("star_left", 190, 520, 92, 0.78)
-    add_star("star_top", 925, 165, 72, 0.70)
-    add_star("star_right", 1158, 592, 84, 0.72)
-
-    for dot in [
-        ("dot_01", 338, 275, 7, 0.86),
-        ("dot_02", 420, 470, 6, 0.94),
-        ("dot_03", 500, 305, 5, 0.95),
-        ("dot_04", 710, 572, 13, 0.90),
-        ("dot_05", 862, 156, 13, 0.96),
-        ("dot_06", 1037, 435, 9, 0.95),
-        ("dot_07", 1224, 362, 8, 0.88),
-        ("dot_08", 1398, 435, 8, 0.94),
-        ("dot_09", 1481, 584, 9, 0.96),
-        ("dot_10", 776, 362, 12, 0.84),
-        ("dot_11", 984, 552, 12, 0.95),
-    ]:
-        add_dot(*dot)
-
-    add_line_segment("underline_1", 226, title_underline_y, 958, title_underline_y, 6, 1.0)
-    add_line_segment("underline_2", 1018, title_underline_y, 1458, title_underline_y, 6, 1.0)
-    add_line_segment("underline_3", 902, 830, 1296, 830, 6, 0.86)
-    add_line_segment("underline_4", 674, 860, 890, 860, 6, 0.76)
-    add_line_segment("underline_5", 968, 860, 1060, 860, 6, 0.76)
-
-    textbox(
-        title_layout["source_text"],
-        x=title_x,
-        y=title_y,
-        width=title_box_width,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=max(24.0, title_layout["font_size"] - 2.0),
-        bold="true",
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        single_line="false",
-        max_lines=len(title_layout["lines"]),
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.95,
-        safety_ratio=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-    )
-
-    raw_xml = ET.tostring(
-        presentation,
-        encoding="utf-8",
-    )
-
-    xml_content = minidom.parseString(
-        raw_xml
-    ).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
+    raw_xml = ET.tostring(presentation, encoding="utf-8")
+    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
     return xml_content
 
-def generate_closing_thank_you_memorial_slide_xml(
-    closing_statement: str = "Write your closing statement",
-    title: str = "Cảm ơn quí vị đã lắng nghe",
-    subtitle: str = "Briefly elaborate on what you want to discuss. Briefly elaborate on what you want to discuss. Briefly elaborate on what you want to discuss.",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1500530855697-b586d89ba3ee"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
-    background_color: str = "#DDEEF2",
-    top_band_color: str = "#E5CAC3",
-    title_band_color: str = "#DDEEF2",
-    bottom_band_color: str = "#E5CAC3",
-    closing_statement_color: str = "#111111",
-    title_color: str = "#050505",
-    subtitle_color: str = "#111111",
-    image_overlay_color: str = "#FFFFFF",
+
+
+def generate_analysis_story_slide_xml(
+    title: str = "PHÃ‚N TÃCH & CÃ‚U CHUYá»†N",
+    badge_text: str = "BÃO CÃO",
+    chart_title: str = "KPI cÃ¡c thÃ¡ng",
+    chart_labels: list = None,
+    chart_data: list = None,
+    insights_title: str = "Nháº­n Ä‘á»‹nh chÃ­nh",
+    insights: list = None,
+    conclusion_text: str = "Káº¿t luáº­n: ÄÃ¢y lÃ  cÃ¢u káº¿t ngáº¯n gá»n, nháº¥n máº¡nh thÃ´ng Ä‘iá»‡p chÃ­nh vÃ  Ä‘á»‹nh hÆ°á»›ng tiáº¿p theo.",
+    footer_text: str = "BÃ¡o cÃ¡o dá»± Ã¡n",
+    page_number: str = "06",
+    background_color: str = "#FFFFFF",
+    primary_color: str = "#0B114F",
+    secondary_color: str = "#4B7BFF",
+    light_bg_color: str = "#EEF4FF",
+    text_color: str = "#333333"
 ) -> str:
     """
-    Generate XML for a memorial-style closing thank-you slide.
-
-    The layout uses a pale blue outer background, a centered grayscale-style
-    landscape image, a narrow closing-statement band, a large blue title band,
-    and a small subtitle band below it. Text is kept as source text with
-    reflow enabled so it can adapt when edited.
+    Generate XML for an Analysis & Story slide with a bar chart and key takeaways.
     """
+    import html as html_mod
+    import xml.etree.ElementTree as ET
+    from xml.dom import minidom
 
-    if not closing_statement.strip():
-        closing_statement = "Write your closing statement"
-    if not title.strip():
-        title = "Thank you"
-    if not subtitle.strip():
-        subtitle = "Briefly elaborate on what you want to discuss."
+    if chart_labels is None:
+        chart_labels = ["T1", "T2", "T3", "T4", "T5", "T6"]
+    if chart_data is None:
+        chart_data = [750, 1000, 1300, 800, 250, 1500]
+    if insights is None:
+        insights = [
+            "ÄÃ¢y lÃ  nháº­n Ä‘á»‹nh Ä‘áº§u tiÃªn tá»« dá»¯ liá»‡u.",
+            "ÄÃ¢y lÃ  nháº­n Ä‘á»‹nh thá»© hai, giáº£i thÃ­ch nguyÃªn nhÃ¢n hoáº·c yáº¿u tá»‘ áº£nh hÆ°á»Ÿng.",
+            "ÄÃ¢y lÃ  nháº­n Ä‘á»‹nh thá»© ba, gá»£i Ã½ hÃ nh Ä‘á»™ng hoáº·c cÆ¡ há»™i cáº£i thiá»‡n."
+        ]
 
-    canvas_width = 1600
-    canvas_height = 900
-    canvas_dpi = 120.0
-
-    def normalize_font_name(name: str) -> str:
-        return "".join(ch.lower() for ch in name if ch.isalnum())
-
-    def font_directories() -> list[Path]:
-        directories: list[Path] = []
-        windir = os.environ.get("WINDIR")
-        if windir:
-            directories.append(Path(windir) / "Fonts")
-        directories.extend(
-            [
-                Path("/usr/share/fonts"),
-                Path("/usr/local/share/fonts"),
-                Path.home() / ".fonts",
-                Path.home() / "Library/Fonts",
-                Path("/Library/Fonts"),
-            ]
-        )
-        return [directory for directory in directories if directory.exists()]
-
-    def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
-        aliases = {
-            "Times New Roman": ["timesnewroman", "times", "arial"],
-            "Arial": ["arial", "timesnewroman", "times"],
-            "Arial": ["arial", "calibri", "aptos"],
-            "Calibri": ["calibri", "arial", "aptos"],
-        }
-        normalized_names = [normalize_font_name(item) for item in aliases.get(font_name, [font_name])]
-        candidates: list[tuple[int, Path]] = []
-
-        for directory in font_directories():
-            try:
-                files = directory.rglob("*")
-            except OSError:
-                continue
-
-            for path in files:
-                if path.suffix.lower() not in {".ttf", ".otf", ".ttc"}:
-                    continue
-                stem = normalize_font_name(path.stem)
-                if not any(name in stem for name in normalized_names):
-                    continue
-
-                score = 80 if any(name == stem for name in normalized_names) else 58
-                has_bold = any(token in stem for token in ("bold", "bd", "semibold", "demi"))
-                has_italic = any(token in stem for token in ("italic", "oblique", "it"))
-
-                if bold and has_bold:
-                    score += 20
-                elif bold:
-                    score -= 8
-                elif has_bold:
-                    score -= 6
-
-                if italic and has_italic:
-                    score += 18
-                elif italic:
-                    score -= 8
-                elif has_italic:
-                    score -= 4
-
-                candidates.append((score, path))
-
-        if candidates:
-            candidates.sort(key=lambda item: item[0], reverse=True)
-            for _, path in candidates:
-                try:
-                    ImageFont.truetype(str(path), 12)
-                    return path
-                except OSError:
-                    continue
-
-        windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
-        if bold and italic:
-            fallback_paths = [
-                windows_fonts / "timesbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                windows_fonts / "arialbi.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
-            ]
-        elif italic:
-            fallback_paths = [
-                windows_fonts / "timesi.ttf",
-                windows_fonts / "ariali.ttf",
-                windows_fonts / "ariali.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
-            ]
-        elif bold:
-            fallback_paths = [
-                windows_fonts / "timesbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                windows_fonts / "arialbd.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-            ]
-        else:
-            fallback_paths = [
-                windows_fonts / "times.ttf",
-                windows_fonts / "arial.ttf",
-                windows_fonts / "arial.ttf",
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-            ]
-
-        for path in fallback_paths:
-            if not path.exists():
-                continue
-            try:
-                ImageFont.truetype(str(path), 12)
-                return path
-            except OSError:
-                continue
-
-        return _resolve_font_fallback_path(bold=bold, italic=italic)
-
-    def pt_to_canvas(point_size: float) -> float:
-        return point_size * canvas_dpi / 72.0
-
-    def load_font(font_path: Path, font_size_pt: float) -> ImageFont.FreeTypeFont:
-        return ImageFont.truetype(
-            str(font_path),
-            max(1, round(pt_to_canvas(font_size_pt))),
-        )
-
-    def measure_text_width(text: str, font_path: Path, font_size_pt: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        if hasattr(font, "getlength"):
-            return float(font.getlength(text))
-        left, _, right, _ = font.getbbox(text)
-        return float(right - left)
-
-    def measure_line_height(font_path: Path, font_size_pt: float, line_spacing: float) -> float:
-        font = load_font(font_path, font_size_pt)
-        ascent, descent = font.getmetrics()
-        return float(ascent + descent) * line_spacing
-
-    def wrap_text(text: str, font_path: Path, font_size_pt: float, max_width: float) -> list[str]:
-        def split_long_word(word: str) -> list[str]:
-            chunks: list[str] = []
-            current_chunk = ""
-            for character in word:
-                candidate = current_chunk + character
-                if (
-                    current_chunk
-                    and measure_text_width(candidate, font_path, font_size_pt) > max_width
-                ):
-                    chunks.append(current_chunk)
-                    current_chunk = character
-                else:
-                    current_chunk = candidate
-            return chunks + [current_chunk] if current_chunk else chunks or [word]
-
-        lines: list[str] = []
-        for paragraph in text.splitlines() or [text]:
-            words = paragraph.split()
-            if not words:
-                lines.append("")
-                continue
-
-            current = ""
-            for word in words:
-                if measure_text_width(word, font_path, font_size_pt) > max_width:
-                    if current:
-                        lines.append(current)
-                        current = ""
-                    chunks = split_long_word(word)
-                    lines.extend(chunks[:-1])
-                    current = chunks[-1]
-                    continue
-
-                candidate = word if not current else f"{current} {word}"
-                if not current or measure_text_width(candidate, font_path, font_size_pt) <= max_width:
-                    current = candidate
-                else:
-                    if current:
-                        lines.append(current)
-                    current = word
-
-            if current:
-                lines.append(current)
-        return lines or [""]
-
-    def fit_text(
-        text: str,
-        *,
-        font_path: Path,
-        preferred_font_size: float,
-        min_font_size: float,
-        max_width: float,
-        max_height: float,
-        line_spacing: float,
-        max_lines: int | None = None,
-    ) -> dict:
-        current_font_size = preferred_font_size
-        best_layout = None
-
-        while current_font_size >= min_font_size:
-            lines = wrap_text(text, font_path, current_font_size, max_width)
-            line_height = measure_line_height(font_path, current_font_size, line_spacing)
-            height = len(lines) * line_height
-            too_many_lines = max_lines is not None and len(lines) > max_lines
-            overflow_height = max(0.0, height - max_height)
-            score = (
-                overflow_height * 2000
-                + max(0, len(lines) - (max_lines or 999)) * 1500
-                + (preferred_font_size - current_font_size) * 10
-            )
-            layout = {
-                "source_text": text,
-                "lines": lines,
-                "font_size": current_font_size,
-                "width": max_width,
-                "height": min(height, max_height),
-                "score": score,
-            }
-
-            if best_layout is None or score < best_layout["score"]:
-                best_layout = layout
-
-            if height <= max_height and not too_many_lines:
-                return layout
-
-            break
-
-        return best_layout
-
-    statement_font_name = "Times New Roman"
-    title_font_name = "Times New Roman"
-    subtitle_font_name = "Arial"
-
-    statement_font_path = resolve_font_path(statement_font_name, bold=False, italic=False)
-    title_font_path = resolve_font_path(title_font_name, bold=False, italic=True)
-    subtitle_font_path = resolve_font_path(subtitle_font_name, bold=False, italic=False)
-
-    statement_layout = fit_text(
-        closing_statement.strip(),
-        font_path=statement_font_path,
-        preferred_font_size=24.0,
-        min_font_size=11.0,
-        max_width=1276.0,
-        max_height=84.0,
-        line_spacing=1.0,
-        max_lines=2,
-    )
-
-    title_layout = fit_text(
-        title.strip(),
-        font_path=title_font_path,
-        preferred_font_size=58.0,
-        min_font_size=24.0,
-        max_width=1240.0,
-        max_height=240.0,
-        line_spacing=0.9,
-        max_lines=3,
-    )
-
-    subtitle_layout = fit_text(
-        subtitle.strip(),
-        font_path=subtitle_font_path,
-        preferred_font_size=14.0,
-        min_font_size=8.0,
-        max_width=1180.0,
-        max_height=72.0,
-        line_spacing=1.0,
-        max_lines=2,
-    )
-
-    image_x = 30.0
-    image_y = 30.0
-    image_w = 1540.0
-    image_h = 840.0
-
-    # The bands grow with the measured text.  The default values preserve the
-    # original visual rhythm, while longer content gets more room before the
-    # font is reduced.
-    band_x = 130.0
-    band_w = 1340.0
-    content_bottom = image_y + image_h - 28.0
-
-    statement_band_x = band_x
-    statement_band_y = 214.0
-    statement_band_w = band_w
-    statement_band_h = max(
-        76.0,
-        min(124.0, statement_layout["height"] + 28.0),
-    )
-
-    title_band_x = band_x
-    title_band_y = statement_band_y + statement_band_h + 53.0
-    title_band_w = band_w
-    title_band_h = max(
-        205.0,
-        min(290.0, title_layout["height"] + 64.0),
-    )
-
-    subtitle_band_x = band_x
-    subtitle_band_y = title_band_y + title_band_h + 54.0
-    subtitle_band_w = band_w
-    subtitle_band_h = max(
-        75.0,
-        min(
-            140.0,
-            subtitle_layout["height"] + 34.0,
-            content_bottom - subtitle_band_y,
-        ),
-    )
+    canvas_w = 1600
+    canvas_h = 900
 
     presentation = ET.Element(
         "presentation",
         {
             "schemaVersion": "1.0",
-            "width": str(canvas_width),
-            "height": str(canvas_height),
+            "width": str(canvas_w),
+            "height": str(canvas_h),
             "slideWidthInches": "13.333",
             "slideHeightInches": "7.5",
         },
     )
 
-    slide = ET.SubElement(presentation, "slide", {"background": background_color})
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        {"background": background_color},
+    )
 
-    def add(tag: str, **attrs):
+    def add_element(tag, **attrs):
         return ET.SubElement(
             slide,
             tag,
-            {key: str(value) for key, value in attrs.items() if value is not None},
+            {key: str(value) for key, value in attrs.items()},
         )
 
-    def textbox(text: str, **attrs):
-        node = add("textbox", **attrs)
+    def add_textbox(text, **attrs):
+        node = add_element("textbox", **attrs)
         node.text = text
         return node
 
-    add(
+    # Background shape
+    add_element(
         "shape",
         type="rect",
-        x=0,
-        y=0,
-        width=canvas_width,
-        height=canvas_height,
+        x=0, y=0,
+        width=canvas_w, height=canvas_h,
         fill=background_color,
         line_color="none",
     )
 
-    add(
-        "image",
-        src=image_url,
-        x=image_x,
-        y=image_y,
-        width=image_w,
-        height=image_h,
-        fit="cover",
-        crop_x=0.52,
-        crop_y=0.48,
-        grayscale="true",
+    # Decorative swooshes on bottom right
+    svg_bg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">'
+        f'<path d="M1200 900 Q1250 700 1600 550 L1600 900 Z" fill="{light_bg_color}" opacity="0.8"/>'
+        f'<path d="M1350 900 Q1450 750 1600 650 L1600 900 Z" fill="{secondary_color}" opacity="0.9"/>'
+        f'<path d="M1450 900 Q1500 800 1600 700 L1600 900 Z" fill="{primary_color}"/>'
+        f'</svg>'
+    )
+    svg_bg_el = add_element("shape", type="freeform", x=0, y=0, width=1600, height=900, fill="none", line_color="none")
+    svg_bg_el.set("svg_data", html_mod.escape(svg_bg))
+
+    # Badge
+    badge_w = 140
+    badge_h = 40
+    add_element(
+        "shape",
+        type="roundRect",
+        x=80, y=80,
+        width=badge_w, height=badge_h,
+        fill=secondary_color,
+        line_color="none",
+    )
+    
+    badge_icon = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">'
+        f'<path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" fill="none" stroke="#FFFFFF" stroke-width="2"/>'
+        f'<path d="M14 2V8H20" fill="none" stroke="#FFFFFF" stroke-width="2"/>'
+        f'<path d="M8 13H16M8 17H16M8 9H10" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>'
+        f'</svg>'
+    )
+    badge_icon_el = add_element("shape", type="freeform", x=95, y=90, width=20, height=20, fill="none", line_color="none")
+    badge_icon_el.set("svg_data", html_mod.escape(badge_icon))
+    
+    add_textbox(
+        badge_text,
+        x=120, y=80,
+        width=badge_w - 40, height=badge_h,
+        font="Arial", size=16, bold="true", color="#FFFFFF",
+        align="left", vertical_align="middle", single_line="true"
     )
 
-    add(
+    # Title
+    add_textbox(
+        title,
+        x=80, y=140,
+        width=1400, height=80,
+        font="Arial", size=56, bold="true", color=primary_color,
+        align="left", vertical_align="middle", single_line="true"
+    )
+
+    # Title underline
+    add_element("shape", type="rect", x=80, y=230, width=120, height=6, fill=secondary_color, line_color="none")
+    add_element("shape", type="rect", x=200, y=230, width=150, height=6, fill="#E0E0E0", line_color="none")
+
+    # Left Panel - Chart Card
+    add_element(
         "shape",
-        type="rect",
-        x=image_x,
-        y=image_y,
-        width=image_w,
-        height=image_h,
-        fill=image_overlay_color,
-        opacity=0.08,
+        type="roundRect",
+        x=80, y=280,
+        width=680, height=500,
+        fill="#FFFFFF",
+        line_color="#E0E0E0",
+    )
+    
+    add_element("shape", type="oval", x=300, y=320, width=20, height=20, fill=secondary_color, line_color="none")
+    add_textbox(
+        chart_title,
+        x=330, y=310,
+        width=300, height=40,
+        font="Arial", size=20, color=text_color,
+        align="left", vertical_align="middle", single_line="true"
+    )
+
+    # Draw Bar Chart SVG
+    chart_w = 560
+    chart_h = 320
+    chart_x = 120
+    chart_y = 380
+
+    svg_chart = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {chart_w} {chart_h}" width="{chart_w}" height="{chart_h}">'
+    max_val = 2000
+    y_steps = [0, 500, 1000, 1500, 2000]
+    
+    # Grid lines and Y labels
+    for step in y_steps:
+        y_pos = chart_h - (step / max_val * (chart_h - 40)) - 30
+        svg_chart += f'<text x="40" y="{y_pos+5}" font-family="Arial" font-size="14" fill="#666666" text-anchor="end">{step:,}</text>'.replace(",", ".")
+        svg_chart += f'<line x1="50" y1="{y_pos}" x2="{chart_w}" y2="{y_pos}" stroke="#EEEEEE" stroke-width="1"/>'
+
+    # Bars and X labels
+    bar_width = 45
+    spacing = (chart_w - 60) / len(chart_labels)
+    for i, (label, val) in enumerate(zip(chart_labels, chart_data)):
+        x_center = 60 + i * spacing + spacing / 2
+        bar_h = val / max_val * (chart_h - 40)
+        y_pos = chart_h - bar_h - 30
+        svg_chart += f'<rect x="{x_center - bar_width/2}" y="{y_pos}" width="{bar_width}" height="{bar_h}" fill="{secondary_color}" rx="4"/>'
+        svg_chart += f'<text x="{x_center}" y="{chart_h}" font-family="Arial" font-size="16" fill="#333333" text-anchor="middle">{label}</text>'
+
+    svg_chart += '</svg>'
+    chart_el = add_element("shape", type="freeform", x=chart_x, y=chart_y, width=chart_w, height=chart_h, fill="none", line_color="none")
+    chart_el.set("svg_data", html_mod.escape(svg_chart))
+
+    # Right Panel - Insights Card
+    add_element(
+        "shape",
+        type="roundRect",
+        x=800, y=280,
+        width=720, height=500,
+        fill=light_bg_color,
         line_color="none",
     )
 
-    add(
-        "shape",
-        type="rect",
-        x=statement_band_x,
-        y=statement_band_y,
-        width=statement_band_w,
-        height=statement_band_h,
-        fill=top_band_color,
-        opacity=0.96,
-        line_color="none",
+    # Insights Title & Icon
+    bulb_icon = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="60" height="60">'
+        f'<circle cx="24" cy="24" r="24" fill="#D2E3FF"/>'
+        f'<path d="M24 12C19 12 15 16 15 21C15 24 17 26.5 19 28V31C19 32.1 19.9 33 21 33H27C28.1 33 29 32.1 29 31V28C31 26.5 33 24 33 21C33 16 29 12 24 12ZM21 35H27V36C27 37.1 26.1 38 25 38H23C21.9 38 21 37.1 21 36V35Z" fill="{secondary_color}"/>'
+        f'</svg>'
+    )
+    bulb_el = add_element("shape", type="freeform", x=840, y=310, width=60, height=60, fill="none", line_color="none")
+    bulb_el.set("svg_data", html_mod.escape(bulb_icon))
+
+    add_textbox(
+        insights_title,
+        x=920, y=320,
+        width=500, height=40,
+        font="Arial", size=24, bold="true", color="#111111",
+        align="left", vertical_align="middle", single_line="true"
     )
 
-    add(
-        "shape",
-        type="rect",
-        x=title_band_x,
-        y=title_band_y,
-        width=title_band_w,
-        height=title_band_h,
-        fill=title_band_color,
-        opacity=0.98,
-        line_color="none",
+    # Bullet points
+    bullet_y = 400
+    for insight in insights:
+        # Bullet
+        add_element("shape", type="oval", x=850, y=bullet_y + 8, width=8, height=8, fill="#111111", line_color="none")
+        add_textbox(
+            insight,
+            x=880, y=bullet_y,
+            width=580, height=60,
+            font="Arial", size=18, color="#333333",
+            align="left", vertical_align="top", single_line="false", max_lines=2
+        )
+        bullet_y += 70
+
+    # Separator Line
+    add_element("shape", type="rect", x=840, y=630, width=640, height=2, fill="#C0D5FF", line_color="none")
+
+    # Conclusion
+    check_icon = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30">'
+        f'<circle cx="12" cy="12" r="11" fill="none" stroke="{text_color}" stroke-width="2"/>'
+        f'<path d="M7 12L10 15L17 8" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+        f'</svg>'
+    )
+    check_el = add_element("shape", type="freeform", x=840, y=670, width=30, height=30, fill="none", line_color="none")
+    check_el.set("svg_data", html_mod.escape(check_icon))
+
+    add_textbox(
+        conclusion_text,
+        x=880, y=665,
+        width=580, height=80,
+        font="Arial", size=18, bold="true", color="#111111",
+        align="left", vertical_align="top", single_line="false", max_lines=3
     )
 
-    add(
-        "shape",
-        type="rect",
-        x=subtitle_band_x,
-        y=subtitle_band_y,
-        width=subtitle_band_w,
-        height=subtitle_band_h,
-        fill=bottom_band_color,
-        opacity=0.96,
-        line_color="none",
+    # Footer Area
+    add_element("shape", type="rect", x=0, y=830, width=1600, height=70, fill=primary_color, line_color="none")
+    add_textbox(
+        footer_text,
+        x=80, y=830,
+        width=400, height=70,
+        font="Arial", size=18, color="#FFFFFF",
+        align="left", vertical_align="middle", single_line="true"
     )
-
-    textbox(
-        statement_layout["source_text"],
-        x=statement_band_x + 42,
-        y=statement_band_y + (statement_band_h - statement_layout["height"]) / 2,
-        width=statement_band_w - 84,
-        height=statement_layout["height"],
-        font=statement_font_name,
-        font_path=str(statement_font_path),
-        size=statement_layout["font_size"],
-        min_font_size=11.0,
-        color=closing_statement_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    textbox(
-        title_layout["source_text"],
-        x=title_band_x + 50,
-        y=title_band_y + (title_band_h - title_layout["height"]) / 2,
-        width=title_band_w - 100,
-        height=title_layout["height"],
-        font=title_font_name,
-        font_path=str(title_font_path),
-        size=title_layout["font_size"],
-        min_font_size=24.0,
-        color=title_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="true",
-        single_line="false",
-        max_lines=3,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=0.9,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
-    )
-
-    textbox(
-        subtitle_layout["source_text"],
-        x=subtitle_band_x + 62,
-        y=subtitle_band_y + (subtitle_band_h - subtitle_layout["height"]) / 2,
-        width=subtitle_band_w - 124,
-        height=subtitle_layout["height"],
-        font=subtitle_font_name,
-        font_path=str(subtitle_font_path),
-        size=subtitle_layout["font_size"],
-        min_font_size=8.0,
-        color=subtitle_color,
-        align="center",
-        vertical_align="middle",
-        bold="false",
-        italic="false",
-        single_line="false",
-        max_lines=2,
-        overflow="clip",
-        reflow_on_resize="true",
-        line_spacing=1.0,
-        margin_left=0,
-        margin_right=0,
-        margin_top=0,
-        margin_bottom=0,
-        safety_ratio=1.0,
+    add_textbox(
+        page_number,
+        x=1470, y=830,
+        width=50, height=70,
+        font="Arial", size=18, color="#FFFFFF",
+        align="right", vertical_align="middle", single_line="true"
     )
 
     raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(
-        indent="  ",
-        encoding="UTF-8",
-    ).decode("utf-8")
-
+    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
     return xml_content
+
+
+
+
+
+def generate_dark_multi_line_chart_slide_xml(**kwargs) -> str:
+    """Generates a dark multi line slide."""
+    title = kwargs.get('title', 'Slide Title')
+    return """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<presentation schemaVersion=\"1.0\" width=\"810\" height=\"455\" slideWidthInches=\"13.333\" slideHeightInches=\"7.5\">
+  <slide background=\"#1E3052\">
+    <shape type=\"rect\" x=\"0\" y=\"0\" width=\"810\" height=\"455\" fill=\"#1E3052\" line_color=\"none\"/>
+    <textbox x=\"40\" y=\"25\" width=\"500\" height=\"42\" font=\"Arial\" size=\"28\" bold=\"true\" color=\"#FFFFFF\" single_line=\"true\" min_font_size=\"22\" overflow=\"clip\">SALES RATE FOR 7 YEARS</textbox>
+    <shape type=\"freeform\" x=\"0\" y=\"0\" width=\"810\" height=\"455\" fill=\"none\" line_color=\"none\" svg_data=\"&amp;lt;svg xmlns=&amp;quot;http://www.w3.org/2000/svg&amp;quot; viewBox=&amp;quot;0 0 810 455&amp;quot; width=&amp;quot;810&amp;quot; height=&amp;quot;455&amp;quot;&amp;gt;&amp;lt;line x1=&amp;quot;60&amp;quot; y1=&amp;quot;355.0&amp;quot; x2=&amp;quot;770&amp;quot; y2=&amp;quot;355.0&amp;quot; stroke=&amp;quot;#2A4468&amp;quot; stroke-width=&amp;quot;0.5&amp;quot; stroke-dasharray=&amp;quot;4,3&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;50&amp;quot; y=&amp;quot;355.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;0&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;60&amp;quot; y1=&amp;quot;286.2&amp;quot; x2=&amp;quot;770&amp;quot; y2=&amp;quot;286.2&amp;quot; stroke=&amp;quot;#2A4468&amp;quot; stroke-width=&amp;quot;0.5&amp;quot; stroke-dasharray=&amp;quot;4,3&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;50&amp;quot; y=&amp;quot;286.2&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;10&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;60&amp;quot; y1=&amp;quot;217.5&amp;quot; x2=&amp;quot;770&amp;quot; y2=&amp;quot;217.5&amp;quot; stroke=&amp;quot;#2A4468&amp;quot; stroke-width=&amp;quot;0.5&amp;quot; stroke-dasharray=&amp;quot;4,3&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;50&amp;quot; y=&amp;quot;217.5&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;20&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;60&amp;quot; y1=&amp;quot;148.8&amp;quot; x2=&amp;quot;770&amp;quot; y2=&amp;quot;148.8&amp;quot; stroke=&amp;quot;#2A4468&amp;quot; stroke-width=&amp;quot;0.5&amp;quot; stroke-dasharray=&amp;quot;4,3&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;50&amp;quot; y=&amp;quot;148.8&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;30&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;60&amp;quot; y1=&amp;quot;80.0&amp;quot; x2=&amp;quot;770&amp;quot; y2=&amp;quot;80.0&amp;quot; stroke=&amp;quot;#2A4468&amp;quot; stroke-width=&amp;quot;0.5&amp;quot; stroke-dasharray=&amp;quot;4,3&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;50&amp;quot; y=&amp;quot;80.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;40&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;60.0&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2016&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;178.3&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2017&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;296.7&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2018&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;415.0&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2019&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;533.3&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2020&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;651.7&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2021&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;770.0&amp;quot; y=&amp;quot;375&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;#8AABC4&amp;quot;&amp;gt;2022&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;60&amp;quot; y1=&amp;quot;355&amp;quot; x2=&amp;quot;770&amp;quot; y2=&amp;quot;355&amp;quot; stroke=&amp;quot;#4A6A8A&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;polyline points=&amp;quot;60.0,286.2 178.3,114.4 296.7,251.9 415.0,251.9 533.3,162.5 651.7,114.4 770.0,286.2&amp;quot; fill=&amp;quot;none&amp;quot; stroke=&amp;quot;#FFD700&amp;quot; stroke-width=&amp;quot;2.5&amp;quot; stroke-linejoin=&amp;quot;round&amp;quot; stroke-linecap=&amp;quot;round&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;60.0&amp;quot; cy=&amp;quot;286.2&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;178.3&amp;quot; cy=&amp;quot;114.4&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;296.7&amp;quot; cy=&amp;quot;251.9&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;415.0&amp;quot; cy=&amp;quot;251.9&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;533.3&amp;quot; cy=&amp;quot;162.5&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;651.7&amp;quot; cy=&amp;quot;114.4&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;770.0&amp;quot; cy=&amp;quot;286.2&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;polyline points=&amp;quot;60.0,224.4 178.3,176.2 296.7,183.1 415.0,286.2 533.3,114.4 651.7,148.8 770.0,162.5&amp;quot; fill=&amp;quot;none&amp;quot; stroke=&amp;quot;#FF6B6B&amp;quot; stroke-width=&amp;quot;2.5&amp;quot; stroke-linejoin=&amp;quot;round&amp;quot; stroke-linecap=&amp;quot;round&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;60.0&amp;quot; cy=&amp;quot;224.4&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;178.3&amp;quot; cy=&amp;quot;176.2&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;296.7&amp;quot; cy=&amp;quot;183.1&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;415.0&amp;quot; cy=&amp;quot;286.2&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;533.3&amp;quot; cy=&amp;quot;114.4&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;651.7&amp;quot; cy=&amp;quot;148.8&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;770.0&amp;quot; cy=&amp;quot;162.5&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;50&amp;quot; cy=&amp;quot;410&amp;quot; r=&amp;quot;6&amp;quot; fill=&amp;quot;#FFD700&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;62&amp;quot; y=&amp;quot;410&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; fill=&amp;quot;#FFFFFF&amp;quot;&amp;gt;Product 01&amp;lt;/text&amp;gt;
+&amp;lt;circle cx=&amp;quot;190&amp;quot; cy=&amp;quot;410&amp;quot; r=&amp;quot;6&amp;quot; fill=&amp;quot;#FF6B6B&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;202&amp;quot; y=&amp;quot;410&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;11&amp;quot; fill=&amp;quot;#FFFFFF&amp;quot;&amp;gt;Product 02&amp;lt;/text&amp;gt;&amp;lt;/svg&amp;gt;\"/>
+    <textbox x=\"470\" y=\"400\" width=\"310\" height=\"40\" font=\"Arial\" size=\"9\" color=\"#8AABC4\" single_line=\"false\" max_lines=\"3\" min_font_size=\"7\" overflow=\"clip\" line_spacing=\"1.3\">A business model is nothing more than a blueprint that explains how a company aims to make money</textbox>
+  </slide>
+</presentation>
+"""
+
+def generate_line_chart_report_slide_xml(**kwargs) -> str:
+    """Generates a line chart report slide."""
+    title = kwargs.get('title', 'Slide Title')
+    return """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<presentation schemaVersion=\"1.0\" width=\"810\" height=\"455\" slideWidthInches=\"13.333\" slideHeightInches=\"7.5\">
+  <slide background=\"#F5F9F9\">
+    <shape type=\"rect\" x=\"0\" y=\"0\" width=\"810\" height=\"455\" fill=\"#F5F9F9\" line_color=\"none\"/>
+    <textbox x=\"80\" y=\"15\" width=\"650\" height=\"40\" font=\"Arial\" size=\"26\" bold=\"true\" color=\"#0D7377\" align=\"center\" single_line=\"true\" min_font_size=\"20\" overflow=\"clip\">Repeat Order Report Graph</textbox>
+    <textbox x=\"80\" y=\"55\" width=\"650\" height=\"55\" font=\"Arial\" size=\"10\" color=\"#555555\" align=\"center\" single_line=\"false\" max_lines=\"3\" min_font_size=\"8\" overflow=\"clip\" line_spacing=\"1.3\">A repeat order report graph helps businesses track customer loyalty and sales data patterns.</textbox>
+    <shape type=\"freeform\" x=\"0\" y=\"0\" width=\"810\" height=\"455\" fill=\"none\" line_color=\"none\" svg_data=\"&amp;lt;svg xmlns=&amp;quot;http://www.w3.org/2000/svg&amp;quot; viewBox=&amp;quot;0 0 810 455&amp;quot; width=&amp;quot;810&amp;quot; height=&amp;quot;455&amp;quot;&amp;gt;&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;360.0&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;360.0&amp;quot; stroke=&amp;quot;#E0EDED&amp;quot; stroke-width=&amp;quot;0.5&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;47&amp;quot; y=&amp;quot;360.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;0&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;314.0&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;314.0&amp;quot; stroke=&amp;quot;#E0EDED&amp;quot; stroke-width=&amp;quot;0.5&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;47&amp;quot; y=&amp;quot;314.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;6&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;268.0&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;268.0&amp;quot; stroke=&amp;quot;#E0EDED&amp;quot; stroke-width=&amp;quot;0.5&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;47&amp;quot; y=&amp;quot;268.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;12&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;222.0&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;222.0&amp;quot; stroke=&amp;quot;#E0EDED&amp;quot; stroke-width=&amp;quot;0.5&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;47&amp;quot; y=&amp;quot;222.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;18&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;176.0&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;176.0&amp;quot; stroke=&amp;quot;#E0EDED&amp;quot; stroke-width=&amp;quot;0.5&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;47&amp;quot; y=&amp;quot;176.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;24&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;130.0&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;130.0&amp;quot; stroke=&amp;quot;#E0EDED&amp;quot; stroke-width=&amp;quot;0.5&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;47&amp;quot; y=&amp;quot;130.0&amp;quot; text-anchor=&amp;quot;end&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;30&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;55.0&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Jan&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;120.9&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Feb&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;186.8&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Mar&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;252.7&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Apr&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;318.6&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;May&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;384.5&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Jun&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;450.5&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Jul&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;516.4&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Aug&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;582.3&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Sep&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;648.2&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Oct&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;714.1&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Nov&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;780.0&amp;quot; y=&amp;quot;376&amp;quot; text-anchor=&amp;quot;middle&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;Dec&amp;lt;/text&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;130&amp;quot; x2=&amp;quot;55&amp;quot; y2=&amp;quot;360&amp;quot; stroke=&amp;quot;#0D7377&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;line x1=&amp;quot;55&amp;quot; y1=&amp;quot;360&amp;quot; x2=&amp;quot;780&amp;quot; y2=&amp;quot;360&amp;quot; stroke=&amp;quot;#0D7377&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;polyline points=&amp;quot;55.0,321.7 120.9,344.7 186.8,260.3 252.7,245.0 318.6,260.3 384.5,214.3 450.5,321.7 516.4,321.7 582.3,291.0 648.2,176.0 714.1,268.0 780.0,206.7&amp;quot; fill=&amp;quot;none&amp;quot; stroke=&amp;quot;#0D7377&amp;quot; stroke-width=&amp;quot;2.0&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;55.0&amp;quot; cy=&amp;quot;321.7&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;120.9&amp;quot; cy=&amp;quot;344.7&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;186.8&amp;quot; cy=&amp;quot;260.3&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;252.7&amp;quot; cy=&amp;quot;245.0&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;318.6&amp;quot; cy=&amp;quot;260.3&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;384.5&amp;quot; cy=&amp;quot;214.3&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;450.5&amp;quot; cy=&amp;quot;321.7&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;516.4&amp;quot; cy=&amp;quot;321.7&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;582.3&amp;quot; cy=&amp;quot;291.0&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;648.2&amp;quot; cy=&amp;quot;176.0&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;714.1&amp;quot; cy=&amp;quot;268.0&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;circle cx=&amp;quot;780.0&amp;quot; cy=&amp;quot;206.7&amp;quot; r=&amp;quot;5.0&amp;quot; fill=&amp;quot;#0D7377&amp;quot;/&amp;gt;
+&amp;lt;rect x=&amp;quot;345.0&amp;quot; y=&amp;quot;108&amp;quot; width=&amp;quot;10&amp;quot; height=&amp;quot;10&amp;quot; fill=&amp;quot;#0D7377&amp;quot; rx=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;359.0&amp;quot; y=&amp;quot;114&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#0D7377&amp;quot;&amp;gt;2026&amp;lt;/text&amp;gt;&amp;lt;/svg&amp;gt;\"/>
+    <shape type=\"rounded_rectangle\" x=\"40\" y=\"385\" width=\"200\" height=\"50\" fill=\"#FFFFFF\" line_color=\"#0D7377\" line_width=\"1\"/>
+    <textbox x=\"48\" y=\"390\" width=\"184\" height=\"40\" font=\"Arial\" size=\"13\" bold=\"true\" color=\"#0D7377\" align=\"center\" vertical_align=\"middle\" single_line=\"false\" max_lines=\"2\" min_font_size=\"10\" overflow=\"clip\">October Is Peak</textbox>
+    <shape type=\"rounded_rectangle\" x=\"255\" y=\"385\" width=\"200\" height=\"50\" fill=\"#FFFFFF\" line_color=\"#0D7377\" line_width=\"1\"/>
+    <textbox x=\"263\" y=\"390\" width=\"184\" height=\"40\" font=\"Arial\" size=\"13\" bold=\"true\" color=\"#0D7377\" align=\"center\" vertical_align=\"middle\" single_line=\"false\" max_lines=\"2\" min_font_size=\"10\" overflow=\"clip\">+40% From Last Year</textbox>
+  </slide>
+</presentation>
+"""
+
+def generate_modern_pie_chart_slide_xml(**kwargs) -> str:
+    """Generates a pie chart slide."""
+    title = kwargs.get('title', 'Slide Title')
+    return """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<presentation schemaVersion=\"1.0\" width=\"810\" height=\"455\" slideWidthInches=\"13.333\" slideHeightInches=\"7.5\">
+  <slide background=\"#FFFFFF\">
+    <shape type=\"rect\" x=\"0\" y=\"0\" width=\"810\" height=\"455\" fill=\"#FFFFFF\" line_color=\"none\"/>
+    <textbox x=\"40\" y=\"25\" width=\"400\" height=\"50\" font=\"Arial\" size=\"32\" bold=\"true\" color=\"#111111\" single_line=\"true\" min_font_size=\"24\" overflow=\"clip\">Budget Pie Chart</textbox>
+    <textbox x=\"40\" y=\"70\" width=\"350\" height=\"28\" font=\"Arial\" size=\"16\" color=\"#444444\" single_line=\"true\" min_font_size=\"12\" overflow=\"clip\">Monthly Budget</textbox>
+    <shape type=\"freeform\" x=\"0\" y=\"0\" width=\"810\" height=\"455\" fill=\"none\" line_color=\"none\" svg_data=\"&amp;lt;svg xmlns=&amp;quot;http://www.w3.org/2000/svg&amp;quot; viewBox=&amp;quot;0 0 810 455&amp;quot; width=&amp;quot;810&amp;quot; height=&amp;quot;455&amp;quot;&amp;gt;&amp;lt;path d=&amp;quot;M 230,255 L 230.00,125.00 A 130,130 0 1 1 176.00,373.25 Z&amp;quot; fill=&amp;quot;#6366F1&amp;quot; stroke=&amp;quot;white&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;385.0&amp;quot; y=&amp;quot;288.7&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#555555&amp;quot;&amp;gt;Food&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;312.6&amp;quot; y=&amp;quot;273.0&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;white&amp;quot;&amp;gt;56.8%&amp;lt;/text&amp;gt;
+&amp;lt;path d=&amp;quot;M 230,255 L 176.00,373.25 A 130,130 0 0 1 105.27,218.37 Z&amp;quot; fill=&amp;quot;#FB923C&amp;quot; stroke=&amp;quot;white&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;85.7&amp;quot; y=&amp;quot;320.9&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#555555&amp;quot;&amp;gt;Shelter&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;153.1&amp;quot; y=&amp;quot;290.1&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;white&amp;quot;&amp;gt;22.7%&amp;lt;/text&amp;gt;
+&amp;lt;path d=&amp;quot;M 230,255 L 105.27,218.37 A 130,130 0 0 1 159.72,145.64 Z&amp;quot; fill=&amp;quot;#F87171&amp;quot; stroke=&amp;quot;white&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;103.0&amp;quot; y=&amp;quot;160.0&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#555555&amp;quot;&amp;gt;Education&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;162.4&amp;quot; y=&amp;quot;204.4&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;white&amp;quot;&amp;gt;11.4%&amp;lt;/text&amp;gt;
+&amp;lt;path d=&amp;quot;M 230,255 L 159.72,145.64 A 130,130 0 0 1 230.00,125.00 Z&amp;quot; fill=&amp;quot;#34D399&amp;quot; stroke=&amp;quot;white&amp;quot; stroke-width=&amp;quot;1&amp;quot;/&amp;gt;
+&amp;lt;text x=&amp;quot;185.3&amp;quot; y=&amp;quot;102.8&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;9&amp;quot; fill=&amp;quot;#555555&amp;quot;&amp;gt;Savings&amp;lt;/text&amp;gt;
+&amp;lt;text x=&amp;quot;206.2&amp;quot; y=&amp;quot;173.9&amp;quot; text-anchor=&amp;quot;middle&amp;quot; dominant-baseline=&amp;quot;central&amp;quot; font-family=&amp;quot;Arial&amp;quot; font-size=&amp;quot;10&amp;quot; font-weight=&amp;quot;bold&amp;quot; fill=&amp;quot;white&amp;quot;&amp;gt;9.1%&amp;lt;/text&amp;gt;&amp;lt;/svg&amp;gt;\"/>
+    <shape type=\"rounded_rectangle\" x=\"470\" y=\"130\" width=\"12\" height=\"32\" fill=\"#6366F1\" line_color=\"none\"/>
+    <textbox x=\"492\" y=\"128\" width=\"280\" height=\"22\" font=\"Arial\" size=\"14\" bold=\"true\" color=\"#111111\" single_line=\"true\" min_font_size=\"11\" overflow=\"clip\">Food</textbox>
+    <textbox x=\"492\" y=\"148\" width=\"280\" height=\"36\" font=\"Arial\" size=\"11\" color=\"#666666\" single_line=\"false\" max_lines=\"2\" min_font_size=\"9\" overflow=\"clip\" line_spacing=\"1.15\">Briefly elaborate on what you want to discuss.</textbox>
+    <shape type=\"rounded_rectangle\" x=\"470\" y=\"195\" width=\"12\" height=\"32\" fill=\"#FB923C\" line_color=\"none\"/>
+    <textbox x=\"492\" y=\"193\" width=\"280\" height=\"22\" font=\"Arial\" size=\"14\" bold=\"true\" color=\"#111111\" single_line=\"true\" min_font_size=\"11\" overflow=\"clip\">Shelter</textbox>
+    <textbox x=\"492\" y=\"213\" width=\"280\" height=\"36\" font=\"Arial\" size=\"11\" color=\"#666666\" single_line=\"false\" max_lines=\"2\" min_font_size=\"9\" overflow=\"clip\" line_spacing=\"1.15\">Briefly elaborate on what you want to discuss.</textbox>
+    <shape type=\"rounded_rectangle\" x=\"470\" y=\"260\" width=\"12\" height=\"32\" fill=\"#F87171\" line_color=\"none\"/>
+    <textbox x=\"492\" y=\"258\" width=\"280\" height=\"22\" font=\"Arial\" size=\"14\" bold=\"true\" color=\"#111111\" single_line=\"true\" min_font_size=\"11\" overflow=\"clip\">Education</textbox>
+    <textbox x=\"492\" y=\"278\" width=\"280\" height=\"36\" font=\"Arial\" size=\"11\" color=\"#666666\" single_line=\"false\" max_lines=\"2\" min_font_size=\"9\" overflow=\"clip\" line_spacing=\"1.15\">Briefly elaborate on what you want to discuss.</textbox>
+    <shape type=\"rounded_rectangle\" x=\"470\" y=\"325\" width=\"12\" height=\"32\" fill=\"#34D399\" line_color=\"none\"/>
+    <textbox x=\"492\" y=\"323\" width=\"280\" height=\"22\" font=\"Arial\" size=\"14\" bold=\"true\" color=\"#111111\" single_line=\"true\" min_font_size=\"11\" overflow=\"clip\">Savings</textbox>
+    <textbox x=\"492\" y=\"343\" width=\"280\" height=\"36\" font=\"Arial\" size=\"11\" color=\"#666666\" single_line=\"false\" max_lines=\"2\" min_font_size=\"9\" overflow=\"clip\" line_spacing=\"1.15\">Briefly elaborate on what you want to discuss.</textbox>
+    <textbox x=\"40\" y=\"420\" width=\"300\" height=\"22\" font=\"Arial\" size=\"11\" color=\"#888888\" single_line=\"true\" overflow=\"clip\">www.reallygreatsite.com</textbox>
+  </slide>
+</presentation>
+"""
+
+
+
