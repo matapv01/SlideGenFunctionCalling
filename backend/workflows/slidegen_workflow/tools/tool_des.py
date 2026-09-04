@@ -3755,7 +3755,7 @@ def get_tool_by_name(name: str):
     """Get a specific tool by name."""
     return TOOL_MAP.get(name)
 
-def execute_tool(tool_call: dict):
+def execute_tool(tool_call: dict, raise_on_error: bool = False):
     """Execute a tool call with the provided arguments."""
     name = tool_call.get("name")
     args = tool_call.get("arguments", {})
@@ -3765,8 +3765,12 @@ def execute_tool(tool_call: dict):
             result = TOOL_MAP[name].invoke(args)
             return str(result)
         except Exception as e:
+            if raise_on_error:
+                raise e
             print(f"Error executing tool '{name}': {e}")
             return None
+        if raise_on_error:
+            raise ValueError(f"Tool '{name}' not found in TOOL_MAP.")
         print(f"Tool '{name}' not found.")
         return None
 
@@ -3815,9 +3819,15 @@ def execute_tool_plan(tool_calls: list, tool_lookup: dict = None) -> tuple:
     )
 
     print(f"  🎨 [RENDER HTML] Executing tool '{tool_name}' to generate slide HTML...")
-    html_out = execute_tool(final_tool_call)
+    try:
+        html_out = execute_tool(final_tool_call, raise_on_error=True)
+    except Exception as e:
+        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render HTML: {e}")
+        raise ValueError(f"Tool '{tool_name}' execution error: {e}")
+
     if html_out:
         print(f"  ✅ [SUCCESS] Tool '{tool_name}' rendered HTML successfully ({len(html_out)} bytes).")
     else:
-        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render HTML.")
+        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render HTML (returned empty).")
+        raise ValueError(f"Tool '{tool_name}' returned empty content.")
     return html_out, final_tool_call, search_history

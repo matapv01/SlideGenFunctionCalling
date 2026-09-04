@@ -4,7 +4,6 @@ import os
 from playwright.async_api import async_playwright
 from backend.domain.ports.capture_provider import CaptureProvider
 from backend.config import BROWSER_VIEWPORT_WIDTH, BROWSER_VIEWPORT_HEIGHT
-import img2pdf
 from PIL import Image
 import uuid
 
@@ -80,13 +79,21 @@ class PlaywrightCaptureProvider(CaptureProvider):
 
     # --- Helper Functions (Private) ---
     def _convert_image_to_pdf(self, image_path: str, pdf_path: str):
-            with Image.open(image_path) as img:
-                if img.mode != 'RGB': img = img.convert('RGB')
-                pdf_bytes = img2pdf.convert(image_path)
-                with open(pdf_path, 'wb') as f: f.write(pdf_bytes)
+        try:
+            import img2pdf
+        except ImportError:
+            raise ImportError("Vui lòng cài đặt img2pdf: pip install img2pdf")
+        with Image.open(image_path) as img:
+            if img.mode != 'RGB': img = img.convert('RGB')
+            pdf_bytes = img2pdf.convert(image_path)
+            with open(pdf_path, 'wb') as f: f.write(pdf_bytes)
 
 
     def _convert_images_to_pdf(self, image_paths: list, pdf_path: str):
+        try:
+            import img2pdf
+        except ImportError:
+            raise ImportError("Vui lòng cài đặt img2pdf: pip install img2pdf")
         valid_imgs = [p for p in image_paths if os.path.exists(p)]
         if not valid_imgs: raise Exception("No valid images found")
         pdf_bytes = img2pdf.convert(valid_imgs)

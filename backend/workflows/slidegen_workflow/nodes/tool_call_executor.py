@@ -274,6 +274,17 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
                 f"EMPTY_LIST: '{arg_name}' is required but the list is empty."
             )
     
+    # ── 8. Strict Pydantic schema-level validation ───────────────────
+    tool_ref = tool_schema.get("tool_ref")
+    if tool_ref and hasattr(tool_ref, "args_schema") and tool_ref.args_schema:
+        try:
+            if hasattr(tool_ref.args_schema, "model_validate"):
+                tool_ref.args_schema.model_validate(arguments)
+            else:
+                tool_ref.args_schema(**arguments)
+        except Exception as pydantic_err:
+            errors.append(f"SCHEMA_VALIDATION_ERROR for '{tool_name}':\n{pydantic_err}")
+
     is_valid = len(errors) == 0
     return is_valid, errors
 
@@ -322,15 +333,14 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         try:
             html_content, final_tool_call, search_history = execute_tool_plan(tool_plan)
             if not html_content:
-                raise ValueError("Slide HTML tool returned empty content.")
+                raise ValueError(f"Tool '{tool_name}' returned empty HTML content.")
         except Exception as e:
             print(f"  FAIL - Tool plan execution failed: {e}")
             state['executor_decision'] = 'fail'
             state['executor_feedback'] = (
-                "EXECUTOR TOOL PLAN FAILED:\n"
+                "EXECUTOR EXECUTION FAILED:\n"
                 f"- {e}\n\n"
-                "Regenerate a valid slide-first plan: one slide HTML tool first, "
-                "then one search_ddgs_images call for each image parameter."
+                "Fix the validation/schema errors above and regenerate a valid tool call matching the parameter schema exactly."
             )
             state['retry_count'] = retry_count + 1
             if state['retry_count'] >= EXECUTOR_MAX_RETRIES:

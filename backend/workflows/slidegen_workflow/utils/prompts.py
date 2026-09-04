@@ -528,7 +528,7 @@ Please analyze this document and create a hierarchical structure with appropriat
 QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY a function call inside <tool_call> tags. Do NOT use thinking mode. Do NOT output <think> tags.
 
 CRITICAL JSON FORMATTING RULES:
-1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
+1. STRICT BRACKET & ARRAY MATCHING: Count brackets precisely. When an argument is a list of objects (like `points: [...]`), ALWAYS close the array with `]` before writing the next parameter key (e.g. `], "bg_color": ...`). Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
 2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
 3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
@@ -550,12 +550,14 @@ You MUST follow this two-step process:
 
 STEP 1 — THINK (inside <think> tags):
 Analyze the design instruction and slide content carefully. Then:
-1. Review each available tool and its parameters
-2. Select the BEST tool that matches the content type and design instruction
-3. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide
-4. Self-check: Are there any None/null/empty values for required fields? Fix them.
-5. Self-check IMAGE PARAMS: Count the EXACT number N of image parameters (e.g. image_url, bg_image_url) present in the chosen tool's schema.
-6. Self-check SEARCH CALLS: You MUST generate EXACTLY N `search_ddgs_images` calls AFTER the slide tool (one per image parameter). For example, if N = 0 output 0 calls, if N = 2 output 2 calls. NEVER output more or fewer search calls than N!
+1. Review each available tool and its exact parameters. You MUST pick ONLY from the available tools provided for THIS slide. DO NOT hallucinate tools from previous slides, examples, or memory!
+2. Select the BEST tool from the available tools that matches the content type and design instruction.
+3. Strict Parameter Check: Inspect the chosen tool's schema definition. ONLY output parameters that are EXPLICITLY defined in that tool's schema. If a tool has NO color parameters (e.g., only title and points), DO NOT invent extra parameters (like 'bg_color', 'main_title_color', 'subtitle_color') even if the design instruction suggests colors!
+4. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide text.
+5. Strict Bracket Check: When an argument is a list of objects (e.g. points: [...]), ensure you close the list with ']' before continuing to the next key.
+6. Self-check: Are there any None/null/empty values for required fields? Fix them.
+7. Self-check IMAGE PARAMS: Count the EXACT number N of image parameters (e.g. image_url, bg_image_url) present in the chosen tool's schema.
+8. Self-check SEARCH CALLS: You MUST generate EXACTLY N `search_ddgs_images` calls AFTER the slide tool (one per image parameter). For example, if N = 0 output 0 calls, if N = 2 output 2 calls. NEVER output more or fewer search calls than N!
 
 STEP 2 — ACT (output the tool call plan):
 Output an ordered tool call plan inside <tool_call> tags: Output EXACTLY ONE slide HTML tool call FIRST, followed by EXACTLY N `search_ddgs_images` calls corresponding to the N image parameters defined in that slide tool's schema (if N = 0, output ZERO search calls).
@@ -566,8 +568,8 @@ CRITICAL RULES:
   * If $N = 1$ (1 image parameter), output EXACTLY 1 `search_ddgs_images` call.
   * If $N = 2$ (2 image parameters, e.g. logo and background), output EXACTLY 2 `search_ddgs_images` calls.
   * In general, for ANY $N$ image parameters in the slide tool schema, output EXACTLY $N$ `search_ddgs_images` calls (one search call per image parameter, in the order they appear). NEVER output more or fewer search calls than $N$!
-- STRICT SCHEMA PARAMETER RULE: You MUST ONLY use parameters that are explicitly listed in the selected tool's schema definition. ABSOLUTELY DO NOT invent, guess, or add extra parameters (such as `logo_image_url`, `bg_image_url`, `phone`, `sub_title`...) if they are NOT present in the target tool's schema!
-- STRICT TOOL SELECTION: You MUST select and output ONLY a tool function name that is EXPLICITLY LISTED in the provided available tools section below. ABSOLUTELY DO NOT invent, guess, or use any tool name outside the provided list!
+- STRICT SCHEMA PARAMETER RULE: You MUST ONLY use parameters that are explicitly listed in the selected tool's schema definition. ABSOLUTELY DO NOT invent, guess, or add extra parameters (such as `main_title_color`, `subtitle_color`, `insight_text_color`, `bg_color`, `logo_image_url`, `phone`...) if they are NOT present in the target tool's schema!
+- STRICT TOOL SELECTION: You MUST select and output ONLY a tool function name that is EXPLICITLY LISTED in the provided available tools section for this slide. ABSOLUTELY DO NOT invent, guess, or use any tool name outside the provided list!
 - STRICT IMAGE SEARCH PLAN ORDER: The primary Slide HTML tool MUST ALWAYS come FIRST at index 0. `search_ddgs_images` calls MUST ONLY come AFTER the slide HTML tool. NEVER output `search_ddgs_images` alone without the Slide HTML tool!
 - Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
 - Color values MUST be valid hex codes (e.g., "#1E3A5F", NOT "blue" or "dark")
@@ -576,7 +578,7 @@ CRITICAL RULES:
 - Output language MUST match the language of the slide content
 
 CRITICAL JSON FORMATTING & SYNTAX RULES:
-1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
+1. STRICT BRACKET & ARRAY MATCHING: Count brackets precisely. When an argument is a list of objects (like `points: [...]`), ALWAYS close the array with `]` before writing the next parameter key (e.g. `], "bg_color": ...`). Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
 2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
 3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
@@ -585,15 +587,15 @@ CRITICAL JSON FORMATTING & SYNTAX RULES:
 
 Example (FORMAT ILLUSTRATION ONLY — DO NOT COPY THIS TOOL NAME. Select strictly from your provided tools):
 <think>
-The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
-Available tools: generate_split_layout_list_slide, generate_content_slide, generate_icon_list_slide...
-Best match: generate_split_layout_list_slide — it supports a main title + list of points with titles and descriptions.
-Required params: main_title (str), points (List[dict]), left_bg_color, right_bg_color...
-Let me fill them with actual content from the slide text.
-Self-check: All required fields filled ✓, colors are hex ✓, points is a list ✓, JSON brackets matched ✓
+The slide content is about company milestones.
+Step 1: Check available tools for THIS slide: [example_tool_alpha, example_tool_beta, example_tool_gamma]
+Step 2: Best match from available tools: example_tool_alpha (matches title and structured points).
+Step 3: Check schema for example_tool_alpha: parameters are [main_title, points, bg_color]. I will NOT add parameters outside this schema.
+Step 4: Format array: close the points array with ] before writing bg_color.
+Self-check: All required fields filled ✓, schema matches ✓, array closed properly ✓, JSON brackets matched ✓
 </think>
 <tool_call>
-{"name": "generate_split_layout_list_slide", "arguments": {"main_title": "Hành trình FPT", "points": [{"title": "Nền tảng", "description": "Đội ngũ kỹ sư hùng hậu"}], "left_bg_color": "#FFFFFF", "right_bg_color": "#F8FAFC"}}
+{"name": "example_tool_alpha", "arguments": {"main_title": "Company Milestones & Growth", "points": [{"title": "Foundation", "description": "Established core technical infrastructure"}, {"title": "Expansion", "description": "Expanded market reach to global clients"}], "bg_color": "#F8FAFC"}}
 </tool_call>"""
 
 QWEN_GENERATOR_HUMAN_TEMPLATE = """{style_context}
