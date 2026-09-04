@@ -15,7 +15,10 @@ HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 HIGHLIGHT_MARKER_RE = re.compile(
     r"\[\[hl\s+color=\"(?P<color>[^\"]+)\"\]\]"
     r"(?P<text>.*?)"
-    r"\[\[/hl\]\]",
+    # Accept the canonical ``[[/hl]]`` and the legacy malformed ``[[/hl]``
+    # form emitted by some model responses. Both forms are consumed before
+    # XML reaches the browser so marker syntax can never appear as visible text.
+    r"\[\[/hl\]\]?",
     flags=re.IGNORECASE | re.DOTALL,
 )
 # Accept the earlier marker during migration, but only retain its foreground
@@ -24,7 +27,7 @@ LEGACY_HIGHLIGHT_MARKER_RE = re.compile(
     r"\[\[hl\s+bg=\"(?P<background>[^\"]+)\"\s+"
     r"fg=\"(?P<foreground>[^\"]+)\"\]\]"
     r"(?P<text>.*?)"
-    r"\[\[/hl\]\]",
+    r"\[\[/hl\]\]?",
     flags=re.IGNORECASE | re.DOTALL,
 )
 LITERAL_MATH_FIELD_RE = re.compile(

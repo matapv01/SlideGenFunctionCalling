@@ -68,6 +68,7 @@ class XMLSlideConverter:
             "polygon": self.render_polygon,
             "image": self.render_image,
             "svg": self.render_svg,
+            "table": self.render_table,
             "piechart": self.render_chart,
             "barchart": self.render_chart,
             "linechart": self.render_chart,
@@ -1985,6 +1986,82 @@ if ($closed) {
         )
         line.line.width = Pt(float(e.get("width", "1")))
 
+        # python-pptx versions differ in arrowhead support. Keep connector
+        # export compatible by only applying arrowheads when the installed
+        # line object exposes the native properties.
+        arrowhead = getattr(line.line, "end_arrowhead", None)
+        if self.to_bool(e.get("arrow_end")) and arrowhead is not None:
+            try:
+                from pptx.enum.dml import MSO_ARROWHEAD
+                line.line.end_arrowhead = MSO_ARROWHEAD.TRIANGLE
+            except (ImportError, AttributeError, ValueError):
+                pass
+        arrowhead = getattr(line.line, "begin_arrowhead", None)
+        if self.to_bool(e.get("arrow_start")) and arrowhead is not None:
+            try:
+                from pptx.enum.dml import MSO_ARROWHEAD
+                line.line.begin_arrowhead = MSO_ARROWHEAD.TRIANGLE
+            except (ImportError, AttributeError, ValueError):
+                pass
+
+    @staticmethod
+    def _is_number(value: str) -> bool:
+        try:
+            float(value)
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def _table_rows(value: str | None) -> list[list[str]]:
+        rows = [
+            [cell.strip() for cell in row.split("|")]
+            for row in (value or "Metric|Value;Revenue|120;Users|2400").split(";")
+            if row.strip()
+        ]
+        column_count = max((len(row) for row in rows), default=1)
+        return [row + [""] * (column_count - len(row)) for row in rows]
+
+    def render_table(self, slide, e: ET.Element) -> None:
+        rows = self._table_rows(e.get("data"))
+        if not rows:
+            return
+
+        table_shape = slide.shapes.add_table(
+            len(rows),
+            len(rows[0]),
+            self.x(e.get("x")),
+            self.y(e.get("y")),
+            self.x(e.get("width")),
+            self.y(e.get("height")),
+        )
+        table = table_shape.table
+        header_fill = e.get("header_fill", "#1E3A8A")
+        header_color = e.get("header_color", "#FFFFFF")
+        row_fill = e.get("row_fill", "#FFFFFF")
+        stripe_fill = e.get("stripe_fill", "#EFF6FF")
+        text_color = e.get("text_color", "#0F172A")
+        font_size = max(8, float(e.get("font_size", "18")))
+
+        for row_index, row in enumerate(rows):
+            for column_index, value in enumerate(row):
+                cell = table.cell(row_index, column_index)
+                cell.text = value
+                cell.fill.solid()
+                cell.fill.fore_color.rgb = self.rgb(
+                    header_fill if row_index == 0 else stripe_fill if row_index % 2 == 0 else row_fill,
+                )
+                cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+                for paragraph in cell.text_frame.paragraphs:
+                    paragraph.alignment = PP_ALIGN.LEFT
+                    for run in paragraph.runs:
+                        run.font.name = e.get("font", "Arial")
+                        run.font.size = Pt(font_size)
+                        run.font.bold = row_index == 0 or column_index == 0
+                        run.font.color.rgb = self.rgb(
+                            header_color if row_index == 0 else text_color,
+                        )
+
     def render_polygon(self, slide, e: ET.Element) -> None:
         points: list[tuple[int, int]] = []
 
@@ -2345,27 +2422,31 @@ if ($closed) {
         }
 
         series_nodes = e.findall("./series")
-        if not series_nodes:
-            raise ValueError(f"{e.tag} thiếu series")
-
-        first_points = series_nodes[0].findall("./point")
-        categories = [
-            point.get("label", "")
-            for point in first_points
-        ]
-
         data = ChartData()
-        data.categories = categories
+        first_points: list[ET.Element] = []
+        if series_nodes:
+            first_points = series_nodes[0].findall("./point")
+            categories = [point.get("label", "") for point in first_points]
+            data.categories = categories
 
-        for index, series in enumerate(series_nodes, start=1):
-            values = [
-                float(point.get("value", "0"))
-                for point in series.findall("./point")
+            for index, series in enumerate(series_nodes, start=1):
+                values = [
+                    float(point.get("value", "0"))
+                    for point in series.findall("./point")
+                ]
+                data.add_series(series.get("name", f"Series {index}"), values)
+        else:
+            raw_values = [
+                value.strip()
+                for value in e.get("data", "").split(",")
+                if value.strip()
             ]
-            data.add_series(
-                series.get("name", f"Series {index}"),
-                values,
-            )
+            values = [float(value) for value in raw_values if self._is_number(value)]
+            if not values:
+                raise ValueError(f"{e.tag} thiếu series hoặc data")
+            raw_labels = [label.strip() for label in e.get("labels", "").split(",") if label.strip()]
+            data.categories = raw_labels if len(raw_labels) == len(values) else [str(index + 1) for index in range(len(values))]
+            data.add_series(e.get("title", "Series 1"), values)
 
         frame = slide.shapes.add_chart(
             chart_map[e.tag],

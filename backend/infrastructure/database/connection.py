@@ -116,6 +116,57 @@ def init_db():
             )
         """)
 
+        # Project collaborators and access control. Owners are represented by
+        # projects.user_id; this table stores invited members only.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS project_collaborators (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                role TEXT NOT NULL DEFAULT 'viewer',
+                invited_by INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(project_id, user_id),
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Immutable snapshots of a project at save/restore points.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS project_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                label TEXT,
+                snapshot_json TEXT NOT NULL,
+                snapshot_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Slide/element comments. Comments are soft-resolved instead of deleted
+        # so a review trail remains useful after a version is restored.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS project_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                slide_index INTEGER,
+                element_id TEXT,
+                body TEXT NOT NULL,
+                resolved BOOLEAN DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
         # Subscription codes table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS subscription_codes (
@@ -164,6 +215,9 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_subscription ON users(subscription_tier)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_usage_logs_user_date ON daily_usage_logs(user_id, usage_date)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_code_redemptions_user ON code_redemptions(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_collaborators_user ON project_collaborators(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_versions_project ON project_versions(project_id, created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_comments_project ON project_comments(project_id, created_at DESC)")
 
         # Migrate: add code_type column to existing DB if missing (must run before INSERT below)
         try:

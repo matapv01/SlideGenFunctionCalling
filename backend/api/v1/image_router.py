@@ -106,7 +106,8 @@ async def get_image(image_name: str):
     """
     Serve an image file from the uploads directory.
     """
-    image_path = UPLOAD_DIR / image_name
+    safe_name = image_name.replace("\\", "/").split("/")[-1]
+    image_path = UPLOAD_DIR / safe_name
     if not image_path.exists():
         raise HTTPException(status_code=404, detail="Không tìm thấy hình ảnh")
     return FileResponse(image_path)

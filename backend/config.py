@@ -141,14 +141,17 @@ ENABLE_VIT_EVALUATION = os.getenv("ENABLE_VIT_EVALUATION", "false").lower() in (
 )
 # Rule-based XML overflow handling. The LLM is called only for textboxes that
 # fail the geometry check, and each textbox is re-measured after rewriting.
-TEXT_OVERFLOW_MAX_ROUNDS = int(os.getenv("TEXT_OVERFLOW_MAX_ROUNDS", "3"))
+# Keep the bounded repair loop short; an alternate layout-tool retry is used
+# when the same tool still cannot fit the complete slide.
+TEXT_OVERFLOW_MAX_ROUNDS = int(os.getenv("TEXT_OVERFLOW_MAX_ROUNDS", "2"))
 TEXT_OVERFLOW_MAX_BOXES_PER_ROUND = int(
     os.getenv("TEXT_OVERFLOW_MAX_BOXES_PER_ROUND", "12")
 )
 
 # --- Executor Validator Configuration ---
 # Max retries when executor detects logic errors (None, missing params, type mismatch)
-EXECUTOR_MAX_RETRIES = int(os.getenv("EXECUTOR_MAX_RETRIES", "5"))
+# and when the overflow fallback asks the main generator for another layout tool.
+EXECUTOR_MAX_RETRIES = int(os.getenv("EXECUTOR_MAX_RETRIES", "2"))
 # Enable CoT (Chain-of-Thought) thinking mode for Qwen generator
 ENABLE_COT_THINKING = os.getenv("ENABLE_COT_THINKING", "true").lower() in ("1", "true", "yes")
 # Max tokens for CoT generation (should be higher than non-CoT to account for thinking block)

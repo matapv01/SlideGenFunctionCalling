@@ -1,9 +1,8 @@
-"""Rule-based XML overflow resolver with bounded LLM summarization."""
+"""Detect overflow, harmonize the whole slide, and regenerate its layout."""
 
 from __future__ import annotations
 
 import json
-import inspect
 import logging
 import re
 import xml.etree.ElementTree as ET
@@ -11,10 +10,15 @@ from typing import Any
 
 from backend.config import (
     EXECUTOR_MAX_RETRIES,
-    TEXT_OVERFLOW_MAX_BOXES_PER_ROUND,
     TEXT_OVERFLOW_MAX_ROUNDS,
 )
 from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
+    canonical_tool_name,
+    execute_tool as execute_xml_tool,
+    get_tool_by_name,
+    normalize_tool_arguments,
+)
 from backend.workflows.slidegen_workflow.utils.xml_overflow import (
     analyze_xml_root,
     public_overflow_report,
@@ -22,6 +26,27 @@ from backend.workflows.slidegen_workflow.utils.xml_overflow import (
 
 logger = logging.getLogger(__name__)
 _MATH_MARKER_RE = re.compile(r"<\s*/?\s*math-field\b", re.IGNORECASE)
+_LATEX_MARKER_RE = re.compile(
+    r"(?:\$[^$]+\$|\\\([^)]*\\\)|\\\[[^]]*\\\]|\\(?:frac|sqrt|sum|int|begin)\b)",
+    re.IGNORECASE | re.DOTALL,
+)
+_PROTECTED_ARGUMENT_KEY_TOKENS = {
+    "color",
+    "url",
+    "image",
+    "icon",
+    "font",
+    "opacity",
+    "background",
+    "fill",
+    "stroke",
+    "border",
+    "radius",
+    "width",
+    "height",
+    "position",
+    "direction",
+}
 
 
 def _response_text(response: Any) -> str:
@@ -41,14 +66,20 @@ def _response_text(response: Any) -> str:
     return str(content or "").strip()
 
 
-def _parse_summary(response: Any) -> str | None:
+def _parse_slide_rewrite(response: Any) -> dict[str, Any] | None:
+    """Extract a complete tool-argument object from a whole-slide LLM response."""
     raw = _response_text(response)
     if not raw:
         return None
 
     cleaned = raw.strip()
     if "```" in cleaned:
-        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE | re.DOTALL).strip()
+        cleaned = re.sub(
+            r"^```(?:json)?\s*|\s*```$",
+            "",
+            cleaned,
+            flags=re.IGNORECASE | re.DOTALL,
+        ).strip()
 
     candidates = [cleaned]
     object_match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
@@ -60,45 +91,187 @@ def _parse_summary(response: Any) -> str | None:
             payload = json.loads(candidate)
         except (TypeError, ValueError, json.JSONDecodeError):
             continue
-
-        if isinstance(payload, dict):
-            value = payload.get("text") or payload.get("summary") or payload.get("rewritten_text")
-            if isinstance(value, str) and value.strip():
-                return value.strip()
-        elif isinstance(payload, str) and payload.strip():
-            return payload.strip()
+        if not isinstance(payload, dict):
+            continue
+        arguments = payload.get("arguments")
+        if isinstance(arguments, dict):
+            return arguments
     return None
 
 
-def _summary_prompt(record: dict[str, Any], round_number: int) -> list[dict[str, str]]:
-    current_text = record["text"]
-    width_ratio = min(1.0, record["available_width"] / max(1.0, record["max_line_width"]))
-    height_ratio = min(1.0, record["available_height"] / max(1.0, record["required_height"]))
-    pressure_ratio = max(0.25, min(width_ratio, height_ratio))
-    target_chars = max(12, int(len(current_text) * pressure_ratio * 0.82))
-    max_lines = record["max_lines"] or max(1, int(record["available_height"] / max(1.0, record["required_height"] / max(1, record["line_count"]))))
+def _is_protected_argument_key(key: str) -> bool:
+    normalized = key.strip().lower()
+    return any(token in normalized for token in _PROTECTED_ARGUMENT_KEY_TOKENS)
+
+
+def _contains_math_text(text: str) -> bool:
+    return bool(_MATH_MARKER_RE.search(text) or _LATEX_MARKER_RE.search(text))
+
+
+def _merge_shortened_arguments(
+    original: Any,
+    candidate: Any,
+    *,
+    key: str = "",
+) -> tuple[Any, int]:
+    """Merge only safe, non-expanding textual changes into existing arguments.
+
+    Tool structure, list cardinality, visual settings, URLs, and math-bearing
+    strings remain authoritative from the original validated tool call.
+    """
+    if isinstance(original, dict):
+        if not isinstance(candidate, dict):
+            return original, 0
+        merged: dict[str, Any] = {}
+        changes = 0
+        for child_key, original_value in original.items():
+            candidate_value = candidate.get(child_key, original_value)
+            merged_value, child_changes = _merge_shortened_arguments(
+                original_value,
+                candidate_value,
+                key=child_key,
+            )
+            merged[child_key] = merged_value
+            changes += child_changes
+        return merged, changes
+
+    if isinstance(original, list):
+        if not isinstance(candidate, list) or len(candidate) != len(original):
+            return original, 0
+        merged_items = []
+        changes = 0
+        for original_item, candidate_item in zip(original, candidate):
+            merged_item, child_changes = _merge_shortened_arguments(
+                original_item,
+                candidate_item,
+                key=key,
+            )
+            merged_items.append(merged_item)
+            changes += child_changes
+        return merged_items, changes
+
+    if isinstance(original, str):
+        if (
+            _is_protected_argument_key(key)
+            or _contains_math_text(original)
+            or not isinstance(candidate, str)
+        ):
+            return original, 0
+        original_text = original.strip()
+        original_leading_space = original[: len(original) - len(original.lstrip())]
+        candidate_core = candidate.strip()
+        if not candidate_core or len(candidate_core) > len(original_text):
+            return original, 0
+        if candidate_core == original_text:
+            return original, 0
+        candidate_text = f"{original_leading_space}{candidate_core}"
+        return candidate_text, 1
+
+    return original, 0
+
+
+def _content_argument_inventory(
+    value: Any,
+    *,
+    path: str = "arguments",
+    key: str = "",
+) -> list[dict[str, Any]]:
+    inventory: list[dict[str, Any]] = []
+    if isinstance(value, dict):
+        for child_key, child_value in value.items():
+            inventory.extend(
+                _content_argument_inventory(
+                    child_value,
+                    path=f"{path}.{child_key}",
+                    key=child_key,
+                )
+            )
+    elif isinstance(value, list):
+        for index, child_value in enumerate(value):
+            inventory.extend(
+                _content_argument_inventory(
+                    child_value,
+                    path=f"{path}[{index}]",
+                    key=key,
+                )
+            )
+    elif (
+        isinstance(value, str)
+        and not _is_protected_argument_key(key)
+    ):
+        inventory.append(
+            {
+                "path": path,
+                "characters": len(value),
+                "protected_math": _contains_math_text(value),
+                "text": value,
+            }
+        )
+    return inventory
+
+
+def _slide_rewrite_prompt(
+    state: State,
+    records: list[dict[str, Any]],
+    tool_call: dict[str, Any],
+    round_number: int,
+) -> list[dict[str, str]]:
+    arguments = tool_call.get("arguments") or {}
+    boxes = [
+        {
+            "id": record["id"],
+            "text": record["text"],
+            "x": record["x"],
+            "y": record["y"],
+            "width": record["width"],
+            "height": record["height"],
+            "line_count": record["line_count"],
+            "max_lines": record["max_lines"],
+            "reasons": record["reasons"],
+            "overflow": record["overflow"],
+            "has_math_field": record["has_math_field"],
+        }
+        for record in records
+    ]
+    inventory = _content_argument_inventory(arguments)
 
     return [
         {
             "role": "system",
             "content": (
-                "You are a strict slide copy editor. Shorten text only when it is too large "
-                "for its existing XML textbox. Preserve the original language, key facts, names, "
-                "numbers, and intent. Do not add claims, markdown, bullets, or commentary. "
-                "Return JSON only in the form {\"text\": \"shortened text\"}."
+                "You are a strict presentation editor repairing one complete slide. "
+                "Read every textbox and every editable content field, then rewrite and "
+                "balance the slide copy as one coherent whole, never as an isolated fix "
+                "for only the textbox reported as overflowing. Shorten content "
+                "proportionally across related fields so the visual hierarchy remains "
+                "balanced and every textbox can fit after the "
+                "same slide generator recalculates its layout. Preserve the original "
+                "language, facts, numbers, names, intent, and ordering. Keep concise "
+                "labels concise. Never add claims, markdown, bullets, or commentary. "
+                "Do not change URLs, colors, image/icon choices, visual settings, object "
+                "keys, list lengths, or mathematical expressions. Return JSON only as "
+                "{\"arguments\": <the complete revised arguments object>}."
             ),
         },
         {
             "role": "user",
             "content": json.dumps(
                 {
-                    "task": "Summarize this textbox so it fits without changing its font size.",
+                    "task": (
+                        "Inspect the complete slide first, compare the relative emphasis "
+                        "of every textbox, and rewrite all editable content fields together. "
+                        "Shorten the longest or most space-consuming related fields "
+                        "proportionally; keep an already concise label unchanged only when "
+                        "it helps the hierarchy. Never summarize just the overflowing box. "
+                        "Boxes outside the slide indicate that the surrounding content "
+                        "also needs shortening so the generator can recalculate a compact layout."
+                    ),
                     "round": round_number,
-                    "overflow_reasons": record["reasons"],
-                    "current_line_count": record["line_count"],
-                    "allowed_lines": max_lines,
-                    "approximate_target_characters": target_chars,
-                    "text": current_text,
+                    "tool_name": tool_call.get("name"),
+                    "source_slide_content": state.get("current_slide_text", ""),
+                    "textboxes": boxes,
+                    "editable_content_inventory": inventory,
+                    "current_arguments": arguments,
                 },
                 ensure_ascii=False,
             ),
@@ -106,8 +279,19 @@ def _summary_prompt(record: dict[str, Any], round_number: int) -> list[dict[str,
     ]
 
 
-def _call_summarizer(llm: Any, record: dict[str, Any], round_number: int) -> str | None:
-    messages = _summary_prompt(record, round_number)
+def _call_slide_rewriter(
+    llm: Any,
+    state: State,
+    records: list[dict[str, Any]],
+    tool_call: dict[str, Any],
+    round_number: int,
+) -> dict[str, Any] | None:
+    messages = _slide_rewrite_prompt(
+        state,
+        records,
+        tool_call,
+        round_number,
+    )
     try:
         if hasattr(llm, "generate_completion"):
             response = llm.generate_completion(
@@ -117,52 +301,91 @@ def _call_summarizer(llm: Any, record: dict[str, Any], round_number: int) -> str
         elif hasattr(llm, "invoke"):
             response = llm.invoke(messages)
         else:
-            logger.warning("Overflow resolver skipped: configured LLM has no invoke method")
+            logger.warning("Whole-slide overflow rewrite skipped: LLM has no invoke method")
             return None
     except Exception as exc:
-        logger.warning("Overflow summarization failed for %s: %s", record["id"], exc)
+        logger.warning("Whole-slide overflow rewrite failed: %s", exc)
         return None
 
-    candidate = _parse_summary(response)
-    if not candidate:
-        logger.warning("Overflow summarizer returned no JSON text for %s", record["id"])
-        return None
-
-    original = record["text"].strip()
-    if candidate.strip() == original or len(candidate.strip()) >= len(original):
-        logger.warning("Overflow summarizer did not shorten textbox %s", record["id"])
-        return None
-    return candidate.strip()
+    arguments = _parse_slide_rewrite(response)
+    if arguments is None:
+        logger.warning("Whole-slide overflow rewriter returned no arguments JSON")
+    return arguments
 
 
-def _replace_plain_text(element: ET.Element, replacement: str) -> bool:
-    """Replace text while preserving textbox attributes and avoiding math loss."""
-    if (
-        any(child.tag.rsplit("}", 1)[-1].lower() == "math-field" for child in element)
-        or _MATH_MARKER_RE.search("".join(element.itertext()))
-    ):
-        return False
-
-    children = list(element)
-    run_children = [
-        child for child in children if child.tag.rsplit("}", 1)[-1].lower() == "run"
+def _preserve_transition_attributes(
+    source_root: ET.Element,
+    target_root: ET.Element,
+) -> None:
+    source_slides = [
+        node
+        for node in source_root
+        if node.tag.rsplit("}", 1)[-1].lower() == "slide"
     ]
-    if run_children:
-        # Keep the first run's visual style (highlight/bold/color) instead of
-        # dropping all rich-text formatting when the copy is rewritten.
-        first_run = run_children[0]
-        first_run.text = replacement
-        first_run.tail = None
-        for child in children:
-            if child is not first_run:
-                element.remove(child)
-        element.text = None
-        return True
+    target_slides = [
+        node
+        for node in target_root
+        if node.tag.rsplit("}", 1)[-1].lower() == "slide"
+    ]
+    for source_slide, target_slide in zip(source_slides, target_slides):
+        for name, value in source_slide.attrib.items():
+            if name.startswith("transition"):
+                target_slide.set(name, value)
 
-    for child in children:
-        element.remove(child)
-    element.text = replacement
-    return True
+
+def _regenerate_slide(
+    tool_call: dict[str, Any],
+    *,
+    source_content: str,
+    previous_root: ET.Element,
+) -> ET.Element | None:
+    tool_name = canonical_tool_name(str(tool_call.get("name") or ""))
+    tool = get_tool_by_name(tool_name)
+    if tool is None:
+        logger.warning("Cannot regenerate overflow slide: unknown tool %s", tool_name)
+        return None
+
+    arguments = normalize_tool_arguments(
+        tool_name,
+        tool_call.get("arguments") or {},
+    )
+    schema = getattr(tool, "args_schema", None)
+    if schema is not None and hasattr(schema, "model_validate"):
+        try:
+            schema.model_validate(arguments)
+        except Exception as exc:
+            logger.warning("Whole-slide rewrite produced invalid tool arguments: %s", exc)
+            return None
+
+    normalized_tool_call = {
+        **tool_call,
+        "name": tool_name,
+        "arguments": arguments,
+    }
+    xml_content = execute_xml_tool(
+        normalized_tool_call,
+        source_content=source_content,
+    )
+    if not xml_content:
+        logger.warning("Whole-slide generator returned empty XML")
+        return None
+    try:
+        target_root = ET.fromstring(xml_content)
+    except ET.ParseError as exc:
+        logger.warning("Whole-slide generator returned invalid XML: %s", exc)
+        return None
+    if target_root.tag.rsplit("}", 1)[-1].lower() != "presentation":
+        logger.warning("Whole-slide generator did not return a presentation root")
+        return None
+    if any(
+        (node.text or "").strip() == "Slide content is temporarily unavailable"
+        for node in target_root.iter()
+    ):
+        logger.warning("Whole-slide generator fell back instead of regenerating the slide")
+        return None
+
+    _preserve_transition_attributes(previous_root, target_root)
+    return target_root
 
 
 def _merge_browser_measurement(
@@ -182,9 +405,17 @@ def _merge_browser_measurement(
         if not browser_box:
             continue
 
+        xml_reasons = set(record.get("reasons") or [])
+        browser_reasons = set(browser_box.get("reasons") or [])
+        # The React preview deliberately expands and clamps textboxes for
+        # editing. Keep source-XML boundary failures so that this visual
+        # convenience cannot hide a box whose actual geometry is off-slide.
+        if "slide_boundary" in xml_reasons:
+            browser_reasons.add("slide_boundary")
+
         record["measurement_source"] = "playwright"
-        record["overflow"] = bool(browser_box.get("overflow"))
-        record["reasons"] = list(browser_box.get("reasons") or [])
+        record["overflow"] = bool(browser_reasons)
+        record["reasons"] = sorted(browser_reasons)
         record["line_count"] = int(browser_box.get("line_count") or record["line_count"])
         if browser_box.get("max_lines") is not None:
             record["max_lines"] = browser_box["max_lines"]
@@ -206,32 +437,17 @@ async def _analyze_current_xml(
     *,
     force_browser: bool = False,
 ) -> tuple[list[dict[str, Any]], str]:
-    records = analyze_xml_root(root)
-    # XML/Pillow is the fast path. Only open a browser when XML already finds
-    # a candidate or when a rewrite must be verified against the real DOM.
-    if not force_browser and not any(record["overflow"] for record in records):
-        return records, "xml"
-
-    measure_overflow = getattr(capture_provider, "measure_xml_overflow", None)
-    if not callable(measure_overflow):
-        return records, "pillow"
-
-    try:
-        browser_report = measure_overflow(xml_content, slide_index=0)
-        if inspect.isawaitable(browser_report):
-            browser_report = await browser_report
-        _merge_browser_measurement(records, browser_report or {})
-        return records, "playwright"
-    except Exception as exc:
-        # Keep the deterministic fallback for tests and degraded environments.
-        # The final render still uses the same Playwright provider and will
-        # surface a hard error if the preview itself is unavailable.
-        logger.warning("Playwright overflow measurement failed; using XML fallback: %s", exc)
-        return records, "pillow"
+    # Overflow validation intentionally stays on the deterministic XML/Pillow
+    # path. Opening Chromium for every rewrite is expensive and the XML
+    # geometry is the persisted artifact that the workflow must keep valid.
+    # ``capture_provider`` and ``force_browser`` remain in the signature for
+    # compatibility with callers that provide the old measurement options.
+    del xml_content, capture_provider, force_browser
+    return analyze_xml_root(root), "pillow"
 
 
 async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
-    """Filter XML text boxes, rewrite only overflowing text, then re-measure."""
+    """Rewrite an overflowing slide as a whole, regenerate it, then re-measure."""
     xml_content = state.get("current_xml_content", "")
     state["overflow_rewrite_count"] = 0
     state["overflow_failed"] = False
@@ -257,27 +473,22 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
 
     configurable = config.get("configurable", {}) if config else {}
     llm = configurable.get("llm")
-    capture_provider = configurable.get("capture_provider")
     max_rounds = max(0, int(configurable.get("text_overflow_max_rounds", TEXT_OVERFLOW_MAX_ROUNDS)))
-    max_boxes = max(1, int(configurable.get("text_overflow_max_boxes", TEXT_OVERFLOW_MAX_BOXES_PER_ROUND)))
     rewrite_count = 0
     llm_calls = 0
-    skipped_math_fields = 0
+    protected_math_field_ids: set[str] = set()
     skipped_unfixable = 0
     rounds_completed = 0
 
-    measurement_source = "xml"
-    force_browser = False
+    measurement_source = "pillow"
     records: list[dict[str, Any]] = []
     for round_number in range(1, max_rounds + 1):
         current_xml = ET.tostring(root, encoding="unicode")
         records, measurement_source = await _analyze_current_xml(
             root,
             current_xml,
-            capture_provider,
-            force_browser=force_browser,
+            None,
         )
-        force_browser = False
         overflowing = [record for record in records if record["overflow"]]
         rounds_completed = round_number
         logger.info(
@@ -288,61 +499,122 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             round_number,
         )
 
-        if not overflowing or llm is None:
-            if overflowing and llm is None:
-                logger.warning("XML overflow found but no LLM is configured; keeping original text")
+        if not overflowing:
             break
 
-        changed = 0
-        for record in overflowing[:max_boxes]:
-            if record["has_math_field"]:
-                skipped_math_fields += 1
-                logger.info("Skipping overflow rewrite for math textbox %s", record["id"])
-                continue
-            if not record["rewrite_possible"]:
-                skipped_unfixable += 1
-                logger.info(
-                    "Skipping overflow rewrite for textbox %s: geometry cannot be fixed by shortening (%s)",
-                    record["id"],
-                    ", ".join(record["reasons"]),
-                )
-                continue
+        protected_math_field_ids.update(
+            record["id"]
+            for record in records
+            if record["has_math_field"]
+        )
 
-            llm_calls += 1
-            replacement = _call_summarizer(llm, record, round_number)
-            if replacement and _replace_plain_text(record["_element"], replacement):
-                changed += 1
-                rewrite_count += 1
-                logger.info(
-                    "Shortened overflowing textbox %s: %s -> %s chars",
-                    record["id"],
-                    len(record["text"]),
-                    len(replacement),
-                )
-
-        if not changed:
+        if llm is None:
+            logger.warning(
+                "Whole-slide overflow rewrite skipped: no LLM is configured"
+            )
+            skipped_unfixable += len(overflowing)
             break
-        # The XML has changed, so the next pass must validate the result with
-        # the actual preview DOM rather than relying on Pillow alone.
-        force_browser = True
+
+        tool_call = state.get("current_tool_call") or {}
+        original_arguments = tool_call.get("arguments")
+        if not tool_call.get("name") or not isinstance(original_arguments, dict):
+            logger.warning(
+                "Whole-slide overflow rewrite skipped: current tool call is unavailable"
+            )
+            skipped_unfixable += len(overflowing)
+            break
+
+        llm_calls += 1
+        candidate_arguments = _call_slide_rewriter(
+            llm,
+            state,
+            records,
+            tool_call,
+            round_number,
+        )
+        if candidate_arguments is None:
+            skipped_unfixable += len(overflowing)
+            break
+
+        merged_arguments, changed_fields = _merge_shortened_arguments(
+            original_arguments,
+            candidate_arguments,
+        )
+        if changed_fields <= 0:
+            logger.warning(
+                "Whole-slide overflow rewriter did not shorten any safe content field"
+            )
+            skipped_unfixable += len(overflowing)
+            break
+
+        revised_tool_call = {
+            **tool_call,
+            "arguments": merged_arguments,
+        }
+        regenerated_root = _regenerate_slide(
+            revised_tool_call,
+            source_content=state.get("current_slide_text", ""),
+            previous_root=root,
+        )
+        if regenerated_root is None:
+            skipped_unfixable += len(overflowing)
+            break
+
+        root = regenerated_root
+        rewrite_count += changed_fields
+        revised_tool_call = {
+            **revised_tool_call,
+            "name": canonical_tool_name(revised_tool_call.get("name")),
+            "arguments": normalize_tool_arguments(
+                revised_tool_call.get("name"),
+                revised_tool_call.get("arguments") or {},
+            ),
+        }
+        state["current_tool_call"] = revised_tool_call
+
+        current_plan = state.get("current_tool_plan")
+        if isinstance(current_plan, list):
+            replaced = False
+            revised_plan = []
+            for call in current_plan:
+                if (
+                    not replaced
+                    and isinstance(call, dict)
+                    and canonical_tool_name(call.get("name"))
+                    == revised_tool_call.get("name")
+                ):
+                    revised_plan.append(revised_tool_call)
+                    replaced = True
+                else:
+                    revised_plan.append(call)
+            state["current_tool_plan"] = revised_plan
+
+        logger.info(
+            "Regenerated overflowing slide %s after harmonizing %s content fields",
+            state.get("current_slide_index", 0) + 1,
+            changed_fields,
+        )
 
     state["current_xml_content"] = ET.tostring(root, encoding="unicode")
-    if force_browser:
-        final_records, measurement_source = await _analyze_current_xml(
-            root,
-            state["current_xml_content"],
-            capture_provider,
-            force_browser=True,
-        )
-    else:
-        final_records = records or analyze_xml_root(root)
+    # A rewrite may happen on the last allowed round.  ``records`` then still
+    # describes the XML from before that rewrite; using it here reports a stale
+    # overflow and can fail an otherwise repaired slide.  Always measure the
+    # final regenerated root before deciding whether overflow remains.
+    final_records, measurement_source = await _analyze_current_xml(
+        root,
+        state["current_xml_content"],
+        None,
+    )
     report = public_overflow_report(final_records)
     report.update(
         {
             "rounds": rounds_completed,
             "llm_calls": llm_calls,
             "rewrites": rewrite_count,
-            "skipped_math_fields": skipped_math_fields,
+            # Formula boxes still participate in whole-slide repair. Only the
+            # expressions themselves are immutable while layout is rebuilt.
+            "protected_math_fields": len(protected_math_field_ids),
+            "skipped_math_fields": 0,
             "skipped_unfixable": skipped_unfixable,
             "measurement_source": measurement_source,
             "status": "ok" if not any(record["overflow"] for record in final_records) else "overflow_remaining",
@@ -363,18 +635,33 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             EXECUTOR_MAX_RETRIES,
         )
         if retry_count >= EXECUTOR_MAX_RETRIES:
-            raise RuntimeError(
-                f"Slide {state.get('current_slide_index', 0) + 1} still has "
-                f"{remaining_overflow} overflowing textbox(es) after retries"
+            # Overflow is a quality warning, not a workflow-fatal error. Keep
+            # the best regenerated XML, mark the report explicitly, and let
+            # the graph render/finalize this slide before moving on.
+            report["status"] = "accepted_with_overflow"
+            report["accepted_with_overflow"] = True
+            state["overflow_report"] = report
+            state["overflow_failed"] = False
+            logger.warning(
+                "Accepting slide %s with %s overflowing textbox(es) after "
+                "retries; continuing workflow",
+                state.get("current_slide_index", 0) + 1,
+                remaining_overflow,
             )
-        state["overflow_failed"] = True
-        state["retry_count"] = retry_count + 1
-        state["executor_decision"] = "fail"
-        state["executor_feedback"] = (
-            "TEXT OVERFLOW VALIDATION FAILED. Regenerate the slide with shorter "
-            "content or a safer textbox layout. "
-            f"Remaining overflowing boxes: {remaining_overflow}."
-        )
+        else:
+            state["overflow_failed"] = True
+            state["retry_count"] = retry_count + 1
+            state["executor_decision"] = "fail"
+            state["executor_feedback"] = (
+                "WHOLE-SLIDE OVERFLOW VALIDATION FAILED. Read the complete slide "
+                "content and regenerate the slide with all textual fields shortened "
+                "proportionally and harmoniously. First preserve the current design; "
+                "if its geometry still cannot fit the complete slide, choose a different "
+                "available XML layout tool with more suitable space. Preserve facts, "
+                "numbers, names, images, colors, list structure, and mathematical expressions. "
+                "No textbox may exceed its bounds or the slide boundary. "
+                f"Remaining overflowing boxes: {remaining_overflow}."
+            )
     else:
         state["overflow_failed"] = False
 

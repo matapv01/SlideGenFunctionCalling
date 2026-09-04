@@ -30,9 +30,10 @@ def evaluate_executor_decision(state: State) -> str:
     return "generate_slide"
 
 def evaluate_overflow_decision(state: State) -> str:
-    """Render only after the browser-based overflow check passes."""
+    """Render only a slide whose whole-slide overflow repair has passed."""
     if state.get("overflow_failed") or (
-        (state.get("overflow_report") or {}).get("status") == "overflow_remaining"
+        (state.get("overflow_report") or {}).get("status")
+        == "overflow_remaining"
     ):
         return "generate_slide"
     return "render_xml"

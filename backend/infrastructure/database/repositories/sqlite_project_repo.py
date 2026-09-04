@@ -55,11 +55,12 @@ class SqliteProjectRepository(ProjectRepository):
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT * FROM projects
-                WHERE user_id = ?
-                ORDER BY updated_at DESC
+                SELECT DISTINCT p.* FROM projects p
+                LEFT JOIN project_collaborators pc ON pc.project_id = p.id AND pc.user_id = ?
+                WHERE p.user_id = ? OR pc.user_id IS NOT NULL
+                ORDER BY p.updated_at DESC
                 LIMIT ? OFFSET ?
-            """, (user_id, limit, offset))
+            """, (user_id, user_id, limit, offset))
             rows = cursor.fetchall()
             return [self._map_project(row) for row in rows]
 
@@ -217,3 +218,76 @@ class SqliteProjectRepository(ProjectRepository):
                     metadata['generation_params'] = json.loads(metadata['generation_params'])
                 return metadata
             return None
+
+    # --- Collaboration / access control ---
+
+    def get_project_role(self, project_id: int, user_id: int) -> Optional[str]:
+        """Return owner/editor/viewer for a user, or None when not shared."""
+        with get_db_connection() as conn:
+            row = conn.execute(
+                "SELECT user_id FROM projects WHERE id = ?", (project_id,)
+            ).fetchone()
+            if not row:
+                return None
+            if int(row["user_id"]) == int(user_id):
+                return "owner"
+            member = conn.execute(
+                "SELECT role FROM project_collaborators WHERE project_id = ? AND user_id = ?",
+                (project_id, user_id),
+            ).fetchone()
+            return str(member["role"]) if member else None
+
+    def list_collaborators(self, project_id: int) -> list[dict]:
+        with get_db_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT pc.id, pc.project_id, pc.user_id, pc.role,
+                       pc.created_at, pc.updated_at,
+                       u.email, COALESCE(up.full_name, u.email) AS name
+                FROM project_collaborators pc
+                JOIN users u ON u.id = pc.user_id
+                LEFT JOIN user_profiles up ON up.user_id = u.id
+                WHERE pc.project_id = ?
+                ORDER BY pc.created_at ASC
+                """,
+                (project_id,),
+            ).fetchall()
+            return [dict(row) for row in rows]
+
+    def find_user_by_email(self, email: str):
+        with get_db_connection() as conn:
+            return conn.execute(
+                "SELECT id, email FROM users WHERE lower(email) = lower(?)", (email.strip(),)
+            ).fetchone()
+
+    def upsert_collaborator(self, project_id: int, user_id: int, role: str, invited_by: int) -> dict:
+        with get_db_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO project_collaborators (project_id, user_id, role, invited_by)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(project_id, user_id) DO UPDATE SET
+                    role = excluded.role,
+                    invited_by = excluded.invited_by,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (project_id, user_id, role, invited_by),
+            )
+            conn.commit()
+        return next(item for item in self.list_collaborators(project_id) if item["user_id"] == user_id)
+
+    def update_collaborator_role(self, project_id: int, user_id: int, role: str) -> None:
+        with get_db_connection() as conn:
+            conn.execute(
+                "UPDATE project_collaborators SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ? AND user_id = ?",
+                (role, project_id, user_id),
+            )
+            conn.commit()
+
+    def remove_collaborator(self, project_id: int, user_id: int) -> None:
+        with get_db_connection() as conn:
+            conn.execute(
+                "DELETE FROM project_collaborators WHERE project_id = ? AND user_id = ?",
+                (project_id, user_id),
+            )
+            conn.commit()

@@ -17,6 +17,22 @@ class ProjectService:
     def __init__(self, project_repo: ProjectRepository):
         self.repo = project_repo
 
+    def get_project_role(self, project_id: int, user_id: int) -> str | None:
+        return self.repo.get_project_role(project_id, user_id)
+
+    def require_project_access(self, project_id: int, user_id: int, minimum_role: str = "viewer") -> str:
+        """Check project membership and return the effective role."""
+        project = self.repo.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
+        role = self.repo.get_project_role(project_id, user_id)
+        if role is None:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập dự án này")
+        role_rank = {"viewer": 1, "editor": 2, "owner": 3}
+        if role_rank.get(role, 0) < role_rank.get(minimum_role, 1):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa dự án này")
+        return role
+
 
     def create_project(self, user_id: int, data: Union[ProjectCreate, dict]) -> int:
         if isinstance(data, ProjectCreate):
@@ -50,25 +66,19 @@ class ProjectService:
 
 
     def get_project_details(self, project_id: int, user_id: int) -> Project:
-        # Logic nghiệp vụ: Kiểm tra quyền sở hữu
         project = self.repo.get_project(project_id)
         if not project:
             raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
-        
-        if project.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Truy cập bị từ chối")
 
+        role = self.require_project_access(project_id, user_id)
         project.metadata = self.repo.get_metadata(project_id) or {}
+        project.metadata["access_role"] = role
         
         return project
 
 
     def update_project(self, project_id: int, user_id: int, data: Union[ProjectUpdate, dict]) -> None:
-        project = self.repo.get_project(project_id)
-        if not project:
-            raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
-        if project.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Truy cập bị từ chối")
+        self.require_project_access(project_id, user_id, "editor")
         
         # Convert Pydantic to dict
         if isinstance(data, ProjectUpdate):
@@ -84,15 +94,13 @@ class ProjectService:
         if not project:
             raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
         if project.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Truy cập bị từ chối")
+            raise HTTPException(status_code=403, detail="Chỉ chủ sở hữu mới có thể xóa dự án")
             
         self.repo.delete_project(project_id)
 
 
     def create_slide(self, project_id: int, user_id: int, data: Union[SlideCreate, dict]) -> int:
-        project = self.repo.get_project(project_id)
-        if not project or project.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Truy cập bị từ chối")
+        self.require_project_access(project_id, user_id, "editor")
         
         if isinstance(data, SlideCreate):
             data_dict = data.model_dump()
@@ -124,10 +132,7 @@ class ProjectService:
         if not slide:
             raise HTTPException(status_code=404, detail="Không tìm thấy slide")
             
-        # Check ownership thông qua Project
-        project = self.repo.get_project(slide.project_id)
-        if not project or project.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Truy cập bị từ chối")
+        self.require_project_access(slide.project_id, user_id)
             
         return slide
 
@@ -138,10 +143,7 @@ class ProjectService:
         if not slide:
              raise HTTPException(status_code=404, detail="Slide not found")
 
-        # Check ownership
-        project = self.repo.get_project(slide.project_id)
-        if not project or project.user_id != user_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        self.require_project_access(slide.project_id, user_id, "editor")
 
         # Merge data vào Entity
         if isinstance(data, SlideUpdate):
@@ -160,6 +162,7 @@ class ProjectService:
 
     def delete_slide(self, slide_id: int, user_id: int) -> None:
         slide = self.get_slide(slide_id, user_id) # Check exist & ownership
+        self.require_project_access(slide.project_id, user_id, "editor")
         project_id = slide.project_id
         
         self.repo.delete_slide(slide_id)

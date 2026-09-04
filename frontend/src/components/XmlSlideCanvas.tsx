@@ -75,15 +75,21 @@ const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => 
 
 interface MathFieldEditorProps extends MathFieldPreviewProps {
   onChange: (latex: string) => void;
+  onCommit?: () => void;
 }
 
-const MathFieldEditor = ({ latex, fontSize, color, onChange }: MathFieldEditorProps) => {
+const MathFieldEditor = ({ latex, fontSize, color, onChange, onCommit }: MathFieldEditorProps) => {
   const hostRef = useRef<HTMLSpanElement>(null);
   const onChangeRef = useRef(onChange);
+  const onCommitRef = useRef(onCommit);
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  useEffect(() => {
+    onCommitRef.current = onCommit;
+  }, [onCommit]);
 
   useLayoutEffect(() => {
     if (!hostRef.current || !customElements.get("math-field")) return;
@@ -105,11 +111,19 @@ const MathFieldEditor = ({ latex, fontSize, color, onChange }: MathFieldEditorPr
     const handleInput = () => {
       onChangeRef.current(String(mathField.value ?? mathField.textContent ?? ""));
     };
+    const handleBlur = () => onCommitRef.current?.();
     mathField.addEventListener("input", handleInput);
+    mathField.addEventListener("blur", handleBlur);
     hostRef.current.replaceChildren(mathField);
     mathField.value = latex;
 
-    return () => mathField.removeEventListener("input", handleInput);
+    return () => {
+      mathField.removeEventListener("input", handleInput);
+      mathField.removeEventListener("blur", handleBlur);
+    };
+  // The math-field host is intentionally mounted once; separate effects update
+  // its value and input handler without resetting the caret on every keystroke.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -391,6 +405,14 @@ const polygonBounds = (points: string) => {
   };
 };
 
+const parseTableData = (value: string | undefined) => {
+  const rows = (value || "Metric|Value;Revenue|120;Users|2400")
+    .split(";")
+    .map((row) => row.split("|").map((cell) => cell.trim()));
+  const columnCount = Math.max(1, ...rows.map((row) => row.length));
+  return rows.map((row) => Array.from({ length: columnCount }, (_, index) => row[index] || ""));
+};
+
 const movePoints = (points: string, dx: number, dy: number) =>
   points
     .trim()
@@ -532,6 +554,11 @@ const elementStyle = (element: XmlSlideElement, selected: boolean, baseZIndex: n
     const angle = Math.atan2(numberAttr(element, "y2") - numberAttr(element, "y1"), numberAttr(element, "x2") - numberAttr(element, "x1")) * 180 / Math.PI;
     style.transformOrigin = "left center";
     transforms.push(`rotate(${angle}deg)`);
+  } else if (tag === "table") {
+    style.background = element.attrs.row_fill || "#FFFFFF";
+    style.border = `1px solid ${element.attrs.border_color || "#CBD5E1"}`;
+    style.overflow = "hidden";
+    style.color = element.attrs.text_color || "#0F172A";
   } else if (["piechart", "barchart", "linechart"].includes(tag)) {
     style.border = "1px dashed #64748b";
     style.background = "rgba(148, 163, 184, 0.18)";
@@ -649,6 +676,10 @@ export const XmlSlideCanvas = ({
       onSelect(element.id, true);
       return;
     }
+    if (element.attrs.locked === "true") {
+      onSelect(element.id, false);
+      return;
+    }
     const frame = elementFrame(element, metrics);
     const groupId = element.attrs[XML_GROUP_ATTR];
     const groupedIds = groupId
@@ -659,7 +690,7 @@ export const XmlSlideCanvas = ({
       : groupedIds;
     const members = dragIds.flatMap((id) => {
       const member = slide.elements.find((item) => item.id === id);
-      if (!member) return [];
+      if (!member || member.attrs.locked === "true") return [];
       const memberFrame = elementFrame(member, metrics);
       return [{
         id,
@@ -923,10 +954,10 @@ export const XmlSlideCanvas = ({
         : {}),
       style,
       onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => handlePointerDown(event, element),
-      onDoubleClick: () => !readOnly && tag === "textbox" && setEditingId(element.id),
+      onDoubleClick: () => !readOnly && element.attrs.locked !== "true" && tag === "textbox" && setEditingId(element.id),
     };
 
-    const resizeHandles = primarySelected && !readOnly ? (["tl", "tr", "bl", "br"] as const).map((handle) => (
+    const resizeHandles = primarySelected && !readOnly && element.attrs.locked !== "true" ? (["tl", "tr", "bl", "br"] as const).map((handle) => (
       <span
         key={handle}
         className="absolute z-[1001] h-2.5 w-2.5 rounded-sm border border-blue-700 bg-white shadow"
@@ -973,6 +1004,54 @@ export const XmlSlideCanvas = ({
       );
     }
 
+    if (tag === "line") {
+      const frame = elementFrame(element, metrics);
+      const x1 = numberAttr(element, "x1") - frame.x;
+      const y1 = numberAttr(element, "y1") - frame.y;
+      const x2 = numberAttr(element, "x2", numberAttr(element, "x1") + 100) - frame.x;
+      const y2 = numberAttr(element, "y2", numberAttr(element, "y1")) - frame.y;
+      const markerId = `xml-arrow-${element.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+      const stroke = element.attrs.stroke || element.attrs.color || "#111827";
+      const strokeWidth = ptToCanvasY(numberAttr(element, "width", 1), metrics);
+      const arrowStart = ["true", "arrow", "filled"].includes((element.attrs.arrow_start || "").toLowerCase());
+      const arrowEnd = ["true", "arrow", "filled"].includes((element.attrs.arrow_end || "").toLowerCase());
+      return (
+        <div
+          key={element.id}
+          {...common}
+          aria-label="Connector"
+          style={{ ...style, borderTop: "none", transform: "none", overflow: "visible" }}
+        >
+          <svg width="100%" height="100%" viewBox={`0 0 ${Math.max(1, frame.width)} ${Math.max(1, frame.height)}`} overflow="visible">
+            {(arrowStart || arrowEnd) && (
+              <defs>
+                <marker id={`${markerId}-start`} markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse" markerUnits="strokeWidth">
+                  <path d="M 8 0 L 0 4 L 8 8 z" fill={stroke} />
+                </marker>
+                <marker id={`${markerId}-end`} markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth">
+                  <path d="M 0 0 L 8 4 L 0 8 z" fill={stroke} />
+                </marker>
+              </defs>
+            )}
+            <line
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              strokeDasharray={element.attrs.dash === "dashed" ? "8 6" : element.attrs.dash === "dotted" ? "2 5" : undefined}
+              strokeLinecap="round"
+              markerStart={arrowStart ? `url(#${markerId}-start)` : undefined}
+              markerEnd={arrowEnd ? `url(#${markerId}-end)` : undefined}
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+          {resizeHandles}
+        </div>
+      );
+    }
+
     if (tag === "polygon") {
       const bounds = polygonBounds(element.attrs.points || "");
       const points = bounds.parsed
@@ -987,6 +1066,38 @@ export const XmlSlideCanvas = ({
           <svg width="100%" height="100%" viewBox={`0 0 ${bounds.width} ${bounds.height}`} preserveAspectRatio="none">
             <polygon points={points} fill={fill} stroke={stroke} strokeWidth={strokeWidth} vectorEffect="non-scaling-stroke" />
           </svg>
+          {resizeHandles}
+        </div>
+      );
+    }
+
+    if (tag === "table") {
+      const rows = parseTableData(element.attrs.data);
+      const fontSize = Math.max(10, ptToCanvasY(numberAttr(element, "font_size", 18), metrics));
+      const headerFill = element.attrs.header_fill || "#1E3A8A";
+      const headerColor = element.attrs.header_color || "#FFFFFF";
+      const borderColor = element.attrs.border_color || "#CBD5E1";
+      return (
+        <div
+          key={element.id}
+          {...common}
+          role="table"
+          aria-label="Slide table"
+          className="overflow-hidden rounded-sm"
+          style={{ ...style, background: element.attrs.row_fill || "#FFFFFF" }}
+        >
+          <table className="h-full w-full border-collapse text-left" style={{ fontSize }}>
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={`${element.id}-row-${rowIndex}`} style={{ background: rowIndex === 0 ? headerFill : rowIndex % 2 === 0 ? element.attrs.stripe_fill || "#EFF6FF" : element.attrs.row_fill || "#FFFFFF", color: rowIndex === 0 ? headerColor : element.attrs.text_color || "#0F172A" }}>
+                  {row.map((cell, cellIndex) => {
+                    const Cell = rowIndex === 0 ? "th" : "td";
+                    return <Cell key={`${element.id}-${rowIndex}-${cellIndex}`} className="border px-2 py-1.5 align-middle" style={{ borderColor, fontWeight: rowIndex === 0 || cellIndex === 0 ? 700 : 400 }}>{cell}</Cell>;
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
           {resizeHandles}
         </div>
       );
@@ -1061,6 +1172,7 @@ export const XmlSlideCanvas = ({
                    latex={field.attrs.value || field.text}
                    fontSize={ptToCanvasY(layout.fontSize, metrics)}
                    color={element.attrs.color || "#111827"}
+                   onCommit={onCommit}
                    onChange={(latex) => {
                      const children = element.children.map((child, childIndex) => {
                        if (childIndex !== element.children.indexOf(field)) return child;
@@ -1141,10 +1253,66 @@ export const XmlSlideCanvas = ({
     }
 
     if (["piechart", "barchart", "linechart"].includes(tag)) {
+      const values = (element.attrs.data || "28,46,64,38,78")
+        .split(",")
+        .map((value) => Number(value.trim()))
+        .filter((value) => Number.isFinite(value) && value >= 0)
+        .slice(0, 12);
+      const safeValues = values.length > 0 ? values : [0];
+      const maxValue = Math.max(...safeValues, 1);
+      const palette = ["#3B82F6", "#14B8A6", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
+      const totalValue = Math.max(safeValues.reduce((sum, value) => sum + value, 0), 1);
+      let pieOffset = 0;
+      const pieGradient = safeValues.map((value, index) => {
+        const start = pieOffset;
+        pieOffset += (value / totalValue) * 360;
+        return `${palette[index % palette.length]} ${start}deg ${pieOffset}deg`;
+      }).join(", ");
+      const linePoints = safeValues.map((value, index) => {
+        const x = safeValues.length === 1 ? 50 : (index / (safeValues.length - 1)) * 100;
+        const y = 100 - (value / maxValue) * 86 - 7;
+        return `${x},${y}`;
+      }).join(" ");
       return (
-        <div key={element.id} {...common} className="flex flex-col justify-center gap-2 rounded text-center">
-          <strong>{element.attrs.title || element.tag}</strong>
-          <span className="text-xs text-slate-500">Chart preview · {element.children.length} series</span>
+        <div
+          key={element.id}
+          {...common}
+          className="flex flex-col justify-center gap-2 rounded p-3 text-center"
+          role="img"
+          aria-label={`${element.attrs.title || "Chart"}: ${safeValues.join(", ")}`}
+        >
+          <strong className="truncate text-sm">{element.attrs.title || element.tag}</strong>
+          <div className="flex min-h-0 flex-1 items-end justify-center gap-1.5 border-b border-slate-400/40 px-2 pb-1 pt-2">
+            {tag === "barchart" && safeValues.map((value, index) => (
+              <span
+                key={`${element.id}-bar-${index}`}
+                className="min-w-2 flex-1 rounded-t transition-[height]"
+                style={{
+                  height: `${Math.max(4, (value / maxValue) * 100)}%`,
+                  background: element.attrs.color || palette[index % palette.length],
+                }}
+                title={String(value)}
+              />
+            ))}
+            {tag === "piechart" && (
+              <span
+                className="m-auto block aspect-square h-[78%] rounded-full border-4 border-white/60 shadow-inner"
+                style={{ background: `conic-gradient(${pieGradient})` }}
+                title={safeValues.join(", ")}
+              />
+            )}
+            {tag === "linechart" && (
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full min-h-0 w-full overflow-visible" aria-hidden="true">
+                <polyline points={linePoints} fill="none" stroke={element.attrs.color || "#3B82F6"} strokeWidth="3" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
+                {safeValues.map((value, index) => {
+                  const x = safeValues.length === 1 ? 50 : (index / (safeValues.length - 1)) * 100;
+                  const y = 100 - (value / maxValue) * 86 - 7;
+                  return <circle key={`${element.id}-point-${index}`} cx={x} cy={y} r="2.5" fill={element.attrs.color || "#3B82F6"} vectorEffect="non-scaling-stroke" />;
+                })}
+              </svg>
+            )}
+          </div>
+          {resizeHandles}
         </div>
       );
     }

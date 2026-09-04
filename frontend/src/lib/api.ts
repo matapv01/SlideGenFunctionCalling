@@ -88,6 +88,40 @@ interface SlidesResponse {
   total: number;
 }
 
+export type ProjectRole = "owner" | "editor" | "viewer";
+export interface ProjectCollaborator {
+  id?: number | null;
+  project_id: number;
+  user_id: number;
+  email: string;
+  name: string;
+  role: ProjectRole;
+  owner?: boolean;
+  created_at?: string;
+}
+export interface ProjectVersion {
+  id: number;
+  project_id: number;
+  label?: string;
+  created_at?: string;
+  created_by?: { id?: number; email?: string; name?: string };
+  snapshot?: { xml?: string; slides?: any[]; [key: string]: any };
+}
+export interface ProjectComment {
+  id: number;
+  project_id: number;
+  user_id: number;
+  author: { id?: number; email?: string; name?: string };
+  body: string;
+  slide_index?: number | null;
+  element_id?: string | null;
+  resolved: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+export interface ImageSearchResult {
+  url: string;
+}
 export type OutputFormat = "xml";
 
 // Auth
@@ -169,6 +203,58 @@ export const api = {
 
   deleteProject: (id: string | number) =>
     request<{ message: string }>(`/projects/${id}`, { method: "DELETE" }),
+
+  // Collaboration, project history and review comments
+  getProjectCollaborators: (projectId: string | number) =>
+    request<{ collaborators: ProjectCollaborator[] }>(`/projects/${projectId}/collaborators`),
+
+  inviteProjectCollaborator: (projectId: string | number, email: string, role: "viewer" | "editor") =>
+    request<ProjectCollaborator>(`/projects/${projectId}/collaborators`, {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }),
+
+  updateProjectCollaborator: (projectId: string | number, userId: string | number, role: "viewer" | "editor") =>
+    request<ProjectCollaborator>(`/projects/${projectId}/collaborators/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+
+  removeProjectCollaborator: (projectId: string | number, userId: string | number) =>
+    request<{ message: string }>(`/projects/${projectId}/collaborators/${userId}`, { method: "DELETE" }),
+
+  getProjectVersions: (projectId: string | number) =>
+    request<{ versions: ProjectVersion[] }>(`/projects/${projectId}/versions`),
+
+  getProjectVersion: (projectId: string | number, versionId: string | number) =>
+    request<ProjectVersion>(`/projects/${projectId}/versions/${versionId}`),
+
+  createProjectVersion: (projectId: string | number, data: { snapshot: ProjectVersion["snapshot"]; label?: string }) =>
+    request<ProjectVersion>(`/projects/${projectId}/versions`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  restoreProjectVersion: (projectId: string | number, versionId: string | number) =>
+    request<{ restored: boolean; version_id: number }>(`/projects/${projectId}/versions/${versionId}/restore`, { method: "POST" }),
+
+  getProjectComments: (projectId: string | number, includeResolved = true) =>
+    request<{ comments: ProjectComment[] }>(`/projects/${projectId}/comments?include_resolved=${includeResolved}`),
+
+  createProjectComment: (projectId: string | number, data: { body: string; slide_index?: number; element_id?: string }) =>
+    request<ProjectComment>(`/projects/${projectId}/comments`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateProjectComment: (projectId: string | number, commentId: string | number, data: { body?: string; resolved?: boolean }) =>
+    request<ProjectComment>(`/projects/${projectId}/comments/${commentId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteProjectComment: (projectId: string | number, commentId: string | number) =>
+    request<{ message: string }>(`/projects/${projectId}/comments/${commentId}`, { method: "DELETE" }),
 
   // Upload endpoints - /api/generate/docx*
   uploadDocx: (file: File, options: { outputFormat?: OutputFormat } = {}) => {
@@ -414,6 +500,19 @@ export const api = {
 
   // Image URL - /api/image-serve/*
   imageUrl: (imageName: string) => `${API_BASE_URL}/image-serve/${encodeURIComponent(imageName)}`,
+
+  imageProxyUrl: (imageUrl: string) => `${API_BASE_URL}/image-serve/remote-proxy?url=${encodeURIComponent(imageUrl)}`,
+
+  searchImages: (
+    query: string,
+    options: { layout?: "Wide" | "Tall" | "Square"; size?: "Large" | "Medium" | "Small"; maxResults?: number } = {},
+  ) => {
+    const params = new URLSearchParams({ query });
+    if (options.layout) params.set("layout", options.layout);
+    if (options.size) params.set("size", options.size);
+    if (options.maxResults) params.set("max_results", String(options.maxResults));
+    return request<{ query: string; images: ImageSearchResult[] }>(`/image-search?${params.toString()}`);
+  },
 
   // Subscription endpoints - /api/subscription/*
   getSubscriptionInfo: () => request<{

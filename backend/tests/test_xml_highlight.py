@@ -55,6 +55,21 @@ def test_invalid_color_receives_safe_fallback():
     assert highlights[0].text_color == DEFAULT_HIGHLIGHT_COLOR
 
 
+def test_malformed_highlight_closing_marker_is_consumed():
+    clean_arguments, highlights = extract_highlight_markers(
+        {
+            "text": (
+                '[[hl color="#28A745"]]Tùy biến[[/hl], chuyên sâu'
+            )
+        }
+    )
+
+    assert clean_arguments["text"] == "Tùy biến, chuyên sâu"
+    assert len(highlights) == 1
+    assert highlights[0].text == "Tùy biến"
+    assert highlights[0].text_color == "#28A745"
+
+
 def test_highlight_must_be_a_unique_phrase_from_source_content():
     clean_arguments, highlights = extract_highlight_markers(
         {

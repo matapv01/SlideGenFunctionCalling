@@ -40,6 +40,7 @@ from backend.application.services.idea_workflow_service import IdeaWorkflowServi
 from backend.application.services.manual_workflow_service import ManualWorkflowService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
 from backend.application.services.subscription_service import SubscriptionService
+from backend.application.services.collaboration_service import CollaborationService
 
 from backend.api.schemas.auth_schema import UserResponse
 
@@ -239,3 +240,9 @@ async def get_current_user_from_token_param(
 
 def get_subscription_service() -> SubscriptionService:
     return SubscriptionService(SqliteUserRepository())
+
+
+def get_collaboration_service(
+    project_repo: ProjectRepository = Depends(get_project_repo),
+) -> CollaborationService:
+    return CollaborationService(project_repo)

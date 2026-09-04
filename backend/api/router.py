@@ -12,6 +12,8 @@ from backend.api.v1.slide_router import router as slide_router
 from backend.api.v1.temp_router import router as temp_router
 from backend.api.v1.project_router import router as project_router
 from backend.api.v1.subscription_router import router as subscription_router
+from backend.api.v1.collaboration_router import router as collaboration_router
+from backend.api.v1.image_search_router import router as image_search_router
 
 def create_router():
     """Create and configure the main API router"""
@@ -22,6 +24,8 @@ def create_router():
     router.include_router(project_router)
     router.include_router(profile_router)
     router.include_router(subscription_router)
+    router.include_router(collaboration_router)
+    router.include_router(image_search_router)
 
     # Include router for infrastructure-related endpoints
     router.include_router(capture_router)

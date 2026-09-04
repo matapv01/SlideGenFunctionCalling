@@ -971,6 +971,61 @@ TOOLS_DICT = {'INTRO_TOOLS': INTRO_TOOLS,
 # Tool utilities
 TOOL_MAP = {tool.name: tool for tool in ALL_TOOLS}
 
+# Older prompts and persisted workflow state may still refer to this layout
+# with its former name. Keep the public tool list canonical, but resolve the
+# legacy name at runtime so it cannot produce a safe fallback.
+TOOL_NAME_ALIASES = {
+    "generate_numbered_list_slide_xml": "generate_numbered_social_media_points_slide_xml",
+}
+
+
+def canonical_tool_name(name: str) -> str:
+    """Return the registered name for a legacy tool alias."""
+    if not isinstance(name, str):
+        return name
+    return TOOL_NAME_ALIASES.get(name, name)
+
+
+def normalize_tool_arguments(tool_name: str, arguments: dict) -> dict:
+    """Adapt legacy numbered-list arguments to the canonical tool schema."""
+    if canonical_tool_name(tool_name) != "generate_numbered_social_media_points_slide_xml":
+        return arguments
+    if not isinstance(arguments, dict):
+        return arguments
+
+    normalized = dict(arguments)
+    items = normalized.get("items")
+    if isinstance(items, (list, tuple)):
+        normalized["items"] = [
+            item
+            if isinstance(item, dict)
+            else {"title": str(item or ""), "description": ""}
+            for item in items
+        ]
+    elif items is not None:
+        normalized["items"] = [{"title": str(items), "description": ""}]
+
+    # The legacy shape used one text color for all numbered content fields.
+    legacy_text_color = normalized.get("text_color")
+    if legacy_text_color is not None:
+        normalized.setdefault("title_color", legacy_text_color)
+        normalized.setdefault("item_title_color", legacy_text_color)
+        normalized.setdefault("item_body_color", legacy_text_color)
+
+    return normalized
+
+
+def normalize_tool_call(tool_call: dict) -> dict:
+    """Return a copy of a tool call with aliases and legacy args normalized."""
+    if not isinstance(tool_call, dict):
+        return tool_call
+    name = canonical_tool_name(tool_call.get("name"))
+    return {
+        **tool_call,
+        "name": name,
+        "arguments": normalize_tool_arguments(name, tool_call.get("arguments", {})),
+    }
+
 
 def _safe_xml_for_failed_tool(tool_name: str) -> str:
     """Return valid XML so one failed generator never empties the slide."""
@@ -979,8 +1034,8 @@ def _safe_xml_for_failed_tool(tool_name: str) -> str:
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
   <slide background="#F3F3F3">
     <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F3F3F3" line_color="none" />
-    <textbox x="120" y="300" width="1360" height="120" font="FreeSans" size="48" color="#111111" align="center" vertical_align="middle" overflow="clip">{safe_name}</textbox>
-    <textbox x="120" y="450" width="1360" height="80" font="FreeSans" size="24" color="#555555" align="center" vertical_align="middle" overflow="clip">Slide content is temporarily unavailable</textbox>
+    <textbox x="120" y="240" width="1360" height="180" font="FreeSans" size="42" color="#111111" align="center" vertical_align="middle" overflow="clip">{safe_name}</textbox>
+    <textbox x="120" y="470" width="1360" height="70" font="FreeSans" size="24" color="#555555" align="center" vertical_align="middle" overflow="clip">Slide content is temporarily unavailable</textbox>
   </slide>
 </presentation>'''
 
@@ -990,12 +1045,13 @@ def get_all_tool_names():
 
 def get_tool_by_name(name: str):
     """Get a specific tool by name."""
-    return TOOL_MAP.get(name)
+    return TOOL_MAP.get(canonical_tool_name(name))
 
 def execute_tool(tool_call: dict, source_content: str | None = None):
     """Execute a tool call with the provided arguments."""
-    name = tool_call.get("name")
-    args = tool_call.get("arguments", {})
+    normalized_call = normalize_tool_call(tool_call)
+    name = normalized_call.get("name")
+    args = normalized_call.get("arguments", {})
     
     if name in TOOL_MAP:
         try:
@@ -1043,6 +1099,11 @@ def execute_tool_plan(
         execute_image_search_plan,
     )
 
+    normalized_tool_calls = [
+        normalize_tool_call(call) if isinstance(call, dict) else call
+        for call in tool_calls
+    ] if isinstance(tool_calls, list) else tool_calls
+
     if tool_lookup is None:
         tool_lookup = {t.name: t for tools in TOOLS_DICT.values() for t in tools}
 
@@ -1052,7 +1113,7 @@ def execute_tool_plan(
     )
     try:
         final_tool_call, search_history = execute_image_search_plan(
-            tool_calls=tool_calls,
+            tool_calls=normalized_tool_calls,
             tool_lookup=tool_lookup,
         )
     except Exception as error:
@@ -1062,11 +1123,11 @@ def execute_tool_plan(
         # the call itself is also invalid.
         print(f"Warning: XML tool plan normalization failed: {error}")
         if (
-            isinstance(tool_calls, list)
-            and tool_calls
-            and isinstance(tool_calls[0], dict)
+            isinstance(normalized_tool_calls, list)
+            and normalized_tool_calls
+            and isinstance(normalized_tool_calls[0], dict)
         ):
-            final_tool_call = tool_calls[0]
+            final_tool_call = normalized_tool_calls[0]
         else:
             final_tool_call = {
                 "name": "xml_tool_plan_fallback_xml",
@@ -1075,11 +1136,11 @@ def execute_tool_plan(
         search_history = []
     tool_name = final_tool_call.get("name", "unknown_tool")
     original_xml_call = (
-        tool_calls[0]
-        if isinstance(tool_calls, list) and tool_calls
+        normalized_tool_calls[0]
+        if isinstance(normalized_tool_calls, list) and normalized_tool_calls
         else final_tool_call
     )
-    search_calls = tool_calls[1:] if isinstance(tool_calls, list) else []
+    search_calls = normalized_tool_calls[1:] if isinstance(normalized_tool_calls, list) else []
 
     # Build execution matrix theo cấu trúc training: tool_call trước, image_tool_call_N sau
     execution_matrix: dict = {"tool_call": original_xml_call}

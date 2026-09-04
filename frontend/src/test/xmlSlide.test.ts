@@ -74,4 +74,23 @@ describe("XML slide rich text", () => {
       ">Edited plain text</textbox>",
     );
   });
+
+  it("round-trips chart, table, and connector element attributes", () => {
+    const document = parseXmlSlide(`
+      <presentation width="1600" height="900">
+        <slide>
+          <barchart x="10" y="20" width="400" height="240" data="10,20,30" />
+          <line x1="30" y1="40" x2="300" y2="160" arrow_end="true" />
+          <table x="80" y="100" width="600" height="300" data="Metric|Q1;Revenue|120" />
+        </slide>
+      </presentation>
+    `);
+    const [chart, connector, table] = document.slides[0].elements;
+
+    expect(chart.tag).toBe("barchart");
+    expect(chart.attrs.data).toBe("10,20,30");
+    expect(connector.attrs.arrow_end).toBe("true");
+    expect(table.tag).toBe("table");
+    expect(serializeXmlSlide(document)).toContain("data=\"Metric|Q1;Revenue|120\"");
+  });
 });

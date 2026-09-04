@@ -63,7 +63,7 @@ const router = createBrowserRouter([
       { path: "view/:projectId", element: <ProtectedRoute><ViewProject /></ProtectedRoute> },
       { path: "settings", element: <ProtectedRoute><Settings /></ProtectedRoute> },
       { path: "subscription", element: <ProtectedRoute><Subscription /></ProtectedRoute> },
-      { path: "editor", element: <XmlSlideEditor /> },
+      { path: "editor", element: <ProtectedRoute><XmlSlideEditor /></ProtectedRoute> },
       { path: "render/xml-preview", element: <XmlRenderPreview /> },
       { path: "*", element: <NotFound /> },
     ]

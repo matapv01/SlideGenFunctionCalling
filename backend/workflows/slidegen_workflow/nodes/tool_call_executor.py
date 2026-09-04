@@ -24,8 +24,10 @@ except ImportError:
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     TOOLS_DICT as XML_TOOLS_DICT,
+    canonical_tool_name,
     execute_tool as execute_xml_tool,
     execute_tool_plan as execute_xml_tool_plan,
+    normalize_tool_arguments,
 )
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.utils.xml_transitions import (
@@ -59,9 +61,9 @@ def _fallback_xml_for_failed_tool(tool_call: dict, reason: str) -> str:
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
   <slide background="#F8FAFC">
     <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F8FAFC" line_color="none" />
-    <textbox x="180" y="260" width="1240" height="100" font="Arial" size="52" bold="true" color="#0F172A" align="center" vertical_align="middle">{tool_name}</textbox>
-    <textbox x="180" y="390" width="1240" height="80" font="Arial" size="28" color="#475569" align="center" vertical_align="middle">Fallback XML slide</textbox>
-    <textbox x="180" y="500" width="1240" height="120" font="Arial" size="20" color="#64748B" align="center" vertical_align="middle">{safe_reason}</textbox>
+    <textbox x="180" y="220" width="1240" height="180" font="Arial" size="42" bold="true" color="#0F172A" align="center" vertical_align="middle">{tool_name}</textbox>
+    <textbox x="180" y="450" width="1240" height="70" font="Arial" size="28" color="#475569" align="center" vertical_align="middle">Fallback XML slide</textbox>
+    <textbox x="180" y="560" width="1240" height="220" font="Arial" size="20" color="#64748B" align="center" vertical_align="middle">{safe_reason}</textbox>
   </slide>
 </presentation>'''
 
@@ -149,8 +151,12 @@ def validate_tool_call(
     if not tool_call or not isinstance(tool_call, dict):
         return False, ["Tool call is empty or not a dict."]
     
-    tool_name = tool_call.get("name")
-    arguments = tool_call.get("arguments", {})
+    raw_tool_name = tool_call.get("name")
+    tool_name = canonical_tool_name(raw_tool_name)
+    arguments = normalize_tool_arguments(
+        tool_name,
+        tool_call.get("arguments", {}),
+    )
     
     # ── 1. Tool name checks ──────────────────────────────────────────
     if not tool_name:
@@ -164,7 +170,13 @@ def validate_tool_call(
     schema_lookup = _get_schema_lookup(tools_dict, format_name)
 
     # Check if tool exists in available tools (if provided) or in global registry
-    if available_tool_names and tool_name not in available_tool_names:
+    available_tool_names = (
+        [canonical_tool_name(name) for name in available_tool_names]
+        if available_tool_names
+        else available_tool_names
+    )
+    is_known_alias = isinstance(raw_tool_name, str) and raw_tool_name != tool_name
+    if available_tool_names and tool_name not in available_tool_names and not is_known_alias:
         errors.append(
             f"UNKNOWN_TOOL: '{tool_name}' is not in the available tools: {available_tool_names}. "
             f"Choose one of the available tools."

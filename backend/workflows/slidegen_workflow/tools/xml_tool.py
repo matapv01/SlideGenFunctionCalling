@@ -2206,7 +2206,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
                 best = layout
             if layout["height"] <= max_height:
                 return layout
-            break
+            size -= 0.5
         return best
 
     title_font_name = "Arial"
@@ -2217,7 +2217,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
     title_layout = fit_text(
         title,
         title_font_path,
-        preferred=82.0,
+        preferred=48.0,
         minimum=26.0,
         max_width=text_box_width,
         max_height=title_max_height,
@@ -11138,6 +11138,14 @@ def generate_instructions_slide_xml(
         padding=4,
     )
 
+    # Keep the columns below the actual title box when a long title wraps.
+    # The previous fixed ``columns_top`` could place the first heading inside
+    # a multi-line title.
+    columns_top = max(
+        columns_top,
+        title_y + title_layout["height"] + 28.0,
+    )
+
     for _ in range(100 if AUTO_SHRINK_TEXT else 0):
         if title_layout["height"] <= 78:
             break
@@ -11240,6 +11248,18 @@ def generate_instructions_slide_xml(
             heading_to_body_gap,
             paragraph_gap,
         )
+
+    # The footer must follow the tallest column.  A fixed footer_y caused the
+    # long body text to render underneath the footer, which made the two text
+    # blocks overlap visually.
+    columns_bottom = max(
+        columns_top + left_layout["total_height"],
+        columns_top + right_layout["total_height"],
+    )
+    footer_y = max(
+        footer_y,
+        columns_bottom + 28.0,
+    )
 
     footer_layout = layout_text(
         footer_text,
@@ -13736,10 +13756,13 @@ def generate_client_snapshot_slide_xml(
 
     title_x = 22.0
     title_y = 38.0
-    title_width = 680.0
+    # Keep the title inside the left column, but give it the full usable
+    # width.  The old 680px width made otherwise reasonable Vietnamese titles
+    # wrap to three lines and pushed every content row downward.
+    title_width = 760.0
 
     subtitle_x = 22.0
-    subtitle_width = 700.0
+    subtitle_width = 760.0
 
     # The marker is a separate textbox (x=45, width=30). Leave a visible gap
     # before the label instead of starting it inside the marker box.
@@ -13752,10 +13775,10 @@ def generate_client_snapshot_slide_xml(
     subgoal_text_x = 122.0
     subgoal_width = content_right - subgoal_text_x
 
-    content_bottom = 760.0
+    content_bottom = 840.0
 
-    title_to_subtitle_gap = 34.0
-    subtitle_to_content_gap = 125.0
+    title_to_subtitle_gap = 28.0
+    subtitle_to_content_gap = 96.0
     bullet_gap = 13.0
     goal_gap = 8.0
 
@@ -14052,9 +14075,11 @@ def generate_client_snapshot_slide_xml(
     title_min_font_size = 46.0
 
     subtitle_font_size = 20.0
-    subtitle_min_font_size = 22.0
+    # The previous minimum (22pt) was larger than the starting 20pt size, so
+    # the subtitle could never participate in fitting.
+    subtitle_min_font_size = 16.0
 
-    body_font_size = 27.0
+    body_font_size = 24.0
     body_min_font_size = 18.0
 
     title_line_spacing = 0.95
@@ -14196,7 +14221,14 @@ def generate_client_snapshot_slide_xml(
                 padding=2,
             )
 
-            label_width = (
+            # Reserve a usable value column even when a model supplies an
+            # unusually long label.  Let the label wrap inside this cap rather
+            # than consuming the entire row and collapsing the value textbox.
+            max_label_width = max(
+                120.0,
+                content_right - content_x - value_gap - 280.0,
+            )
+            raw_label_width = (
                 single_line_width(
                     label,
                     body_bold_font_path,
@@ -14206,6 +14238,7 @@ def generate_client_snapshot_slide_xml(
                 if label
                 else 0.0
             )
+            label_width = min(raw_label_width, max_label_width)
 
             label_layout = (
                 layout_text(
@@ -14337,21 +14370,24 @@ def generate_client_snapshot_slide_xml(
             )
             changed = True
 
-        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
+        # This layout has a dense, variable-length detail list.  Let it
+        # perform its own bounded fit even when the global auto-shrink switch
+        # is disabled for other XML tools.
+        elif body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
+        elif subtitle_font_size > subtitle_min_font_size:
             subtitle_font_size = max(
                 subtitle_min_font_size,
                 subtitle_font_size - 0.5,
             )
             changed = True
 
-        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
+        elif title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -14553,8 +14589,8 @@ def generate_client_snapshot_slide_xml(
                 color=body_color,
                 align="left",
                 vertical_align="top",
-                single_line="true",
-                max_lines=1,
+                single_line="false",
+                max_lines=len(item["label"]["lines"]),
                 overflow="clip",
                 reflow_on_resize="true",
                 line_spacing=body_line_spacing,
@@ -17480,7 +17516,7 @@ def generate_topics_overview_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size -= 0.5
 
         return best
 
@@ -17500,7 +17536,10 @@ def generate_topics_overview_slide_xml(
 
     title_x = 88.0
     title_y = 94.0
-    title_width = 700.0
+    # The title sits above the full-width topic grid.  Limiting it to 700px
+    # forced long titles into unnecessary extra lines on the left, where they
+    # could overlap the first row of images.
+    title_width = canvas_width - title_x - 88.0
     title_max_height = 150.0
 
     title_layout = fit_text(
@@ -17527,7 +17566,10 @@ def generate_topics_overview_slide_xml(
     grid_width = grid_right - grid_x
 
     # Move content up/down depending on title size and item count.
-    grid_top = 322.0 if rows == 1 else 272.0
+    grid_top = max(
+        322.0 if rows == 1 else 272.0,
+        title_y + title_layout["height"] + 30.0,
+    )
     grid_bottom = 760.0 if rows == 1 else 822.0
     row_gap = 38.0 if rows == 1 else 30.0
     col_gap = 30.0 if columns >= 3 else 48.0
