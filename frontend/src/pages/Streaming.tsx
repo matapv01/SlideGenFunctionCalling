@@ -239,6 +239,7 @@ const Streaming = () => {
       const data = JSON.parse(e.data);
       const slideIndex = data.slide_index ?? data.index ?? slides.length;
       const slideTitle = data.title || `Slide ${slideIndex + 1}`;
+      if (data.total) setTotalSlides(Number(data.total));
       let slideContent = data.xml || data.content;
       const contentPath = data.xml_path || data.content_path;
       
@@ -258,11 +259,18 @@ const Streaming = () => {
         slideContent = `<?xml version="1.0" encoding="UTF-8"?><presentation schemaVersion="1.0" width="1600" height="900"><slide background="#ffffff"><textbox x="520" y="390" width="560" height="90" size="30" align="center">${escapeXmlText(slideTitle)}</textbox></slide></presentation>`;
       }
       
-      setSlides((prev) => [...prev, { 
-        index: slideIndex, 
+      const incomingSlide: SlideThumb = {
+        index: slideIndex,
         xml: slideContent,
         title: slideTitle
-      }]);
+      };
+
+      // Reveal every completed slide immediately, even when another section
+      // finishes first. Sorting keeps each result in its real deck position.
+      setSlides((prev) => [
+        ...prev.filter((slide) => slide.index !== slideIndex),
+        incomingSlide,
+      ].sort((left, right) => left.index - right.index));
     });
 
     es.addEventListener("complete", (e) => {
@@ -412,6 +420,22 @@ const Streaming = () => {
     typeof totalSlides === "number" && totalSlides <= 0
       ? Math.max(slides.length, 1)
       : totalSlides;
+  const parsedTotalSlides = typeof totalSlides === "number"
+    ? totalSlides
+    : Number.parseInt(totalSlides, 10);
+  const highestCompletedIndex = slides.reduce(
+    (highest, slide) => Math.max(highest, slide.index),
+    -1,
+  );
+  const slideSlotCount = Math.max(
+    Number.isFinite(parsedTotalSlides) ? parsedTotalSlides : 0,
+    highestCompletedIndex + 1,
+  );
+  const slidesByIndex = new Map(slides.map((slide) => [slide.index, slide]));
+  const slideSlots = Array.from(
+    { length: slideSlotCount },
+    (_, index) => slidesByIndex.get(index) || null,
+  );
 
   const startPresentation = async (startIndex: number = 0) => {
     setCurrentSlideIndex(startIndex);
@@ -605,7 +629,7 @@ const Streaming = () => {
         )}
 
         {/* Slide thumbnails */}
-        {slides.length > 0 && (
+        {slideSlots.length > 0 && (
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
@@ -617,11 +641,11 @@ const Streaming = () => {
             </div>
             
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-              {slides.map((slide, index) => (
+              {slideSlots.map((slide, index) => slide ? (
                 <Card
                   key={slide.index}
                   className="group cursor-pointer overflow-hidden bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02] animate-slide-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  style={{ animationDelay: `${Math.min(index, 6) * 100}ms` }}
                   onClick={() => setPreviewSlide(slide)}
                 >
                   {/* Colored header bar */}
@@ -660,6 +684,24 @@ const Streaming = () => {
                     <div className="mt-2 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       <span className="text-xs font-medium">{t.streaming_slide_completed}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card
+                  key={`pending-${index}`}
+                  className="overflow-hidden border-dashed bg-muted/20"
+                >
+                  <div className="h-1.5 bg-muted" />
+                  <CardContent className="p-3">
+                    <div className="inline-block px-2 py-0.5 rounded text-xs font-semibold mb-2 bg-muted text-muted-foreground">
+                      {t.streaming_slide_n} {index + 1}
+                    </div>
+                    <div className="aspect-video rounded-lg border border-dashed bg-muted/30 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/60" />
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      {t.streaming_stage_processing}
                     </div>
                   </CardContent>
                 </Card>

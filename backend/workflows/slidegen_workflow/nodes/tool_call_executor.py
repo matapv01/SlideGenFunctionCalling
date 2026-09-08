@@ -302,6 +302,25 @@ def validate_tool_call(
             errors.append(
                 f"EMPTY_LIST: '{arg_name}' is required but the list is empty."
             )
+
+    # ── 8. Deep schema validation ───────────────────────────────────
+    # The checks above intentionally produce concise feedback, but array
+    # element types also need validation before StructuredTool invocation.
+    # Otherwise a list[str] vs list[dict] mismatch passes here and only fails
+    # during execution, where it becomes a generic safe-fallback slide.
+    if not errors:
+        args_schema = getattr(tool_schema["tool_ref"], "args_schema", None)
+        if args_schema is not None:
+            try:
+                if hasattr(args_schema, "model_validate"):
+                    args_schema.model_validate(arguments)
+                else:
+                    args_schema.parse_obj(arguments)
+            except Exception as exc:
+                errors.append(
+                    f"SCHEMA_VALIDATION_ERROR: arguments for '{tool_name}' do not match "
+                    f"the nested tool schema: {str(exc)[:700]}"
+                )
     
     # ── 8. Strict Pydantic schema-level validation ───────────────────
     tool_ref = tool_schema.get("tool_ref")

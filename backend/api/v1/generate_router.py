@@ -694,7 +694,11 @@ async def stream_idea_generation(
                 title=title,
                 output_folder=str(output_folder),
                 callback=callback,
-                slide_options=idea_slide_options
+                slide_options=idea_slide_options,
+                section_ids=[
+                    chunk.get("section_id")
+                    for chunk in idea_data.get("slide_chunks", [])
+                ],
             )
             
             if not res:
@@ -756,7 +760,10 @@ async def get_idea_structure(
             sanitized_chunk = {
                 "title": str(title).strip() if title else f"Slide {i + 1}",
                 "content": str(content).strip() if content else "Content not available",
-                "slide_type": chunk.get("slide_type", "content")
+                "slide_type": chunk.get("slide_type", "content"),
+                "section_id": chunk.get("section_id"),
+                "section_order": chunk.get("section_order"),
+                "order_in_section": chunk.get("order_in_section"),
             }
             sanitized_chunks.append(sanitized_chunk)
 
@@ -859,7 +866,10 @@ async def stream_manual_generation(
                 title=title,
                 output_folder=str(output_folder),
                 callback=callback,
-                slide_options=slide_options
+                slide_options=slide_options,
+                slide_positions=data.get("slide_positions", []),
+                slide_context_maps=data.get("slide_context_maps", []),
+                section_ids=data.get("section_ids", []),
             )
             
             if not res:

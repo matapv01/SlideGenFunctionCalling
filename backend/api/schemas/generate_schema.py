@@ -8,6 +8,9 @@ class SlideChunk(BaseModel):
     title: str
     content: str
     slide_type: Optional[str] = "content"
+    section_id: Optional[str] = None
+    section_order: Optional[int] = None
+    order_in_section: Optional[int] = None
 
 class SlideOptionsBase(BaseModel):
     """Base class for slide generation options"""

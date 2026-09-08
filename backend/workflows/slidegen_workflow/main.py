@@ -4,9 +4,12 @@ import zipfile
 import os
 import time
 import logging
+import threading
 from collections import Counter
-from typing import Optional, Callable, Dict, Any, Tuple
+from typing import Optional, Callable, Dict, Any, Tuple, List
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
+from backend.workflows.slidegen_workflow.graph.parallel_builder import build_parallel_workflow
+from backend.config import ENABLE_SECTION_PARALLELISM, SECTION_MAX_CONCURRENCY
 from backend.workflows.manual_workflow.main import run_manual_workflow
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
 from backend.domain.ports.llm_provider import LLMProvider
@@ -120,7 +123,11 @@ async def main_workflow(
         active_tools_dict = XML_TOOLS_DICT
 
         # 2. XML is the only generation artifact, so no HTML/VLM path is built.
-        workflow = build_workflow(router_flags=False)
+        workflow = (
+            build_parallel_workflow()
+            if ENABLE_SECTION_PARALLELISM
+            else build_workflow(router_flags=False)
+        )
         app = workflow.compile()
 
         # 3. Graph Config (Inject công cụ vào các Node)
@@ -137,8 +144,13 @@ async def main_workflow(
                 "temp_dir": output_dir,
                 "temp_debug_dir": output_debug_dir,
                 "stream_callback": lambda t, d: _emit_event(callback, t, d),
+                "parallel_progress_tracker": {
+                    "completed_indices": set(),
+                    "lock": threading.Lock(),
+                },
             },
-            "recursion_limit": 500
+            "recursion_limit": 500,
+            "max_concurrency": SECTION_MAX_CONCURRENCY,
         }
 
         # 4. Feed preprocessed doc state into planning/generation workflow
@@ -159,6 +171,7 @@ async def main_workflow(
             "retry_count": 0,
             "max_retries": max_retries_per_slide,
             "final_slides": [],
+            "batch_results": [],
             "all_debug_info": [],
             "vlm_decision": "accept",
             "slide_options": _slide_options
@@ -182,7 +195,10 @@ async def main_workflow_from_chunks(
     output_folder: str,
     infra_providers: Dict[str, Any], # 🟢 NHẬN TỪ WORKFLOW SERVICE
     callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None,
-    slide_options: Optional[Dict[str, bool]] = None
+    slide_options: Optional[Dict[str, bool]] = None,
+    slide_positions: Optional[List[Any]] = None,
+    slide_context_maps: Optional[List[str]] = None,
+    section_ids: Optional[List[str]] = None,
 ):
     """
     Idea Workflow: Chunks -> Slides
@@ -212,7 +228,11 @@ async def main_workflow_from_chunks(
         active_tools_dict = XML_TOOLS_DICT
 
         # Router flag is False because we don't need to route document conversion
-        workflow = build_workflow(router_flags=False)
+        workflow = (
+            build_parallel_workflow()
+            if ENABLE_SECTION_PARALLELISM
+            else build_workflow(router_flags=False)
+        )
         app = workflow.compile()
 
         if not slide_options:
@@ -233,8 +253,13 @@ async def main_workflow_from_chunks(
                 "temp_dir": output_dir,
                 "temp_debug_dir": output_debug_dir,
                 "stream_callback": lambda t, d: _emit_event(callback, t, d),
+                "parallel_progress_tracker": {
+                    "completed_indices": set(),
+                    "lock": threading.Lock(),
+                },
             },
-            "recursion_limit": 500
+            "recursion_limit": 500,
+            "max_concurrency": SECTION_MAX_CONCURRENCY,
         }
 
         initial_input = {
@@ -244,6 +269,7 @@ async def main_workflow_from_chunks(
             "retry_count": 0,
             "max_retries": graph_config["configurable"].get("max_retries", 1),
             "final_slides": [],
+            "batch_results": [],
             "all_debug_info": [],
             "vlm_decision": "accept",
             "slide_options": _slide_options,
@@ -256,10 +282,15 @@ async def main_workflow_from_chunks(
             title=title,
             slide_options=_slide_options,
             graph_config=graph_config,
+            slide_positions=slide_positions,
+            slide_context_maps=slide_context_maps,
+            section_ids=section_ids,
         )
 
         initial_input["slide_chunks"] = manual_state.get("slide_chunks", slide_chunks)
-        initial_input["slide_context_maps"] = manual_state.get("slide_context_maps", [])
+        initial_input["slide_context_maps"] = manual_state.get("slide_context_maps", slide_context_maps or [])
+        initial_input["slide_positions"] = manual_state.get("slide_positions", slide_positions or [])
+        initial_input["section_ids"] = manual_state.get("section_ids", section_ids or [])
         initial_input["document_structure"] = manual_state.get("document_structure", {"title": title})
 
         # --- EXECUTION ---

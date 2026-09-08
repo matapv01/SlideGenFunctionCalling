@@ -14,14 +14,21 @@ QUY TẮC VỀ VỊ TRÍ (POSITION):
 - -1: Slide chuyển tiếp (Nằm giữa các phần/chương lớn).
 - -2: Slide cảm ơn (Kết thúc bài).
 
+QUY TẮC VỀ SECTION:
+- Mỗi slide phải có `section_id`, `section_order` và `order_in_section`.
+- Các slide thuộc cùng một phần lớn phải dùng chung `section_id`, kể cả khi
+  không tạo slide transition.
+- Intro dùng `section_id` là `intro`; thank-you dùng `closing`.
+- Transition mở đầu phần nào phải dùng cùng `section_id` với phần đó.
+
 ĐỊNH DẠNG ĐẦU RA (JSON):
 Bạn CHỈ được trả về JSON theo cấu trúc sau:
 {{
   "slide_chunks": [
-    {{"position": 0, "title": "", "content": "Title: [Tiêu đề]\\nSubtitle: [Phụ đề]", "slide_type": "intro"}},
-    {{"position": 1, "title": "Tiêu đề phần 1", "content": "- Ý chính 1\\n- Ý chính 2", "slide_type": "content"}},
-    {{"position": -1, "title": "TRANSITION", "content": "Tiếp theo: [Tên phần tiếp theo]", "slide_type": "transition"}},
-    {{"position": -2, "title": "THANK_YOU", "content": "Lời cảm ơn chân thành", "slide_type": "thank_you"}}
+    {{"position": 0, "section_id": "intro", "section_order": 0, "order_in_section": 0, "title": "", "content": "Title: [Tiêu đề]\\nSubtitle: [Phụ đề]", "slide_type": "intro"}},
+    {{"position": 1, "section_id": "section_1", "section_order": 1, "order_in_section": 0, "title": "Tiêu đề phần 1", "content": "- Ý chính 1\\n- Ý chính 2", "slide_type": "content"}},
+    {{"position": -1, "section_id": "section_2", "section_order": 2, "order_in_section": 0, "title": "TRANSITION", "content": "Tiếp theo: [Tên phần tiếp theo]", "slide_type": "transition"}},
+    {{"position": -2, "section_id": "closing", "section_order": 999, "order_in_section": 0, "title": "THANK_YOU", "content": "Lời cảm ơn chân thành", "slide_type": "thank_you"}}
   ]
 }}
 """
@@ -42,6 +49,8 @@ HƯỚNG DẪN CHI TIẾT:
 2. Slide đầu tiên (position 0) phải có định dạng "Title: [tiêu đề]\\nSubtitle: [phụ đề]".
 3. Tạo đúng {min_content} đến {max_content} slide nội dung chính (mỗi slide 3-5 gạch đầu dòng).
 4. Phân bổ slide nội dung đều vào {estimated_sections} phần lớn.
+   Luôn ghi `section_id`, `section_order`, `order_in_section` cho từng slide,
+   kể cả khi không tạo transition.
 5. {{"Thêm slide chuyển tiếp (position -1) GIỮA các phần lớn" if enable_transition_slides else "KHÔNG thêm slide chuyển tiếp"}}.
 6. {{"Thêm slide cảm ơn (position -2) ở cuối cùng" if enable_thank_you_slide else "KHÔNG thêm slide cảm ơn"}}.
 
@@ -75,4 +84,6 @@ Slide cảm ơn: {enable_thank_you_slide}
 YÊU CẦU ĐẦU RA:
 - KHÔNG giải thích, KHÔNG xin lỗi, KHÔNG dùng tool.
 - TRẢ VỀ DUY NHẤT BLOCK JSON `slide_chunks` theo định dạng chuẩn.
+- Mỗi slide phải có `section_id`, `section_order`, `order_in_section` để giữ
+  được các phần lớn ngay cả khi không có transition.
 """

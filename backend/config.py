@@ -83,6 +83,47 @@ PLANNING_BATCH_SIZE = 5
 # Số lần thử lại tối đa khi generate slide bị lỗi (ví dụ: invalid function call)
 SLIDE_GENERATION_MAX_RETRIES = 2
 
+# Generate top-level document sections concurrently while preserving sequential
+# slide generation inside each section. Disable this flag to use the legacy
+# whole-deck sequential graph.
+ENABLE_SECTION_PARALLELISM = os.getenv(
+    "ENABLE_SECTION_PARALLELISM",
+    "true",
+).lower() in ("1", "true", "yes")
+SECTION_MAX_CONCURRENCY = max(
+    1,
+    int(os.getenv("SECTION_MAX_CONCURRENCY", "3")),
+)
+SECTION_FALLBACK_BATCH_SIZE = max(
+    1,
+    int(os.getenv("SECTION_FALLBACK_BATCH_SIZE", "3")),
+)
+
+# Rendered-layout deduplication runs inside each sequential section batch.
+# Cross-section diversity is handled before fan-out by layout assignment, so
+# there is no final whole-deck regeneration pass. Transitions remain exempt.
+ENABLE_LAYOUT_DUPLICATE_CHECK = os.getenv(
+    "ENABLE_LAYOUT_DUPLICATE_CHECK",
+    "true",
+).lower() in ("1", "true", "yes")
+ADJACENT_LAYOUT_SIMILARITY = float(
+    os.getenv("ADJACENT_LAYOUT_SIMILARITY", "0.85")
+)
+GLOBAL_LAYOUT_SIMILARITY = float(
+    os.getenv("GLOBAL_LAYOUT_SIMILARITY", "0.92")
+)
+DUPLICATE_REGEN_MAX_ROUNDS = max(
+    0,
+    int(os.getenv("DUPLICATE_REGEN_MAX_ROUNDS", "2")),
+)
+
+# Create one immutable visual direction before per-slide planning so parallel
+# workers do not need to wait for the previous slide to establish a style.
+ENABLE_DECK_STYLE_PLAN = os.getenv(
+    "ENABLE_DECK_STYLE_PLAN",
+    "true",
+).lower() in ("1", "true", "yes")
+
 # --- Tool Retrieval ---
 # Số lượng tools relevant được retrieve từ FAISS index cho mỗi slide
 TOOL_RETRIEVER_TOP_K = 5

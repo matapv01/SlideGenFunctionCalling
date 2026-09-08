@@ -97,7 +97,10 @@ class SlideGenWorkflowService(BaseWorkflowService):
                 output_folder=output_folder,
                 infra_providers=self._get_providers(),
                 callback=kw.get('callback'),
-                slide_options=kw.get('slide_options', {})
+                slide_options=kw.get('slide_options', {}),
+                slide_positions=kw.get('slide_positions', []),
+                slide_context_maps=kw.get('slide_context_maps', []),
+                section_ids=kw.get('section_ids', []),
             )
 
         if output_folder:

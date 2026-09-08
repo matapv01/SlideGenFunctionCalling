@@ -260,6 +260,8 @@ You are an expert presentation designer and slide planner. Your task is to analy
    - The visual mood and style that will make this message land
    - Key layout approach (what goes where)
    - Any special considerations (bold colors, subtle, high-tech, warm, etc.)
+   - Follow the immutable DECK STYLE CONTRACT. Vary composition and geometry,
+     not the deck's typography, palette, image treatment, or chart treatment.
 
 **OUTPUT REQUIREMENT:**
 - Return ONLY a single, valid JSON object that strictly follows the required schema.
@@ -275,6 +277,12 @@ SLIDE_PLANNER_HUMAN_PROMPT = """
 IMPORTANT:
 - If slide number is 1 → MUST use INTRO_TOOLS
 - If slide number is 2 or higher → NEVER use INTRO_TOOLS
+
+---
+**IMMUTABLE DECK STYLE CONTRACT:**
+All per-slide design decisions must remain compatible with this contract.
+
+{deck_style_plan}
 
 ---
 **PRESENTATION CONTEXT (OUTLINE):**

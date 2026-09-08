@@ -14,6 +14,9 @@ from backend.workflows.idea_workflow.utils.prompts import (
     IDEA_GENERATION_USER_PROMPT,
     FALLBACK_STRUCTURE_PROMPT # Import prompt mới
 )
+from backend.workflows.idea_workflow.utils.section_metadata import (
+    normalize_section_metadata,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +131,13 @@ def generate_structure(state: State, config: RunnableConfig) -> State:
     # --- FINAL VALIDATION ---
     if not slide_chunks:
         raise ValueError("Critical: Failed to generate slide structure (Both Agent and Fallback failed).")
+
+    # Normalize one section contract for the shared parallel scheduler. This
+    # also handles old/partial model output and decks without transition slides.
+    slide_chunks = normalize_section_metadata(
+        slide_chunks,
+        estimated_sections=int(constraints.get("estimated_sections", 1) or 1),
+    )
 
     # Update State
     state["slide_chunks"] = slide_chunks

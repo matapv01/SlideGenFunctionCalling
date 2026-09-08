@@ -1,5 +1,6 @@
 # src/graph/stage.py
-from typing import List, Dict, Any, Literal
+import operator
+from typing import Annotated, List, Dict, Any, Literal
 from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
@@ -24,11 +25,46 @@ class SlidePlan(BaseModel):
         description="The single, most appropriate category of tools to use for generating this slide."
     )
 
+
+class DeckStylePlan(BaseModel):
+    """One visual contract shared by every slide in a deck."""
+
+    theme_name: str = "Modern editorial"
+    font_family: str = "Arial"
+    title_font_min: int = 36
+    title_font_max: int = 48
+    body_font_min: int = 18
+    body_font_max: int = 28
+    background_color: str = "#F8FAFC"
+    primary_color: str = "#0F172A"
+    secondary_color: str = "#475569"
+    accent_color: str = "#0D9488"
+    text_color: str = "#1F2937"
+    image_style: str = "Clean editorial photography with consistent color grading"
+    chart_style: str = "Minimal charts with direct labels and restrained grid lines"
+    layout_density: Literal["airy", "balanced", "compact"] = "balanced"
+
 class slide_context(TypedDict):
     """Lưu trữ context của slide trước đó."""
     content: str
     function_call: Dict
     image_path: str
+
+
+class SlideJob(TypedDict, total=False):
+    """Canonical scheduler input shared by DOCX, Idea, and Manual flows."""
+
+    index: int
+    section_id: str
+    section_order: int
+    order_in_section: int
+    slide_type: str
+    content: Any
+    context_map: str
+    position: Any
+    plan: Dict[str, Any]
+    assigned_tool_candidates: List[str]
+    excluded_tools: List[str]
 
 class State(TypedDict, total=False):
     """
@@ -50,8 +86,32 @@ class State(TypedDict, total=False):
     document_outline: List[Dict]
     slide_chunks: List[str]
     slide_positions: List[Any]
+    section_ids: List[str]
     slide_context_maps: List[str]
     slide_plans: List[Dict]  # Contains 'action' field from planner (INTRO_TOOLS, etc.)
+    deck_style_plan: Dict[str, Any]
+
+    # Parallel section orchestration. ``batch_results`` uses a reducer because
+    # multiple LangGraph Send workers write to it concurrently.
+    slide_jobs: List[Dict[str, Any]]
+    section_batches: List[Dict[str, Any]]
+    section_batch: Dict[str, Any]
+    batch_slide_jobs: List[Dict[str, Any]]
+    batch_id: str
+    batch_cursor: int
+    batch_done: bool
+    deck_slide_count: int
+    batch_results: Annotated[List[Dict[str, Any]], operator.add]
+    batch_layout_signatures: List[Dict[str, Any]]
+    batch_tool_usage_history: List[Dict[str, Any]]
+    duplicate_excluded_tools: List[str]
+    duplicate_retry_count: int
+    duplicate_detected: bool
+    layout_signature: Dict[str, Any]
+    duplicate_report: Dict[str, Any]
+    assigned_tool_candidates: List[str]
+    preferred_tool_name: str
+    layout_assignment_report: Dict[str, Any]
 
     # Slide generation loop state
     current_slide_index: int
@@ -59,6 +119,8 @@ class State(TypedDict, total=False):
     current_slide_text: str
     current_slide_plan: Dict
     current_slide_context_map: str
+    current_slide_position: Any
+    current_slide_type: str
     current_tool_plan: List[Dict]
     current_search_history: List[Dict]
     current_tool_call: Dict

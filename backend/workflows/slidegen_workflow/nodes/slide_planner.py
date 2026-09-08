@@ -1,5 +1,6 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_planner.py
 
+import json
 from typing import Dict, List
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -74,7 +75,10 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
     slide_chunks = state.get('slide_chunks', [])
     slide_context_maps = state.get('slide_context_maps', [])
+    slide_positions = state.get('slide_positions', [])
+    section_ids = state.get('section_ids', [])
     document_structure = state.get('document_structure', {})
+    deck_style_plan = state.get('deck_style_plan', {})
 
     if not slide_chunks:
         print("WARNING: No slide chunks found. Skipping planning.")
@@ -104,10 +108,16 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             # IMPORTANT: Also remove corresponding context map to keep arrays in sync
             if slide_context_maps and pos < len(slide_context_maps):
                 slide_context_maps.pop(pos)
+            if slide_positions and pos < len(slide_positions):
+                slide_positions.pop(pos)
+            if section_ids and pos < len(section_ids):
+                section_ids.pop(pos)
         print("✅ Kept only the last thank you slide")
 
     # Update state with cleaned chunks
     state['slide_chunks'] = slide_chunks
+    state['slide_positions'] = slide_positions
+    state['section_ids'] = section_ids
 
     # Recreate or update context maps to match current chunks
     if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
@@ -148,7 +158,8 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         all_inputs.append({
             "slide_number": i + 1,  # Add slide number (1-indexed)
             "slide_context_map": context_map,
-            "slide_content": content
+            "slide_content": content,
+            "deck_style_plan": json.dumps(deck_style_plan, ensure_ascii=False, indent=2),
         })
 
     total_slides = len(all_inputs)

@@ -25,10 +25,15 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
         "overflow_report": state.get("overflow_report", {}),
         "overflow_rewrite_count": state.get("overflow_rewrite_count", 0),
         "original_text": state.get("current_slide_text", ""),
+        "batch_id": state.get("batch_id", ""),
+        "slide_type": state.get("current_slide_type", "content"),
+        "tool_category": (state.get("current_slide_plan") or {}).get("action"),
     }
     state.setdefault("final_slides", []).append(final_slide_data)
 
     stream_callback = config.get("configurable", {}).get("stream_callback")
+    if configurable.get("suppress_slide_events"):
+        stream_callback = None
     if stream_callback:
         slide_text = state.get("current_slide_text", {})
         slide_title = (
@@ -36,8 +41,26 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
             if isinstance(slide_text, dict)
             else "Untitled"
         )
-        total_slides = len(state["final_slides"]) + len(state.get("slide_chunks", []))
-        current = len(state["final_slides"])
+        total_slides = state.get("deck_slide_count") or (
+            len(state["final_slides"]) + len(state.get("slide_chunks", []))
+        )
+        progress_tracker = configurable.get("parallel_progress_tracker")
+        is_new_completion = True
+        if progress_tracker:
+            lock = progress_tracker.get("lock")
+            if lock:
+                with lock:
+                    completed_indices = progress_tracker.setdefault("completed_indices", set())
+                    is_new_completion = idx not in completed_indices
+                    completed_indices.add(idx)
+                    current = len(completed_indices)
+            else:
+                completed_indices = progress_tracker.setdefault("completed_indices", set())
+                is_new_completion = idx not in completed_indices
+                completed_indices.add(idx)
+                current = len(completed_indices)
+        else:
+            current = len(state["final_slides"])
         percentage = current / total_slides * 100 if total_slides else 0
         stream_callback(
             "slide_completed",
@@ -56,16 +79,17 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
                 "total": total_slides,
             },
         )
-        stream_callback(
-            "progress",
-            {
-                "current": current,
-                "total": total_slides,
-                "percentage": percentage,
-                "title": "Creating slides",
-                "message": f"Completed {current}/{total_slides} slides",
-            },
-        )
+        if is_new_completion:
+            stream_callback(
+                "progress",
+                {
+                    "current": current,
+                    "total": total_slides,
+                    "percentage": percentage,
+                    "title": "Creating slides",
+                    "message": f"Completed {current}/{total_slides} slides",
+                },
+            )
 
     state["retry_count"] = 0
     state["previous_accepted_tool_call"] = state["current_tool_call"]
@@ -77,7 +101,20 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
     tool_call = state.get("current_tool_call") or {}
     tool_name = tool_call.get("name")
     tool_category = (state.get("current_slide_plan") or {}).get("action")
-    if tool_retriever and tool_name and tool_category and tool_name != "default_fallback":
+    if tool_name and tool_category and tool_name != "default_fallback":
+        local_history = list(state.get("batch_tool_usage_history") or [])
+        local_history.append(
+            {"category": tool_category, "tool_name": tool_name, "index": idx}
+        )
+        state["batch_tool_usage_history"] = local_history
+
+    if (
+        configurable.get("record_tool_usage", True)
+        and tool_retriever
+        and tool_name
+        and tool_category
+        and tool_name != "default_fallback"
+    ):
         try:
             tool_retriever.record_tool_usage(tool_category, tool_name, idx)
         except Exception as exc:

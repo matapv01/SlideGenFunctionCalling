@@ -976,6 +976,10 @@ TOOL_MAP = {tool.name: tool for tool in ALL_TOOLS}
 # legacy name at runtime so it cannot produce a safe fallback.
 TOOL_NAME_ALIASES = {
     "generate_numbered_list_slide_xml": "generate_numbered_social_media_points_slide_xml",
+    # Some model responses add a descriptive ``layout`` segment to the
+    # registered split-content tool name. Keep persisted/retried calls working
+    # while exposing only the canonical name to the model.
+    "generate_split_content_layout_slide_xml": "generate_split_content_slide_xml",
 }
 
 
@@ -986,31 +990,149 @@ def canonical_tool_name(name: str) -> str:
     return TOOL_NAME_ALIASES.get(name, name)
 
 
+def constrain_tool_call_to_candidates(tool_call: dict, candidate_tool_names) -> dict:
+    """Force a generated call to use the sole layout selected by the planner.
+
+    Raw-text model endpoints can invent a descriptive function name even when
+    only one slide tool was supplied. When layout assignment has narrowed the
+    choice to one candidate, that candidate is authoritative. With multiple
+    candidates we only resolve known aliases and let normal validation reject
+    an unknown choice instead of guessing.
+    """
+    if not isinstance(tool_call, dict):
+        return tool_call
+
+    candidates = list(dict.fromkeys(
+        name for name in (candidate_tool_names or []) if isinstance(name, str) and name
+    ))
+    resolved_name = canonical_tool_name(tool_call.get("name"))
+
+    if resolved_name in candidates:
+        selected_name = resolved_name
+    elif len(candidates) == 1:
+        selected_name = candidates[0]
+    else:
+        selected_name = resolved_name
+
+    return {**tool_call, "name": selected_name}
+
+
 def normalize_tool_arguments(tool_name: str, arguments: dict) -> dict:
-    """Adapt legacy numbered-list arguments to the canonical tool schema."""
-    if canonical_tool_name(tool_name) != "generate_numbered_social_media_points_slide_xml":
-        return arguments
+    """Adapt loose model arguments to the canonical tool schemas."""
     if not isinstance(arguments, dict):
         return arguments
 
+    canonical_name = canonical_tool_name(tool_name)
     normalized = dict(arguments)
-    items = normalized.get("items")
-    if isinstance(items, (list, tuple)):
-        normalized["items"] = [
-            item
-            if isinstance(item, dict)
-            else {"title": str(item or ""), "description": ""}
-            for item in items
-        ]
-    elif items is not None:
-        normalized["items"] = [{"title": str(items), "description": ""}]
 
-    # The legacy shape used one text color for all numbered content fields.
-    legacy_text_color = normalized.get("text_color")
-    if legacy_text_color is not None:
-        normalized.setdefault("title_color", legacy_text_color)
-        normalized.setdefault("item_title_color", legacy_text_color)
-        normalized.setdefault("item_body_color", legacy_text_color)
+    def as_list(value):
+        if value is None:
+            return []
+        return list(value) if isinstance(value, (list, tuple)) else [value]
+
+    def text_from(value, *keys) -> str:
+        if isinstance(value, dict):
+            for key in keys:
+                candidate = value.get(key)
+                if candidate not in (None, ""):
+                    return str(candidate).strip()
+            return ""
+        return str(value or "").strip()
+
+    if canonical_name == "generate_numbered_social_media_points_slide_xml":
+        items = normalized.get("items")
+        if isinstance(items, (list, tuple)):
+            normalized["items"] = [
+                item
+                if isinstance(item, dict)
+                else {"title": str(item or ""), "description": ""}
+                for item in items
+            ]
+        elif items is not None:
+            normalized["items"] = [{"title": str(items), "description": ""}]
+
+        # The legacy shape used one text color for all numbered content fields.
+        legacy_text_color = normalized.get("text_color")
+        if legacy_text_color is not None:
+            normalized.setdefault("title_color", legacy_text_color)
+            normalized.setdefault("item_title_color", legacy_text_color)
+            normalized.setdefault("item_body_color", legacy_text_color)
+
+    if canonical_name == "generate_social_media_points_slide_xml":
+        cards = normalized.get("cards")
+        raw_cards = cards if isinstance(cards, (list, tuple)) else [cards]
+        if cards is not None:
+            normalized["cards"] = [
+                {
+                    "title": str(card.get("title") or card.get("heading") or ""),
+                    "description": str(
+                        card.get("description") or card.get("content") or card.get("text") or ""
+                    ),
+                }
+                if isinstance(card, dict)
+                else {"title": str(card or ""), "description": ""}
+                for card in raw_cards
+            ][:3]
+
+    if canonical_name == "generate_problem_slide_xml":
+        raw_items = normalized.get("problem_items")
+        if raw_items is None:
+            raw_items = normalized.get("problems", normalized.get("items", normalized.get("cards")))
+        if raw_items is not None:
+            normalized["problem_items"] = [
+                text_from(item, "problem", "title", "content", "text", "description")
+                for item in as_list(raw_items)
+            ][:5]
+        for color_field in ("card_colors", "card_text_colors"):
+            if color_field in normalized:
+                normalized[color_field] = [
+                    str(color).strip() for color in as_list(normalized[color_field]) if color
+                ]
+
+    if canonical_name == "generate_implementation_timeline_slide_xml":
+        raw_items = normalized.get("timeline_items")
+        if raw_items is None:
+            raw_items = normalized.get("milestones", normalized.get("steps", normalized.get("items")))
+        if raw_items is not None:
+            normalized["timeline_items"] = [
+                {
+                    "label": text_from(item, "label", "week", "phase", "title", "step")
+                    or f"Phase {index + 1}",
+                    "content": text_from(item, "content", "description", "text", "detail"),
+                }
+                for index, item in enumerate(as_list(raw_items))
+            ]
+
+    if canonical_name == "generate_three_ideas_slide_xml":
+        raw_ideas = normalized.get("ideas")
+        if raw_ideas is not None:
+            ideas = as_list(raw_ideas)
+            normalized.setdefault(
+                "idea_titles",
+                [text_from(item, "title", "heading", "name", "idea") for item in ideas],
+            )
+            normalized.setdefault(
+                "idea_descriptions",
+                [text_from(item, "description", "content", "text", "detail") for item in ideas],
+            )
+
+        if "idea_titles" in normalized:
+            normalized["idea_titles"] = [
+                text_from(item, "title", "heading", "name", "idea")
+                for item in as_list(normalized["idea_titles"])
+            ]
+        if "idea_descriptions" in normalized:
+            normalized["idea_descriptions"] = [
+                text_from(item, "description", "content", "text", "detail")
+                for item in as_list(normalized["idea_descriptions"])
+            ]
+
+        titles = normalized.get("idea_titles")
+        descriptions = normalized.get("idea_descriptions")
+        if isinstance(titles, list) and isinstance(descriptions, list):
+            pair_count = max(len(titles), len(descriptions))
+            normalized["idea_titles"] = (titles + [""] * pair_count)[:pair_count]
+            normalized["idea_descriptions"] = (descriptions + [""] * pair_count)[:pair_count]
 
     return normalized
 

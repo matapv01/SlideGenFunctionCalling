@@ -9,7 +9,10 @@ from langchain_core.runnables import RunnableConfig
 from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
+    TOOLS_DICT as XML_TOOLS_DICT,
+    constrain_tool_call_to_candidates,
+)
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K, COT_MAX_TOKENS
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
@@ -31,6 +34,9 @@ from backend.workflows.slidegen_workflow.utils.helper import (
     QWEN_CHAT_TEMPLATE,
 )
 from backend.infrastructure.llm_providers.base import BaseLLMProvider
+from backend.workflows.slidegen_workflow.utils.deck_style import (
+    apply_deck_style_to_tool_call,
+)
 
 _tokenizer_cache = {}
 
@@ -249,6 +255,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     previous_evaluation = "\n\n".join(eval_parts) if eval_parts else "No evaluation yet."
     previous_function_call = state.get('current_tool_call', {})
     previous_slide_function_call = state.get('previous_accepted_tool_call', {})
+    deck_style_plan = state.get('deck_style_plan', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
     
     if isinstance(current_text, (dict, list)):
@@ -264,9 +271,28 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     
     # 3. Retrieve relevant tools (Reuse candidate_tools if available in state for retries)
     my_tools = []
-    if state.get("candidate_tools"):
-        # Remove search tool if present in candidate_tools cache to get original my_tools
-        cached = [t for t in state["candidate_tools"] if getattr(t, 'name', '') != SEARCH_DDGS_TOOL.name]
+    assigned_names = list(state.get("assigned_tool_candidates") or [])
+    excluded_tools = set(state.get("duplicate_excluded_tools") or [])
+    if assigned_names:
+        category_lookup = {
+            tool.name: tool for tool in all_tools_dict.get(tool_category, [])
+        }
+        selected_name = next(
+            (name for name in assigned_names if name not in excluded_tools and name in category_lookup),
+            None,
+        )
+        if selected_name:
+            my_tools = [category_lookup[selected_name]]
+            print(f"  -> Using deck-assigned layout: {selected_name}")
+
+    if not my_tools and state.get("candidate_tools"):
+        # Remove search tool if present in candidate_tools cache to get original my_tools.
+        cached = [
+            tool
+            for tool in state["candidate_tools"]
+            if getattr(tool, "name", "") != SEARCH_DDGS_TOOL.name
+            and getattr(tool, "name", "") not in excluded_tools
+        ]
         if cached:
             my_tools = cached
             print(f"  -> Reusing {len(my_tools)} cached tools from state (retry attempt)")
@@ -302,6 +328,19 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
     if not my_tools:
         my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
+
+    # A duplicate-layout retry excludes the rejected layout tool. This is a
+    # retry constraint, not a permanent per-tool quota.
+    if excluded_tools:
+        filtered_tools = [tool for tool in my_tools if tool.name not in excluded_tools]
+        if not filtered_tools:
+            filtered_tools = [
+                tool for tool in all_tools_dict.get(tool_category, [])
+                if tool.name not in excluded_tools
+            ]
+        if filtered_tools:
+            my_tools = filtered_tools
+            print(f"  -> Excluding duplicate layouts: {sorted(excluded_tools)}")
         
     print(f"  -> Prepared {len(my_tools)} tools: {[t.name for t in my_tools]}")
     
@@ -335,7 +374,20 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     
     # 5. Extract history for recent tools
     recent_tools_list = []
-    if hasattr(tool_retriever, 'tool_usage_history') and tool_category in tool_retriever.tool_usage_history:
+    local_history = [
+        item for item in state.get("batch_tool_usage_history", [])
+        if item.get("category") == tool_category
+    ]
+    if local_history:
+        seen = set()
+        for item in reversed(local_history):
+            tool_name = item.get("tool_name")
+            if tool_name and tool_name not in seen:
+                recent_tools_list.append(f"- {tool_name}")
+                seen.add(tool_name)
+                if len(recent_tools_list) >= 3:
+                    break
+    elif hasattr(tool_retriever, 'tool_usage_history') and tool_category in tool_retriever.tool_usage_history:
         history = list(tool_retriever.tool_usage_history[tool_category])
         history.reverse()
         seen = set()
@@ -348,7 +400,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     recent_tools_str = "\n".join(recent_tools_list) if recent_tools_list else "- (None used recently)"
     
     # 6. Format Style Context
-    style_context_str = json.dumps(_extract_style_params(previous_slide_function_call), indent=2)
+    style_context = deck_style_plan or _extract_style_params(previous_slide_function_call)
+    style_context_str = json.dumps(style_context, ensure_ascii=False, indent=2)
     
     # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide (Reuse cached instruction if available for retries)
     design_instruction = state.get("design_instruction")
@@ -618,6 +671,32 @@ OUTPUT FORMAT: XML ONLY
         }
         tool_plan = [tool_call_dict]
     else:
+        allowed_slide_tool_names = [tool.name for tool in my_tools]
+        generated_name = tool_call_dict.get("name")
+        tool_call_dict = constrain_tool_call_to_candidates(
+            tool_call_dict,
+            allowed_slide_tool_names,
+        )
+        if tool_call_dict.get("name") != generated_name:
+            print(
+                "  -> Corrected generated tool name "
+                f"'{generated_name}' to assigned layout '{tool_call_dict.get('name')}'"
+            )
+        tool_plan = [
+            constrain_tool_call_to_candidates(call, allowed_slide_tool_names)
+            if call.get("name") != SEARCH_DDGS_TOOL.name else call
+            for call in tool_plan
+        ]
+        tool_call_dict = apply_deck_style_to_tool_call(
+            tool_call_dict,
+            my_tools,
+            deck_style_plan,
+        )
+        tool_plan = [
+            apply_deck_style_to_tool_call(call, my_tools, deck_style_plan)
+            if call.get("name") != SEARCH_DDGS_TOOL.name else call
+            for call in tool_plan
+        ]
         # Save valid parsed tool call for retry memory
         state["last_valid_tool_call"] = tool_call_dict
         
