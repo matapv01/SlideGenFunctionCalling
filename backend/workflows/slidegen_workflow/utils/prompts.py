@@ -453,17 +453,27 @@ You MUST follow this two-step process:
 
 STEP 1 — THINK (inside <think> tags):
 Analyze the design instruction and slide content carefully. Then:
-1. Review each available tool and its parameters
-2. Select the BEST tool that matches the content type and design instruction
-3. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide
-4. Self-check: Are there any None/null/empty values for required fields? Fix them.
-5. Self-check: Are color values valid hex codes (e.g., #2563EB)? Are lists actually lists?
-6. Self-check JSON syntax: Are all open brackets properly closed? Are quotes escaped? No trailing commas?
+1. Review each available tool and its exact parameters. You MUST pick ONLY from the available tools provided for THIS slide. DO NOT hallucinate tools from previous slides, examples, or memory!
+2. Select the BEST tool from the available tools that matches the content type and design instruction.
+3. Strict Parameter Check: Inspect the chosen tool's schema definition. ONLY output parameters that are EXPLICITLY defined in that tool's schema. If a tool has NO color parameters (e.g., only title and points), DO NOT invent extra parameters (like 'bg_color', 'main_title_color', 'subtitle_color') even if the design instruction suggests colors!
+4. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide text.
+5. Strict Bracket Check: When an argument is a list of objects (e.g. points: [...]), ensure you close the list with ']' before continuing to the next key.
+6. Self-check: Are there any None/null/empty values for required fields? Fix them.
+7. Self-check IMAGE PARAMS: Count the EXACT number N of image parameters (e.g. image_url, bg_image_url) present in the chosen tool's schema.
+8. Self-check SEARCH CALLS: You MUST generate EXACTLY N `search_ddgs_images` calls AFTER the slide tool (one per image parameter). For example, if N = 0 output 0 calls, if N = 2 output 2 calls. NEVER output more or fewer search calls than N!
 
-STEP 2 — ACT (output the tool call):
-Output EXACTLY ONE function call inside <tool_call> tags. The JSON must be strictly valid and complete.
+STEP 2 — ACT (output the tool call plan):
+Output an ordered tool call plan inside <tool_call> tags: Output EXACTLY ONE slide XML tool call FIRST, followed by EXACTLY N `search_ddgs_images` calls corresponding to the N image parameters defined in that slide tool's schema (if N = 0, output ZERO search calls).
 
 CRITICAL RULES:
+- EXACT 1-TO-1 IMAGE SEARCH COUNT RULE: The number of `search_ddgs_images` calls MUST MATCH EXACTLY the number of image parameters ($N$) defined in the selected slide tool's schema.
+  * If $N = 0$ (no image parameters in schema), output EXACTLY 0 `search_ddgs_images` calls.
+  * If $N = 1$ (1 image parameter), output EXACTLY 1 `search_ddgs_images` call.
+  * If $N = 2$ (2 image parameters, e.g. logo and background), output EXACTLY 2 `search_ddgs_images` calls.
+  * In general, for ANY $N$ image parameters in the slide tool schema, output EXACTLY $N$ `search_ddgs_images` calls (one search call per image parameter, in the order they appear). NEVER output more or fewer search calls than $N$!
+- STRICT SCHEMA PARAMETER RULE: You MUST ONLY use parameters that are explicitly listed in the selected tool's schema definition. ABSOLUTELY DO NOT invent, guess, or add extra parameters (such as `main_title_color`, `subtitle_color`, `insight_text_color`, `bg_color`, `logo_image_url`, `phone`...) if they are NOT present in the target tool's schema!
+- STRICT TOOL SELECTION: You MUST select and output ONLY a tool function name that is EXPLICITLY LISTED in the provided available tools section for this slide. ABSOLUTELY DO NOT invent, guess, or use any tool name outside the provided list!
+- STRICT IMAGE SEARCH PLAN ORDER: The primary slide XML tool MUST ALWAYS come FIRST at index 0. `search_ddgs_images` calls MUST ONLY come AFTER the slide XML tool. NEVER output `search_ddgs_images` alone without the slide XML tool!
 - Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
 - Color values MUST be valid hex codes (e.g., "#1E3A5F", NOT "blue" or "dark")
 - List parameters MUST be actual lists (e.g., ["item1", "item2"], NOT a string)
@@ -480,7 +490,7 @@ CRITICAL JSON FORMATTING & SYNTAX RULES:
 7. HIGHLIGHT MARKERS IN JSON: Escape the marker's color quotes inside a JSON string, for example `[[hl color=\\\"#2563EB\\\"]]important phrase[[/hl]]`.
 8. LATEX BACKSLASHES IN JSON: Escape every LaTeX backslash twice in the raw JSON string. Write `<math-field>\\\\frac{a}{b}</math-field>` in JSON; after JSON decoding the XML value must contain `<math-field>\\frac{a}{b}</math-field>`.
 
-Example:
+Example (FORMAT ILLUSTRATION ONLY — DO NOT COPY THIS TOOL NAME. Select strictly from your provided tools):
 <think>
 The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
 Available tools: generate_split_content_slide_xml, generate_bullet_content_slide_xml...

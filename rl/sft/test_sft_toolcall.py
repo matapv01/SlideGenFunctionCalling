@@ -3,7 +3,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from transformers import AutoTokenizer
 from backend.workflows.slidegen_workflow.utils.helper import QWEN_CHAT_TEMPLATE
-from rl.sft_toolcall import SFTKLTrainer,encode_sample
+from rl.sft.sft_toolcall import SFTKLTrainer,encode_sample
 from rl.toolcall_data import split_by_doc
 
 class TinyLM(torch.nn.Module):

@@ -13,7 +13,7 @@ from backend.workflows.slidegen_workflow.tools.ddgs_tool import (
     _parse_target_dimensions,
     _rank_image_results,
 )
-from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool_plan
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import execute_tool_plan
 from backend.workflows.slidegen_workflow.utils.helper import (
     parse_tool_call_json,
     parse_tool_calls_json,
@@ -174,20 +174,19 @@ def test_execute_searches_then_injects_by_search_order(monkeypatch):
     ]
 
 
-def test_execute_tool_plan_renders_real_slide_with_injected_image(monkeypatch):
+def test_execute_tool_plan_renders_real_xml_slide_with_injected_image(monkeypatch):
     def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
         return json.dumps(["https://example.com/messi.jpg"])
 
     monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
     monkeypatch.setattr(tool_plan_executor, "_pick_live_url", lambda urls: urls[0])
 
-    html, final_call, history = execute_tool_plan(
+    xml, final_call, history = execute_tool_plan(
         [
             {
-                "name": "generate_dynamic_intro_slide",
+                "name": "generate_modern_cover_slide_xml",
                 "arguments": {
-                    "main_title": "Messi",
-                    "subtitle": "Career highlights",
+                    "title": "Messi career highlights",
                     "image_url": "",
                 },
             },
@@ -202,7 +201,7 @@ def test_execute_tool_plan_renders_real_slide_with_injected_image(monkeypatch):
         ]
     )
 
-    assert "https://example.com/messi.jpg" in html
+    assert "https://example.com/messi.jpg" in xml
     assert final_call["arguments"]["image_url"] == "https://example.com/messi.jpg"
     assert history[0]["target_param"] == "image_url"
 

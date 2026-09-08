@@ -9,7 +9,7 @@ load_dotenv()
 
 from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 from backend import config as backend_config
 
 class DummyLLM:
@@ -78,6 +78,7 @@ def run_test_on_dataset_sample(sample_index: int = 0):
             "planner_llm": llm,
             "tools_dict": TOOLS_DICT,
             "tool_retriever": tool_retriever,
+            "output_format": "xml",
         }
     }
     

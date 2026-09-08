@@ -10,8 +10,8 @@ load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
-from backend.workflows.slidegen_workflow.utils.helper import render_html_to_png, format_tool_for_qwen, parse_tool_call_json
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT, execute_tool
+from backend.workflows.slidegen_workflow.utils.helper import render_xml_to_png, format_tool_for_qwen, parse_tool_call_json
 
 base_model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-0.5B-Instruct")
 adapter_path = os.getenv("LORA_ADAPTER_PATH", "")
@@ -63,10 +63,10 @@ for category, tools_list in TOOLS_DICT.items():
         flat_tools[tool.name] = tool
 
 candidate_tool_names = [
-    "generate_split_layout_list_slide", "generate_icon_list_slide",
-    "generate_content_slide", "generate_classic_content_slide",
-    "generate_comparison_slide", "generate_process_steps_slide",
-    "generate_vision_mission_slide"
+    "generate_split_content_slide_xml", "generate_bullet_content_slide_xml",
+    "generate_two_ideas_slide_xml", "generate_three_ideas_slide_xml",
+    "generate_problem_slide_xml", "generate_implementation_timeline_slide_xml",
+    "generate_content_creation_slide_xml"
 ]
 selected_tools = [format_tool_for_qwen(flat_tools[name]) for name in candidate_tool_names if name in flat_tools]
 print(f"Loaded {len(selected_tools)} candidate tools.")
@@ -122,18 +122,18 @@ try:
 
     print(f"Parsed tool call: {json.dumps(tool_call, indent=2, ensure_ascii=False)}")
 
-    html_content = execute_tool(tool_call)
-    if html_content:
-        html_path = os.path.join(os.path.dirname(__file__), "infer_output.html")
-        with open(html_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        print(f"-> Saved HTML layout to: {html_path}")
+    xml_content = execute_tool(tool_call)
+    if xml_content:
+        xml_path = os.path.join(os.path.dirname(__file__), "infer_output.xml")
+        with open(xml_path, "w", encoding="utf-8") as f:
+            f.write(xml_content)
+        print(f"-> Saved XML layout to: {xml_path}")
 
         png_path = os.path.join(os.path.dirname(__file__), "infer_output.png")
-        render_html_to_png(html_content, png_path)
+        render_xml_to_png(xml_content, png_path)
         print(f"-> Captured slide image to: {png_path}")
-        print("\nSUCCESS! Check 'scripts/infer_output.png' or 'scripts/infer_output.html'!")
+        print("\nSUCCESS! Check 'scripts/infer_output.png' or 'scripts/infer_output.xml'!")
     else:
-        print("Failed to execute tool (returned empty HTML).")
+        print("Failed to execute tool (returned empty XML).")
 except Exception as e:
     print(f"Failed to parse or render slide: {e}")

@@ -1,7 +1,7 @@
 """Compatibility exports for the rule-based image tool-plan executor.
 
 Image search queries are now generated in the same LLM response as the final
-slide HTML tool. This module intentionally contains no planner-LLM path.
+slide XML tool. This module intentionally contains no planner-LLM path.
 """
 
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (

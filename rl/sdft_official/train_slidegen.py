@@ -89,7 +89,7 @@ from datasets import Dataset
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 from backend.workflows.slidegen_workflow.utils.helper import (
     QWEN_CHAT_TEMPLATE,
     format_tool_for_qwen,

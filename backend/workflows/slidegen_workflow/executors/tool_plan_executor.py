@@ -159,15 +159,15 @@ def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict,
         normalized_calls.append({"name": call["name"], "arguments": arguments})
 
     # XML slide tool is FIRST, search calls come AFTER
-    html_call = normalized_calls[0]
+    xml_call = normalized_calls[0]
     search_calls = normalized_calls[1:]
-    html_tool_name = html_call["name"]
+    xml_tool_name = xml_call["name"]
 
-    if html_tool_name == SEARCH_TOOL_NAME:
+    if xml_tool_name == SEARCH_TOOL_NAME:
         raise ToolPlanError("The first tool call must be a slide XML tool, not an image search.")
-    if html_tool_name not in tool_lookup:
+    if xml_tool_name not in tool_lookup:
         raise ToolPlanError(
-            f"XML tool '{html_tool_name}' is not available. "
+            f"XML tool '{xml_tool_name}' is not available. "
             f"Valid slide tools are: {list(tool_lookup.keys())}"
         )
 
@@ -188,18 +188,23 @@ def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict,
             raise ToolPlanError(f"Image search {index} has invalid size '{size}'.")
 
     image_targets = get_image_targets_in_order(
-        tool_lookup[html_tool_name],
-        html_call["arguments"],
+        tool_lookup[xml_tool_name],
+        xml_call["arguments"],
     )
     if len(search_calls) != len(image_targets):
         target_names = [target["path_string"] for target in image_targets]
+        example_slide_args = "{...all_args_with_real_values...}"
+        example_search_args = '{"query": "<describe the image you need>", "layout": "Wide", "size": "Large"}'
         raise ToolPlanError(
-            f"XML tool '{html_tool_name}' requires {len(image_targets)} image "
+            f"XML tool '{xml_tool_name}' requires {len(image_targets)} image "
             f"search call(s) for {target_names}, but the generator returned "
-            f"{len(search_calls)}."
+            f"{len(search_calls)}.\n"
+            f"You MUST output BOTH the slide tool AND a search_ddgs_images call together, like this:\n"
+            f'<tool_call>{{"name": "{xml_tool_name}", "arguments": {example_slide_args}}}</tool_call>\n'
+            f'<tool_call>{{"name": "search_ddgs_images", "arguments": {example_search_args}}}</tool_call>'
         )
 
-    return html_call, search_calls, image_targets
+    return xml_call, search_calls, image_targets
 
 
 

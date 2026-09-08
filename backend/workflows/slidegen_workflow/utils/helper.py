@@ -3,9 +3,10 @@ import logging
 import asyncio
 import base64
 import html
+import os
 import re
 import textwrap
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -279,6 +280,77 @@ def _normalize_tool_call_collection(value) -> List[dict]:
     ]
 
 
+def repair_and_parse_json(s: str) -> Optional[Any]:
+    """Robustly parse JSON string, applying heuristics to repair common LLM syntax defects."""
+    if not s or not s.strip():
+        return None
+    s = s.strip()
+
+    # 0. Try json_repair library if installed
+    try:
+        import importlib
+        json_repair = importlib.import_module("json_repair")
+        return json_repair.loads(s)
+    except Exception:
+        pass
+
+    # 1. Direct standard parse
+    try:
+        return json.loads(s)
+    except Exception:
+        pass
+
+    # Helper cleaner
+    def _clean_str(text_to_clean: str) -> str:
+        in_string = False
+        chars = []
+        for i, char in enumerate(text_to_clean):
+            if char == '"' and (i == 0 or text_to_clean[i-1] != '\\'):
+                in_string = not in_string
+            if char == '\n' and in_string:
+                chars.append('\\n')
+            elif char == '\r' and in_string:
+                continue
+            else:
+                chars.append(char)
+        cleaned = "".join(chars)
+        # Remove trailing commas before closing brackets/braces
+        cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
+        return cleaned
+
+    cleaned = _clean_str(s)
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        pass
+
+    # 2. Heuristic: Fix unclosed array before a key-value property
+    # e.g., "points": [ {...}, {...}, "bg_color": ... -> "points": [ {...}, {...} ], "bg_color": ...
+    try:
+        open_brackets = cleaned.count('[')
+        close_brackets = cleaned.count(']')
+        if open_brackets > close_brackets:
+            diff = open_brackets - close_brackets
+            # Insert missing ']' after the last object inside the array before the next key
+            fixed_array = re.sub(r'(\}\s*),\s*("(?=[a-zA-Z0-9_]+"\s*:))', r'\1], \2', cleaned, count=diff)
+            fixed_array = re.sub(r',\s*([\]}])', r'\1', fixed_array)
+            return json.loads(fixed_array)
+    except Exception:
+        pass
+
+    # 3. Heuristic: Balance unclosed trailing brackets and braces
+    try:
+        open_braces = cleaned.count('{') - cleaned.count('}')
+        open_brackets = cleaned.count('[') - cleaned.count(']')
+        balanced = cleaned + (']' * max(0, open_brackets)) + ('}' * max(0, open_braces))
+        balanced = re.sub(r',\s*([\]}])', r'\1', balanced)
+        return json.loads(balanced)
+    except Exception:
+        pass
+
+    return None
+
+
 def parse_tool_calls_json(text: str) -> List[dict]:
     """
     Extract all ordered tool calls from Qwen/raw model output.
@@ -303,12 +375,13 @@ def parse_tool_calls_json(text: str) -> List[dict]:
     if tool_call_blocks:
         calls: List[dict] = []
         for block in tool_call_blocks:
-            try:
-                parsed = json.loads(block.strip())
-            except Exception:
-                continue
-            calls.extend(_normalize_tool_call_collection(parsed))
-        return calls
+            parsed = repair_and_parse_json(block)
+            if parsed is not None:
+                calls.extend(_normalize_tool_call_collection(parsed))
+            else:
+                logging.warning(f"Failed to parse tool call block after repair: {block}")
+        if calls:
+            return calls
 
     # 2. Try extracting from a single unclosed <tool_call> tag.
     tool_call_match = re.search(r"<tool_call>\s*(\{.*)", cleaned, re.DOTALL)
@@ -324,19 +397,18 @@ def parse_tool_calls_json(text: str) -> List[dict]:
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
-    # 4. Direct JSON parse
-    try:
-        parsed = json.loads(cleaned)
+    # 4. Direct/Repaired JSON parse
+    parsed = repair_and_parse_json(cleaned)
+    if parsed is not None:
         return _normalize_tool_call_collection(parsed)
-    except Exception:
-        pass
 
     # 5. Fallback: Search for any JSON object containing "name" and "arguments" / "args"
     try:
         json_obj_match = re.search(r'\{[^{}]*"name"\s*:\s*"[^"]+"\s*,\s*"(?:arguments|args)"\s*:\s*\{.*?\}\s*\}', text, re.DOTALL)
         if json_obj_match:
-            parsed = json.loads(json_obj_match.group(0))
-            return _normalize_tool_call_collection(parsed)
+            parsed = repair_and_parse_json(json_obj_match.group(0))
+            if parsed is not None:
+                return _normalize_tool_call_collection(parsed)
     except Exception:
         pass
 
@@ -345,7 +417,7 @@ def parse_tool_calls_json(text: str) -> List[dict]:
 
 def parse_tool_call_json(text: str) -> Optional[dict]:
     """
-    Return the primary slide HTML tool call from raw model output.
+    Return the primary slide XML tool call from raw model output.
 
     If image-search calls are present, prefer the first non-search call so both
     legacy search-first outputs and the current slide-first plan resolve to the
@@ -356,6 +428,60 @@ def parse_tool_call_json(text: str) -> Optional[dict]:
         if call.get("name") != "search_ddgs_images":
             return call
     return calls[0] if calls else None
+
+
+def render_xml_to_png(
+    xml_content: str,
+    output_path: str,
+    slide_index: int = 0,
+) -> None:
+    """Render XML through the frontend XML preview route (sync wrapper)."""
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+
+    def _fallback_render(reason: str) -> None:
+        import xml.etree.ElementTree as ET
+
+        try:
+            root = ET.fromstring(xml_content)
+            text = " ".join(part.strip() for part in root.itertext() if part.strip())
+        except ET.ParseError:
+            text = re.sub(r"<[^>]+>", " ", xml_content)
+        text = re.sub(r"\s+", " ", text).strip()
+        preview = text[:1200] if text else "XML render fallback"
+
+        img = Image.new("RGB", (1600, 900), "white")
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.load_default()
+        draw.text((48, 36), "XML preview render fallback", fill="#0F172A", font=font)
+        for idx, line in enumerate(textwrap.wrap(reason, width=110) or ["render failed"]):
+            draw.text((48, 68 + idx * 16), line, fill="#475569", font=font)
+        y = 130
+        for line in textwrap.wrap(preview, width=105):
+            if y > 850:
+                break
+            draw.text((48, y), line, fill="#111827", font=font)
+            y += 16
+        img.save(output_path)
+
+    try:
+        from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
+
+        capture = PlaywrightCaptureProvider()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        loop.run_until_complete(
+            capture.generate_slide_from_xml_web(
+                xml_content,
+                output_path,
+                slide_index=slide_index,
+            )
+        )
+    except Exception as exc:
+        logging.warning(f"XML Playwright render failed, using fallback PNG: {exc}")
+        _fallback_render(str(exc))
 
 
 def render_html_to_png(html_content: str, output_path: str) -> None:

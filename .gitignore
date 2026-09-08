@@ -38,3 +38,4 @@ static/
 models/vit/*.pt
 models/vit/*.bin
 models/vit/*.safetensors
+preview_runs/

@@ -142,7 +142,7 @@ def main():
     if args.max_samples: selected=selected[:args.max_samples]
     responses=load_responses(args.responses)
     if len(responses)!=len(selected): raise ValueError(f"expected {len(selected)} responses, got {len(responses)}")
-    from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+    from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
     valid={tool.name for tools in TOOLS_DICT.values() for tool in tools}
     rows=[{"index":i,**score_response(r,s,valid),"doc_id":s.get("doc_id"),"slide_index":s.get("slide_index"),"response":r}
           for i,(r,s) in enumerate(zip(responses,selected))]

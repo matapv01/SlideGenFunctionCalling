@@ -4,8 +4,8 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
-from backend.workflows.slidegen_workflow.utils.helper import render_html_to_png, parse_tool_call_json
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import execute_tool
+from backend.workflows.slidegen_workflow.utils.helper import render_xml_to_png, parse_tool_call_json
 from backend.infrastructure.aesthetic.vit_aesthetic_provider import ViTAestheticProvider
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -33,12 +33,12 @@ def slide_aesthetics_reward(prompts, completions, **kwargs):
                 rewards.append(0.0)
                 continue
 
-            html_content = execute_tool(tool_call)
-            if not html_content:
+            xml_content = execute_tool(tool_call)
+            if not xml_content:
                 rewards.append(0.0)
                 continue
 
-            render_html_to_png(html_content, temp_img_path)
+            render_xml_to_png(xml_content, temp_img_path)
             score = aesthetic.evaluate(temp_img_path)
 
             if os.path.exists(temp_img_path):

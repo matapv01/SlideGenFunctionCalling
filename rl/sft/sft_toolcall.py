@@ -176,7 +176,7 @@ def main():
     manifest["best_metric"]=trainer.state.best_metric;manifest["best_checkpoint"]=trainer.state.best_model_checkpoint
     manifest["final_adapter"]=str(final.resolve())
     if args.run_test_generation:
-        valid_tools={t.name for ts in __import__("backend.workflows.slidegen_workflow.tools.tool_des",fromlist=["TOOLS_DICT"]).TOOLS_DICT.values() for t in ts}
+        valid_tools={t.name for ts in __import__("backend.workflows.slidegen_workflow.tools.tool_des_xml",fromlist=["TOOLS_DICT"]).TOOLS_DICT.values() for t in ts}
         test=generate_test(trainer.model,tokenizer,splits["test"],args,valid_tools)
         write_json(log_dir/"test_report.json",test["metrics"])
         with (log_dir/"test_predictions.jsonl").open("w",encoding="utf-8") as f:

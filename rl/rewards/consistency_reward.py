@@ -5,8 +5,8 @@ import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
-from backend.workflows.slidegen_workflow.utils.helper import render_html_to_png, parse_tool_call_json, sanitize_to_placeholders
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import execute_tool
+from backend.workflows.slidegen_workflow.utils.helper import render_xml_to_png, parse_tool_call_json, sanitize_to_placeholders
 from backend.infrastructure.embedding.dinov2_provider import DINOv2EmbeddingProvider
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -27,19 +27,24 @@ def visual_consistency_reward(prompts, completions, previous_slide_embedding, **
                 continue
 
             sanitized = sanitize_to_placeholders(tool_call)
-            html_content = execute_tool(sanitized)
-            if not html_content:
+            xml_content = execute_tool(sanitized)
+            if not xml_content:
                 rewards.append(0.0)
                 continue
 
-            render_html_to_png(html_content, temp_img_path)
+            render_xml_to_png(xml_content, temp_img_path)
             curr_embedding = embedder.get_embedding_np(temp_img_path)
             prev_embedding = np.array(previous_slide_embedding[idx])
 
-            dot = np.dot(curr_embedding, prev_embedding)
-            norm = np.linalg.norm(curr_embedding) * np.linalg.norm(prev_embedding)
-            sim_score = float(dot / norm) if norm > 0 else 0.0
-            sim_score = max(0.0, min(1.0, sim_score))
+            prev_norm = np.linalg.norm(prev_embedding)
+            if prev_norm == 0:
+                # First slide in deck has no previous slide to compare consistency with — give full score
+                sim_score = 1.0
+            else:
+                dot = np.dot(curr_embedding, prev_embedding)
+                norm = np.linalg.norm(curr_embedding) * prev_norm
+                sim_score = float(dot / norm) if norm > 0 else 0.0
+                sim_score = max(0.0, min(1.0, sim_score))
 
             if os.path.exists(temp_img_path):
                 os.remove(temp_img_path)

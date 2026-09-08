@@ -151,6 +151,10 @@ def validate_tool_call(
     if not tool_call or not isinstance(tool_call, dict):
         return False, ["Tool call is empty or not a dict."]
     
+    # Preserve parser diagnostics before normalizing aliases or arguments.
+    if tool_call.get("_parse_error"):
+        return False, [tool_call["_parse_error"]]
+
     raw_tool_name = tool_call.get("name")
     tool_name = canonical_tool_name(raw_tool_name)
     arguments = normalize_tool_arguments(
@@ -159,8 +163,8 @@ def validate_tool_call(
     )
     
     # ── 1. Tool name checks ──────────────────────────────────────────
-    if not tool_name:
-        errors.append("MISSING_TOOL_NAME: 'name' field is empty or missing.")
+    if not tool_name or tool_name in ("PARSE_ERROR", "default_fallback"):
+        errors.append("MISSING_TOOL_CALL: No valid tool was generated. Pick a valid tool from available tools.")
         return False, errors
     
     if not isinstance(tool_name, str):
@@ -223,16 +227,38 @@ def validate_tool_call(
             continue
         
         if arg_name not in field_info:
-            # Extra argument not in schema — warn but don't fail
+            errors.append(
+                f"EXTRA_ARGUMENT: '{arg_name}' is not a valid parameter for tool '{tool_name}'. "
+                f"Do NOT invent extra parameters! Valid parameters for '{tool_name}' are: {list(field_info.keys())}."
+            )
             continue
         
         expected_type = field_info[arg_name].get("type", "")
         
         # Check list types
-        if expected_type == "array" and not isinstance(arg_value, list):
-            errors.append(
-                f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
-            )
+        if expected_type == "array":
+            if not isinstance(arg_value, list):
+                errors.append(
+                    f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
+                )
+            else:
+                items_spec = field_info[arg_name].get("items", {})
+                expected_item_type = items_spec.get("type", "")
+                
+                # Deep check list items
+                if expected_item_type == "object":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, dict):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be an object/dict, got {type(item).__name__}: '{str(item)[:50]}'. "
+                                f"Provide a list of structured dictionaries."
+                            )
+                elif expected_item_type == "string":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, str):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be a string, got {type(item).__name__}: '{str(item)[:50]}'."
+                            )
         
         # Check string types
         if expected_type == "string" and not isinstance(arg_value, str):
@@ -277,6 +303,17 @@ def validate_tool_call(
                 f"EMPTY_LIST: '{arg_name}' is required but the list is empty."
             )
     
+    # ── 8. Strict Pydantic schema-level validation ───────────────────
+    tool_ref = tool_schema.get("tool_ref")
+    if tool_ref and hasattr(tool_ref, "args_schema") and tool_ref.args_schema:
+        try:
+            if hasattr(tool_ref.args_schema, "model_validate"):
+                tool_ref.args_schema.model_validate(arguments)
+            else:
+                tool_ref.args_schema(**arguments)
+        except Exception as pydantic_err:
+            errors.append(f"SCHEMA_VALIDATION_ERROR for '{tool_name}':\n{pydantic_err}")
+
     is_valid = len(errors) == 0
     return is_valid, errors
 
@@ -355,7 +392,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
             print(f"  FAIL - Tool plan execution failed: {e}")
             state['executor_decision'] = 'fail'
             state['executor_feedback'] = (
-                "EXECUTOR TOOL PLAN FAILED:\n"
+                "EXECUTOR EXECUTION FAILED:\n"
                 f"- {e}\n\n"
                 "Regenerate a valid slide-first plan: one slide XML tool first, "
                 "then one search_ddgs_images call for each image parameter."
