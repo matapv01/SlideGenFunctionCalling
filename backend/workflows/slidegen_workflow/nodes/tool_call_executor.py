@@ -51,21 +51,74 @@ def _store_xml_with_random_transitions(state: State, xml_content: str) -> None:
         print(f"  Transition ngẫu nhiên: {details}")
 
 
-def _fallback_xml_for_failed_tool(tool_call: dict, reason: str) -> str:
-    """Return a valid XML slide so generation can still be finalized."""
+def _fallback_xml_for_failed_tool(
+    tool_call: dict,
+    reason: str,
+    source_content: str = "",
+) -> str:
+    """Return a readable content slide instead of exposing an internal error."""
     from xml.sax.saxutils import escape
 
-    tool_name = escape(str(tool_call.get("name", "unknown_tool")))
-    safe_reason = escape(str(reason))
+    del tool_call, reason
+    raw_lines = [
+        re.sub(r"^\s*[-+*]\s*", "", line).strip()
+        for line in str(source_content or "").splitlines()
+        if line.strip()
+    ]
+    if raw_lines and raw_lines[0].isdigit():
+        raw_lines.pop(0)
+    title = raw_lines.pop(0) if raw_lines else "Nội dung slide"
+    body_lines = []
+    for line in raw_lines:
+        if line == title or line in body_lines:
+            continue
+        body_lines.append(line)
+    body = "\n".join(body_lines[:10]) or "Nội dung đang được tổng hợp."
+    safe_title = escape(title[:180])
+    safe_body = escape(body[:1400])
     return f'''<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
   <slide background="#F8FAFC">
     <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F8FAFC" line_color="none" />
-    <textbox x="180" y="220" width="1240" height="180" font="Arial" size="42" bold="true" color="#0F172A" align="center" vertical_align="middle">{tool_name}</textbox>
-    <textbox x="180" y="450" width="1240" height="70" font="Arial" size="28" color="#475569" align="center" vertical_align="middle">Fallback XML slide</textbox>
-    <textbox x="180" y="560" width="1240" height="220" font="Arial" size="20" color="#64748B" align="center" vertical_align="middle">{safe_reason}</textbox>
+    <shape type="rect" x="120" y="118" width="12" height="126" fill="#0D9488" line_color="none" />
+    <textbox x="170" y="110" width="1310" height="150" font="Arial" size="42" bold="true" color="#0F172A" align="left" vertical_align="middle" overflow="shrink">{safe_title}</textbox>
+    <textbox x="170" y="300" width="1260" height="470" font="Arial" size="24" color="#334155" align="left" vertical_align="top" overflow="shrink">{safe_body}</textbox>
   </slide>
 </presentation>'''
+
+
+def _store_best_available_fallback(
+    state: State,
+    active_execute_tool,
+    tool_call: dict,
+    reason: str,
+) -> None:
+    """Keep the last valid slide when a later regeneration response is broken."""
+    previous_xml = str(state.get("last_valid_xml_content") or "").strip()
+    previous_call = state.get("last_valid_tool_call") or {}
+    if previous_xml and previous_call:
+        print("  ⚠️ Reusing the last valid XML after regeneration failed.")
+        state["current_tool_call"] = previous_call
+        state["current_tool_plan"] = [previous_call]
+        state["current_search_history"] = []
+        state["current_xml_content"] = previous_xml
+        return
+
+    fallback_content = active_execute_tool(
+        tool_call,
+        source_content=state.get("current_slide_text", ""),
+    )
+    if not fallback_content:
+        fallback_content = _fallback_xml_for_failed_tool(
+            tool_call,
+            reason,
+            source_content=state.get("current_slide_text", ""),
+        )
+    fallback_call = {"name": "default_fallback", "arguments": {}}
+    state["current_tool_call"] = fallback_call
+    state["current_tool_plan"] = [fallback_call]
+    state["current_search_history"] = []
+    _store_xml_with_random_transitions(state, fallback_content)
 
 # ─── Regex patterns ───────────────────────────────────────────────────
 HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
@@ -389,7 +442,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
     with feedback so the graph can route back to generate_slide.
     """
     idx = state.get('current_slide_index', 0)
-    retry_count = state.get('retry_count', 0)
+    retry_count = int(state.get('executor_retry_count', 0))
     
     print(f"\n{'='*60}")
     print(f"  🔍 EXECUTOR VALIDATOR — Slide {idx + 1}, Attempt {retry_count + 1}/{EXECUTOR_MAX_RETRIES}")
@@ -402,7 +455,15 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         print("  ❌ No tool call found in state.")
         state['executor_decision'] = 'fail'
         state['executor_feedback'] = "CRITICAL: No tool call was generated. You must output a valid function call."
-        state['retry_count'] = retry_count + 1
+        state['executor_retry_count'] = retry_count + 1
+        state['retry_count'] = int(state.get('retry_count', 0)) + 1
+        if state['executor_retry_count'] >= EXECUTOR_MAX_RETRIES:
+            _store_best_available_fallback(
+                state,
+                execute_xml_tool,
+                {"name": "PARSE_ERROR", "arguments": {}},
+                state['executor_feedback'],
+            )
         return state
     
     configurable = config.get("configurable", {}) if config else {}
@@ -437,6 +498,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         print(f"  ✅ PASS — Tool call is valid!")
         state['executor_decision'] = 'pass'
         state['executor_feedback'] = ''
+        state['executor_retry_count'] = 0
         tool_plan = state.get("current_tool_plan") or [tool_call]
         try:
             slide_content, final_tool_call, search_history = active_execute_tool_plan(
@@ -459,19 +521,15 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                 "Fix ALL errors above and regenerate a valid tool call matching the parameter schema exactly.\n"
                 "Ensure the slide XML tool is output FIRST with correct parameter types, followed by search_ddgs_images calls if the tool has image slots."
             )
-            state['retry_count'] = retry_count + 1
-            if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-                fallback_content = active_execute_tool(
+            state['executor_retry_count'] = retry_count + 1
+            state['retry_count'] = int(state.get('retry_count', 0)) + 1
+            if state['executor_retry_count'] >= EXECUTOR_MAX_RETRIES:
+                _store_best_available_fallback(
+                    state,
+                    active_execute_tool,
                     tool_call,
-                    source_content=state.get("current_slide_text", ""),
+                    str(e),
                 )
-                if not fallback_content:
-                    fallback_content = (
-                        _fallback_xml_for_failed_tool(tool_call, str(e))
-                    )
-                state['current_tool_plan'] = [tool_call]
-                state['current_search_history'] = []
-                _store_xml_with_random_transitions(state, fallback_content)
             return state
 
         for key in list(state.keys()):
@@ -483,6 +541,8 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         state['current_tool_call'] = final_tool_call
         state['current_search_history'] = search_history
         _store_xml_with_random_transitions(state, slide_content)
+        state['last_valid_tool_call'] = final_tool_call
+        state['last_valid_xml_content'] = state.get('current_xml_content', '')
     else:
         error_report = "\n".join(f"  • {e}" for e in errors)
         print(f"  ❌ FAIL — {len(errors)} error(s) found:")
@@ -507,18 +567,14 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
             + schema_hint
             + "\n\nFix ALL errors above and regenerate the tool call using ONLY the parameter names listed in the schema above."
         )
-        state['retry_count'] = retry_count + 1
-        if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-            fallback_content = active_execute_tool(
+        state['executor_retry_count'] = retry_count + 1
+        state['retry_count'] = int(state.get('retry_count', 0)) + 1
+        if state['executor_retry_count'] >= EXECUTOR_MAX_RETRIES:
+            _store_best_available_fallback(
+                state,
+                active_execute_tool,
                 tool_call,
-                source_content=state.get("current_slide_text", ""),
+                "; ".join(errors),
             )
-            if not fallback_content:
-                fallback_content = (
-                    _fallback_xml_for_failed_tool(tool_call, "; ".join(errors))
-                )
-            state['current_tool_plan'] = [tool_call]
-            state['current_search_history'] = []
-            _store_xml_with_random_transitions(state, fallback_content)
     
     return state

@@ -77,6 +77,24 @@ def test_unknown_name_is_not_guessed_when_multiple_layouts_are_available() -> No
     assert corrected["name"] == call["name"]
 
 
+def test_registered_layout_is_not_renamed_with_incompatible_arguments() -> None:
+    call = {
+        "name": "generate_split_content_slide_xml",
+        "arguments": {
+            "title": "Kiến trúc",
+            "column_titles": ["Tổng thể", "Hệ thống"],
+            "column_descriptions": ["Các thành phần", "Quy trình xử lý"],
+        },
+    }
+
+    corrected = constrain_tool_call_to_candidates(
+        call,
+        ["generate_platform_instructions_slide_xml"],
+    )
+
+    assert corrected == call
+
+
 def test_social_media_cards_accept_loose_string_items() -> None:
     call = {
         "name": "generate_social_media_points_slide_xml",

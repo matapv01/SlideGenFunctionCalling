@@ -1771,6 +1771,23 @@ if ($closed) {
             self.y(str(final_height)),
         )
 
+        # The final XML contrast guard may add an opaque textbox backplate
+        # when text sits directly on an image or another unverifiable surface.
+        # Preserve that safety layer in exported PowerPoint files as well as
+        # in the web preview.
+        textbox_fill = e.get("fill") or e.get("background")
+        if textbox_fill and textbox_fill.lower() != "none":
+            box.fill.solid()
+            box.fill.fore_color.rgb = self.rgb(textbox_fill)
+        else:
+            box.fill.background()
+
+        line_color = e.get("line_color")
+        if line_color and line_color.lower() != "none":
+            box.line.color.rgb = self.rgb(line_color)
+        else:
+            box.line.fill.background()
+
         tf = box.text_frame
         tf.clear()
 

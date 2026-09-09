@@ -18,7 +18,10 @@ def _route_batch(state: State) -> str:
 
 
 def _route_executor(state: State) -> str:
-    if state.get("executor_decision") == "pass" or state.get("retry_count", 0) >= EXECUTOR_MAX_RETRIES:
+    if (
+        state.get("executor_decision") == "pass"
+        or state.get("executor_retry_count", 0) >= EXECUTOR_MAX_RETRIES
+    ):
         return "text_overflow_resolver"
     return "generate_slide"
 

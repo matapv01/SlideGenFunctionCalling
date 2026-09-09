@@ -272,7 +272,10 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     # 3. Retrieve relevant tools (Reuse candidate_tools if available in state for retries)
     my_tools = []
     assigned_names = list(state.get("assigned_tool_candidates") or [])
-    excluded_tools = set(state.get("duplicate_excluded_tools") or [])
+    excluded_tools = {
+        *list(state.get("duplicate_excluded_tools") or []),
+        *list(state.get("overflow_excluded_tools") or []),
+    }
     if assigned_names:
         category_lookup = {
             tool.name: tool for tool in all_tools_dict.get(tool_category, [])
@@ -442,10 +445,9 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     image_search_rules = IMAGE_SEARCH_EXECUTION_PLAN_RULES
     output_format_rules = """
 
-OUTPUT FORMAT: XML ONLY
-- Use only the selected XML slide tool from the available list.
-- The tool must return the complete XML presentation/slide content.
-- Do not generate CSS, markdown, or a prose explanation.
+OUTPUT FORMAT: TOOL CALLS ONLY
+- Invoke the selected XML slide tool from the available list; do not write the XML document yourself.
+- Return function/tool calls only. Do not return raw arguments, CSS, markdown, or a prose explanation.
 - Keep text values as plain editable text accepted by the XML tool schema.
 - The only allowed inline control syntax is [[hl color="#RRGGBB"]]phrase[[/hl]] for text-color emphasis; it is removed before final XML generation.
 """
@@ -602,7 +604,10 @@ OUTPUT FORMAT: XML ONLY
             response = None
         else:
             gemini_vars = {**human_vars, "design_instruction": design_instruction}
-            llm_with_tools = llm.bind_tools(generator_tools)
+            llm_with_tools = llm.bind_tools(
+                generator_tools,
+                tool_choice="required",
+            )
             slidegen_prompt = ChatPromptTemplate.from_messages([
                 # Keep the assembled system prompt as a fixed message. It contains
                 # LaTeX/JSON braces and may also include a previous tool call;
@@ -668,10 +673,16 @@ OUTPUT FORMAT: XML ONLY
             failure_reason = "INVALID_TOOL_CALL_SYNTAX: Tool call tags were detected, but JSON inside <tool_call> could not be parsed. Check JSON brackets, quotes, and commas."
         elif "<think>" in raw_text:
             failure_reason = "MISSING_TOOL_CALL_TAGS: You analyzed the slide inside <think> tags, but FORGOT to output the final tool call inside <tool_call>{\"name\": \"...\", \"arguments\": {...}}</tool_call> tags."
+        elif not is_qwen:
+            failure_reason = (
+                "MISSING_NATIVE_TOOL_CALL: The model returned text instead of invoking "
+                "one of the supplied slide tools. Return a native function/tool call only."
+            )
         else:
             failure_reason = "MISSING_TOOL_CALL: No <tool_call> tags found in response. You MUST wrap your final tool call inside <tool_call>...</tool_call> tags."
 
         print(f"❌ Tool extraction failed: {failure_reason}")
+        print(f"  -> Raw model response preview: {raw_text[:1000]!r}")
         tool_call_dict = {
             "name": "PARSE_ERROR",
             "_parse_error": failure_reason,

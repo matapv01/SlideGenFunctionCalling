@@ -201,7 +201,7 @@ XML_CONTENT_PROMPT = """
    - If a background or panel is dark, use white or light text, labels, legend text, and grid lines. If it is light, use dark text and sufficiently visible grid lines. Never combine dark text with a dark panel or light text with a light panel.
    - Keep data-series colors distinct and preserve their order: the first series uses the first series color, the second uses the second, and so on. Do not reuse a panel or text color for a data series when it reduces readability.
    - Output only valid six-digit hexadecimal colors for declared color parameters. Do not pass color parameters that are not defined by the selected tool schema.
-10. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
+10. OUTPUT: Invoke the selected XML slide tool and return tool calls only; do not output raw arguments or prose.
 
 Generate a readable, professional XML function call.
 """

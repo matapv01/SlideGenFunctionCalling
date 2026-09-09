@@ -28,6 +28,9 @@ def provide_next_batch_slide(state: State) -> State:
     state["duplicate_retry_count"] = 0
     state["duplicate_detected"] = False
     state["retry_count"] = 0
+    state["executor_retry_count"] = 0
+    state["overflow_retry_count"] = 0
+    state["overflow_excluded_tools"] = []
     state["executor_feedback"] = ""
     state["vlm_feedback"] = ""
     state["overflow_report"] = {}
@@ -37,6 +40,8 @@ def provide_next_batch_slide(state: State) -> State:
     state["current_tool_plan"] = []
     state["current_xml_content"] = ""
     state["current_xml_path"] = ""
+    state["last_valid_tool_call"] = {}
+    state["last_valid_xml_content"] = ""
 
     print(
         f"Batch {state.get('batch_id')} processing slide "

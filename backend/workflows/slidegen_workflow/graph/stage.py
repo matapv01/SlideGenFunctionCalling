@@ -105,6 +105,7 @@ class State(TypedDict, total=False):
     batch_layout_signatures: List[Dict[str, Any]]
     batch_tool_usage_history: List[Dict[str, Any]]
     duplicate_excluded_tools: List[str]
+    overflow_excluded_tools: List[str]
     duplicate_retry_count: int
     duplicate_detected: bool
     layout_signature: Dict[str, Any]
@@ -128,6 +129,7 @@ class State(TypedDict, total=False):
     current_xml_path: str
     current_image_path: str
     current_transitions: List[Dict[str, str]]
+    current_contrast_report: List[Dict[str, Any]]
     previous_image_path: str
     previous_accepted_tool_call: Dict
     previous_slide_context: slide_context
@@ -138,6 +140,8 @@ class State(TypedDict, total=False):
 
     # Retry and evaluation state
     retry_count: int
+    executor_retry_count: int
+    overflow_retry_count: int
     llm : Any
     vlm_decision: str
     vlm_feedback: str
@@ -146,6 +150,8 @@ class State(TypedDict, total=False):
     overflow_report: Dict[str, Any]
     overflow_rewrite_count: int
     overflow_failed: bool
+    last_valid_xml_content: str
+    last_valid_tool_call: Dict[str, Any]
     executor_decision: str  # "pass" or "fail" from tool_call_executor
     executor_feedback: str  # Detailed error description from executor
 

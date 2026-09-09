@@ -186,7 +186,15 @@ class GeminiAPIProvider(BaseLLMProvider):
         max_tokens: int = 2000,
         temperature: float = 0.5,
     ) -> str:
-        llm_bound = self.llm.bind_tools(tools) if tools else self.llm
+        # Every caller that supplies tools expects a tool invocation, not a
+        # prose answer.  Leaving the choice on ``auto`` lets Gemini return
+        # ordinary text under load or after a retry prompt, which the slide
+        # workflow cannot execute.
+        llm_bound = (
+            self.llm.bind_tools(tools, tool_choice="required")
+            if tools
+            else self.llm
+        )
         resp = llm_bound.invoke(messages)
         
         # Nếu Gemini trả về native tool_calls qua LangChain AIMessage

@@ -24,7 +24,7 @@ def route_to_task(state: State) -> str:
 def evaluate_executor_decision(state: State) -> str:
     """Route every generated slide to overflow rules or retry generation."""
     decision = state.get("executor_decision", "fail")
-    retry_count = state.get("retry_count", 0)
+    retry_count = state.get("executor_retry_count", 0)
     if decision == "pass" or retry_count >= EXECUTOR_MAX_RETRIES:
         return "text_overflow_resolver"
     return "generate_slide"

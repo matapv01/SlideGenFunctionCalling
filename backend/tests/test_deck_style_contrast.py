@@ -31,6 +31,25 @@ def test_dark_panel_text_is_changed_to_readable_colors() -> None:
     assert arguments["body_color"] == "#FFFFFF"
 
 
+def test_transition_headline_uses_readable_dark_panel_text() -> None:
+    tool = get_tool_by_name("generate_transition_headline_slide_xml")
+    call = {
+        "name": tool.name,
+        "arguments": {
+            "title": "1. Giới thiệu",
+            "subtitle": "Nhu cầu và xu hướng sử dụng AI",
+            "image_url": "https://example.com/ai.jpg",
+            "dark_panel_color": "#292A30",
+        },
+    }
+
+    styled = apply_deck_style_to_tool_call(call, [tool], DECK_STYLE)
+    arguments = styled["arguments"]
+
+    assert arguments["title_color"] == "#0D9488"
+    assert arguments["subtitle_color"] == "#FFFFFF"
+
+
 def test_card_text_contrasts_with_dark_card_surface() -> None:
     tool = get_tool_by_name("generate_social_media_points_slide_xml")
     call = {

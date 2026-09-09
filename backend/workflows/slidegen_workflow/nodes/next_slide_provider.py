@@ -41,6 +41,11 @@ def provide_next_slide(state: State) -> State:
 
         # Reset retry_count for the new slide
         state['retry_count'] = 0
+        state['executor_retry_count'] = 0
+        state['overflow_retry_count'] = 0
+        state['overflow_excluded_tools'] = []
+        state['last_valid_tool_call'] = {}
+        state['last_valid_xml_content'] = ''
 
         print(f"Queue has {len(slide_chunks)} chunks remaining. Preparing to process slide {state['current_slide_index'] + 1}/{state['length_slide_chunks']}.")
         print("Reset retry_count for new slide: 0")

@@ -1062,10 +1062,10 @@ def constrain_tool_call_to_candidates(tool_call: dict, candidate_tool_names) -> 
     """Force a generated call to use one of the allowed candidate layouts.
 
     Raw-text model endpoints can invent a descriptive function name even when
-    only one slide tool was supplied. When layout assignment has narrowed the
-    choice to one candidate, that candidate is authoritative. With multiple
-    candidates we only resolve known aliases and let normal validation reject
-    an unknown choice instead of guessing.
+    only one slide tool was supplied. Only an unregistered hallucinated name
+    may be redirected to that sole candidate. A different registered layout is
+    left intact so validation can reject it with accurate schema feedback;
+    renaming it while retaining incompatible arguments corrupts the call.
     """
     if not isinstance(tool_call, dict):
         return tool_call
@@ -1076,6 +1076,8 @@ def constrain_tool_call_to_candidates(tool_call: dict, candidate_tool_names) -> 
     resolved_name = canonical_tool_name(tool_call.get("name"))
 
     if resolved_name in candidates:
+        selected_name = resolved_name
+    elif resolved_name in TOOL_MAP:
         selected_name = resolved_name
     elif len(candidates) == 1:
         selected_name = candidates[0]

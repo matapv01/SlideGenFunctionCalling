@@ -314,8 +314,9 @@ def test_overflow_is_accepted_after_retry_budget_and_workflow_can_continue(monke
         "current_slide_text": "Complete source content",
         "current_tool_call": original_call,
         "current_tool_plan": [original_call],
-        # The executor/overflow retry budget is already exhausted.
+        # The overflow-layout retry budget is already exhausted.
         "retry_count": 2,
+        "overflow_retry_count": 2,
     }
 
     monkeypatch.setattr(
@@ -345,6 +346,57 @@ def test_overflow_is_accepted_after_retry_budget_and_workflow_can_continue(monke
     assert result["overflow_report"]["status"] == "accepted_with_overflow"
     assert result["overflow_report"]["accepted_with_overflow"] is True
     assert result["overflow_report"]["overflowing_boxes"] > 0
+
+
+def test_overflow_retry_uses_its_own_budget_and_excludes_failed_layout(monkeypatch) -> None:
+    original_call = {
+        "name": "generate_platform_instructions_slide_xml",
+        "arguments": {"items": [{"title": "Kiến trúc", "subtitle": "Nội dung"}]},
+    }
+    state = {
+        "current_xml_content": ET.tostring(
+            _presentation_with_overflow(),
+            encoding="unicode",
+        ),
+        "current_slide_index": 3,
+        "current_slide_text": "Complete source content",
+        "current_tool_call": original_call,
+        "current_tool_plan": [original_call],
+        "retry_count": 7,
+        "executor_retry_count": 2,
+        "overflow_retry_count": 0,
+    }
+
+    monkeypatch.setattr(
+        text_overflow_resolver,
+        "_call_slide_rewriter",
+        lambda *args, **kwargs: original_call["arguments"],
+    )
+    monkeypatch.setattr(
+        text_overflow_resolver,
+        "_regenerate_slide",
+        lambda *args, **kwargs: _presentation_with_overflow(),
+    )
+
+    result = asyncio.run(
+        text_overflow_resolver.resolve_text_overflow(
+            state,
+            {
+                "configurable": {
+                    "llm": object(),
+                    "text_overflow_max_rounds": 1,
+                }
+            },
+        )
+    )
+
+    assert result["overflow_failed"] is True
+    assert result["overflow_retry_count"] == 1
+    assert result["executor_retry_count"] == 2
+    assert result["retry_count"] == 8
+    assert result["overflow_excluded_tools"] == [
+        "generate_platform_instructions_slide_xml"
+    ]
 
 
 def test_real_generator_is_reflowed_after_whole_slide_rewrite() -> None:

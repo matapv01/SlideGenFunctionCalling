@@ -596,6 +596,10 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
         )
 
     state["current_xml_content"] = ET.tostring(root, encoding="unicode")
+    state["last_valid_xml_content"] = state["current_xml_content"]
+    current_tool_call = state.get("current_tool_call") or {}
+    if current_tool_call.get("name") not in {"PARSE_ERROR", "default_fallback"}:
+        state["last_valid_tool_call"] = current_tool_call
     # A rewrite may happen on the last allowed round.  ``records`` then still
     # describes the XML from before that rewrite; using it here reports a stale
     # overflow and can fail an otherwise repaired slide.  Always measure the
@@ -624,7 +628,7 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
     state["overflow_report"] = report
     remaining_overflow = report["overflowing_boxes"]
     if remaining_overflow:
-        retry_count = int(state.get("retry_count", 0))
+        retry_count = int(state.get("overflow_retry_count", 0))
         logger.error(
             "SLIDE OVERFLOW FAILURE: slide=%s remaining_overflow=%s "
             "measurement=%s retry=%s/%s",
@@ -650,14 +654,22 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             )
         else:
             state["overflow_failed"] = True
-            state["retry_count"] = retry_count + 1
+            state["overflow_retry_count"] = retry_count + 1
+            state["retry_count"] = int(state.get("retry_count", 0)) + 1
+            overflowing_tool = canonical_tool_name(
+                (state.get("current_tool_call") or {}).get("name")
+            )
+            excluded = list(state.get("overflow_excluded_tools") or [])
+            if overflowing_tool and overflowing_tool not in excluded:
+                excluded.append(overflowing_tool)
+            state["overflow_excluded_tools"] = excluded
             state["executor_decision"] = "fail"
             state["executor_feedback"] = (
                 "WHOLE-SLIDE OVERFLOW VALIDATION FAILED. Read the complete slide "
                 "content and regenerate the slide with all textual fields shortened "
-                "proportionally and harmoniously. First preserve the current design; "
-                "if its geometry still cannot fit the complete slide, choose a different "
-                "available XML layout tool with more suitable space. Preserve facts, "
+                "proportionally and harmoniously. The previous layout could not fit after "
+                "whole-slide repair, so use a different available XML layout with more "
+                "suitable space. Preserve facts, "
                 "numbers, names, images, colors, list structure, and mathematical expressions. "
                 "No textbox may exceed its bounds or the slide boundary. "
                 f"Remaining overflowing boxes: {remaining_overflow}."

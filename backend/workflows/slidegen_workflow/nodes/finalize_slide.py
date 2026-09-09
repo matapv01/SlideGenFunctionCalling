@@ -24,6 +24,7 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
         "vlm_evaluation_url": state.get("vlm_evaluation_url", ""),
         "overflow_report": state.get("overflow_report", {}),
         "overflow_rewrite_count": state.get("overflow_rewrite_count", 0),
+        "contrast_report": state.get("current_contrast_report", []),
         "original_text": state.get("current_slide_text", ""),
         "batch_id": state.get("batch_id", ""),
         "slide_type": state.get("current_slide_type", "content"),
@@ -92,6 +93,8 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
             )
 
     state["retry_count"] = 0
+    state["executor_retry_count"] = 0
+    state["overflow_retry_count"] = 0
     state["previous_accepted_tool_call"] = state["current_tool_call"]
 
     # Feed accepted XML tool usage back into the retriever. This enables the

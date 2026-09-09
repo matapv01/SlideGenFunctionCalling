@@ -172,6 +172,8 @@ async def _invoke_jobs(
         "document_title": state.get("document_title", ""),
         "current_slide_index": -1,
         "retry_count": 0,
+        "executor_retry_count": 0,
+        "overflow_retry_count": 0,
         "vlm_decision": "accept",
     }
     return await get_batch_app().ainvoke(worker_state, config=_worker_config(config))
