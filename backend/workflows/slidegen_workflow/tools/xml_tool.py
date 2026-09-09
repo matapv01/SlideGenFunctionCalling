@@ -24578,3 +24578,2374 @@ def generate_closing_thank_you_memorial_slide_xml(
     ).decode("utf-8")
 
     return xml_content
+
+
+#Chart tool
+
+def generate_monthly_sales_revenue_line_slide_xml(
+    title: str = "Doanh thu bán hàng hàng tháng",
+
+    data: list[dict[str, str | int | float]] = [
+        {"label": "Th.1",  "value": 0},
+        {"label": "Th.2",  "value": 10},
+        {"label": "Th.3",  "value": 15},
+        {"label": "Th.4",  "value": 45},
+        {"label": "Th.5",  "value": 40},
+        {"label": "Th.6",  "value": 50},
+        {"label": "Th.7",  "value": 100},
+        {"label": "Th.8",  "value": 85},
+        {"label": "Th.9",  "value": 70},
+        {"label": "Th.10", "value": 60},
+        {"label": "Th.11", "value": 70},
+        {"label": "Th.12", "value": 125},
+    ],
+
+    analysis_items: str = (
+        "• Xu hướng: Biểu đồ cho thấy doanh thu biến động theo từng giai đoạn, "
+        "tăng dần từ đầu kỳ và đạt mức cao nhất vào cuối chu kỳ theo dõi.\n"
+        "• Tăng đột biến và giảm: Doanh thu tăng mạnh trong một số giai đoạn cao điểm, "
+        "sau đó giảm nhẹ nhưng vẫn duy trì cao hơn mức trung bình ban đầu.\n"
+
+    ),
+
+    background_color: str = "#F3E5D6",
+    text_color: str = "#2F2F2F",
+    line_color: str = "#EF845E",
+    grid_color: str = "#C8C0B8",
+) -> str:
+    """
+    Generate XML for a monthly sales revenue line-chart slide.
+
+    data format:
+    [
+        {"label": "Th.1", "value": 0},
+        {"label": "Th.2", "value": 10},
+        ...
+    ]
+
+    analysis_items format:
+    A multiline string. Each line can represent one analysis point.
+    """
+
+    import math
+
+    # =========================================================
+    # Normalize
+    # =========================================================
+
+    title = str(title or "").strip()
+
+    # =========================================================
+    # Normalize data
+    # =========================================================
+
+    rows = (
+        data
+        if isinstance(data, (list, tuple))
+        else [data]
+    )
+
+    normalized_data = []
+
+    for index, raw_item in enumerate(rows):
+        item = (
+            raw_item
+            if isinstance(raw_item, dict)
+            else {}
+        )
+
+        label = str(
+            item.get("label")
+            or item.get("category")
+            or item.get("name")
+            or f"Th.{index + 1}"
+        ).strip()
+
+        try:
+            value = float(
+                item.get("value", 0)
+            )
+        except (TypeError, ValueError):
+            value = 0.0
+
+        normalized_data.append(
+            {
+                "label": label,
+                "value": value,
+            }
+        )
+
+    if len(normalized_data) < 2:
+        raise ValueError(
+            "Line chart cần ít nhất 2 điểm dữ liệu."
+        )
+
+    # =========================================================
+    # Y-axis scale
+    # =========================================================
+
+    maximum = max(
+        item["value"]
+        for item in normalized_data
+    )
+
+    # Similar visual scale to reference image.
+    rough_step = max(
+        1.0,
+        maximum / 6.0,
+    )
+
+    magnitude = 10 ** math.floor(
+        math.log10(rough_step)
+    )
+
+    normalized_step = (
+        rough_step / magnitude
+    )
+
+    if normalized_step <= 1:
+        nice = 1
+    elif normalized_step <= 2:
+        nice = 2
+    elif normalized_step <= 5:
+        nice = 5
+    else:
+        nice = 10
+
+    tick_step = nice * magnitude
+
+    axis_max = (
+        math.ceil(
+            maximum / tick_step
+        )
+        * tick_step
+    )
+
+    # Give tallest point slight breathing room.
+    if axis_max <= maximum:
+        axis_max += tick_step
+
+    # =========================================================
+    # Canvas
+    # =========================================================
+
+    canvas_width = 1600
+    canvas_height = 900
+
+    # =========================================================
+    # Header layout
+    # =========================================================
+
+    header_x = 105.0
+    header_y = 60.0
+    header_w = 1390.0
+
+    title_x = header_x + 45
+    title_y = header_y + 25
+    title_w = header_w - 90
+    title_h = 130.0
+
+    # =========================================================
+    # Chart layout
+    # =========================================================
+
+    plot_left = 175.0
+    plot_top = 270.0
+    plot_right = 1495.0
+    plot_bottom = 630.0
+
+    plot_w = (
+        plot_right
+        - plot_left
+    )
+
+    plot_h = (
+        plot_bottom
+        - plot_top
+    )
+
+    # =========================================================
+    # Analysis layout
+    # =========================================================
+
+    analysis_x = 105.0
+    analysis_y = 690.0
+    analysis_w = 1390.0
+
+    # =========================================================
+    # Build XML
+    # =========================================================
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_width),
+            "height": str(canvas_height),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        {
+            "background": background_color,
+        },
+    )
+
+    def add(tag: str, **attrs):
+        return ET.SubElement(
+            slide,
+            tag,
+            {
+                key: str(value)
+                for key, value in attrs.items()
+                if value is not None
+            },
+        )
+
+    def textbox(text: str, **attrs):
+        node = add(
+            "textbox",
+            **attrs,
+        )
+        node.text = str(text)
+        return node
+
+    # =========================================================
+    # Background
+    # =========================================================
+
+    add(
+        "shape",
+        type="rectangle",
+        x=0,
+        y=0,
+        width=canvas_width,
+        height=canvas_height,
+        fill=background_color,
+        line_color="none",
+    )
+
+    # =========================================================
+    # Main title
+    # =========================================================
+
+    textbox(
+        title,
+        x=title_x,
+        y=title_y,
+        width=title_w,
+        height=title_h,
+
+        font="Arial",
+        size=46,
+        min_font_size=40,
+
+        color=text_color,
+
+        bold="true",
+        italic="false",
+
+        align="left",
+        vertical_align="middle",
+
+        single_line="false",
+        max_lines=2,
+
+        overflow="clip",
+        reflow_on_resize="true",
+
+        line_spacing=0.90,
+        safety_ratio=1.0,
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    # =========================================================
+    # Y-axis grid + labels
+    # =========================================================
+
+    tick_values = []
+
+    current = 0.0
+
+    while current <= (
+        axis_max + tick_step * 0.01
+    ):
+        tick_values.append(current)
+        current += tick_step
+
+    for tick in tick_values:
+
+        ratio = tick / axis_max
+
+        y = (
+            plot_bottom
+            - ratio * plot_h
+        )
+
+        add(
+            "line",
+            x1=plot_left,
+            y1=y,
+            x2=plot_right,
+            y2=y,
+            color=grid_color,
+            width=0.65,
+        )
+
+        textbox(
+            f"{tick:g}",
+            x=plot_left - 66,
+            y=y - 17,
+            width=48,
+            height=34,
+
+            font="Arial",
+            size=14,
+            min_font_size=12,
+
+            color=text_color,
+
+            bold="false",
+
+            align="right",
+            vertical_align="middle",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="clip",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # X positions
+    # =========================================================
+
+    point_count = len(
+        normalized_data
+    )
+
+    step_x = (
+        plot_w
+        / (point_count - 1)
+    )
+
+    point_positions = []
+
+    for index, item in enumerate(
+        normalized_data
+    ):
+
+        x = (
+            plot_left
+            + index * step_x
+        )
+
+        ratio = (
+            float(item["value"])
+            / axis_max
+        )
+
+        y = (
+            plot_bottom
+            - ratio * plot_h
+        )
+
+        point_positions.append(
+            (
+                x,
+                y,
+                float(item["value"]),
+            )
+        )
+
+    # =========================================================
+    # Connecting line
+    # =========================================================
+
+    for index in range(
+        len(point_positions) - 1
+    ):
+
+        x1, y1, _ = (
+            point_positions[index]
+        )
+
+        x2, y2, _ = (
+            point_positions[index + 1]
+        )
+
+        add(
+            "line",
+            x1=x1,
+            y1=y1,
+            x2=x2,
+            y2=y2,
+            color=line_color,
+            width=1.8,
+        )
+
+    # =========================================================
+    # Markers
+    # =========================================================
+
+    marker_size = 15.0
+
+    for x, y, value in point_positions:
+
+        add(
+            "shape",
+            type="circle",
+
+            x=x - marker_size / 2,
+            y=y - marker_size / 2,
+
+            width=marker_size,
+            height=marker_size,
+
+            fill=line_color,
+            line_color="none",
+        )
+
+    # =========================================================
+    # X labels
+    # =========================================================
+
+    label_width = min(
+        95.0,
+        step_x * 0.95,
+    )
+
+    label_font_size = max(
+        8.0,
+        min(
+            14.0,
+            label_width * 0.26,
+        ),
+    )
+
+    for index, item in enumerate(
+        normalized_data
+    ):
+
+        x = point_positions[index][0]
+
+        textbox(
+            item["label"],
+
+            x=x - label_width / 2,
+            y=plot_bottom + 10,
+
+            width=label_width,
+            height=38,
+
+            font="Arial",
+            size=label_font_size,
+            min_font_size=max(8.0, label_font_size - 2.0),
+
+            color=text_color,
+
+            bold="true",
+
+            align="center",
+            vertical_align="top",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="clip",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # Analysis title
+    # =========================================================
+
+    textbox(
+        "Phân tích",
+
+        x=analysis_x,
+        y=analysis_y,
+
+        width=190,
+        height=34,
+
+        font="Arial",
+        size=17,
+        min_font_size=15,
+
+        color=text_color,
+
+        bold="true",
+
+        align="left",
+        vertical_align="middle",
+
+        single_line="true",
+        max_lines=1,
+
+        overflow="clip",
+        reflow_on_resize="true",
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    # =========================================================
+    # Analysis text
+    # =========================================================
+
+    textbox(
+        analysis_items,
+
+        x=analysis_x + 10,
+        y=analysis_y + 40,
+        width=analysis_w - 20,
+        height=270,
+
+        font="Arial",
+        size=15,
+        min_font_size=10,
+
+        color=text_color,
+
+        bold="false",
+
+        align="left",
+        vertical_align="top",
+
+        single_line="false",
+        max_lines=10,
+
+        overflow="shrink",
+        reflow_on_resize="true",
+
+        line_spacing=1.05,
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    normalized_analysis = []
+
+    analysis_row_y = (
+        analysis_y + 40
+    )
+
+    for index, raw_item in enumerate(
+        normalized_analysis[:5]
+    ):
+
+        item = (
+            raw_item
+            if isinstance(raw_item, dict)
+            else {}
+        )
+
+        row_y = (
+            analysis_row_y
+            + index * 46
+        )
+
+        # Bullet
+        textbox(
+            "•",
+
+            x=analysis_x + 10,
+            y=row_y,
+
+            width=20,
+            height=42,
+
+            font="Arial",
+            size=17,
+
+            color=text_color,
+
+            align="center",
+            vertical_align="middle",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="clip",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        # Bold analysis label
+        analysis_title = str(
+            item.get("title")
+            or ""
+        ).strip()
+
+        title_box_w = max(
+            140.0,
+            min(
+                310.0,
+                125.0
+                + len(analysis_title) * 7.0,
+            )
+        )
+
+        textbox(
+            analysis_title,
+
+            x=analysis_x + 40,
+            y=row_y,
+
+            width=title_box_w,
+            height=42,
+
+            font="Arial",
+            size=15,
+            min_font_size=13,
+
+            color=text_color,
+
+            bold="true",
+
+            align="left",
+            vertical_align="middle",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="shrink",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        textbox(
+            str(
+                item.get("text")
+                or ""
+            ),
+
+            x=(
+                analysis_x
+                + 40
+                + title_box_w
+                + 5
+            ),
+            y=row_y,
+
+            width=(
+                analysis_w
+                - title_box_w
+                - 55
+            ),
+            height=42,
+
+            font="Arial",
+            size=14,
+            min_font_size=11,
+
+            color=text_color,
+
+            bold="false",
+
+            align="left",
+            vertical_align="middle",
+
+            single_line="false",
+            max_lines=2,
+
+            overflow="shrink",
+            reflow_on_resize="true",
+
+            line_spacing=1.0,
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # Serialize
+    # =========================================================
+
+    raw_xml = ET.tostring(
+        presentation,
+        encoding="utf-8",
+    )
+
+    return minidom.parseString(
+        raw_xml
+    ).toprettyxml(
+        indent="  ",
+        encoding="UTF-8",
+    ).decode("utf-8")
+
+def generate_market_share_distribution_slide_xml(
+    title: str = "Market Share\nDistribution Graph",
+    intro_text: str = (
+        "This graph tracks the market share of "
+        "the company over a specified period."
+    ),
+    items: list[dict[str, str | int]] = [
+        {
+            "title": "International",
+            "description": (
+                "This graph tracks the market share "
+                "of the company over a specified period."
+            ),
+            "value": 50,
+            "color": "#7ED957",
+        },
+        {
+            "title": "Local",
+            "description": (
+                "Targets consumers within a single "
+                "country, focusing on national preferences."
+            ),
+            "value": 50,
+            "color": "#FFBD59",
+        },
+   
+    ],
+    background_color: str = "#FFFFFF",
+    title_color: str = "#000000",
+    text_color: str = "#242424",
+) -> str:
+    """
+    Generate XML for a market-share distribution slide.
+
+    The slide contains a title, an introductory paragraph, a donut chart,
+    percentage labels, and detail cards for each market-share category.
+    Item values are automatically normalized for the donut chart.
+    """
+
+    # =========================================================
+    # Normalize
+    # =========================================================
+
+    title = str(title or "").strip()
+    intro_text = str(intro_text or "").strip()
+
+    default_colors = [
+        "#7ED957",
+        "#FFBD59",
+        "#FF5757",
+        "#5DADE2",
+        "#9B59B6",
+    ]
+
+    supported_icon_types = [
+        "globe",
+        "location",
+        "region",
+        "chart",
+    ]
+
+    def infer_icon_type(
+        item_title: str,
+        item_description: str,
+        item_index: int,
+    ) -> str:
+        content = (
+            f"{item_title} {item_description}"
+        ).casefold()
+
+        icon_keywords = {
+            "globe": (
+                "international",
+                "global",
+                "world",
+                "worldwide",
+                "overseas",
+                "export",
+                "quốc tế",
+                "toàn cầu",
+                "nước ngoài",
+            ),
+            "location": (
+                "local",
+                "domestic",
+                "national",
+                "country",
+                "city",
+                "location",
+                "địa phương",
+                "nội địa",
+                "trong nước",
+                "quốc gia",
+                "thành phố",
+            ),
+            "region": (
+                "region",
+                "regional",
+                "area",
+                "zone",
+                "territory",
+                "khu vực",
+                "vùng",
+                "miền",
+            ),
+            "chart": (
+                "share",
+                "market",
+                "sales",
+                "revenue",
+                "growth",
+                "trend",
+                "distribution",
+                "tỷ trọng",
+                "doanh thu",
+                "tăng trưởng",
+                "xu hướng",
+                "phân bổ",
+            ),
+        }
+
+        for icon_name, keywords in icon_keywords.items():
+            if any(
+                keyword in content
+                for keyword in keywords
+            ):
+                return icon_name
+
+        return supported_icon_types[
+            item_index % len(supported_icon_types)
+        ]
+
+    raw_items = (
+        items
+        if isinstance(items, (list, tuple))
+        else [items]
+    )
+
+    normalized_items: list[dict[str, object]] = []
+
+    for index, raw_item in enumerate(raw_items):
+
+        item = (
+            raw_item
+            if isinstance(raw_item, dict)
+            else {}
+        )
+
+        try:
+            value = float(
+                item.get("value", 0)
+            )
+        except (TypeError, ValueError):
+            value = 0.0
+
+        if value <= 0:
+            continue
+
+        color = str(
+            item.get("color")
+            or default_colors[
+                index % len(default_colors)
+            ]
+        ).strip()
+
+        if not color.startswith("#"):
+            color = "#" + color
+
+        normalized_items.append(
+            {
+                "title": str(
+                    item.get("title")
+                    or f"Category {index + 1}"
+                ).strip(),
+
+                "description": str(
+                    item.get("description")
+                    or ""
+                ).strip(),
+
+                "value": value,
+
+                "color": color,
+            }
+        )
+
+    if not normalized_items:
+        raise ValueError(
+            "Market share slide cần ít nhất một item có value > 0."
+        )
+
+    for index, item in enumerate(
+        normalized_items
+    ):
+        item["icon"] = infer_icon_type(
+            str(item["title"]),
+            str(item["description"]),
+            index,
+        )
+
+    total = sum(
+        float(item["value"])
+        for item in normalized_items
+    )
+
+    for item in normalized_items:
+        item["percentage"] = (
+            float(item["value"])
+            / total
+            * 100.0
+        )
+
+    # =========================================================
+    # Canvas
+    # =========================================================
+
+    canvas_width = 1600
+    canvas_height = 900
+
+    # =========================================================
+    # Layout
+    # =========================================================
+
+    # Title
+    title_x = 100.0
+    title_y = 72.0
+    title_w = 620.0
+    title_h = 190.0
+
+    # Top-right intro
+    intro_x = 815.0
+    intro_y = 120.0
+    intro_w = 600.0
+    intro_h = 110.0
+
+    # Donut
+    donut_x = 90.0
+    donut_y = 300.0
+    donut_size = 590.0
+
+    # Right details adapt to the number of items.
+    detail_area_x = 770.0
+    detail_area_w = 650.0
+    detail_start_y = 305.0
+    detail_bottom_y = 850.0
+    detail_column_gap = 25.0
+
+    item_count = len(normalized_items)
+    detail_columns = 1 if item_count <= 3 else 2
+    detail_rows = (
+        item_count + detail_columns - 1
+    ) // detail_columns
+
+    detail_column_w = (
+        detail_area_w
+        - detail_column_gap * (detail_columns - 1)
+    ) / detail_columns
+
+    detail_gap = min(
+        215.0,
+        max(
+            125.0,
+            (detail_bottom_y - detail_start_y)
+            / max(detail_rows, 1),
+        ),
+    )
+
+    detail_icon_size = (
+        86.0
+        if detail_columns == 1
+        else 64.0
+    )
+
+    detail_text_offset = (
+        detail_icon_size + 20.0
+    )
+
+    detail_title_font_size = (
+        28.0
+        if detail_columns == 1
+        else 18.0
+    )
+
+    detail_body_font_size = (
+        18.0
+        if detail_columns == 1
+        else 13.0
+    )
+
+    detail_body_min_font_size = (
+        15.0
+        if detail_columns == 1
+        else 10.0
+    )
+
+    detail_title_h = (
+        50.0
+        if detail_columns == 1
+        else 36.0
+    )
+
+    detail_body_offset = (
+        58.0
+        if detail_columns == 1
+        else 45.0
+    )
+
+    detail_body_h = max(
+        60.0,
+        min(
+            105.0,
+            detail_gap - detail_body_offset - 8.0,
+        ),
+    )
+
+    # =========================================================
+    # XML root
+    # =========================================================
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_width),
+            "height": str(canvas_height),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        {
+            "background": background_color,
+        },
+    )
+
+    def add(tag: str, **attrs):
+        return ET.SubElement(
+            slide,
+            tag,
+            {
+                key: str(value)
+                for key, value in attrs.items()
+                if value is not None
+            },
+        )
+
+    def textbox(text: str, **attrs):
+        node = add(
+            "textbox",
+            **attrs,
+        )
+        node.text = str(text)
+        return node
+
+    # =========================================================
+    # Background
+    # =========================================================
+
+    add(
+        "shape",
+        type="rectangle",
+        x=0,
+        y=0,
+        width=canvas_width,
+        height=canvas_height,
+        fill=background_color,
+        line_color="none",
+    )
+
+    # =========================================================
+    # Main title
+    # =========================================================
+
+    textbox(
+        title,
+        x=title_x,
+        y=title_y,
+        width=title_w,
+        height=title_h,
+
+        font="Arial",
+        size=48,
+        min_font_size=42,
+
+        color=title_color,
+
+        bold="true",
+        italic="false",
+
+        align="left",
+        vertical_align="top",
+
+        single_line="false",
+        max_lines=3,
+
+        overflow="clip",
+        reflow_on_resize="true",
+
+        line_spacing=0.92,
+        safety_ratio=1.0,
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    # =========================================================
+    # Intro paragraph
+    # =========================================================
+
+    textbox(
+        intro_text,
+        x=intro_x,
+        y=intro_y,
+        width=intro_w,
+        height=intro_h,
+
+        font="Arial",
+        size=22,
+        min_font_size=18,
+
+        color=text_color,
+
+        bold="false",
+        italic="false",
+
+        align="left",
+        vertical_align="top",
+
+        single_line="false",
+        max_lines=4,
+
+        overflow="clip",
+        reflow_on_resize="true",
+
+        line_spacing=1.02,
+        safety_ratio=1.0,
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    # =========================================================
+    # Donut chart as SVG
+    # =========================================================
+
+    svg_node = add(
+        "svg",
+        x=donut_x,
+        y=donut_y,
+        width=donut_size,
+        height=donut_size,
+        pixel_width=900,
+        pixel_height=900,
+    )
+
+    radius = 165.0
+    cx = 250.0
+    cy = 250.0
+
+    circumference = (
+        2
+        * 3.141592653589793
+        * radius
+    )
+
+    gap_degrees = 4.0
+
+    svg_parts = [
+        """
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="500"
+    height="500"
+    viewBox="0 0 500 500"
+>
+"""
+    ]
+
+    current_angle = -90.0
+
+    for item in normalized_items:
+
+        percentage = float(
+            item["percentage"]
+        )
+
+        sweep = (
+            percentage
+            / 100.0
+            * 360.0
+        )
+
+        effective_sweep = max(
+            1.0,
+            sweep - gap_degrees
+        )
+
+        arc_length = (
+            effective_sweep
+            / 360.0
+            * circumference
+        )
+
+        rest_length = (
+            circumference
+            - arc_length
+        )
+
+        svg_parts.append(
+            f"""
+    <circle
+        cx="{cx}"
+        cy="{cy}"
+        r="{radius}"
+        fill="none"
+        stroke="{item['color']}"
+        stroke-width="92"
+        stroke-linecap="butt"
+        stroke-dasharray="{arc_length:.2f} {rest_length:.2f}"
+        transform="rotate({current_angle:.2f} {cx} {cy})"
+    />
+"""
+        )
+
+        current_angle += sweep
+
+    svg_parts.append(
+        """
+</svg>
+"""
+    )
+
+    svg_node.text = "".join(
+        svg_parts
+    )
+
+    # =========================================================
+    # Percentage labels around donut
+    # =========================================================
+
+    import math
+
+    current_angle = -90.0
+
+    label_radius = 238.0
+
+    for item in normalized_items:
+
+        percentage = float(
+            item["percentage"]
+        )
+
+        sweep = (
+            percentage
+            / 100.0
+            * 360.0
+        )
+
+        center_angle = (
+            current_angle
+            + sweep / 2
+        )
+
+        angle_rad = math.radians(
+            center_angle
+        )
+
+        label_center_x = (
+            donut_x
+            + donut_size / 2
+            + math.cos(angle_rad)
+            * (label_radius / 500.0 * donut_size)
+        )
+
+        label_center_y = (
+            donut_y
+            + donut_size / 2
+            + math.sin(angle_rad)
+            * (label_radius / 500.0 * donut_size)
+        )
+
+        textbox(
+            f"{percentage:.0f}%",
+
+            x=label_center_x - 45,
+            y=label_center_y - 20,
+
+            width=90,
+            height=40,
+
+            font="Arial",
+            size=20,
+            min_font_size=18,
+
+            color="#000000",
+
+            bold="true",
+            italic="false",
+
+            align="center",
+            vertical_align="middle",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="clip",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        current_angle += sweep
+
+    # =========================================================
+    # Icon SVG helpers
+    # =========================================================
+
+    def globe_icon_svg() -> str:
+        return """
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 100 100">
+  <g fill="none"
+     stroke="#111111"
+     stroke-width="4"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+    <circle cx="50" cy="50" r="30"/>
+
+    <ellipse cx="50" cy="50"
+             rx="14" ry="30"/>
+
+    <path d="M20 50 H80"/>
+    <path d="M26 36 H74"/>
+    <path d="M26 64 H74"/>
+
+    <path d="M64 20
+             C78 26 83 39 78 53"/>
+
+    <path d="M78 53
+             L82 43"/>
+
+    <path d="M78 53
+             L68 50"/>
+
+  </g>
+</svg>
+"""
+
+    def location_icon_svg() -> str:
+        return """
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 100 100">
+
+  <g fill="none"
+     stroke="#111111"
+     stroke-width="4"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+    <path d="
+        M50 18
+        C34 18 25 29 25 43
+        C25 61 50 78 50 78
+        C50 78 75 61 75 43
+        C75 29 66 18 50 18
+    "/>
+
+    <circle
+        cx="50"
+        cy="42"
+        r="9"
+    />
+
+    <ellipse
+        cx="50"
+        cy="82"
+        rx="27"
+        ry="7"
+    />
+
+  </g>
+</svg>
+"""
+
+    def region_icon_svg() -> str:
+        return """
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 100 100">
+
+  <g fill="none"
+     stroke="#111111"
+     stroke-width="3.6"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+    <circle
+        cx="45"
+        cy="52"
+        r="27"
+    />
+
+    <path d="
+        M25 35
+        L35 30
+        L40 36
+        L36 44
+        L27 43
+        Z
+    "/>
+
+    <path d="
+        M48 28
+        L59 33
+        L55 40
+        L46 40
+        L42 34
+        Z
+    "/>
+
+    <path d="
+        M31 55
+        L42 50
+        L50 58
+        L47 70
+        L37 72
+        Z
+    "/>
+
+    <path d="
+        M56 47
+        L66 51
+        L64 63
+        L55 66
+        L51 58
+        Z
+    "/>
+
+    <path d="
+        M76 22
+        C66 22 61 29 61 37
+        C61 47 76 57 76 57
+        C76 57 91 47 91 37
+        C91 29 86 22 76 22
+        Z
+    "/>
+
+    <circle
+        cx="76"
+        cy="36"
+        r="5"
+    />
+
+  </g>
+</svg>
+"""
+
+    def chart_icon_svg() -> str:
+        return """
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 100 100">
+
+  <g fill="none"
+     stroke="#111111"
+     stroke-width="4"
+     stroke-linecap="round"
+     stroke-linejoin="round">
+
+    <path d="M20 78 V22"/>
+    <path d="M20 78 H84"/>
+    <path d="M28 64 L43 50 L56 58 L76 32"/>
+
+    <circle cx="28" cy="64" r="3" fill="#111111"/>
+    <circle cx="43" cy="50" r="3" fill="#111111"/>
+    <circle cx="56" cy="58" r="3" fill="#111111"/>
+    <circle cx="76" cy="32" r="3" fill="#111111"/>
+
+  </g>
+</svg>
+"""
+
+    # =========================================================
+    # Right detail items
+    # =========================================================
+
+    used_icon_types: set[str] = set()
+
+    for index, item in enumerate(
+        normalized_items
+    ):
+
+        column_index = (
+            index % detail_columns
+        )
+
+        row_index = (
+            index // detail_columns
+        )
+
+        card_x = (
+            detail_area_x
+            + column_index
+            * (
+                detail_column_w
+                + detail_column_gap
+            )
+        )
+
+        row_y = (
+            detail_start_y
+            + row_index * detail_gap
+        )
+
+        detail_icon_x = card_x
+        detail_text_x = (
+            card_x
+            + detail_text_offset
+        )
+
+        detail_title_w = (
+            detail_column_w
+            - detail_text_offset
+        )
+
+        detail_body_w = detail_title_w
+
+        # ---------------------------------------------
+        # Colored icon square
+        # ---------------------------------------------
+
+        add(
+            "shape",
+            type="rectangle",
+
+            x=detail_icon_x,
+            y=row_y,
+
+            width=detail_icon_size,
+            height=detail_icon_size,
+
+            fill=item["color"],
+            line_color="none",
+        )
+
+        # ---------------------------------------------
+        # Black icon
+        # ---------------------------------------------
+
+        icon_svg = add(
+            "svg",
+
+            x=detail_icon_x + 15,
+            y=row_y + 15,
+
+            width=detail_icon_size - 30,
+            height=detail_icon_size - 30,
+
+            pixel_width=300,
+            pixel_height=300,
+        )
+
+        icon_type = str(
+            item["icon"]
+        ).lower()
+
+        if icon_type in {
+            "pin",
+            "local",
+        }:
+            icon_type = "location"
+        elif icon_type in {
+            "map",
+        }:
+            icon_type = "region"
+        elif icon_type in {
+            "trend",
+            "analytics",
+            "other",
+        }:
+            icon_type = "chart"
+
+        if (
+            icon_type not in supported_icon_types
+            or icon_type in used_icon_types
+        ):
+            unused_icon_types = [
+                icon_name
+                for icon_name in supported_icon_types
+                if icon_name not in used_icon_types
+            ]
+
+            if unused_icon_types:
+                icon_type = unused_icon_types[0]
+
+        used_icon_types.add(icon_type)
+
+        if icon_type in {
+            "location",
+        }:
+            icon_svg.text = (
+                location_icon_svg()
+            )
+
+        elif icon_type in {
+            "region",
+        }:
+            icon_svg.text = (
+                region_icon_svg()
+            )
+
+        elif icon_type in {
+            "chart",
+        }:
+            icon_svg.text = (
+                chart_icon_svg()
+            )
+
+        else:
+            icon_svg.text = (
+                globe_icon_svg()
+            )
+
+        # ---------------------------------------------
+        # Detail title
+        # ---------------------------------------------
+
+        textbox(
+            item["title"],
+
+            x=detail_text_x,
+            y=row_y - 1,
+
+            width=detail_title_w,
+            height=detail_title_h,
+
+            font="Arial",
+            size=detail_title_font_size,
+            min_font_size=max(
+                10.0,
+                detail_title_font_size - 5.0,
+            ),
+
+            color="#000000",
+
+            bold="true",
+            italic="false",
+
+            align="left",
+            vertical_align="middle",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="shrink",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        # ---------------------------------------------
+        # Description
+        # ---------------------------------------------
+
+        textbox(
+            item["description"],
+
+            x=detail_text_x,
+            y=row_y + detail_body_offset,
+
+            width=detail_body_w,
+            height=detail_body_h,
+
+            font="Arial",
+            size=detail_body_font_size,
+            min_font_size=detail_body_min_font_size,
+
+            color=text_color,
+
+            bold="false",
+            italic="false",
+
+            align="left",
+            vertical_align="top",
+
+            single_line="false",
+            max_lines=4,
+
+            overflow="shrink",
+            reflow_on_resize="true",
+
+            line_spacing=1.03,
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # Serialize XML
+    # =========================================================
+
+    raw_xml = ET.tostring(
+        presentation,
+        encoding="utf-8",
+    )
+
+    xml_content = minidom.parseString(
+        raw_xml
+    ).toprettyxml(
+        indent="  ",
+        encoding="UTF-8",
+    ).decode("utf-8")
+
+    return xml_content
+
+def generate_best_selling_product_chart_slide_xml(
+    title: str = "BEST SELLING PRODUCT",
+
+    chart_data: list[dict[str, str | dict[str, int | float]]] = [
+        {
+            "category": "January",
+            "series": {
+                "Sunscreen": 7,
+                "Moisturizer": 6,
+                "Serum": 5,
+            },
+        },
+        {
+            "category": "February",
+            "series": {
+                "Sunscreen": 8,
+                "Moisturizer": 8,
+                "Serum": 4,
+            },
+        },
+        {
+            "category": "March",
+            "series": {
+                "Sunscreen": 15,
+                "Moisturizer": 10,
+                "Serum": 5,
+            },
+        },
+        {
+            "category": "April",
+            "series": {
+                "Sunscreen": 18,
+                "Moisturizer": 14,
+                "Serum": 8,
+            },
+        },
+        
+    ],
+
+    footer_text: str = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        "Fusce ac rutrum ipsum. Suspendisse auctor aliquam ante id tempor. "
+        "Ut id dolor aliquam, pellentesque odio vitae, tempus turpis."
+    ),
+
+    background_color: str = "#FFFFFF",
+    panel_color: str = "#F8F8F8",
+
+    title_color: str = "#2B8FB4",
+
+    coral_color: str = "#FF7375",
+    peach_color: str = "#F3C580",
+    green_color: str = "#A6CE91",
+
+    grid_color: str = "#C9C9C9",
+    axis_text_color: str = "#161616",
+
+    footer_color: str = "#626262",
+) -> str:
+
+    """
+    Generate XML for a minimalist best-selling-product slide.
+
+    Layout:
+    - Large centered light-blue title
+    - Large grouped column chart inside a very light gray panel
+    - Centered footer paragraph
+
+    chart_data:
+    [
+        {
+            "category": "January",
+            "series": {
+                "Sunscreen": 7,
+                "Moisturizer": 6,
+                "Serum": 5
+            }
+        }
+    ]
+
+    """
+
+    # =========================================================
+    # Normalize
+    # =========================================================
+
+    title = str(title or "").strip()
+    footer_text = str(footer_text or "").strip()
+
+    # =========================================================
+    # Normalize chart data
+    # =========================================================
+
+    rows = chart_data if isinstance(chart_data, (list, tuple)) else [chart_data]
+
+    normalized_rows = []
+
+    for index, raw_row in enumerate(rows):
+        row = raw_row if isinstance(raw_row, dict) else {}
+
+        category = str(
+            row.get("category")
+            or row.get("label")
+            or f"Category {index + 1}"
+        ).strip()
+
+        series = row.get("series")
+        series = series if isinstance(series, dict) else {}
+
+        clean_series = {}
+
+        for name, raw_value in series.items():
+            try:
+                value = float(raw_value)
+            except (TypeError, ValueError):
+                value = 0.0
+
+            clean_series[str(name)] = max(0.0, value)
+
+        normalized_rows.append(
+            {
+                "category": category,
+                "series": clean_series,
+            }
+        )
+
+    normalized_rows = normalized_rows[:6]
+
+    if not normalized_rows:
+        raise ValueError("chart_data cần ít nhất một category.")
+
+    series_names = []
+
+    for row in normalized_rows:
+        for name in row["series"]:
+            if name not in series_names:
+                series_names.append(name)
+
+    series_names = series_names[:3]
+
+    if not series_names:
+        raise ValueError("Chart cần ít nhất một series.")
+
+    series_colors = [
+        coral_color,
+        peach_color,
+        green_color,
+    ]
+
+    # =========================================================
+    # Canvas
+    # =========================================================
+
+    canvas_width = 1600
+    canvas_height = 900
+
+    # =========================================================
+    # Main layout
+    # =========================================================
+
+    # Title
+    title_x = 300.0
+    title_y = 105.0
+    title_w = 1000.0
+    title_h = 90.0
+
+    # Main chart panel
+    chart_panel_x = 95.0
+    chart_panel_y = 255.0
+    chart_panel_w = 1410.0
+    chart_panel_h = 440.0
+
+    # Footer
+    footer_x = 230.0
+    footer_y = 745.0
+    footer_w = 1140.0
+    footer_h = 95.0
+
+    # =========================================================
+    # Plot region
+    # =========================================================
+
+    plot_left = chart_panel_x + 90.0
+    plot_top = chart_panel_y + 50.0
+    plot_right = chart_panel_x + chart_panel_w - 42.0
+    plot_bottom = chart_panel_y + chart_panel_h - 70.0
+
+    plot_w = plot_right - plot_left
+    plot_h = plot_bottom - plot_top
+
+    # =========================================================
+    # Determine axis maximum
+    # =========================================================
+
+    values = [
+        float(row["series"].get(name, 0))
+        for row in normalized_rows
+        for name in series_names
+    ]
+
+    maximum = max(values or [1])
+
+    if maximum <= 20:
+        axis_max = 20.0
+        tick_step = 5.0
+
+    elif maximum <= 40:
+        axis_max = 40.0
+        tick_step = 10.0
+
+    elif maximum <= 100:
+        axis_max = 100.0
+        tick_step = 25.0
+
+    else:
+        axis_max = maximum * 1.1
+        tick_step = axis_max / 4
+
+    # =========================================================
+    # XML
+    # =========================================================
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_width),
+            "height": str(canvas_height),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        {"background": background_color},
+    )
+
+    def add(tag: str, **attrs):
+        return ET.SubElement(
+            slide,
+            tag,
+            {
+                key: str(value)
+                for key, value in attrs.items()
+                if value is not None
+            },
+        )
+
+    def textbox(text: str, **attrs):
+        node = add("textbox", **attrs)
+        node.text = str(text)
+        return node
+
+    # =========================================================
+    # Main background
+    # =========================================================
+
+    add(
+        "shape",
+        type="rectangle",
+        x=0,
+        y=0,
+        width=canvas_width,
+        height=canvas_height,
+        fill=background_color,
+        line_color="none",
+    )
+
+    # =========================================================
+    # Title
+    # Thin/light typography like reference image
+    # =========================================================
+
+    textbox(
+        title.upper(),
+        x=title_x,
+        y=title_y,
+        width=title_w,
+        height=title_h,
+
+        font="Arial",
+        size=39,
+        min_font_size=34,
+
+        color=title_color,
+
+        bold="false",
+        italic="false",
+
+        align="center",
+        vertical_align="middle",
+
+        single_line="true",
+        max_lines=1,
+
+        overflow="clip",
+        reflow_on_resize="true",
+
+        line_spacing=1.0,
+        safety_ratio=1.0,
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    # =========================================================
+    # Panels
+    # Completely flat, no border, no radius
+    # =========================================================
+
+    add(
+        "shape",
+        type="rectangle",
+        x=chart_panel_x,
+        y=chart_panel_y,
+        width=chart_panel_w,
+        height=chart_panel_h,
+        fill=panel_color,
+        line_color="none",
+    )
+
+
+    # =========================================================
+    # Legend
+    # =========================================================
+
+    legend_y = chart_panel_y + 18.0
+    legend_item_gap = 210.0
+    legend_total_w = len(series_names) * legend_item_gap
+    legend_start_x = chart_panel_x + (chart_panel_w - legend_total_w) / 2
+
+    for series_index, series_name in enumerate(series_names):
+        color = series_colors[series_index % len(series_colors)]
+        item_x = legend_start_x + series_index * legend_item_gap
+
+        add(
+            "shape",
+            type="rectangle",
+            x=item_x,
+            y=legend_y + 7,
+            width=18,
+            height=18,
+            fill=color,
+            line_color="none",
+        )
+
+        textbox(
+            series_name,
+            x=item_x + 28,
+            y=legend_y,
+            width=165,
+            height=32,
+            font="Arial",
+            size=13,
+            min_font_size=11,
+            color=axis_text_color,
+            bold="false",
+            align="left",
+            vertical_align="middle",
+            single_line="true",
+            max_lines=1,
+            overflow="clip",
+            reflow_on_resize="true",
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # Grid lines + y-axis labels
+    # =========================================================
+
+    tick_count = 5
+
+    for i in range(tick_count):
+
+        value = i * tick_step
+
+        if value > axis_max:
+            value = axis_max
+
+        ratio = value / axis_max
+
+        y = plot_bottom - ratio * plot_h
+
+        # Thin horizontal line
+        add(
+            "line",
+            x1=plot_left,
+            y1=y,
+            x2=plot_right,
+            y2=y,
+            color=grid_color,
+            width=0.8,
+        )
+
+        textbox(
+            f"{value:g}",
+            x=plot_left - 58,
+            y=y - 16,
+            width=42,
+            height=32,
+
+            font="Arial",
+            size=14,
+            min_font_size=12,
+
+            color=axis_text_color,
+
+            bold="false",
+
+            align="right",
+            vertical_align="middle",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="clip",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # Bars
+    # Square, flat pastel bars like reference
+    # =========================================================
+
+    category_count = len(normalized_rows)
+
+    category_slot = (
+        plot_w / category_count
+    )
+
+    cluster_width = (
+        category_slot * 0.72
+    )
+
+    small_gap = 3.0
+
+    bar_width = (
+        cluster_width
+        - small_gap * (len(series_names) - 1)
+    ) / len(series_names)
+
+    bar_width = max(
+        15.0,
+        min(45.0, bar_width),
+    )
+
+    for category_index, row in enumerate(normalized_rows):
+
+        category_center = (
+            plot_left
+            + category_slot * category_index
+            + category_slot / 2
+        )
+
+        actual_cluster_w = (
+            len(series_names) * bar_width
+            + (len(series_names) - 1) * small_gap
+        )
+
+        cluster_x = (
+            category_center
+            - actual_cluster_w / 2
+        )
+
+        for series_index, series_name in enumerate(series_names):
+
+            value = float(
+                row["series"].get(
+                    series_name,
+                    0,
+                )
+            )
+
+            bar_h = (
+                value / axis_max
+            ) * plot_h
+
+            x = (
+                cluster_x
+                + series_index
+                * (bar_width + small_gap)
+            )
+
+            y = (
+                plot_bottom
+                - bar_h
+            )
+
+            add(
+                "shape",
+
+                # IMPORTANT:
+                # rectangle, NOT rounded_rectangle
+                type="rectangle",
+
+                x=x,
+                y=y,
+
+                width=bar_width,
+                height=max(1.5, bar_h),
+
+                fill=series_colors[
+                    series_index
+                    % len(series_colors)
+                ],
+
+                line_color="none",
+            )
+
+        # Category labels
+        textbox(
+            row["category"],
+            x=(
+                category_center
+                - category_slot / 2
+            ),
+            y=plot_bottom + 15,
+
+            width=category_slot,
+            height=42,
+
+            font="Arial",
+            size=15,
+            min_font_size=12,
+
+            color=axis_text_color,
+
+            bold="false",
+
+            align="center",
+            vertical_align="top",
+
+            single_line="true",
+            max_lines=1,
+
+            overflow="clip",
+            reflow_on_resize="true",
+
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+    # =========================================================
+    # Footer
+    # =========================================================
+
+    textbox(
+        footer_text,
+
+        x=footer_x,
+        y=footer_y,
+
+        width=footer_w,
+        height=footer_h,
+
+        font="Arial",
+        size=16,
+        min_font_size=14,
+
+        color=footer_color,
+
+        bold="false",
+        italic="false",
+
+        align="center",
+        vertical_align="middle",
+
+        single_line="false",
+        max_lines=3,
+
+        overflow="clip",
+        reflow_on_resize="true",
+
+        line_spacing=1.05,
+
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    # =========================================================
+    # Serialize
+    # =========================================================
+
+    raw_xml = ET.tostring(
+        presentation,
+        encoding="utf-8",
+    )
+
+    xml_content = minidom.parseString(
+        raw_xml
+    ).toprettyxml(
+        indent="  ",
+        encoding="UTF-8",
+    ).decode("utf-8")
+
+    return xml_content
+

@@ -67,7 +67,13 @@ from backend.workflows.slidegen_workflow.tools.xml_tool import (
     generate_business_thank_you_slide_xml,
     generate_dark_gold_thank_you_slide_xml,
     generate_paper_flight_thank_you_slide_xml,
-    generate_closing_thank_you_memorial_slide_xml
+    generate_closing_thank_you_memorial_slide_xml,
+
+    #slide chart
+    generate_monthly_sales_revenue_line_slide_xml,
+    generate_market_share_distribution_slide_xml,
+    generate_best_selling_product_chart_slide_xml,
+
 )
 
 # ===========================================================================================
@@ -708,6 +714,46 @@ class GenerateClosingThankYouMemorialSlideInput(BaseModel):
     subtitle_color: str = Field(default="#111111", description="Color of the supporting subtitle.")
     image_overlay_color: str = Field(default="#FFFFFF", description="Color of the translucent overlay placed over the grayscale background image.")
 
+# === SLIDE Chart ===
+class GenerateMonthlySalesRevenueLineSlideInput(BaseModel):
+    """Input schema for generate_monthly_sales_revenue_line_slide_xml."""
+
+    title: str = Field(..., description="Main slide title displayed inside the large bordered header area at the upper-left. Supports up to 2 lines and is rendered as large bold editable text. example: 'Doanh thu bán hàng\\nhàng tháng'")
+    data: list[dict[str, str | int | float]] = Field(..., description="Ordered data points used to generate the editable line chart. Each item must contain 'label' for the horizontal-axis category and numeric 'value' for the point height. Items are rendered from left to right in the provided order. example: [{'label': 'Th.1', 'value': 0}, {'label': 'Th.2', 'value': 10}, {'label': 'Th.3', 'value': 15}, {'label': 'Th.4', 'value': 45}]")
+    analysis_items: str = Field(..., description="Multiline string containing one analytical note per line. Use the format '• Title: explanation'; the slide generator automatically renders each note and the title in bold. example: '• Xu hướng: Doanh thu tăng đáng kể trong nửa cuối năm.'")
+    background_color: str = Field(default="#F3E5D6", description="Warm beige background color used across the entire slide.")
+    text_color: str = Field(default="#2F2F2F", description="Primary dark text color used for the title, brand, axis labels, values, and analysis text.")
+    line_color: str = Field(default="#EF845E", description="Accent color used for the line chart and circular data markers.")
+    grid_color: str = Field(default="#C8C0B8", description="Light neutral color used for horizontal chart grid lines.")
+    border_color: str = Field(default="#3A3937", description="Dark neutral color used for the thin bordered header and its vertical divider.")
+
+class GenerateMarketShareDistributionSlideInput(BaseModel):
+    """Input schema for generate_market_share_distribution_slide_xml."""
+
+    title: str = Field(default="...", description="Main slide title displayed as large bold text in the upper-left area. Write a concise phrase that states the subject or comparison represented by the donut chart. Supports up to 3 wrapped lines. example: 'Customer Distribution by Region'")
+    intro_text: str = Field(default="...", description="Short introductory paragraph displayed in the upper-right area. Explain what the chart is measuring, which groups or segments are being compared, and any relevant period, scope, or context. Do not write a list of values. Supports up to 4 wrapped lines. example: 'The chart compares the distribution of customers across international and domestic segments during the current reporting period.'")
+    items: list[dict[str, str | int]] = Field(..., description="List of up to 8 comparable categories or segments represented in the donut chart and detail cards. The layout supports a maximum of 8 items arranged responsively in one or two columns. For each item, provide 'title' as the category label, 'description' as a short sentence explaining what the category represents, 'value' as a positive comparable number used to calculate the percentage, and 'color' as a distinct hexadecimal color. Values greater than 0 are automatically normalized into percentages; do not format the value as text with a percent sign. The generator selects a suitable icon automatically from the item's title and description, so do not include an 'icon' field. example: [{'title': 'International', 'description': 'Customers located outside the domestic market.', 'value': 50, 'color': '#7ED957'}, {'title': 'Local', 'description': 'Customers located within the domestic market.', 'value': 50, 'color': '#FFBD59'}]")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the entire slide.")
+    title_color: str = Field(default="#000000", description="Color of the main slide title.")
+    text_color: str = Field(default="#242424", description="Color used for the introductory paragraph, percentage labels, and supporting category descriptions.")
+
+class GenerateBestSellingProductChartSlideInput(BaseModel):
+    """Input schema for generate_best_selling_product_chart_slide_xml."""
+
+    title: str = Field(default="...", description="Main slide title displayed prominently at the top center. Write a concise, presentation-ready phrase describing the subject, category, metric, or comparison shown in the grouped column chart. example: 'BEST SELLING PRODUCT'")
+    chart_data: list[dict[str, object]] = Field(..., description="Ordered data for the grouped column chart. Each item represents one category on the horizontal axis and must contain 'category' as its label and 'series' as a dictionary mapping consistent series names to numeric values. Use the same series names in every category so the grouped bars and legend align correctly. The layout supports up to 6 categories and up to 3 series; provide raw numeric values without percentage signs or formatted numeric strings. example: [{'category': 'January', 'series': {'Sunscreen': 7, 'Moisturizer': 6, 'Serum': 5}}, {'category': 'February', 'series': {'Sunscreen': 8, 'Moisturizer': 8, 'Serum': 4}}, {'category': 'March', 'series': {'Sunscreen': 15, 'Moisturizer': 10, 'Serum': 5}}]")
+    footer_text: str = Field(default="...", description="Short supporting paragraph displayed below the chart. Summarize the main trend, comparison, reporting period, or key takeaway shown by the bars. Use one concise paragraph and do not repeat every individual value. example: 'Sales increased across the reporting period, with Sunscreen remaining the strongest-performing product in the final month.'")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the entire slide.")
+    panel_color: str = Field(default="#F8F8F8", description="Very light background color used for the main chart panel containing the legend, grid, axes, and grouped bars.")
+    title_color: str = Field(default="#2B8FB4", description="Color of the centered slide title.")
+    coral_color: str = Field(default="#FF7375", description="Color assigned to the first data series and its legend marker.")
+    peach_color: str = Field(default="#F3C580", description="Color assigned to the second data series and its legend marker.")
+    green_color: str = Field(default="#A6CE91", description="Color assigned to the third data series and its legend marker.")
+    grid_color: str = Field(default="#C9C9C9", description="Color of the horizontal grid lines behind the grouped bars.")
+    axis_text_color: str = Field(default="#161616", description="Color of the Y-axis values, horizontal category labels, and legend text.")
+    footer_color: str = Field(default="#626262", description="Color of the supporting footer paragraph below the chart.")
+
+
 INTRO_TOOLS = [
 
     StructuredTool.from_function(
@@ -922,6 +968,7 @@ CONTENT_TOOLS = [
     ),
 ]
 
+
 # All available slide generation tools with complete parameter schemas
 
 
@@ -958,7 +1005,26 @@ THANK_YOU_TOOLS = [
     args_schema=GenerateClosingThankYouMemorialSlideInput,
     ),
 ]
-CHART_TOOLS = []
+CHART_TOOLS = [
+    StructuredTool.from_function(
+        func=generate_monthly_sales_revenue_line_slide_xml,
+        name="generate_monthly_sales_revenue_line_slide_xml",
+        description="Generates a  line-chart slide with a warm beige background, a large bold title at the top, a central horizontal line chart with grid lines, axis labels, numeric values, and circular data markers, plus an analytical notes section arranged below the chart.",
+        args_schema=GenerateMonthlySalesRevenueLineSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_market_share_distribution_slide_xml,
+        name="generate_market_share_distribution_slide_xml",
+        description="Generates a market-share distribution slide with a large title and introductory text across the top, a percentage-labeled donut chart on the left, and responsive market-category detail cards with icons, titles, descriptions, and color accents on the right.",
+        args_schema=GenerateMarketShareDistributionSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_best_selling_product_chart_slide_xml,
+        name="generate_best_selling_product_chart_slide_xml",
+        description="Generates a minimalist grouped-column-chart slide with a centered title at the top, a light chart panel containing a series legend, horizontal grid lines, Y-axis values, grouped bars with category labels, and a centered supporting paragraph below the chart.",
+        args_schema=GenerateBestSellingProductChartSlideInput,
+    ),
+]
 
 ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 

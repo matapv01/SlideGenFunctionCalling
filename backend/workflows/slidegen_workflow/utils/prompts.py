@@ -194,7 +194,14 @@ XML_CONTENT_PROMPT = """
    - Do not highlight a full sentence, nest or repeat markers, or place markers in URLs, image-search queries, font/color parameters, or <math-field> content.
    - Do not emit markup tags such as <span> or <highlight>; only the exact marker syntax above is supported.
    - This marker is temporary control syntax and is removed before the final XML is returned.
-9. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
+9. COLOR PARAMETER FILLING:
+   - Read every color parameter's semantic role in the selected tool schema before filling it. For example, `panel_color` is not interchangeable with `background_color`, and `axis_text_color` must remain readable against the panel where it is rendered.
+   - Treat the selected tool's default palette as the canonical palette. Use those defaults when the user has not explicitly requested a different color theme; do not invent a new palette or mix unrelated colors from the previous slide.
+   - Previous-slide style is a reference for visual continuity only. Never copy a previous background or panel color into the current tool if it conflicts with the current tool's default palette, semantic color roles, or text contrast.
+   - If a background or panel is dark, use white or light text, labels, legend text, and grid lines. If it is light, use dark text and sufficiently visible grid lines. Never combine dark text with a dark panel or light text with a light panel.
+   - Keep data-series colors distinct and preserve their order: the first series uses the first series color, the second uses the second, and so on. Do not reuse a panel or text color for a data series when it reduces readability.
+   - Output only valid six-digit hexadecimal colors for declared color parameters. Do not pass color parameters that are not defined by the selected tool schema.
+10. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
 
 Generate a readable, professional XML function call.
 """
@@ -563,8 +570,9 @@ SLIDE_PREPARER_HUMAN_TEMPLATE = """---
 ---
 
 Based on the information above, write a detailed visual styling instruction (in English, 3-4 bullet points) for the next slide. Describe:
-1. What theme color and background color to use to match the previous slide.
+1. What theme color and background color to use to maintain continuity with the previous slide while preserving the selected layout's readability. Reuse an accent color only when it is compatible with the current tool schema; do not copy a previous background or panel color blindly.
 2. The recommended text layout structure (e.g. key-value cards, bullet list, comparison columns).
 3. Any specific formatting rules (e.g. font sizes and spacing).
 4. What LANGUAGE to generate the slide text in (match the language of the [CURRENT SLIDE CONTENT] above).
+5. Explicitly keep all text, legend, axis, and grid colors readable against their actual background or panel. Never recommend a dark text color on a dark panel or a light text color on a light panel.
 Keep it concise and clear."""

@@ -14,7 +14,6 @@ _STYLE_FIELD_MAP = {
     "slide_background_color": "background_color",
     "primary_color": "primary_color",
     "dark_color": "primary_color",
-    "panel_color": "primary_color",
     "secondary_color": "secondary_color",
     "accent_color": "accent_color",
     "theme_color": "accent_color",
@@ -101,10 +100,17 @@ def _apply_contrast_guards(
 ) -> None:
     """Keep semantic text colors readable on their actual layout surfaces."""
     dark_panel = arguments.get("dark_panel_color")
+    dark_panel_text_fields = {
+        "title_color",
+        "heading_color",
+        "body_color",
+        "subtitle_color",
+        "footer_color",
+    }
     if "dark_panel_color" in fields and dark_panel:
         accent = deck_style.get("accent_color", "#FFFFFF")
         light = deck_style.get("background_color", "#FFFFFF")
-        for field_name in ("title_color", "heading_color", "body_color", "subtitle_color", "footer_color"):
+        for field_name in dark_panel_text_fields:
             if field_name not in fields or not arguments.get(field_name):
                 continue
             is_large_text = field_name in {"title_color", "heading_color"}
@@ -117,6 +123,45 @@ def _apply_contrast_guards(
                 arguments[field_name],
                 dark_panel,
                 3.0 if is_large_text else 4.5,
+                alternatives,
+            )
+
+    def contrast_alternatives(surface_color: str) -> list[str]:
+        accent = deck_style.get("accent_color", "#2563EB")
+        text = deck_style.get("text_color", "#1F2937")
+        luminance = _relative_luminance(surface_color)
+        if luminance is not None and luminance < 0.35:
+            return ["#FFFFFF", "#F8FAFC", accent, text, "#111111"]
+        return ["#111111", text, deck_style.get("secondary_color", "#475569"), accent, "#FFFFFF"]
+
+    # Generic light/dark surface guards. A chart panel is not necessarily the
+    # deck's primary color, so protect the text that is rendered on each
+    # surface instead of forcing every panel_color to primary_color.
+    for surface_field, text_fields in (
+        (
+            "background_color",
+            ("title_color", "text_color", "footer_color", "subtitle_color"),
+        ),
+        (
+            "panel_color",
+            ("axis_text_color", "legend_text_color", "panel_text_color", "chart_text_color"),
+        ),
+    ):
+        surface_color = arguments.get(surface_field)
+        if not surface_color:
+            continue
+
+        alternatives = contrast_alternatives(surface_color)
+        for text_field in text_fields:
+            if text_field not in fields or not arguments.get(text_field):
+                continue
+            if surface_field == "background_color" and dark_panel and text_field in dark_panel_text_fields:
+                continue
+
+            arguments[text_field] = _ensure_contrast(
+                arguments[text_field],
+                surface_color,
+                3.0 if text_field == "title_color" else 4.5,
                 alternatives,
             )
 
