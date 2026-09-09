@@ -14,6 +14,8 @@ from backend.workflows.slidegen_workflow.utils.rich_text import (
     materialize_markdown_bold_runs,
     materialize_math_fields_in_xml,
 )
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import ToolPlanError
+
 
 
 # Import all slide generation functions from xml_tool
@@ -991,7 +993,7 @@ def canonical_tool_name(name: str) -> str:
 
 
 def constrain_tool_call_to_candidates(tool_call: dict, candidate_tool_names) -> dict:
-    """Force a generated call to use the sole layout selected by the planner.
+    """Force a generated call to use one of the allowed candidate layouts.
 
     Raw-text model endpoints can invent a descriptive function name even when
     only one slide tool was supplied. When layout assignment has narrowed the
@@ -1169,7 +1171,11 @@ def get_tool_by_name(name: str):
     """Get a specific tool by name."""
     return TOOL_MAP.get(canonical_tool_name(name))
 
-def execute_tool(tool_call: dict, source_content: str | None = None):
+def execute_tool(
+    tool_call: dict,
+    source_content: str | None = None,
+    raise_on_error: bool = False,
+):
     """Execute a tool call with the provided arguments."""
     normalized_call = normalize_tool_call(tool_call)
     name = normalized_call.get("name")
@@ -1191,14 +1197,18 @@ def execute_tool(tool_call: dict, source_content: str | None = None):
                 )
                 result_text = materialize_markdown_bold_runs(result_text)
                 return result_text
-            raise ValueError("XML tool returned empty content")
+            raise ValueError(f"Tool '{name}' returned empty XML content")
         except Exception as e:
+            if raise_on_error:
+                raise e
             print(f"Error executing tool '{name}': {e}")
             if name.endswith("_xml"):
                 print(f"Using safe XML fallback for tool '{name}'.")
                 return _safe_xml_for_failed_tool(name)
             return None
 
+    if raise_on_error:
+        raise ValueError(f"Tool '{name}' not found in TOOL_MAP.")
     print(f"Tool '{name}' not found.")
     return None
 
@@ -1238,12 +1248,19 @@ def execute_tool_plan(
             tool_calls=normalized_tool_calls,
             tool_lookup=tool_lookup,
         )
+    except ToolPlanError as error:
+        # ToolPlanError means the model generated a structurally invalid plan
+        # (e.g. missing search_ddgs_images calls, wrong tool name in plan, etc.)
+        # Re-raise so the executor catches it, sets executor_decision='fail',
+        # and triggers a proper retry with feedback to the model.
+        # DO NOT silently fall back — that would mask the error and cause
+        # all slides to reuse stale/hardcoded image URLs from previous slides.
+        raise ValueError(f"MISSING_IMAGE_SEARCH: {error}") from error
     except Exception as error:
-        # A malformed/missing image-search plan must not discard an otherwise
-        # usable XML slide. Execute the first XML call with its own image
-        # defaults and let execute_tool provide the final safe XML fallback if
-        # the call itself is also invalid.
-        print(f"Warning: XML tool plan normalization failed: {error}")
+        # Unexpected internal error (not a model plan problem).
+        # Use the first XML call as a best-effort fallback so we don't discard
+        # an otherwise valid slide due to an infrastructure glitch.
+        print(f"Warning: XML tool plan execution failed unexpectedly: {error}")
         if (
             isinstance(normalized_tool_calls, list)
             and normalized_tool_calls
@@ -1256,6 +1273,7 @@ def execute_tool_plan(
                 "arguments": {},
             }
         search_history = []
+
     tool_name = final_tool_call.get("name", "unknown_tool")
     original_xml_call = (
         normalized_tool_calls[0]
@@ -1279,12 +1297,19 @@ def execute_tool_plan(
     )
 
     print(f"  🎨 [RENDER XML] Executing tool '{tool_name}' to generate slide XML...")
-    xml_out = execute_tool(final_tool_call, source_content=source_content)
+    try:
+        xml_out = execute_tool(
+            final_tool_call,
+            source_content=source_content,
+            raise_on_error=True,
+        )
+    except Exception as e:
+        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render XML: {e}")
+        raise ValueError(f"Tool '{tool_name}' execution error: {e}")
+
     if not xml_out:
-        print(f"  Warning: Tool '{tool_name}' returned no XML; using safe fallback.")
-        xml_out = _safe_xml_for_failed_tool(tool_name)
-    if xml_out:
-        print(f"  ✅ [SUCCESS] Tool '{tool_name}' rendered XML successfully ({len(xml_out)} bytes).")
-    else:
-        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render XML.")
+        print(f"  ❌ [ERROR] Tool '{tool_name}' returned empty XML.")
+        raise ValueError(f"Tool '{tool_name}' returned empty XML content.")
+
+    print(f"  ✅ [SUCCESS] Tool '{tool_name}' rendered XML successfully ({len(xml_out)} bytes).")
     return xml_out, final_tool_call, search_history

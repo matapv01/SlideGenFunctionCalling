@@ -124,6 +124,34 @@ def _build_tool_schema_lookup(tools_dict: Dict) -> Dict[str, Dict]:
     return lookup
 
 
+def _build_schema_hint(tool_name: str, schema_lookup: Dict) -> str:
+    """Return a concise, human-readable schema for *tool_name* to inject into
+    retry feedback so the model knows the EXACT valid parameter names."""
+    entry = schema_lookup.get(tool_name)
+    if not entry:
+        return ""
+    field_info = entry["field_info"]
+    required_fields = entry["required_fields"]
+    lines = [
+        f"\n--- CORRECT SCHEMA FOR '{tool_name}' ---",
+        f"Use ONLY these exact parameter names (do NOT invent others):",
+    ]
+    for fname, fspec in field_info.items():
+        ftype = fspec.get("type", "any")
+        req_tag = " (REQUIRED)" if fname in required_fields else " (optional)"
+        if ftype == "array":
+            item_spec = fspec.get("items", {})
+            if item_spec.get("type") == "object":
+                item_keys = list(item_spec.get("properties", {}).keys())
+                lines.append(f"  - {fname}: List[dict with keys {item_keys}]{req_tag}")
+            else:
+                lines.append(f"  - {fname}: List[{item_spec.get('type', 'any')}]{req_tag}")
+        else:
+            lines.append(f"  - {fname}: {ftype}{req_tag}")
+    lines.append("--- END SCHEMA ---")
+    return "\n".join(lines)
+
+
 # Module-level cache
 _TOOL_SCHEMA_LOOKUPS: Dict[str, Dict] = {}
 
@@ -186,18 +214,33 @@ def validate_tool_call(
             f"Choose one of the available tools."
         )
         return False, errors
-    #Check if avaiable tools is empty
+    # Check if available tools is empty
     if tool_name not in schema_lookup:
         errors.append(
             f"UNREGISTERED_TOOL: '{tool_name}' is not a registered tool in the system."
         )
         return False, errors
-    
+
     # ── 2. Arguments basic check ─────────────────────────────────────
     if not isinstance(arguments, dict):
         errors.append(f"INVALID_ARGUMENTS_TYPE: 'arguments' should be a dict, got {type(arguments).__name__}.")
         return False, errors
-    
+
+    # ── 2b. Auto-strip extra arguments NOT in schema ──────────────────
+    # The model sometimes hallucinates parameters not defined in the tool schema.
+    # Strip them silently here so we don't burn retry budget on EXTRA_ARGUMENT errors.
+    tool_schema_pre = schema_lookup[tool_name]
+    known_fields = set(tool_schema_pre["field_info"].keys())
+    extra_keys = [k for k in arguments if k not in known_fields]
+    if extra_keys:
+        print(
+            f"  ⚠️ [executor] Auto-stripping hallucinated argument(s) for '{tool_name}': {extra_keys}"
+        )
+        arguments = {k: v for k, v in arguments.items() if k in known_fields}
+        # Propagate stripped arguments back so downstream checks use the clean dict
+        tool_call = {**tool_call, "arguments": arguments}
+
+
     tool_schema = schema_lookup[tool_name]
     required_fields = tool_schema["required_fields"]
     field_info = tool_schema["field_info"]
@@ -406,15 +449,15 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                 source_content=state.get("current_slide_text", ""),
             )
             if not slide_content:
-                raise ValueError("Slide XML tool returned empty content.")
+                raise ValueError(f"Tool '{tool_name}' returned empty XML content.")
         except Exception as e:
             print(f"  FAIL - Tool plan execution failed: {e}")
             state['executor_decision'] = 'fail'
             state['executor_feedback'] = (
                 "EXECUTOR EXECUTION FAILED:\n"
                 f"- {e}\n\n"
-                "Regenerate a valid slide-first plan: one slide XML tool first, "
-                "then one search_ddgs_images call for each image parameter."
+                "Fix ALL errors above and regenerate a valid tool call matching the parameter schema exactly.\n"
+                "Ensure the slide XML tool is output FIRST with correct parameter types, followed by search_ddgs_images calls if the tool has image slots."
             )
             state['retry_count'] = retry_count + 1
             if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
@@ -444,12 +487,25 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         error_report = "\n".join(f"  • {e}" for e in errors)
         print(f"  ❌ FAIL — {len(errors)} error(s) found:")
         print(error_report)
-        
+
+        # Determine if schema hint would help the model fix the errors.
+        # Inject full parameter schema whenever there are missing/extra/schema errors
+        # so the model knows the EXACT correct argument names on the next retry.
+        schema_hint = ""
+        needs_schema = any(
+            err.startswith(("MISSING_REQUIRED_PARAM", "EXTRA_ARGUMENT", "SCHEMA_VALIDATION_ERROR"))
+            for err in errors
+        )
+        if needs_schema:
+            schema_lookup = _get_schema_lookup(active_tools_dict, "xml")
+            schema_hint = _build_schema_hint(tool_name, schema_lookup)
+
         state['executor_decision'] = 'fail'
         state['executor_feedback'] = (
             f"EXECUTOR VALIDATION FAILED ({len(errors)} errors):\n"
             + "\n".join(f"- {e}" for e in errors)
-            + "\n\nFix ALL errors above and regenerate the tool call."
+            + schema_hint
+            + "\n\nFix ALL errors above and regenerate the tool call using ONLY the parameter names listed in the schema above."
         )
         state['retry_count'] = retry_count + 1
         if state['retry_count'] >= EXECUTOR_MAX_RETRIES:

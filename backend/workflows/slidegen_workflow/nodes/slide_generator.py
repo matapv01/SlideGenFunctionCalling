@@ -315,19 +315,27 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                     top_k=TOOL_RETRIEVER_TOP_K,
                     current_slide_index=idx
                 )
-                my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+                if retrieved_tools:
+                    my_tools = retrieved_tools
+                else:
+                    # FAISS returned 0 results for this category (e.g. CHART_TOOLS, TEAM_TOOLS
+                    # when no dedicated tools are registered). Fall back to category list first,
+                    # then CONTENT_TOOLS — but cap at TOOL_RETRIEVER_TOP_K to avoid overflowing
+                    # remote models with tight context windows (e.g. 10 000 tokens).
+                    my_tools = all_tools_dict.get(tool_category, [])[:TOOL_RETRIEVER_TOP_K]
                 print(
                     f"  -> FAISS selected {len(retrieved_tools)} tools for '{tool_category}': "
                     f"{[tool.name for tool in retrieved_tools]}"
                 )
             except Exception as e:
                 print(f"⚠️ tool_retriever error ({e}), falling back to category tools for '{tool_category}'")
-                my_tools = all_tools_dict.get(tool_category, [])
+                my_tools = all_tools_dict.get(tool_category, [])[:TOOL_RETRIEVER_TOP_K]
         else:
-            my_tools = all_tools_dict.get(tool_category, [])
+            my_tools = all_tools_dict.get(tool_category, [])[:TOOL_RETRIEVER_TOP_K]
         
     if not my_tools:
-        my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
+        # Last-resort fallback: cap to avoid context overflow on remote models
+        my_tools = all_tools_dict.get('CONTENT_TOOLS', [])[:TOOL_RETRIEVER_TOP_K]
 
     # A duplicate-layout retry excludes the rejected layout tool. This is a
     # retry constraint, not a permanent per-tool quota.
@@ -518,16 +526,16 @@ OUTPUT FORMAT: XML ONLY
             )
         else:
             tool_desc_text = _build_tool_description_text(tool_schemas)
-            full_qwen_system_prompt = (
-                generator_system_prompt
-                + "\n\n"
-                + image_search_rules
-                + "\n\n"
-                + qwen_base_sys
-                + "\n\n"
-                + tool_desc_text
-                + output_format_rules
-            )
+        full_qwen_system_prompt = (
+            generator_system_prompt
+            + "\n\n"
+            + image_search_rules
+            + "\n\n"
+            + qwen_base_sys
+            + "\n\n"
+            + tool_desc_text
+            + output_format_rules
+        )
         messages = [
             {"role": "system", "content": full_qwen_system_prompt},
             {"role": "user", "content": qwen_user_prompt},
