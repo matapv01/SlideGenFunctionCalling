@@ -202,11 +202,14 @@ class SearchDDGSImagesInput(BaseModel):
         ...,
         min_length=1,
         description=(
-            "A concise English image query derived from the slide content and "
-            "the semantic role of this exact image slot. Use 2-5 concrete nouns "
-            "or noun phrases. Do not include URLs, pixel sizes, orientation "
-            "words, or generic words such as image, photo, wallpaper, beautiful, "
-            "or modern."
+            "A concise English image query following the slide's image strategy. "
+            "For semantic imagery, describe the concrete subject and the role "
+            "of this exact image slot. For decorative imagery, describe a generic "
+            "conceptual illustration and never search a person's name, company, "
+            "book title, literal slide title, or text inside the image. Use 2-5 "
+            "concrete nouns or noun phrases. Do not include URLs, pixel sizes, "
+            "orientation words, or generic words such as image, photo, wallpaper, "
+            "beautiful, or modern."
         ),
     )
     layout: Optional[Literal["Wide", "Tall", "Square"]] = Field(
@@ -239,7 +242,10 @@ SEARCH_DDGS_TOOL = StructuredTool.from_function(
     description=(
         "Search for one real image needed by a slide. Emit one call for each "
         "image parameter, in the same declaration order as the final slide "
-        "XML tool. All image-search calls must appear after the slide XML tool."
+        "XML tool. All image-search calls must appear after the slide XML tool. "
+        "Use generic purpose-led illustrations for decorative image strategy; "
+        "do not search literal names or titles unless the slide explicitly "
+        "requires that exact subject."
     ),
     args_schema=SearchDDGSImagesInput,
 )

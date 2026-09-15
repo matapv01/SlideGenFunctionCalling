@@ -6,7 +6,11 @@ from typing import Dict, List
 from langchain_core.prompts import ChatPromptTemplate
 from backend.workflows.slidegen_workflow.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
-from backend.config import PLANNING_BATCH_SIZE, SLIDE_MAX_CONCURRENCY
+from backend.config import (
+    PLANNER_OUTLINE_MAX_CHARS,
+    PLANNING_BATCH_SIZE,
+    SLIDE_MAX_CONCURRENCY,
+)
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
 import time
 
@@ -62,6 +66,92 @@ def _fallback_slide_topic(content, index: int) -> str:
     return f"Slide {index + 1}"
 
 
+VALID_SLIDE_ACTIONS = {
+    "INTRO_TOOLS",
+    "TRANSITION_TOOLS",
+    "CONTENT_TOOLS",
+    "TEAM_TOOLS",
+    "THANK_YOU_TOOLS",
+    "CHART_TOOLS",
+}
+VALID_IMAGE_STRATEGIES = {"semantic", "decorative"}
+
+
+def build_compact_slide_outline(
+    slide_chunks: List[Dict],
+    slide_context_maps: List[str],
+    max_chars: int = PLANNER_OUTLINE_MAX_CHARS,
+) -> str:
+    """Build a whole-deck map without repeating raw slide content."""
+    lines = []
+    for index, chunk in enumerate(slide_chunks):
+        context = (
+            slide_context_maps[index]
+            if index < len(slide_context_maps)
+            else ""
+        )
+        if not context:
+            context = _fallback_slide_topic(chunk, index)
+        context = " ".join(str(context).split())
+        lines.append(f"{index + 1}. {context[:220]}")
+
+    outline = "\n".join(lines)
+    if len(outline) <= max_chars:
+        return outline
+    truncated = outline[:max_chars].rsplit("\n", 1)[0]
+    return f"{truncated}\n… (outline truncated)"
+
+
+def _metadata_action(content, index: int) -> str:
+    data = content if isinstance(content, dict) else {}
+    heading = str(data.get("heading", "")).upper()
+    slide_type = str(data.get("slide_type", "")).lower()
+    raw_position = data.get("position", "")
+    if isinstance(raw_position, (list, tuple)):
+        raw_position = raw_position[0] if raw_position else ""
+    position = str(raw_position).strip()
+    if index == 0:
+        return "INTRO_TOOLS"
+    if position in {"-2", "999"} or heading == "THANK_YOU" or slide_type in {"thank_you", "thankyou"}:
+        return "THANK_YOU_TOOLS"
+    if position == "-1" or heading == "TRANSITION" or slide_type == "transition":
+        return "TRANSITION_TOOLS"
+    return ""
+
+
+def _normalize_plan_action(plan: Dict, content, index: int) -> str:
+    """Keep structured planner output aligned with document markers."""
+    action = str(plan.get("action", "CONTENT_TOOLS")).upper()
+    metadata_action = _metadata_action(content, index)
+    if metadata_action:
+        return metadata_action
+    if action == "INTRO_TOOLS" and index > 0:
+        return "CONTENT_TOOLS"
+    return action if action in VALID_SLIDE_ACTIONS else "CONTENT_TOOLS"
+
+
+def _normalize_image_strategy(plan: Dict, content, index: int) -> str:
+    """Use generic supporting imagery for identity and structural slides."""
+    action = str(plan.get("action", "CONTENT_TOOLS")).upper()
+    strategy = str(plan.get("image_strategy", "decorative")).lower()
+    metadata_action = _metadata_action(content, index)
+    if metadata_action in {
+        "INTRO_TOOLS",
+        "TRANSITION_TOOLS",
+        "TEAM_TOOLS",
+        "THANK_YOU_TOOLS",
+    } or action in {
+        "INTRO_TOOLS",
+        "TRANSITION_TOOLS",
+        "TEAM_TOOLS",
+        "THANK_YOU_TOOLS",
+    }:
+        return "decorative"
+    if strategy not in VALID_IMAGE_STRATEGIES:
+        return "decorative"
+    return strategy
+
+
 def planning_slide(state: State, config: RunnableConfig) -> State:
     """
     Analyzes all slide content in manageable chunks (batches) to create a design
@@ -82,7 +172,6 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             'description': 'Planning slide design...',
             'message': 'Analyzing content to design slides'
         })
-        time.sleep(2) # Delay for UX
 
     if not llm:
         raise ValueError("LLM instance not found in config.")
@@ -159,6 +248,11 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode='detect')
         print(f"   ✓ Context maps regenerated with {len(slide_context_maps)} items")
 
+    full_outline = build_compact_slide_outline(
+        slide_chunks,
+        slide_context_maps,
+    )
+
     # 1. Prepare a list of all inputs.
     all_inputs = []
     for i, content in enumerate(slide_chunks):
@@ -172,6 +266,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         all_inputs.append({
             "slide_number": i + 1,  # Add slide number (1-indexed)
             "slide_context_map": context_map,
+            "full_outline": full_outline,
             "slide_content": content,
             "deck_style_plan": json.dumps(deck_style_plan, ensure_ascii=False, indent=2),
         })
@@ -201,17 +296,32 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             chunk_plans = []
             for j, plan in enumerate(batch_results):
                 global_idx = i + j
-                plan_dict = plan.dict()
+                plan_dict = (
+                    plan.model_dump()
+                    if hasattr(plan, "model_dump")
+                    else plan.dict()
+                )
                 plan_dict["slide_topic"] = str(
                     plan_dict.get("slide_topic")
                     or _fallback_slide_topic(slide_chunks[global_idx], global_idx)
-                ).strip()
-                
-                # --- HARD RULE cho Slide 1 ---
-                # Ép slide đầu tiên luôn dùng INTRO_TOOLS vì LLM nhiều lúc bị nhầm
-                if global_idx == 0 and plan_dict.get('action') != 'INTRO_TOOLS':
-                    print(f"  -> 🛡️ OVERRIDE: Forced slide 1 action from '{plan_dict.get('action')}' to 'INTRO_TOOLS'")
-                    plan_dict['action'] = 'INTRO_TOOLS'
+                ).strip()[:160]
+                plan_dict["image_strategy"] = _normalize_image_strategy(
+                    plan_dict,
+                    slide_chunks[global_idx],
+                    global_idx,
+                )
+
+                normalized_action = _normalize_plan_action(
+                    plan_dict,
+                    slide_chunks[global_idx],
+                    global_idx,
+                )
+                if normalized_action != plan_dict.get("action"):
+                    print(
+                        f"  -> Normalized slide {global_idx + 1} action "
+                        f"from '{plan_dict.get('action')}' to '{normalized_action}'"
+                    )
+                    plan_dict["action"] = normalized_action
                 
                 chunk_plans.append(plan_dict)
                 
@@ -235,14 +345,16 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     except Exception as e:
         print(f"  -> FAILED during batch planning. Error: {e}")
         # As a fallback, create default plans for all slides.
-        state['slide_plans'] = [
-            {
-                "slide_topic": _fallback_slide_topic(content, index),
-                "thought": "Default plan due to a batch error.",
-                "action": "CONTENT_TOOLS",
-            }
-            for index, content in enumerate(slide_chunks)
-        ]
+        state['slide_plans'] = []
+        for index, content in enumerate(slide_chunks):
+            state['slide_plans'].append(
+                {
+                    "slide_topic": _fallback_slide_topic(content, index),
+                    "thought": "Use a readable layout with concise editable text.",
+                    "image_strategy": _normalize_image_strategy({}, content, index),
+                    "action": _normalize_plan_action({}, content, index),
+                }
+            )
         state['slide_context_maps'] = slide_context_maps  # Still save context maps
         print(f"  -> Created {len(state['slide_plans'])} default plans as a fallback.")
 

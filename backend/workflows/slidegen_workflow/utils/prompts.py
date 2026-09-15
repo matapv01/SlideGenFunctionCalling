@@ -92,41 +92,51 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 # ================================= SLIDE GENERATION PROMPTS =================================
 
 IMAGE_SEARCH_EXECUTION_PLAN_RULES = """
-🖼️ **CRITICAL — SLIDE-FIRST IMAGE SEARCH PLAN:**
+🖼️ **IMAGE SEARCH CONTRACT:**
 
-Return one ordered tool-call plan. The slide XML tool comes FIRST; image searches come AFTER.
+Return exactly one slide XML tool call and, only when the selected layout needs
+images, one `search_ddgs_images` call for each image slot. The application
+validates and canonicalizes the order, so do not emit multiple slide XML tools.
 
-1. Choose the final slide XML tool and inspect its complete parameter schema.
-2. Call the slide XML tool FIRST with all text/style/layout parameters filled in.
+1. Choose the assigned slide XML tool and inspect its complete parameter schema.
+2. Fill the slide XML tool's text/style/layout parameters.
    - For EVERY image URL/path parameter, leave the value as an empty string "".
    - Do NOT invent, guess, or fill any image URL.
-3. After the slide XML tool, for EVERY image URL/path parameter you left empty,
-   emit exactly one `search_ddgs_images` call in schema declaration order:
+3. For EVERY image URL/path parameter you left empty, emit exactly one
+   `search_ddgs_images` call in schema declaration order:
    - Call 1 maps to the first image parameter.
    - Call 2 maps to the second image parameter.
    - Call N maps to the Nth image parameter.
-4. For each `search_ddgs_images` call fill the arguments:
-   - `query`: derive from the slide content and the semantic role of that specific
-     image slot. Use 2-5 concise English nouns/noun phrases. Do not include pixel
-     sizes, orientation words, URLs, or generic words like image/photo/wallpaper/
-     beautiful/modern.
+4. Apply the IMAGE STRATEGY from the user message:
+   - `semantic`: derive the query from the concrete subject and the role of
+     the image slot. Keep the subject specific and factual.
+   - `decorative`: derive a generic conceptual illustration from the slide
+     purpose and image slot. Never include a person's name, company/book title,
+     literal slide title, or text that should be readable inside the image.
+     For example, an introduction/profile can use "friendly person waving hello
+     illustration".
+5. For each `search_ddgs_images` call fill the arguments:
+   - `query`: follow the selected image strategy and the semantic role of that
+     image slot. Use 2-5 concise English nouns/noun phrases. Do not include
+     pixel sizes, orientation words, URLs, or generic words like
+     image/photo/wallpaper/beautiful/modern.
    - `layout` and `size`: derive from the image parameter description in the slide
      tool schema (words like portrait, landscape, banner, avatar, full-height,
      background, and any pixel hint such as 960x1080px).
-5. Choose `layout` strictly from the image slot description:
+6. Choose `layout` strictly from the image slot description:
    - `Tall`: portrait, vertical, full-height, or height > width.
    - `Wide`: landscape, horizontal, banner, background, full-width, or width > height.
    - `Square`: square, avatar, circle, profile, logo, icon, or near-equal dimensions.
-6. Choose `size` strictly from the image slot description and visual importance:
+7. Choose `size` strictly from the image slot description and visual importance:
    - `Large`: max dimension >= 900px, full-height, full-width, background, hero,
      half-slide, or main feature image.
    - `Medium`: cards, portraits, thumbnails, profile/team photos, or 400–899px.
    - `Small`: icons, logos, badges, small decorations, or below 400px.
-7. For nested objects (e.g. team members), keep each nested `image_url` as an empty
-   string so the executor can discover and inject the real URL later.
-8. If the selected slide tool has NO image parameters, emit ONLY the slide XML tool
+8. For nested objects (e.g. team members), keep each nested `image_url` empty so
+   the executor can discover and inject the real URL later.
+9. If the selected slide tool has NO image parameters, emit ONLY the slide XML tool
    with no search calls after it.
-9. Output no prose, markdown, or extra tool calls after the last search call.
+10. Output no prose, markdown, or extra tool calls.
 """
 
 # Critical rule for math/equations - include in all slide prompts
@@ -168,9 +178,9 @@ XML_CONTENT_PROMPT = """
 1. TEXT: Keep text values concise and editable. Preserve the meaning and language of the source content.
 2. LIST INPUTS: For any list/bullet argument, provide plain item text only. Never add `•`, `-`, `*`, `1.`, `1)`, or other numbering; the selected XML tool owns the marker. Use only the documented indentation when a tool supports nested items.
 3. CONTENT STRUCTURE DECISION (IMPORTANT): Do not turn every sentence into a list.
-   - SHORT PARAGRAPH: If the source has one main idea, one or two sentences, and roughly 35 words or fewer, keep it as one normal paragraph/string. Do not use a bullet-list tool and do not add bullet markers or artificial <br> tags.
-   - LONG OR MULTI-POINT CONTENT: If the source is longer than roughly 45 words, or contains three or more independent facts, actions, benefits, or steps, split it into 3-6 concise list items. Three short related sentences are still a paragraph. Prefer a tool field named `bullet_items`, `items`, `steps`, `topics`, or `cards` when the selected layout provides one.
-   - MEDIUM CONTENT: Keep two related sentences together as a paragraph unless the source clearly contains separate facts or steps.
+   - SHORT PARAGRAPH: If the source has one main idea and one or two sentences, keep it as one normal paragraph/string. Do not use a bullet-list tool and do not add bullet markers or artificial <br> tags.
+   - LONG OR MULTI-POINT CONTENT: If the source contains three or more independent facts, actions, benefits, or steps, or is clearly too long for one text box, split it into 3-6 concise list items. Three short related sentences are still a paragraph. Prefer a tool field named `bullet_items`, `items`, `steps`, `topics`, or `cards` when the selected layout provides one.
+   - MEDIUM CONTENT: Keep two related sentences together as a paragraph unless the source clearly contains separate facts or steps. Use the available text area as the deciding factor instead of a rigid word threshold.
    - A list item should express one complete idea and normally stay under 18-22 words. Preserve the original meaning; do not invent details just to create more items.
    - Never choose a list layout merely because it is available. Use a paragraph layout for a short explanation, quote, definition, or single takeaway.
    - If no suitable list field exists, keep the content as a paragraph or use separate text fields; do not simulate bullets by typing `•`, `-`, `*`, or numbers manually.
@@ -193,8 +203,8 @@ XML_CONTENT_PROMPT = """
    - This marker is temporary control syntax and is removed before the final XML is returned.
 9. COLOR PARAMETER FILLING:
    - Read every color parameter's semantic role in the selected tool schema before filling it. For example, `panel_color` is not interchangeable with `background_color`, and `axis_text_color` must remain readable against the panel where it is rendered.
-   - Treat the selected tool's default palette as the canonical palette. Use those defaults when the user has not explicitly requested a different color theme; do not invent a new palette or mix unrelated colors from the previous slide.
-   - Previous-slide style is a reference for visual continuity only. Never copy a previous background or panel color into the current tool if it conflicts with the current tool's default palette, semantic color roles, or text contrast.
+   - Treat the DECK STYLE CONTRACT in the user message as the canonical palette and typography source. Apply it only to fields that exist in the selected tool schema.
+   - Do not invent a second theme or copy an unavailable previous-slide palette. Preserve each field's semantic role and text contrast.
    - If a background or panel is dark, use white or light text, labels, legend text, and grid lines. If it is light, use dark text and sufficiently visible grid lines. Never combine dark text with a dark panel or light text with a light panel.
    - Keep data-series colors distinct and preserve their order: the first series uses the first series color, the second uses the second, and so on. Do not reuse a panel or text color for a data series when it reduces readability.
    - Output only valid six-digit hexadecimal colors for declared color parameters. Do not pass color parameters that are not defined by the selected tool schema.
@@ -208,7 +218,7 @@ NATIVE TOOL CALLING CONTRACT:
 - The XML layouts and search tool are supplied as native function tools. Inspect their schemas directly.
 - Invoke tools through the tool-calling interface. Never serialize a tool call in message content.
 - Do not emit <tool_call> tags, JSON tool-call objects, markdown, or explanatory prose.
-- Return all calls in one assistant response: exactly one XML slide tool call first, then one search_ddgs_images call for each image slot left empty, in schema order.
+- Return exactly one XML slide tool call and, when needed, one search_ddgs_images call per image slot. Put the XML call first; the application validates and normalizes the final order.
 - If the selected XML tool has no image slots, return only that XML tool call.
 """
 
@@ -221,12 +231,15 @@ DECK STYLE CONTRACT (IMMUTABLE FOR ALL SLIDES):
 SLIDE TOPIC:
 {slide_topic}
 
-LAYOUT ASSIGNMENT NOTE:
+IMAGE STRATEGY:
+{image_strategy}
+
+ASSIGNED LAYOUT:
 {recent_tools}
 
 DESIGN PLAN: {slide_plan}
 
-DESIGN INSTRUCTION (FROM PREPARER):
+PLANNER DESIGN BRIEF:
 {design_instruction}
 
 SLIDE {slide_index}/{length_slide_chunks} CONTENT:
@@ -260,10 +273,11 @@ You are an expert presentation designer and slide planner. Your task is to analy
    - Who is the audience and what do they need to understand?
 
 2. **Identify Content Type** (look beyond surface keywords):
-   - **Data-driven content**: Numbers, percentages, metrics, trends over time, year-over-year growth, market analysis, performance comparisons
-     → These belong to **CHART_TOOLS** (visual data presentation is most effective)
-   - **People-focused content**: Team bios, member introductions, names with roles/titles
-     → **TEAM_TOOLS** (specialized for human presentation)
+   - **Data-driven content**: Use **CHART_TOOLS** only when the slide contains
+     actual structured numeric data, a comparison, a trend, or a metric set
+     that can be plotted. A single number mentioned in prose is not enough.
+   - **People-focused content**: Use **TEAM_TOOLS** for multiple people profiles
+     or a clear team/member presentation, not for a single person mentioned in prose.
    - **Narrative/Conceptual**: Stories, explanations, lessons, processes, abstract ideas, text-heavy content
      → **CONTENT_TOOLS** (flexible for varied information)
    - **Section breaks**: "Next topic", "Chapter 3", visual dividers between major parts
@@ -277,21 +291,35 @@ You are an expert presentation designer and slide planner. Your task is to analy
    - Trust your judgment: match content essence to the tool that will make it shine
    - **NEVER default to CONTENT_TOOLS** just because you're unsure—analyze carefully and choose the specialized tool if it fits
 
-4. **Craft Your Vision** (`thought`): Write 2-3 sentences on:
+4. **Craft Your Vision** (`thought`): Write at most 2 concise sentences on:
    - The visual mood and style that will make this message land
    - Key layout approach (what goes where)
-   - Any special considerations (bold colors, subtle, high-tech, warm, etc.)
    - Follow the immutable DECK STYLE CONTRACT. Vary composition and geometry,
      not the deck's typography, palette, image treatment, or chart treatment.
 
-5. **Name the Slide Topic** (`slide_topic`): Return one concise semantic
-   subject for this slide. It should guide relevant imagery and content
-   emphasis, but must not override the deck palette.
+5. **Name the Slide Topic** (`slide_topic`): Return a concise subject of
+   roughly 3-10 words. It should guide relevant imagery and content emphasis,
+   but must not override the deck palette.
+
+6. **Choose the Image Strategy** (`image_strategy`):
+   - `semantic`: Use only when the slide contains a concrete, searchable
+     subject such as a place, object, process, event, scientific concept, or
+     clearly described scene. Search that subject directly.
+   - `decorative`: Use when the image is supporting mood or composition rather
+     than evidence. Do not search a person's name, book title, company name,
+     literal slide title, or text that may appear inside an image. Search a
+     generic conceptual illustration based on the slide purpose instead.
+   - For introductions, names, bios, greetings, and section dividers, prefer
+     `decorative` unless the source explicitly asks for a specific known image.
 
 **OUTPUT REQUIREMENT:**
-- Return ONLY a single, valid JSON object that strictly follows the required schema.
-- Do not add any text, explanations, or markdown formatting before or after the JSON object.
-- The 'action' key must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
+- Populate only the structured fields `slide_topic`, `thought`, `image_strategy`,
+  and `action`.
+- Do not add explanations, markdown, or fields outside the schema. The caller
+  validates the structured response; do not serialize the object manually.
+- The 'image_strategy' field must be either 'semantic' or 'decorative'.
+- The 'action' field must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS',
+  'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """
@@ -310,8 +338,15 @@ All per-slide design decisions must remain compatible with this contract.
 {deck_style_plan}
 
 ---
-**PRESENTATION CONTEXT (OUTLINE):**
-This is the structure of the entire presentation. The "YOU ARE HERE" marker shows the position of the current slide you are planning.
+**PRESENTATION OUTLINE (COMPACT):**
+Use this complete slide map to understand the narrative and identify section
+breaks. It contains headings/context only, not the full document text.
+
+{full_outline}
+
+**CURRENT SLIDE CONTEXT:**
+The slide being planned is marked below. Make the action and topic specific to
+this slide while keeping it coherent with the full outline.
 
 {slide_context_map}
 

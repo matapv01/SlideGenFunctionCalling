@@ -74,6 +74,9 @@ inputs for every slide generator; do not invent a different theme per slide.
 Presentation title: {title}
 Requested options: {json.dumps(slide_options, ensure_ascii=False)}
 Outline: {json.dumps(outline, ensure_ascii=False, default=str)[:12000]}
+
+Populate only the DeckStylePlan structured fields. Do not return prose,
+markdown, or a manually serialized JSON object.
 """
 
     try:

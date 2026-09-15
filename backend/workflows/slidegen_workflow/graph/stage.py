@@ -26,7 +26,20 @@ class SlidePlan(BaseModel):
         ),
     )
     thought: str = Field(
-        description="A detailed creative brief for designing the slide. Describe the desired visual style, color palette, layout, typography, and whether to include images, icons, or specific visual elements. This should be a guide for the next step."
+        description=(
+            "A concise creative brief of at most two sentences covering the "
+            "message hierarchy, layout, and visual emphasis. Follow the shared "
+            "deck style contract; do not invent a separate palette or typography."
+        )
+    )
+    image_strategy: Literal["semantic", "decorative"] = Field(
+        default="decorative",
+        description=(
+            "Choose semantic when the slide contains a concrete subject that "
+            "should be searched directly. Choose decorative when the image is "
+            "only a supporting illustration; never search a person's name, "
+            "book title, or literal slide title for decorative imagery."
+        ),
     )
     action: ToolCategory = Field(
         description="The single, most appropriate category of tools to use for generating this slide."

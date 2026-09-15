@@ -102,6 +102,9 @@ THRESHOLD_CHAR_LIMIT = 800
 # --- Slide Planning ---
 # Số lượng slides được plan cùng lúc trong 1 batch (tăng = nhanh hơn nhưng tốn RAM)
 PLANNING_BATCH_SIZE = 5
+# Maximum characters used for the compact whole-deck outline sent to each
+# planner request. Raw slide content is intentionally not repeated here.
+PLANNER_OUTLINE_MAX_CHARS = 6000
 
 # --- Slide Generation ---
 # Số lần thử lại tối đa khi generate slide bị lỗi (ví dụ: invalid function call)

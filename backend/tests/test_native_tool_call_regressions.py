@@ -17,19 +17,17 @@ def _all_tools():
 def test_missing_native_image_calls_are_completed_from_tool_schema():
     tool = next(
         tool for tool in _all_tools()
-        if tool.name == "generate_content_creation_slide_xml"
+        if tool.name == "generate_ai_content_slide_xml"
     )
     plan = [
         {
             "name": tool.name,
             "arguments": {
-                "main_title": "Content",
-                "original_title": "Original",
-                "original_description": "Description",
-                "curated_title": "Curated",
-                "curated_description": "Description",
-                "main_image_url": "",
-                "portrait_image_url": "",
+                "title": "Content",
+                "intro_text": "Description",
+                "bullet_items": ["Point one"],
+                "footer_text": "Footer",
+                "image_url": "",
             },
         }
     ]
@@ -42,7 +40,6 @@ def test_missing_native_image_calls_are_completed_from_tool_schema():
 
     assert [call["name"] for call in completed] == [
         tool.name,
-        "search_ddgs_images",
         "search_ddgs_images",
     ]
     assert all(call["arguments"]["query"] for call in completed[1:])

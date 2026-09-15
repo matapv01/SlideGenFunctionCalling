@@ -42,7 +42,6 @@ from backend.workflows.slidegen_workflow.tools.xml_tool import (
 
     #slide content
     generate_three_ideas_slide_xml,
-    generate_content_creation_slide_xml,
     generate_ai_content_slide_xml,
     generate_two_ideas_slide_xml,
     generate_our_history_slide_xml,
@@ -261,58 +260,6 @@ class GenerateSectionHeaderImageSlideInput(BaseModel):
     divider_color: str = Field(default="#C9D4C3", description="Color of the short vertical divider line centered above the section heading.")
 
 # === SLIDE CONTENT CLASSES ===
-
-class GenerateContentCreationSlideInput(BaseModel):
-    """Input schema for generate_content_creation_slide_xml."""
-
-    main_title: str = Field(
-        ...,
-        description="Main slide title shown on the upper-right area. example: 'CONTENT CREATION'",
-    )
-    original_title: str = Field(
-        ...,
-        description="Heading for the first content block. example: 'Original Content'",
-    )
-    original_description: str = Field(
-        ...,
-        description="Description text for the original content block. example: 'Develop unique visuals, videos, and copy that align with your brand's message and resonate with your audience's interests. Create content that not only captures attention but also conveys the essence of your brand.'",
-    )
-    curated_title: str = Field(
-        ...,
-        description="Heading for the second content block.  example: 'Curated Content'",
-    )
-    curated_description: str = Field(
-        ...,
-        description="Description text for the curated content block. example: 'Share valuable curated content from reputable sources in your industry such as articles, videos, and graphics to enhance your original material and engage your audience in discussions.'"
-    )
-    main_image_url: str = Field(
-        default="https://images.unsplash.com/photo-1625064757761-c9bccabf1163?auto=format&fit=crop&q=80&w=1800",
-        description="URL for a landscape image sized 498 × 225 px with an approximately 2.21:1 aspect ratio.",
-    )
-    portrait_image_url: str = Field(
-        default="https://images.unsplash.com/photo-1552113125-81af17f36b57?auto=format&fit=crop&q=80&w=1000",
-        description="URL for a near-square portrait image sized 229 × 250 px with an approximately 0.92:1 aspect ratio.",
-    )
-    background_color: str = Field(
-        default="#D2DADE",
-        description="Background color of the slide.",
-    )
-    title_color: str = Field(
-        default="#68767C",
-        description="Color of the main title text.",
-    )
-    accent_color: str = Field(
-        default="#E4AAA2",
-        description="Accent color for the rounded rectangle behind the portrait.",
-    )
-    decoration_color: str = Field(
-        default="#AEB9BE",
-        description="Color of the decorative ellipse and bars.",
-    )
-    text_color: str = Field(
-        default="#111111",
-        description="Color of the body text and section titles.",
-    )
 
 class GenerateAiContentSlideInput(BaseModel):
     """Input schema for generate_ai_content_slide_xml."""
@@ -845,12 +792,6 @@ TRANSITION_TOOLS = [
 
 CONTENT_TOOLS = [
     # === XML CONTENT SLIDES ===
-    StructuredTool.from_function(
-        func=generate_content_creation_slide_xml,
-        name="generate_content_creation_slide_xml",
-        description="""Generates a content-creation slide with a large image on the left, a portrait image on the right, and two text content blocks for original content and curated content. Ideal for marketing, editorial, brand storytelling, and content strategy presentations.""",
-        args_schema=GenerateContentCreationSlideInput
-    ),
     StructuredTool.from_function(
         func=generate_ai_content_slide_xml,
         name="generate_ai_content_slide_xml",
