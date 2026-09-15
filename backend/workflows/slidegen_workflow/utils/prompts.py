@@ -63,14 +63,11 @@ Additional Evaluation Dimensions (Newly Added)
     - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
     - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
 
-In addition, if a previous slide is available, evaluate consistency between the current and previous slides in the following aspects:
+Evaluate consistency against the immutable deck style contract in the following aspects:
 - Background color
 - Text color
 - Font size
 - Font family
-
-Previous accepted tool call:
-{previous_accepted_tool_call}
 
 Current tool call:
 {tool_call_output}
@@ -218,10 +215,13 @@ NATIVE TOOL CALLING CONTRACT:
 HUMAN_PROMPT_TEMPLATE = """
 CONTEXT: {slide_context_map}
 
-PREVIOUS SLIDE STYLE CONTEXT:
-{previous_slide_function_call}
+DECK STYLE CONTRACT (IMMUTABLE FOR ALL SLIDES):
+{deck_style_contract}
 
-RECENTLY USED LAYOUTS (for reference):
+SLIDE TOPIC:
+{slide_topic}
+
+LAYOUT ASSIGNMENT NOTE:
 {recent_tools}
 
 DESIGN PLAN: {slide_plan}
@@ -283,6 +283,10 @@ You are an expert presentation designer and slide planner. Your task is to analy
    - Any special considerations (bold colors, subtle, high-tech, warm, etc.)
    - Follow the immutable DECK STYLE CONTRACT. Vary composition and geometry,
      not the deck's typography, palette, image treatment, or chart treatment.
+
+5. **Name the Slide Topic** (`slide_topic`): Return one concise semantic
+   subject for this slide. It should guide relevant imagery and content
+   emphasis, but must not override the deck palette.
 
 **OUTPUT REQUIREMENT:**
 - Return ONLY a single, valid JSON object that strictly follows the required schema.

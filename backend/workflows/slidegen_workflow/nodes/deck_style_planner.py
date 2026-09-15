@@ -19,19 +19,32 @@ def _as_dict(value: Any) -> Dict[str, Any]:
     return dict(value or {})
 
 
-def _default_style() -> Dict[str, Any]:
-    return _as_dict(DeckStylePlan())
+def _default_style(deck_topic: str = "Untitled presentation") -> Dict[str, Any]:
+    style = _as_dict(DeckStylePlan())
+    style["deck_topic"] = deck_topic
+    return style
 
 
 def create_deck_style(state: State, config: RunnableConfig) -> State:
     """Plan deck styling once so parallel workers never depend on slide N-1."""
     if state.get("deck_style_plan"):
+        existing = dict(state["deck_style_plan"])
+        existing.setdefault(
+            "deck_topic",
+            state.get("document_title") or "Untitled presentation",
+        )
+        existing.setdefault(
+            "visual_direction",
+            "Coherent editorial presentation with clear hierarchy",
+        )
+        state["deck_style_plan"] = existing
         return state
 
     configurable = config.get("configurable", {}) if config else {}
     llm = configurable.get("planner_llm") or configurable.get("llm")
+    title = state.get("document_title") or "Untitled presentation"
     if not ENABLE_DECK_STYLE_PLAN or not llm:
-        state["deck_style_plan"] = _default_style()
+        state["deck_style_plan"] = _default_style(title)
         return state
 
     stream_callback = configurable.get("stream_callback")
@@ -46,7 +59,6 @@ def create_deck_style(state: State, config: RunnableConfig) -> State:
             },
         )
 
-    title = state.get("document_title") or "Untitled presentation"
     outline = state.get("document_outline") or state.get("document_structure") or []
     slide_options = state.get("slide_options") or {}
     prompt = f"""
@@ -55,6 +67,9 @@ style contract that every slide must follow. Keep title typography readable:
 title_font_max must not exceed 48pt and body_font_max must not exceed 28pt.
 Return colors as #RRGGBB. Layouts may vary from slide to slide, but typography,
 palette, image treatment, and chart treatment must remain consistent.
+Return a concise deck_topic describing the presentation's subject and a
+visual_direction describing the shared visual language. These are immutable
+inputs for every slide generator; do not invent a different theme per slide.
 
 Presentation title: {title}
 Requested options: {json.dumps(slide_options, ensure_ascii=False)}
@@ -64,10 +79,15 @@ Outline: {json.dumps(outline, ensure_ascii=False, default=str)[:12000]}
     try:
         result = llm.with_structured_output(DeckStylePlan).invoke(prompt)
         style = _as_dict(result)
+        style["deck_topic"] = str(style.get("deck_topic") or title)
+        style["visual_direction"] = str(
+            style.get("visual_direction")
+            or "Coherent editorial presentation with clear hierarchy"
+        )
         style["title_font_max"] = min(48, int(style.get("title_font_max", 48)))
         style["body_font_max"] = min(28, int(style.get("body_font_max", 28)))
         state["deck_style_plan"] = style
     except Exception as exc:
         print(f"Warning: deck style planner failed, using defaults: {exc}")
-        state["deck_style_plan"] = _default_style()
+        state["deck_style_plan"] = _default_style(title)
     return state

@@ -1,4 +1,4 @@
-"""Assign deck-wide layouts, fan out section batches, then merge results."""
+"""Assign deck-wide layouts, fan out independent slide jobs, then merge."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
                 candidates = list(
                     tool_retriever.get_relevant_tools(
                         category=category,
-                        query=plan.get("thought", ""),
+                        query=plan.get("slide_topic") or plan.get("thought", ""),
                         top_k=TOOL_RETRIEVER_TOP_K,
                         current_slide_index=int(job.get("index", 0)),
                     ) or []
@@ -113,6 +113,12 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
 
 
 def dispatch_section_batches(state: State):
+    """Fan out one immutable slide job per worker.
+
+    The function name is kept for graph/test compatibility. Sections are still
+    used during layout assignment, but generation no longer waits for the
+    previous slide in a section.
+    """
     batches = state.get("section_batches") or []
     if not batches:
         return "merge_batch_results"
@@ -123,10 +129,22 @@ def dispatch_section_batches(state: State):
         "output_format": state.get("output_format", "xml"),
         "document_title": state.get("document_title", ""),
     }
-    return [
-        Send("run_section_batch", {"section_batch": batch, **shared})
-        for batch in batches
-    ]
+    sends = []
+    for section_batch in batches:
+        for job in section_batch.get("jobs") or []:
+            slide_index = int(job.get("index", 0))
+            single_slide_batch = {
+                "batch_id": f"{section_batch['batch_id']}__slide_{slide_index}",
+                "order": slide_index,
+                "jobs": [job],
+            }
+            sends.append(
+                Send(
+                    "run_section_batch",
+                    {"section_batch": single_slide_batch, **shared},
+                )
+            )
+    return sends
 
 
 def _worker_config(config: RunnableConfig) -> Dict[str, Any]:
@@ -161,7 +179,6 @@ async def _invoke_jobs(
         "batch_cursor": 0,
         "batch_done": False,
         "batch_layout_signatures": [],
-        "batch_tool_usage_history": [],
         "final_slides": [],
         "all_debug_info": [],
         "deck_style_plan": state.get("deck_style_plan", {}),

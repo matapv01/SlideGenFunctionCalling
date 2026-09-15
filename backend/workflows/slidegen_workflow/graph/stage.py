@@ -18,6 +18,13 @@ class Evaluation(BaseModel):
 
 class SlidePlan(BaseModel):
     """Defines the structure of a slide plan."""
+    slide_topic: str = Field(
+        default="",
+        description=(
+            "A concise semantic subject for this slide. Use it to guide the "
+            "layout, editable text, icons, and image-search queries."
+        ),
+    )
     thought: str = Field(
         description="A detailed creative brief for designing the slide. Describe the desired visual style, color palette, layout, typography, and whether to include images, icons, or specific visual elements. This should be a guide for the next step."
     )
@@ -29,6 +36,8 @@ class SlidePlan(BaseModel):
 class DeckStylePlan(BaseModel):
     """One visual contract shared by every slide in a deck."""
 
+    deck_topic: str = "Untitled presentation"
+    visual_direction: str = "Coherent editorial presentation with clear hierarchy"
     theme_name: str = "Modern editorial"
     font_family: str = "Arial"
     title_font_min: int = 36
@@ -43,13 +52,6 @@ class DeckStylePlan(BaseModel):
     image_style: str = "Clean editorial photography with consistent color grading"
     chart_style: str = "Minimal charts with direct labels and restrained grid lines"
     layout_density: Literal["airy", "balanced", "compact"] = "balanced"
-
-class slide_context(TypedDict):
-    """Lưu trữ context của slide trước đó."""
-    content: str
-    function_call: Dict
-    image_path: str
-
 
 class SlideJob(TypedDict, total=False):
     """Canonical scheduler input shared by DOCX, Idea, and Manual flows."""
@@ -103,7 +105,6 @@ class State(TypedDict, total=False):
     deck_slide_count: int
     batch_results: Annotated[List[Dict[str, Any]], operator.add]
     batch_layout_signatures: List[Dict[str, Any]]
-    batch_tool_usage_history: List[Dict[str, Any]]
     duplicate_excluded_tools: List[str]
     overflow_excluded_tools: List[str]
     duplicate_retry_count: int
@@ -131,10 +132,7 @@ class State(TypedDict, total=False):
     current_transitions: List[Dict[str, str]]
     current_contrast_report: List[Dict[str, Any]]
     previous_image_path: str
-    previous_accepted_tool_call: Dict
-    previous_slide_context: slide_context
     highlight_color: str  # Color for highlighting key phrases in content slides
-    previous_transition_tool_call: Dict  # Store previous transition tool for consistency
     candidate_tools: List[Any]  # Cached retrieved tools for retry attempts
     last_processed_slide_index: int  # Track slide index to reset tool cache on new slide
 

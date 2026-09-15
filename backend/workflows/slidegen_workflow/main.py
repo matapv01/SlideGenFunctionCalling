@@ -9,7 +9,7 @@ from collections import Counter
 from typing import Optional, Callable, Dict, Any, Tuple, List
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
 from backend.workflows.slidegen_workflow.graph.parallel_builder import build_parallel_workflow
-from backend.config import ENABLE_SECTION_PARALLELISM, SECTION_MAX_CONCURRENCY
+from backend.config import ENABLE_SLIDE_PARALLELISM, SLIDE_MAX_CONCURRENCY
 from backend.workflows.manual_workflow.main import run_manual_workflow
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
 from backend.domain.ports.llm_provider import LLMProvider
@@ -125,7 +125,7 @@ async def main_workflow(
         # 2. XML is the only generation artifact, so no HTML/VLM path is built.
         workflow = (
             build_parallel_workflow()
-            if ENABLE_SECTION_PARALLELISM
+            if ENABLE_SLIDE_PARALLELISM
             else build_workflow(router_flags=False)
         )
         app = workflow.compile()
@@ -150,7 +150,7 @@ async def main_workflow(
                 },
             },
             "recursion_limit": 500,
-            "max_concurrency": SECTION_MAX_CONCURRENCY,
+            "max_concurrency": SLIDE_MAX_CONCURRENCY,
         }
 
         # 4. Feed preprocessed doc state into planning/generation workflow
@@ -232,7 +232,7 @@ async def main_workflow_from_chunks(
         # Router flag is False because we don't need to route document conversion
         workflow = (
             build_parallel_workflow()
-            if ENABLE_SECTION_PARALLELISM
+            if ENABLE_SLIDE_PARALLELISM
             else build_workflow(router_flags=False)
         )
         app = workflow.compile()
@@ -261,7 +261,7 @@ async def main_workflow_from_chunks(
                 },
             },
             "recursion_limit": 500,
-            "max_concurrency": SECTION_MAX_CONCURRENCY,
+            "max_concurrency": SLIDE_MAX_CONCURRENCY,
         }
 
         initial_input = {

@@ -4,6 +4,7 @@ from langgraph.graph import END, StateGraph
 
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.nodes.deck_style_planner import create_deck_style
 from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_slide
 from backend.workflows.slidegen_workflow.nodes.next_slide_provider import provide_next_slide
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
@@ -47,6 +48,7 @@ def evaluate_vlm_decision(state: State) -> str:
 def build_workflow(router_flags: bool = False) -> StateGraph:
     """Build the XML generation graph. ``router_flags`` is kept for API compatibility."""
     workflow = StateGraph(State)
+    workflow.add_node("create_deck_style", create_deck_style)
     workflow.add_node("planning_slide", planning_slide)
     workflow.add_node("provide_next_slide", provide_next_slide)
     workflow.add_node("generate_slide", generate_slide)
@@ -55,7 +57,8 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     workflow.add_node("render_xml", render_xml)
     workflow.add_node("finalizer", finalize_slide)
 
-    workflow.set_entry_point("planning_slide")
+    workflow.set_entry_point("create_deck_style")
+    workflow.add_edge("create_deck_style", "planning_slide")
     workflow.add_edge("planning_slide", "provide_next_slide")
     workflow.add_conditional_edges(
         "provide_next_slide",

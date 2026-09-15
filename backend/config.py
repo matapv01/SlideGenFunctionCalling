@@ -107,16 +107,19 @@ PLANNING_BATCH_SIZE = 5
 # Số lần thử lại tối đa khi generate slide bị lỗi (ví dụ: invalid function call)
 SLIDE_GENERATION_MAX_RETRIES = 2
 
-# Generate top-level document sections concurrently while preserving sequential
-# slide generation inside each section. Disable this flag to use the legacy
-# whole-deck sequential graph.
-ENABLE_SECTION_PARALLELISM = True
-SECTION_MAX_CONCURRENCY = 3
+# Generate independent slide jobs concurrently after deck-wide style and
+# layout assignment. Disable this flag to use the legacy whole-deck graph.
+ENABLE_SLIDE_PARALLELISM = True
+# Backward-compatible alias for older callers/config imports.
+ENABLE_SECTION_PARALLELISM = ENABLE_SLIDE_PARALLELISM
+# Kept at 3 by default to avoid overloading the local Qwen endpoint.
+SLIDE_MAX_CONCURRENCY = 3
+# Backward-compatible alias for integrations that still import the old name.
+SECTION_MAX_CONCURRENCY = SLIDE_MAX_CONCURRENCY
 SECTION_FALLBACK_BATCH_SIZE = 3
 
-# Rendered-layout deduplication runs inside each sequential section batch.
-# Cross-section diversity is handled before fan-out by layout assignment, so
-# there is no final whole-deck regeneration pass. Transitions remain exempt.
+# Layout diversity is assigned globally before slide fan-out. Generation
+# workers do not inspect previous slide tool calls.
 ENABLE_LAYOUT_DUPLICATE_CHECK = True
 ADJACENT_LAYOUT_SIMILARITY = 0.85
 GLOBAL_LAYOUT_SIMILARITY = 0.92

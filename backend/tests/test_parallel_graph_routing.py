@@ -70,6 +70,25 @@ def test_send_fan_out_merges_batches_back_in_slide_order():
     assert [slide["index"] for slide in result["final_slides"]] == [0, 1, 2]
 
 
+def test_parallel_dispatch_creates_one_worker_per_slide():
+    sends = dispatch_section_batches(
+        {
+            "section_batches": [
+                {
+                    "batch_id": "section_0001",
+                    "order": 0,
+                    "jobs": [{"index": 0}, {"index": 1}, {"index": 2}],
+                }
+            ],
+            "deck_style_plan": {"deck_topic": "AI", "visual_direction": "editorial"},
+            "deck_slide_count": 3,
+        }
+    )
+
+    assert len(sends) == 3
+    assert [send.arg["section_batch"]["jobs"][0]["index"] for send in sends] == [0, 1, 2]
+
+
 def test_layouts_are_assigned_globally_before_fan_out():
     tools = [_Tool("layout_a"), _Tool("layout_b")]
     jobs = [

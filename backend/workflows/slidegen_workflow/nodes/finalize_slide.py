@@ -95,21 +95,10 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
     state["retry_count"] = 0
     state["executor_retry_count"] = 0
     state["overflow_retry_count"] = 0
-    state["previous_accepted_tool_call"] = state["current_tool_call"]
-
-    # Feed accepted XML tool usage back into the retriever. This enables the
-    # temporal-decay component on the next slides instead of keeping an empty
-    # usage history throughout the workflow.
     tool_retriever = configurable.get("tool_retriever")
     tool_call = state.get("current_tool_call") or {}
     tool_name = tool_call.get("name")
     tool_category = (state.get("current_slide_plan") or {}).get("action")
-    if tool_name and tool_category and tool_name != "default_fallback":
-        local_history = list(state.get("batch_tool_usage_history") or [])
-        local_history.append(
-            {"category": tool_category, "tool_name": tool_name, "index": idx}
-        )
-        state["batch_tool_usage_history"] = local_history
 
     if (
         configurable.get("record_tool_usage", True)

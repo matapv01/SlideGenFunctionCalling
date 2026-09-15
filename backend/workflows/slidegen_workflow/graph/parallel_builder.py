@@ -1,4 +1,4 @@
-"""Deck graph: style once, plan once, then fan out canonical sections."""
+"""Deck graph: style once, plan once, then fan out independent slide jobs."""
 
 from langgraph.graph import END, StateGraph
 

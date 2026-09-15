@@ -1,4 +1,4 @@
-"""Provide slides sequentially from one section batch."""
+"""Provide the slide job owned by one parallel worker."""
 
 from backend.workflows.slidegen_workflow.graph.stage import State
 

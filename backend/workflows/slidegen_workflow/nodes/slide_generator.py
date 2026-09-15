@@ -28,40 +28,6 @@ from backend.workflows.slidegen_workflow.utils.deck_style import (
     apply_deck_style_to_tool_call,
 )
 
-# Keys that carry slide *content* — these must NOT leak into the next slide's prompt
-_CONTENT_KEYS = frozenset({
-    # text / titles
-    "main_title", "subtitle", "subtitle1", "subtitle2", "content_text",
-    "description_text", "header_text", "headline", "top_text", "title",
-    "author_line", "top_left_text", "bottom_text", "year",
-    "section_title", "section_subtitle",
-    # body content
-    "main_content", "content1", "content2", "content3", "content4",
-    "left_title", "right_title", "left_text", "right_text",
-    "left_content", "right_content", "description",
-    # list / structured content
-    "items", "agenda_items", "mission_items", "list_items", "steps",
-    # image alt text (content-specific)
-    "image_alt_text",
-})
-
-
-def _extract_style_params(tool_call: dict) -> dict:
-    """
-    Return a copy of *tool_call* that keeps only style-related parameters
-    (colors, fonts, opacity, layout, image URLs) and removes content fields
-    so the LLM won't copy text from the previous slide.
-    """
-    if not tool_call:
-        return {}
-    
-    result = {"name": tool_call.get("name", "")}
-    args = tool_call.get("arguments", {})
-    
-    style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
-    result["arguments"] = style_args
-    return result
-
 
 
 
@@ -232,8 +198,9 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     if vlm_fb and vlm_fb != "No feedback provided.":
         eval_parts.append(f"[VLM VISUAL FEEDBACK]\n{vlm_fb}")
     previous_evaluation = "\n\n".join(eval_parts) if eval_parts else "No evaluation yet."
+    # This is the previous attempt for the same slide, used only on retry.
+    # Slides in parallel workers never inherit another slide's tool call.
     previous_function_call = state.get('current_tool_call', {})
-    previous_slide_function_call = state.get('previous_accepted_tool_call', {})
     deck_style_plan = state.get('deck_style_plan', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
     
@@ -244,6 +211,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '')
+    slide_topic = str(current_plan.get('slide_topic') or creative_thought)
     
     print(f"--- Preparing & Generating slide {idx + 1}/{length_slide_chunks} ---")
     print(f"  -> Category: '{tool_category}'")
@@ -279,15 +247,6 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             my_tools = cached
             print(f"  -> Reusing {len(my_tools)} cached tools from state (retry attempt)")
 
-    if not my_tools and tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
-        prev_transition_tool_name = state['previous_transition_tool_call'].get('name')
-        if prev_transition_tool_name:
-            all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
-            matching_tool = next((t for t in all_transition_tools if t.name == prev_transition_tool_name), None)
-            if matching_tool:
-                my_tools = [matching_tool]
-                print(f"  -> Reusing transition tool for consistency: {prev_transition_tool_name}")
-                
     if not my_tools:
         if tool_retriever:
             try:
@@ -338,62 +297,23 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
     generator_system_prompt = XML_CONTENT_PROMPT
     if slide_type == 'TRANSITION_TOOLS':
-        previous_transition = state.get('previous_transition_tool_call', {})
-        if previous_transition:
-            prev_tool_name = previous_transition.get('name', 'unknown')
-            prev_args = previous_transition.get('arguments', {})
-            args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
-            
-            transition_context = f"""* PREVIOUS TRANSITION details:
-  - Tool used: {prev_tool_name}
-  - Parameters used:
-{args_text}
+        generator_system_prompt += """
 
-* YOU MUST match these parameters EXACTLY:
-  - Same font sizes, colors, background
-  - Same text formatting style (numbered/unnumbered)
-  - Same visual elements and layout
-  - If previous had "1." then use "2.", "3." etc. in sequence
-  - If previous had no numbers, don't add numbers
-* ONLY change the text content to match the new section heading"""
-        else:
-            transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        generator_system_prompt += f"\n\n{transition_context}"
+TRANSITION SLIDE CONTRACT:
+- Generate this transition independently from every other slide.
+- Use the assigned transition layout and the immutable deck style contract.
+- Keep the transition title aligned with the slide topic and section context.
+- Do not copy or infer parameters from a previous tool call.
+"""
         
     generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + generator_system_prompt
     
-    # 5. Extract history for recent tools
-    recent_tools_list = []
-    local_history = [
-        item for item in state.get("batch_tool_usage_history", [])
-        if item.get("category") == tool_category
-    ]
-    if local_history:
-        seen = set()
-        for item in reversed(local_history):
-            tool_name = item.get("tool_name")
-            if tool_name and tool_name not in seen:
-                recent_tools_list.append(f"- {tool_name}")
-                seen.add(tool_name)
-                if len(recent_tools_list) >= 3:
-                    break
-    elif hasattr(tool_retriever, 'tool_usage_history') and tool_category in tool_retriever.tool_usage_history:
-        history = list(tool_retriever.tool_usage_history[tool_category])
-        history.reverse()
-        seen = set()
-        for t_name, _ in history:
-            if t_name not in seen:
-                recent_tools_list.append(f"- {t_name}")
-                seen.add(t_name)
-                if len(recent_tools_list) >= 3:
-                    break
-    recent_tools_str = "\n".join(recent_tools_list) if recent_tools_list else "- (None used recently)"
-    
-    # 6. Format Style Context
-    style_context = deck_style_plan or _extract_style_params(previous_slide_function_call)
-    style_context_str = json.dumps(style_context, ensure_ascii=False, indent=2)
-    
-    # 7. Reuse the planner's creative brief.  Planning and deck-style planning
+    # 5. The deck contract and layout assignment are immutable inputs. Do not
+    # read mutable tool history from another slide worker.
+    recent_tools_str = "- Layout assigned globally before parallel generation"
+    style_context_str = json.dumps(deck_style_plan, ensure_ascii=False, indent=2)
+
+    # 6. Reuse the planner's creative brief. Planning and deck-style planning
     # already own their LLM calls; slide generation should make exactly one
     # generation call and should not invoke a second hidden preparer model.
     design_instruction = state.get("design_instruction")
@@ -424,7 +344,8 @@ OUTPUT FORMAT: TOOL CALLS ONLY
     # The configured LangChain chat model owns tool schemas and transport.
     human_prompt = HUMAN_PROMPT_TEMPLATE.format(
         slide_context_map=current_context_map,
-        previous_slide_function_call=style_context_str,
+        deck_style_contract=style_context_str,
+        slide_topic=slide_topic,
         recent_tools=recent_tools_str,
         slide_plan=json.dumps(current_plan, indent=2),
         slide_content=current_text,
@@ -514,7 +435,7 @@ OUTPUT FORMAT: TOOL CALLS ONLY
         tool_plan = _complete_native_tool_plan(
             tool_plan,
             my_tools,
-            current_text,
+            f"{slide_topic}\n{current_text}",
         )
         tool_call_dict = tool_plan[0]
         tool_call_dict = apply_deck_style_to_tool_call(
@@ -541,8 +462,5 @@ OUTPUT FORMAT: TOOL CALLS ONLY
     state["style_context_str"] = style_context_str
     state["design_instruction"] = design_instruction
 
-    if slide_type == "TRANSITION_TOOLS":
-        state["previous_transition_tool_call"] = tool_call_dict
-    
     print(f"Time taken: {time.time() - start_time:.2f} seconds.")
     return state

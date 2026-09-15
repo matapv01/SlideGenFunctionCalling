@@ -48,6 +48,20 @@ def build_slide_context_maps(
     return context_maps
 
 
+def _fallback_slide_topic(content, index: int) -> str:
+    """Derive a stable topic when a structured planner omits the field."""
+    if isinstance(content, dict):
+        for key in ("heading", "title", "section_title", "name"):
+            value = str(content.get(key) or "").strip()
+            if value:
+                return value[:160]
+    if isinstance(content, str):
+        first_line = next((line.strip() for line in content.splitlines() if line.strip()), "")
+        if first_line:
+            return first_line[:160]
+    return f"Slide {index + 1}"
+
+
 def planning_slide(state: State, config: RunnableConfig) -> State:
     """
     Analyzes all slide content in manageable chunks (batches) to create a design
@@ -185,6 +199,10 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             for j, plan in enumerate(batch_results):
                 global_idx = i + j
                 plan_dict = plan.dict()
+                plan_dict["slide_topic"] = str(
+                    plan_dict.get("slide_topic")
+                    or _fallback_slide_topic(slide_chunks[global_idx], global_idx)
+                ).strip()
                 
                 # --- HARD RULE cho Slide 1 ---
                 # Ép slide đầu tiên luôn dùng INTRO_TOOLS vì LLM nhiều lúc bị nhầm
@@ -214,8 +232,14 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     except Exception as e:
         print(f"  -> FAILED during batch planning. Error: {e}")
         # As a fallback, create default plans for all slides.
-        default_plan = {"thought": "Default plan due to a batch error.", "action": "CONTENT_TOOLS"}
-        state['slide_plans'] = [default_plan for _ in slide_chunks]
+        state['slide_plans'] = [
+            {
+                "slide_topic": _fallback_slide_topic(content, index),
+                "thought": "Default plan due to a batch error.",
+                "action": "CONTENT_TOOLS",
+            }
+            for index, content in enumerate(slide_chunks)
+        ]
         state['slide_context_maps'] = slide_context_maps  # Still save context maps
         print(f"  -> Created {len(state['slide_plans'])} default plans as a fallback.")
 

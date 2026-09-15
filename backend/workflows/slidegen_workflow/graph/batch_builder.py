@@ -1,4 +1,4 @@
-"""Sequential slide-generation subgraph used by each parallel DFS section."""
+"""Single-slide generation subgraph used by each parallel slide worker."""
 
 from langgraph.graph import END, StateGraph
 
@@ -6,7 +6,6 @@ from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.nodes.batch_slide_provider import provide_next_batch_slide
 from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_slide
-from backend.workflows.slidegen_workflow.nodes.layout_duplicate_guard import guard_layout_duplicate
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
 from backend.workflows.slidegen_workflow.nodes.text_overflow_resolver import resolve_text_overflow
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
@@ -33,10 +32,6 @@ def _route_overflow(state: State) -> str:
     return "render_xml"
 
 
-def _route_duplicate(state: State) -> str:
-    return "generate_slide" if state.get("duplicate_detected") else "finalizer"
-
-
 def build_batch_workflow() -> StateGraph:
     workflow = StateGraph(State)
     workflow.add_node("provide_next_batch_slide", provide_next_batch_slide)
@@ -44,7 +39,6 @@ def build_batch_workflow() -> StateGraph:
     workflow.add_node("executor", tool_call_executor)
     workflow.add_node("text_overflow_resolver", resolve_text_overflow)
     workflow.add_node("render_xml", render_xml)
-    workflow.add_node("layout_duplicate_guard", guard_layout_duplicate)
     workflow.add_node("finalizer", finalize_slide)
 
     workflow.set_entry_point("provide_next_batch_slide")
@@ -67,12 +61,9 @@ def build_batch_workflow() -> StateGraph:
         _route_overflow,
         {"generate_slide": "generate_slide", "render_xml": "render_xml"},
     )
-    workflow.add_edge("render_xml", "layout_duplicate_guard")
-    workflow.add_conditional_edges(
-        "layout_duplicate_guard",
-        _route_duplicate,
-        {"generate_slide": "generate_slide", "finalizer": "finalizer"},
-    )
+    # Layouts are assigned globally before fan-out, so this worker has no
+    # mutable list of previously accepted slides to compare against.
+    workflow.add_edge("render_xml", "finalizer")
     workflow.add_edge("finalizer", "provide_next_batch_slide")
     return workflow
 
