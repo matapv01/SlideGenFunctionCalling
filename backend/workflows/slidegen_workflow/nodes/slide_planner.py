@@ -6,7 +6,7 @@ from typing import Dict, List
 from langchain_core.prompts import ChatPromptTemplate
 from backend.workflows.slidegen_workflow.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
-from backend.config import PLANNING_BATCH_SIZE
+from backend.config import PLANNING_BATCH_SIZE, SLIDE_MAX_CONCURRENCY
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
 import time
 
@@ -192,7 +192,10 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             print(f"  -> Processing chunk: slides {chunk_start_num}-{chunk_end_num}...")
 
             # Invoke the chain with the current chunk.
-            batch_results = planner_chain.batch(chunk_inputs, config={"max_concurrency": 5})
+            batch_results = planner_chain.batch(
+                chunk_inputs,
+                config={"max_concurrency": max(1, int(SLIDE_MAX_CONCURRENCY))},
+            )
 
             # Add the results from this chunk to the main list.
             chunk_plans = []

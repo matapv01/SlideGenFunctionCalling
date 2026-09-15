@@ -112,8 +112,9 @@ SLIDE_GENERATION_MAX_RETRIES = 2
 ENABLE_SLIDE_PARALLELISM = True
 # Backward-compatible alias for older callers/config imports.
 ENABLE_SECTION_PARALLELISM = ENABLE_SLIDE_PARALLELISM
-# Kept at 3 by default to avoid overloading the local Qwen endpoint.
-SLIDE_MAX_CONCURRENCY = 3
+# Allow up to five independent slide workers while keeping an explicit cap
+# around the local Qwen endpoint.
+SLIDE_MAX_CONCURRENCY = 5
 # Backward-compatible alias for integrations that still import the old name.
 SECTION_MAX_CONCURRENCY = SLIDE_MAX_CONCURRENCY
 SECTION_FALLBACK_BATCH_SIZE = 3

@@ -5,6 +5,7 @@ import os
 import time
 import logging
 import threading
+import asyncio
 from collections import Counter
 from typing import Optional, Callable, Dict, Any, Tuple, List
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
@@ -148,6 +149,13 @@ async def main_workflow(
                     "completed_indices": set(),
                     "lock": threading.Lock(),
                 },
+                # LangGraph's max_concurrency does not reliably cap nested
+                # worker graph invocations created through Send. Keep an
+                # explicit gate around each slide worker so a local Qwen
+                # endpoint is never flooded by one DOCX request.
+                "slide_generation_semaphore": asyncio.Semaphore(
+                    max(1, int(SLIDE_MAX_CONCURRENCY))
+                ),
             },
             "recursion_limit": 500,
             "max_concurrency": SLIDE_MAX_CONCURRENCY,
@@ -259,6 +267,9 @@ async def main_workflow_from_chunks(
                     "completed_indices": set(),
                     "lock": threading.Lock(),
                 },
+                "slide_generation_semaphore": asyncio.Semaphore(
+                    max(1, int(SLIDE_MAX_CONCURRENCY))
+                ),
             },
             "recursion_limit": 500,
             "max_concurrency": SLIDE_MAX_CONCURRENCY,

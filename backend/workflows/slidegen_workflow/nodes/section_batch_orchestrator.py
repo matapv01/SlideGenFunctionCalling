@@ -193,7 +193,20 @@ async def _invoke_jobs(
         "overflow_retry_count": 0,
         "vlm_decision": "accept",
     }
-    return await get_batch_app().ainvoke(worker_state, config=_worker_config(config))
+    worker_config = _worker_config(config)
+    semaphore = (
+        (config or {}).get("configurable", {}).get("slide_generation_semaphore")
+        if config
+        else None
+    )
+    if semaphore is None:
+        return await get_batch_app().ainvoke(worker_state, config=worker_config)
+
+    # Dynamic Send fan-out can schedule more nested workers than the parent
+    # graph's max_concurrency. The shared semaphore is the actual endpoint
+    # protection for local Qwen generation.
+    async with semaphore:
+        return await get_batch_app().ainvoke(worker_state, config=worker_config)
 
 
 async def run_section_batch(state: State, config: RunnableConfig) -> Dict[str, Any]:
