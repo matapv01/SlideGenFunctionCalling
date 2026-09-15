@@ -365,6 +365,7 @@ OUTPUT FORMAT: TOOL CALLS ONLY
         response = llm.bind_tools(
             generator_tools,
             tool_choice="required",
+            parallel_tool_calls=True,
         ).invoke(messages)
         native_tool_calls = _normalize_native_tool_calls(response)
         content = getattr(response, "content", "") or ""

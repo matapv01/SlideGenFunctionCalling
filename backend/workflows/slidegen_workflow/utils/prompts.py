@@ -211,7 +211,7 @@ NATIVE TOOL CALLING CONTRACT:
 - The XML layouts and search tool are supplied as native function tools. Inspect their schemas directly.
 - Invoke tools through the tool-calling interface. Never serialize a tool call in message content.
 - Do not emit <tool_call> tags, JSON tool-call objects, markdown, or explanatory prose.
-- Return exactly one XML slide tool call first. Then return one search_ddgs_images call for each image slot left empty, in schema order.
+- Return all calls in one assistant response: exactly one XML slide tool call first, then one search_ddgs_images call for each image slot left empty, in schema order.
 - If the selected XML tool has no image slots, return only that XML tool call.
 """
 
