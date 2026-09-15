@@ -217,9 +217,12 @@ def _pick_live_url(urls: list, timeout: float = 5.0) -> str | None:
     import urllib.request
     import urllib.error
 
+    first_candidate = None
     for url in urls:
         if not isinstance(url, str) or not url.strip():
             continue
+        if first_candidate is None:
+            first_candidate = url
         try:
             req = urllib.request.Request(url, method="HEAD")
             req.add_header("User-Agent", "Mozilla/5.0")
@@ -228,7 +231,10 @@ def _pick_live_url(urls: list, timeout: float = 5.0) -> str | None:
                     return url
         except Exception:
             continue   # URL hỏng, thử cái tiếp theo
-    return None
+    # CDNs commonly reject HEAD while still serving the image on GET. Keep
+    # the first result from the image provider instead of discarding every
+    # search result and replacing it with the generic fallback image.
+    return first_candidate
 
 
 def _run_one_search(index: int, call: dict, target: dict) -> tuple[int, str, dict]:

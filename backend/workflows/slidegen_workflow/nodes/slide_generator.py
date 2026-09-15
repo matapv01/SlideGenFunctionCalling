@@ -1,5 +1,6 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_generator.py
 import json
+import re
 import time
 from langchain_core.runnables import RunnableConfig
 
@@ -12,6 +13,9 @@ from backend.config import (
     TOOL_RETRIEVER_TOP_K,
 )
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    get_image_targets_in_order,
+)
 from backend.workflows.slidegen_workflow.utils.prompts import (
     HUMAN_PROMPT_TEMPLATE,
     XML_CONTENT_PROMPT,
@@ -103,6 +107,85 @@ def _normalize_native_tool_calls(response) -> list[dict]:
             continue
         normalized.append({"name": name, "arguments": arguments})
     return normalized
+
+
+def _build_fallback_image_query(slide_content: str, target: dict) -> str:
+    """Build a deterministic image query when the model omits a search call."""
+    description = str(target.get("description") or "")
+    raw = f"{slide_content} {description}"
+    raw = re.sub(r"https?://\S+", " ", raw)
+    raw = re.sub(r"[\[\]{}<>\"']", " ", raw)
+
+    generic_terms = {
+        "url", "image", "images", "photo", "portrait", "landscape", "wide",
+        "tall", "square", "displayed", "display", "sized", "approximately",
+        "aspect", "ratio", "powerpoint", "slide", "px", "color", "background",
+    }
+    words = [
+        word.strip(".,:;()")
+        for word in raw.split()
+        if word.strip(".,:;()")
+        and word.strip(".,:;()").lower() not in generic_terms
+    ]
+    query = " ".join(words[:16]).strip()
+    return query[:240] or "professional presentation visual"
+
+
+def _complete_native_tool_plan(
+    tool_plan: list[dict],
+    candidate_tools: list,
+    slide_content: str,
+) -> list[dict]:
+    """Complete omitted image searches without issuing another LLM request.
+
+    Qwen can return a valid XML function call while silently omitting the
+    companion image-search calls.  Image targets are deterministic from the
+    selected tool schema, so fill only the missing searches here and preserve
+    any searches the model did return.
+    """
+    if not isinstance(tool_plan, list):
+        return tool_plan
+
+    search_name = SEARCH_DDGS_TOOL.name
+    slide_calls = [call for call in tool_plan if call.get("name") != search_name]
+    if len(slide_calls) != 1:
+        return tool_plan
+
+    allowed_names = [tool.name for tool in candidate_tools]
+    slide_call = constrain_tool_call_to_candidates(slide_calls[0], allowed_names)
+    selected_tool = next(
+        (tool for tool in candidate_tools if tool.name == slide_call.get("name")),
+        None,
+    )
+    if selected_tool is None:
+        return [slide_call, *[call for call in tool_plan if call.get("name") == search_name]]
+
+    image_targets = get_image_targets_in_order(
+        selected_tool,
+        slide_call.get("arguments", {}),
+    )
+    search_calls = [
+        call for call in tool_plan if call.get("name") == search_name
+    ]
+    missing_targets = image_targets[len(search_calls):]
+    for target in missing_targets:
+        search_calls.append(
+            {
+                "name": search_name,
+                "arguments": {
+                    "query": _build_fallback_image_query(slide_content, target),
+                    "layout": None,
+                    "size": "Large",
+                },
+            }
+        )
+        print(
+            "  -> Added omitted image search for "
+            f"{target['path_string']} (deterministic fallback query)"
+        )
+
+    return [slide_call, *search_calls]
+
 
 def generate_slide(state: State, config: RunnableConfig) -> State:
     """
@@ -428,6 +511,12 @@ OUTPUT FORMAT: TOOL CALLS ONLY
             if call.get("name") != SEARCH_DDGS_TOOL.name else call
             for call in tool_plan
         ]
+        tool_plan = _complete_native_tool_plan(
+            tool_plan,
+            my_tools,
+            current_text,
+        )
+        tool_call_dict = tool_plan[0]
         tool_call_dict = apply_deck_style_to_tool_call(
             tool_call_dict,
             my_tools,

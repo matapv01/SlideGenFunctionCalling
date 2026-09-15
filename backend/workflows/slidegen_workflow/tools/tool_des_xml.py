@@ -725,7 +725,6 @@ class GenerateMonthlySalesRevenueLineSlideInput(BaseModel):
     text_color: str = Field(default="#2F2F2F", description="Primary dark text color used for the title, brand, axis labels, values, and analysis text.")
     line_color: str = Field(default="#EF845E", description="Accent color used for the line chart and circular data markers.")
     grid_color: str = Field(default="#C8C0B8", description="Light neutral color used for horizontal chart grid lines.")
-    border_color: str = Field(default="#3A3937", description="Dark neutral color used for the thin bordered header and its vertical divider.")
 
 class GenerateMarketShareDistributionSlideInput(BaseModel):
     """Input schema for generate_market_share_distribution_slide_xml."""
@@ -1094,6 +1093,37 @@ def normalize_tool_arguments(tool_name: str, arguments: dict) -> dict:
 
     canonical_name = canonical_tool_name(tool_name)
     normalized = dict(arguments)
+
+    # Native providers occasionally serialize an array/object argument as a
+    # JSON string even though the bound tool schema declares a container.
+    # Decode only fields whose canonical schema explicitly expects a container;
+    # ordinary text fields must remain untouched.
+    schema_tool = TOOL_MAP.get(canonical_name)
+    if schema_tool is not None:
+        for field_name, field_schema in schema_tool.args.items():
+            value = normalized.get(field_name)
+            if not isinstance(value, str):
+                continue
+            expected_type = field_schema.get("type")
+            if not expected_type:
+                expected_type = next(
+                    (
+                        variant.get("type")
+                        for variant in field_schema.get("anyOf", [])
+                        if isinstance(variant, dict) and variant.get("type") in {"array", "object"}
+                    ),
+                    None,
+                )
+            if expected_type not in {"array", "object"}:
+                continue
+            try:
+                decoded = json.loads(value)
+            except (TypeError, json.JSONDecodeError):
+                continue
+            if expected_type == "array" and isinstance(decoded, list):
+                normalized[field_name] = decoded
+            elif expected_type == "object" and isinstance(decoded, dict):
+                normalized[field_name] = decoded
 
     def as_list(value):
         if value is None:

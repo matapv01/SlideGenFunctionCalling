@@ -28,6 +28,7 @@ from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     execute_tool as execute_xml_tool,
     execute_tool_plan as execute_xml_tool_plan,
     normalize_tool_arguments,
+    normalize_tool_call,
 )
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.utils.xml_transitions import (
@@ -213,6 +214,32 @@ def _get_schema_lookup(tools_dict: Dict = XML_TOOLS_DICT, cache_key: str = "xml"
     if cache_key not in _TOOL_SCHEMA_LOOKUPS:
         _TOOL_SCHEMA_LOOKUPS[cache_key] = _build_tool_schema_lookup(tools_dict)
     return _TOOL_SCHEMA_LOOKUPS[cache_key]
+
+
+def _normalize_plan_for_execution(tool_plan: list, tool_lookup: Dict) -> list:
+    """Normalize and schema-filter the calls that will actually be executed."""
+    if not isinstance(tool_plan, list):
+        return tool_plan
+
+    normalized_plan = []
+    for call in tool_plan:
+        if not isinstance(call, dict):
+            normalized_plan.append(call)
+            continue
+        normalized_call = normalize_tool_call(call)
+        tool_name = normalized_call.get("name")
+        schema_tool = tool_lookup.get(tool_name)
+        if schema_tool is not None:
+            known_fields = set(schema_tool.args.keys())
+            arguments = normalized_call.get("arguments", {})
+            if isinstance(arguments, dict):
+                normalized_call["arguments"] = {
+                    key: value
+                    for key, value in arguments.items()
+                    if key in known_fields
+                }
+        normalized_plan.append(normalized_call)
+    return normalized_plan
 
 
 def validate_tool_call(
@@ -499,15 +526,23 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         state['executor_decision'] = 'pass'
         state['executor_feedback'] = ''
         state['executor_retry_count'] = 0
-        tool_plan = state.get("current_tool_plan") or [tool_call]
+        tool_lookup = {
+            tool.name: tool
+            for tools in active_tools_dict.values()
+            for tool in tools
+        }
+        tool_plan = _normalize_plan_for_execution(
+            state.get("current_tool_plan") or [tool_call],
+            tool_lookup,
+        )
+        if isinstance(tool_plan, list) and tool_plan and isinstance(tool_plan[0], dict):
+            tool_call = tool_plan[0]
+            state["current_tool_call"] = tool_call
+            state["current_tool_plan"] = tool_plan
         try:
             slide_content, final_tool_call, search_history = active_execute_tool_plan(
                 tool_plan,
-                tool_lookup={
-                    tool.name: tool
-                    for tools in active_tools_dict.values()
-                    for tool in tools
-                },
+                tool_lookup=tool_lookup,
                 source_content=state.get("current_slide_text", ""),
             )
             if not slide_content:
