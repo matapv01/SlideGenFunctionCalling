@@ -1350,7 +1350,7 @@ def execute_tool_plan(
     )
     search_calls = normalized_tool_calls[1:] if isinstance(normalized_tool_calls, list) else []
 
-    # Build execution matrix theo cấu trúc training: tool_call trước, image_tool_call_N sau
+    # Build the execution matrix: tool_call first, image_tool_call_N after it.
     execution_matrix: dict = {"tool_call": original_xml_call}
     for i, call in enumerate(search_calls, start=1):
         result_url = search_history[i - 1].get("result_url", "") if i - 1 < len(search_history) else ""

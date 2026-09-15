@@ -185,60 +185,6 @@ def get_slide_style_context(tool_call: dict) -> str:
     return style_context_str
 
 
-# ====================================================================
-# RL / Training Shared Utilities
-# ====================================================================
-
-def format_tool_for_qwen(tool) -> dict:
-    """Convert a LangChain tool to Qwen's expected JSON Schema format."""
-    return {
-        "type": "function",
-        "function": {
-            "name": tool.name,
-            "description": tool.description,
-            "parameters": tool.args
-        }
-    }
-
-
-QWEN_CHAT_TEMPLATE = """{%- if messages[0].role == 'system' %}
-{%- if tools is defined and tools %}
-<|im_start|>system
-{{ messages[0].content }}
-
-Available tools:
-<tools>
-{% for tool in tools %}
-{{ tool | tojson }}
-{% endfor %}
-</tools>
-
-Output ONLY ordered JSON function calls, each within its own <tool_call> tags.
-Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"main_title": "Title"}}{% endraw %}</tool_call>
-<|im_end|>
-{%- else %}
-<|im_start|>system
-{{ messages[0].content }}<|im_end|>
-{%- endif %}
-{%- endif %}
-{%- for message in messages %}
-{%- if message.role == 'assistant' and message.tool_calls is defined and message.tool_calls %}
-<|im_start|>assistant
-{% for tc in message.tool_calls %}
-<tool_call>
-{{ tc | tojson }}
-</tool_call>
-{% endfor %}<|im_end|>
-{%- elif message.role != 'system' %}
-<|im_start|>{{ message.role }}
-{{ message.content }}<|im_end|>
-{%- endif %}
-{%- endfor %}
-{%- if add_generation_prompt %}
-<|im_start|>assistant
-{%- endif %}"""
-
-
 def _normalize_tool_call(value) -> Optional[dict]:
     """Normalize common native/raw tool-call shapes to {name, arguments}."""
     if not isinstance(value, dict):
@@ -522,6 +468,3 @@ def render_html_to_png(html_content: str, output_path: str) -> None:
     except Exception as exc:
         logging.warning(f"Playwright render failed, using fallback PNG: {exc}")
         _fallback_render(str(exc))
-
-
-

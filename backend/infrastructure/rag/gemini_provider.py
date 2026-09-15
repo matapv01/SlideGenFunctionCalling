@@ -7,25 +7,57 @@ from typing import List, Dict, Any, Tuple
 from langchain_community.vectorstores import FAISS
 from collections import deque
 import numpy as np
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from sentence_transformers import SentenceTransformer
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from langchain_core.documents import Document
 from backend import config
 
-class GeminiToolRetrieveProvider(ToolRetrieveProvider):
-    def __init__(self, tools_dict: Dict[str, List[Any]], index_path: str, api_key: str = None):
-        """
-        Initializes the ToolRetriever using Google Generative AI embeddings.
+class LocalSentenceTransformerEmbeddings:
+    """LangChain-compatible adapter around a local SentenceTransformer model."""
 
-        Args:
-            tools_dict (Dict[str, List[Any]]): The dictionary of all tools, categorized.
-            index_path (str): Path to the directory where the FAISS index will be saved/loaded.
-        """
-        print("Initializing ToolRetriever with Google Gemini Embeddings...")
+    def __init__(self):
+        self.model = SentenceTransformer(
+            config.EMBEDDING_MODEL_NAME,
+            device=config.EMBEDDING_DEVICE,
+            cache_folder=config.EMBEDDING_CACHE_DIR,
+        )
 
-        # The model name is the standard for Gemini embeddings.
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        embeddings = self.model.encode(
+            texts,
+            batch_size=config.EMBEDDING_BATCH_SIZE,
+            normalize_embeddings=config.EMBEDDING_NORMALIZE,
+            show_progress_bar=False,
+            convert_to_numpy=True,
+        )
+        return embeddings.tolist()
 
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", google_api_key=api_key)
+    def embed_query(self, text: str) -> List[float]:
+        return self.embed_documents([text])[0]
+
+
+class LocalEmbeddingToolRetrieveProvider(ToolRetrieveProvider):
+    """
+    Initializes the ToolRetriever using a local SentenceTransformer model.
+
+    Args:
+        tools_dict: The dictionary of all tools, categorized.
+        index_path: Path to the directory where the FAISS index is saved/loaded.
+    """
+    def __init__(
+        self,
+        tools_dict: Dict[str, List[Any]],
+        index_path: str,
+        api_key: str = None,
+    ):
+        # api_key is retained only for compatibility with old standalone scripts;
+        # local embeddings never send it anywhere.
+        print(
+            "Initializing ToolRetriever with local embeddings "
+            f"({config.EMBEDDING_MODEL_NAME}, device={config.EMBEDDING_DEVICE})..."
+        )
+
+        self.embeddings = LocalSentenceTransformerEmbeddings()
 
         self.retrievers = {}
         self.vector_stores: dict = {}
@@ -75,7 +107,7 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         # Pre-compute and cache all tool description embeddings for MMR
         self._precompute_embeddings()
 
-        print("ToolRetriever initialized successfully.")
+        print("Local embedding ToolRetriever initialized successfully.")
 
     def _build_and_save_retriever(self, category: str, tools: List[Any], base_index_path: str):
         """Build FAISS index for a category with incremental update support."""
@@ -431,3 +463,7 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         if category in self.tool_usage_history:
             self.tool_usage_history[category].append((tool_name, slide_index))
             print(f"  📊 Recorded usage: {tool_name} at slide {slide_index}")
+
+
+# Backward-compatible alias for integrations that still import the old class name.
+GeminiToolRetrieveProvider = LocalEmbeddingToolRetrieveProvider

@@ -1,14 +1,14 @@
 # File: backend/api/dependencies.py
 
 from backend.config import (
-    setup_environment,
     CAPTURES_DIR, PROJECT_DIR, STATIC_DIR,
+    LLM_API_KEY,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
-    IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS
+    IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS,
+    FAISS_INDEX_PATH,
 )
 from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import os
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 
 # --- 1. Imports Interfaces (Ports) ---
@@ -25,7 +25,7 @@ from backend.infrastructure.database.repositories.sqlite_user_repo import Sqlite
 from backend.infrastructure.database.repositories.sqlite_project_repo import SqliteProjectRepository
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
 from backend.infrastructure.parser.markitdown_parser import MarkItDownParser
-from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
+from backend.infrastructure.rag.gemini_provider import LocalEmbeddingToolRetrieveProvider
 
 # --- 3. Imports Services (Application) ---
 from backend.application.services.auth_service import AuthService
@@ -49,34 +49,29 @@ security = HTTPBearer()
 # ===== SINGLETON INFRASTRUCTURE INSTANCES =====
 # Khởi tạo 1 lần duy nhất khi Server start
 
-# 1. Load Env
-env_keys = setup_environment()
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-
-# 2. Infrastructure Global Instances
+# Infrastructure global instances
 _capture_infra = PlaywrightCaptureProvider()
 _parser_infra = MarkItDownParser()
 
 _idea_llm = GeminiLLMProvider(
-    api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
+    api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
     model=IDEA_STRUCTURE_LLM_MODEL,
     base_url=LLM_BASE_URL,
     temperature=IDEA_STRUCTURE_LLM_TEMPERATURE,
     max_tokens=IDEA_STRUCTURE_LLM_MAX_TOKENS,
 )
+
 _slidegen_llm = GeminiLLMProvider(
-    api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
+    api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
     model=LLM_MODEL,
     base_url=LLM_BASE_URL,
     temperature=LLM_TEMPERATURE,
     max_tokens=LLM_MAX_TOKENS,
-    top_p=LLM_TOP_P
+    top_p=LLM_TOP_P,
 )
-
-_retriever_infra = GeminiToolRetrieveProvider(
+_retriever_infra = LocalEmbeddingToolRetrieveProvider(
     tools_dict=TOOLS_DICT,
-    index_path="backend/infrastructure/faiss_tool_retriever_index",
-    api_key = GEMINI_API_KEY
+    index_path=str(FAISS_INDEX_PATH),
 )
 
 # ===== SINGLETON SERVICES =====

@@ -10,6 +10,11 @@ PROJECT_DIR = Path(__file__).parent.parent
 STATIC_DIR = PROJECT_DIR / "static"
 FRONTEND_DIR = PROJECT_DIR / "frontend"
 FRONTEND_DIST_DIR = PROJECT_DIR / "frontend" / "dist"
+RUNNING_IN_DOCKER = Path("/.dockerenv").exists()
+
+# `.env` is intentionally limited to credentials/secrets. Load it once before
+# reading those values; application behavior is configured below in this file.
+load_dotenv(PROJECT_DIR / ".env")
 
 # Upload and output directories
 UPLOAD_DIR = STATIC_DIR / "uploads"
@@ -35,11 +40,24 @@ CORS_ORIGINS = [
 ]
 
 # Logging
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+LOG_LEVEL = "INFO"
 
 # API Settings
 API_HOST = "0.0.0.0"
 API_PORT = 12008
+
+# --- Credentials / secrets (the only values read from .env) ---
+LLM_API_KEY = os.getenv("LLM_API_KEY")
+TAVILY_API_KEYS = tuple(
+    key
+    for key in (
+        os.getenv("TAVILY_API_KEY1"),
+        os.getenv("TAVILY_API_KEY2"),
+        os.getenv("TAVILY_API_KEY3"),
+    )
+    if key
+)
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
 
 # ============================================================================
 # HYPERPARAMETERS - Tùy chỉnh để điều chỉnh hành vi của hệ thống
@@ -47,25 +65,31 @@ API_PORT = 12008
 
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3-flash-preview")
-# Base URL cho API endpoint
-LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
+LLM_MODEL = "qwen"
+# Qwen chạy trên host: dùng localhost khi backend chạy trực tiếp,
+# và host.docker.internal khi backend chạy trong Docker.
+LLM_BASE_URL = (
+    "http://host.docker.internal:8080/v1"
+    if RUNNING_IN_DOCKER
+    else "http://127.0.0.1:8080/v1"
+)
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
-LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.5"))
+LLM_TEMPERATURE = 0.5
 # Max tokens trong response (Gemini Flash hỗ trợ lên đến 8k output tokens)
-LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "20000"))
+LLM_MAX_TOKENS = 20000
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
-LLM_TOP_P = float(os.getenv("LLM_TOP_P", "1.0"))
+LLM_TOP_P = 1.0
 # Số lần retry tối đa khi gọi LLM thất bại (network error, timeout, v.v.)
-MAX_REMAKE = int(os.getenv("MAX_REMAKE", "3"))
+MAX_REMAKE = 3
 
 # --- Idea Structure LLM Configuration ---
 # Model cho việc tạo cấu trúc slide từ idea (create with idea feature)
-IDEA_STRUCTURE_LLM_MODEL = os.getenv("IDEA_STRUCTURE_LLM_MODEL", "gemini-2.5-flash")
+# IDEA_STRUCTURE_LLM_MODEL = "gemini-2.5-flash"
+IDEA_STRUCTURE_LLM_MODEL = "qwen"
 # Temperature cao hơn để sáng tạo structure (0.7 = khá creative nhưng vẫn có logic)
-IDEA_STRUCTURE_LLM_TEMPERATURE = float(os.getenv("IDEA_STRUCTURE_LLM_TEMPERATURE", "0.7"))
+IDEA_STRUCTURE_LLM_TEMPERATURE = 0.7
 # Max tokens cho structure generation (cần ít hơn vì chỉ gen JSON structure)
-IDEA_STRUCTURE_LLM_MAX_TOKENS = int(os.getenv("IDEA_STRUCTURE_LLM_MAX_TOKENS", "4096"))
+IDEA_STRUCTURE_LLM_MAX_TOKENS = 4096
 
 # --- Content Splitting ---
 # Giới hạn ký tự cho mỗi slide (vượt quá sẽ không split nữa)
@@ -86,54 +110,34 @@ SLIDE_GENERATION_MAX_RETRIES = 2
 # Generate top-level document sections concurrently while preserving sequential
 # slide generation inside each section. Disable this flag to use the legacy
 # whole-deck sequential graph.
-ENABLE_SECTION_PARALLELISM = os.getenv(
-    "ENABLE_SECTION_PARALLELISM",
-    "true",
-).lower() in ("1", "true", "yes")
-SECTION_MAX_CONCURRENCY = max(
-    1,
-    int(os.getenv("SECTION_MAX_CONCURRENCY", "3")),
-)
-SECTION_FALLBACK_BATCH_SIZE = max(
-    1,
-    int(os.getenv("SECTION_FALLBACK_BATCH_SIZE", "3")),
-)
+ENABLE_SECTION_PARALLELISM = True
+SECTION_MAX_CONCURRENCY = 3
+SECTION_FALLBACK_BATCH_SIZE = 3
 
 # Rendered-layout deduplication runs inside each sequential section batch.
 # Cross-section diversity is handled before fan-out by layout assignment, so
 # there is no final whole-deck regeneration pass. Transitions remain exempt.
-ENABLE_LAYOUT_DUPLICATE_CHECK = os.getenv(
-    "ENABLE_LAYOUT_DUPLICATE_CHECK",
-    "true",
-).lower() in ("1", "true", "yes")
-ADJACENT_LAYOUT_SIMILARITY = float(
-    os.getenv("ADJACENT_LAYOUT_SIMILARITY", "0.85")
-)
-GLOBAL_LAYOUT_SIMILARITY = float(
-    os.getenv("GLOBAL_LAYOUT_SIMILARITY", "0.92")
-)
-DUPLICATE_REGEN_MAX_ROUNDS = max(
-    0,
-    int(os.getenv("DUPLICATE_REGEN_MAX_ROUNDS", "2")),
-)
+ENABLE_LAYOUT_DUPLICATE_CHECK = True
+ADJACENT_LAYOUT_SIMILARITY = 0.85
+GLOBAL_LAYOUT_SIMILARITY = 0.92
+DUPLICATE_REGEN_MAX_ROUNDS = 2
 
 # Create one immutable visual direction before per-slide planning so parallel
 # workers do not need to wait for the previous slide to establish a style.
-ENABLE_DECK_STYLE_PLAN = os.getenv(
-    "ENABLE_DECK_STYLE_PLAN",
-    "true",
-).lower() in ("1", "true", "yes")
+ENABLE_DECK_STYLE_PLAN = True
 
 # --- Tool Retrieval ---
 # Số lượng tools relevant được retrieve từ FAISS index cho mỗi slide
 TOOL_RETRIEVER_TOP_K = 5
 
 # --- Embedding Model Configuration ---
-# Model để tạo embeddings cho tool descriptions
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+# Model để tạo embeddings cho tool descriptions.
+# Chạy local trên CPU để không tranh VRAM với Qwen và hỗ trợ tiếng Việt.
+EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
-# Device cho embedding model: 'cpu', 'cuda', 'mps' (Apple Silicon)
-EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "cuda")
+# Device cho embedding model: 'cpu', 'cuda', 'mps' (Apple Silicon).
+# GPU hiện đang dành cho Qwen nên embedding phải chạy trên CPU.
+EMBEDDING_DEVICE = "cpu"
 
 # Normalize embeddings để cosine similarity hoạt động tốt hơn
 EMBEDDING_NORMALIZE = True
@@ -165,7 +169,14 @@ TOOL_RETRIEVER_ENABLE_TEMPORAL_DECAY = True
 TOOL_RETRIEVER_ENABLE_MMR = True
 
 # --- FAISS Index Configuration ---
-FAISS_INDEX_PATH = "faiss_tool_retriever_index"
+# Index riêng cho model local 384 chiều. Không dùng lại index Gemini cũ
+# vì hai model có số chiều vector khác nhau.
+FAISS_INDEX_PATH = (
+    PROJECT_DIR
+    / "backend"
+    / "infrastructure"
+    / "faiss_tool_retriever_index_multilingual_minilm"
+)
 
 # Force rebuild FAISS index on startup (set True after changing EMBEDDING_MODEL_NAME)
 FAISS_FORCE_REBUILD = False  # Changed to False - only rebuild when tools change
@@ -174,51 +185,42 @@ FAISS_FORCE_REBUILD = False  # Changed to False - only rebuild when tools change
 VLM_MAX_RETRIES = 3
 # Keep the ViT evaluator available in code, but disable the graph call by
 # default until its score calibration is verified. Set this to true to enable.
-ENABLE_VIT_EVALUATION = os.getenv("ENABLE_VIT_EVALUATION", "false").lower() in (
-    "1",
-    "true",
-    "yes",
-    "on",
-)
+ENABLE_VIT_EVALUATION = False
 # Rule-based XML overflow handling. The LLM is called only for textboxes that
 # fail the geometry check, and each textbox is re-measured after rewriting.
 # Keep the bounded repair loop short; an alternate layout-tool retry is used
 # when the same tool still cannot fit the complete slide.
-TEXT_OVERFLOW_MAX_ROUNDS = int(os.getenv("TEXT_OVERFLOW_MAX_ROUNDS", "2"))
-TEXT_OVERFLOW_MAX_BOXES_PER_ROUND = int(
-    os.getenv("TEXT_OVERFLOW_MAX_BOXES_PER_ROUND", "12")
-)
+TEXT_OVERFLOW_MAX_ROUNDS = 2
+TEXT_OVERFLOW_MAX_BOXES_PER_ROUND = 12
 
 # --- Executor Validator Configuration ---
 # Max retries when executor detects logic errors (None, missing params, type mismatch)
 # and when the overflow fallback asks the main generator for another layout tool.
-EXECUTOR_MAX_RETRIES = int(os.getenv("EXECUTOR_MAX_RETRIES", "2"))
-# Enable CoT (Chain-of-Thought) thinking mode for Qwen generator
-ENABLE_COT_THINKING = os.getenv("ENABLE_COT_THINKING", "true").lower() in ("1", "true", "yes")
-# Max tokens for CoT generation (should be higher than non-CoT to account for thinking block)
-COT_MAX_TOKENS = int(os.getenv("COT_MAX_TOKENS", "4096"))
+EXECUTOR_MAX_RETRIES = 2
 
 # --- Playwright Browser Configuration ---
 BROWSER_VIEWPORT_WIDTH = 1920
 BROWSER_VIEWPORT_HEIGHT = 1080
-BROWSER_DEVICE_SCALE_FACTOR = float(os.getenv("BROWSER_DEVICE_SCALE_FACTOR", "2"))
+BROWSER_DEVICE_SCALE_FACTOR = 2.0
 # URL of the frontend route used by Playwright for XML slide previews.
-# Development overrides this to the Vite server in docker-compose.dev.yml.
-BROWSER_PREVIEW_URL = os.getenv(
-    "BROWSER_PREVIEW_URL",
-    "http://127.0.0.1:12008/render/xml-preview",
+# Use Vite when the production bundle is absent; otherwise use the backend SPA.
+BROWSER_PREVIEW_URL = (
+    "http://127.0.0.1:12008/render/xml-preview"
+    if (FRONTEND_DIST_DIR / "index.html").exists()
+    else "http://127.0.0.1:5173/render/xml-preview"
 )
+
+# --- Optional remote provider configuration ---
+REMOTE_API_URL = "https://mood-forestry-attending-organizations.trycloudflare.com"
+API_TIMEOUT = 600
+
+# --- Local asset/provider configuration ---
+VIT_MODEL_DIR = PROJECT_DIR / "models" / "vit"
+VIT_MODEL_FILENAME = "best_model_multilabel_DX_10_0.77.pt"
+HF_ENDPOINT = "https://hf-mirror.com"
+PUPPETEER_EXECUTABLE_PATH = None
+MATHLIVE_PACKAGE_DIR = None
 
 # ============================================================================
 # END OF HYPERPARAMETERS
 # ============================================================================
-
-def setup_environment():
-    """Load environment variables and set API keys."""
-    load_dotenv()
-    api_keys = {
-        "GEMINI_API_KEY": os.getenv('GEMINI_API_KEY'),
-    }
-    if "GEMINI_API_KEY" not in os.environ:
-        os.environ["GEMINI_API_KEY"] = os.getenv('GEMINI_API_KEY')
-    return api_keys

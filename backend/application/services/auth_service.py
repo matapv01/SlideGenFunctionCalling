@@ -1,6 +1,5 @@
 # File: backend/application/services/auth_service.py
 
-import os
 import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional, Dict
@@ -8,6 +7,7 @@ from jose import JWTError, jwt
 from fastapi import HTTPException, status
 from backend.domain.ports.user_repository import UserRepository
 from backend.domain.entities.user import User, UserProfile
+from backend.config import SECRET_KEY
 
 
 class AuthService:
@@ -15,7 +15,7 @@ class AuthService:
     
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
-        self.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+        self.secret_key = SECRET_KEY
         self.algorithm = "HS256"
         self.access_token_expire_minutes = 60 * 24
 

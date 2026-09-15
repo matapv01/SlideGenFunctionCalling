@@ -1,549 +1,0 @@
-Loading GRPO step 1 adapter from /home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0001_adapter
-Loading adapter base model: Qwen/Qwen3-4B-Instruct-2507
-config.json:   0%|                                                                       | 0.00/727 [00:00<?, ?B/s]config.json: 100%|████████████████████████████████████████████████████████████████| 727/727 [00:00<00:00, 12.6MB/s]
-model.safetensors.index.json: 0.00B [00:00, ?B/s]model.safetensors.index.json: 32.8kB [00:00, 269MB/s]
-Fetching 3 files:   0%|                                                                      | 0/3 [00:00<?, ?it/s]
-model-00001-of-00003.safetensors:   0%|                                                | 0.00/3.96G [00:00<?, ?B/s][A
-
-model-00003-of-00003.safetensors:   0%|                                                | 0.00/99.6M [00:00<?, ?B/s][A[A
-
-
-model-00002-of-00003.safetensors:   0%|                                                | 0.00/3.99G [00:00<?, ?B/s][A[A[A
-model-00001-of-00003.safetensors:   0%|                                       | 630k/3.96G [00:01<2:30:31, 438kB/s][A
-model-00001-of-00003.safetensors:   0%|                                      | 2.15M/3.96G [00:06<3:36:44, 304kB/s][A
-model-00001-of-00003.safetensors:   2%|▋                                      | 69.2M/3.96G [00:10<07:30, 8.64MB/s][A
-model-00001-of-00003.safetensors:   4%|█▍                                      | 139M/3.96G [00:13<04:35, 13.9MB/s][A
-model-00001-of-00003.safetensors:   7%|██▊                                     | 273M/3.96G [00:27<05:48, 10.6MB/s][A
-
-model-00003-of-00003.safetensors:  33%|████████████▊                          | 32.6M/99.6M [00:32<01:06, 1.01MB/s][A[A
-model-00001-of-00003.safetensors:  10%|████                                    | 407M/3.96G [00:34<04:27, 13.3MB/s][A
-
-
-model-00002-of-00003.safetensors:   2%|▋                                      | 67.1M/3.99G [00:37<36:29, 1.79MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:   3%|█▎                                      | 134M/3.99G [00:39<15:46, 4.07MB/s][A[A[A
-model-00001-of-00003.safetensors:  12%|████▊                                   | 474M/3.96G [00:41<04:39, 12.5MB/s][A
-model-00001-of-00003.safetensors:  15%|██████▏                                 | 607M/3.96G [00:45<03:17, 17.0MB/s][A
-model-00001-of-00003.safetensors:  17%|██████▊                                 | 674M/3.96G [00:49<03:17, 16.6MB/s][A
-model-00001-of-00003.safetensors:  20%|████████▏                               | 808M/3.96G [00:50<02:07, 24.8MB/s][A
-
-model-00003-of-00003.safetensors:  33%|████████████▊                          | 32.6M/99.6M [00:51<01:06, 1.01MB/s][A[A
-
-
-model-00002-of-00003.safetensors:   3%|█▎                                      | 135M/3.99G [00:51<15:46, 4.07MB/s][A[A[A
-model-00001-of-00003.safetensors:  22%|████████▊                               | 876M/3.96G [00:55<02:21, 21.7MB/s][A
-model-00001-of-00003.safetensors:  26%|█████████▉                             | 1.01G/3.96G [01:00<02:04, 23.7MB/s][A
-
-
-model-00002-of-00003.safetensors:   5%|██                                      | 202M/3.99G [01:00<17:27, 3.61MB/s][A[A[A
-model-00001-of-00003.safetensors:  29%|███████████▎                           | 1.14G/3.96G [01:03<01:43, 27.2MB/s][A
-model-00001-of-00003.safetensors:  31%|███████████▉                           | 1.21G/3.96G [01:05<01:38, 27.8MB/s][A
-model-00001-of-00003.safetensors:  34%|█████████████▎                         | 1.35G/3.96G [01:06<01:02, 41.6MB/s][A
-model-00001-of-00003.safetensors:  37%|██████████████▌                        | 1.48G/3.96G [01:08<00:52, 47.3MB/s][A
-model-00001-of-00003.safetensors:  41%|███████████████▉                       | 1.61G/3.96G [01:08<00:34, 67.7MB/s][A
-
-
-model-00002-of-00003.safetensors:   7%|██▋                                     | 269M/3.99G [01:09<13:39, 4.53MB/s][A[A[A
-model-00001-of-00003.safetensors:  42%|████████████████▌                      | 1.68G/3.96G [01:13<01:00, 37.6MB/s][A
-model-00001-of-00003.safetensors:  44%|█████████████████▏                     | 1.74G/3.96G [01:17<01:10, 31.4MB/s][A
-model-00001-of-00003.safetensors:  46%|█████████████████▊                     | 1.81G/3.96G [01:18<01:00, 35.4MB/s][A
-model-00001-of-00003.safetensors:  49%|███████████████████▏                   | 1.95G/3.96G [01:20<00:47, 42.6MB/s][A
-
-
-model-00002-of-00003.safetensors:   7%|██▋                                     | 271M/3.99G [01:21<13:39, 4.53MB/s][A[A[A
-
-model-00003-of-00003.safetensors: 100%|███████████████████████████████████████| 99.6M/99.6M [01:23<00:00, 1.22MB/s][A[Amodel-00003-of-00003.safetensors: 100%|███████████████████████████████████████| 99.6M/99.6M [01:23<00:00, 1.19MB/s]
-
-model-00001-of-00003.safetensors:  51%|███████████████████▊                   | 2.01G/3.96G [01:28<01:24, 23.0MB/s][A
-model-00001-of-00003.safetensors:  53%|████████████████████▍                  | 2.08G/3.96G [01:28<01:03, 29.4MB/s][A
-model-00001-of-00003.safetensors:  54%|█████████████████████▏                 | 2.15G/3.96G [01:30<01:00, 29.9MB/s][A
-
-
-model-00002-of-00003.safetensors:   8%|███▍                                    | 338M/3.99G [01:30<15:24, 3.95MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  10%|████                                    | 405M/3.99G [01:31<10:14, 5.83MB/s][A[A[A
-model-00001-of-00003.safetensors:  58%|██████████████████████▍                | 2.28G/3.96G [01:31<00:38, 43.2MB/s][A
-
-
-model-00002-of-00003.safetensors:  12%|████▋                                   | 472M/3.99G [01:33<07:23, 7.93MB/s][A[A[A
-model-00001-of-00003.safetensors:  59%|███████████████████████▏               | 2.35G/3.96G [01:35<00:51, 31.1MB/s][A
-model-00001-of-00003.safetensors:  61%|███████████████████████▊               | 2.42G/3.96G [01:36<00:41, 36.9MB/s][A
-
-
-model-00002-of-00003.safetensors:  14%|█████▍                                  | 539M/3.99G [01:38<06:10, 9.31MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  15%|██████                                  | 606M/3.99G [01:39<04:34, 12.3MB/s][A[A[A
-model-00001-of-00003.safetensors:  63%|████████████████████████▍              | 2.48G/3.96G [01:42<01:02, 23.5MB/s][A
-model-00001-of-00003.safetensors:  64%|█████████████████████████              | 2.55G/3.96G [01:43<00:51, 27.2MB/s][A
-model-00001-of-00003.safetensors:  66%|█████████████████████████▊             | 2.62G/3.96G [01:44<00:37, 36.2MB/s][A
-model-00001-of-00003.safetensors:  68%|██████████████████████████▍            | 2.68G/3.96G [01:45<00:33, 38.5MB/s][A
-model-00001-of-00003.safetensors:  73%|████████████████████████████▍          | 2.88G/3.96G [01:46<00:14, 72.6MB/s][A
-model-00001-of-00003.safetensors:  75%|█████████████████████████████          | 2.95G/3.96G [01:48<00:16, 62.0MB/s][A
-
-
-model-00002-of-00003.safetensors:  17%|██████▊                                 | 673M/3.99G [01:50<05:50, 9.46MB/s][A[A[A
-model-00001-of-00003.safetensors:  76%|█████████████████████████████▋         | 3.02G/3.96G [01:50<00:19, 47.6MB/s][A
-model-00001-of-00003.safetensors:  78%|██████████████████████████████▍        | 3.09G/3.96G [01:54<00:24, 35.4MB/s][A
-
-
-model-00002-of-00003.safetensors:  19%|███████▍                                | 741M/3.99G [01:54<05:02, 10.7MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  20%|████████                                | 808M/3.99G [01:58<04:12, 12.6MB/s][A[A[A
-model-00001-of-00003.safetensors:  80%|███████████████████████████████        | 3.15G/3.96G [01:58<00:30, 26.0MB/s][A
-model-00001-of-00003.safetensors:  81%|███████████████████████████████▋       | 3.22G/3.96G [01:59<00:24, 30.1MB/s][A
-model-00001-of-00003.safetensors:  83%|████████████████████████████████▍      | 3.29G/3.96G [02:00<00:17, 37.3MB/s][A
-model-00001-of-00003.safetensors:  85%|█████████████████████████████████      | 3.35G/3.96G [02:02<00:16, 37.5MB/s][A
-model-00001-of-00003.safetensors:  86%|█████████████████████████████████▋     | 3.42G/3.96G [02:02<00:10, 51.1MB/s][A
-model-00001-of-00003.safetensors:  88%|██████████████████████████████████▎    | 3.49G/3.96G [02:04<00:10, 45.0MB/s][A
-
-
-model-00002-of-00003.safetensors:  22%|████████▊                               | 875M/3.99G [02:05<04:35, 11.3MB/s][A[A[A
-model-00001-of-00003.safetensors:  90%|███████████████████████████████████    | 3.56G/3.96G [02:07<00:12, 32.8MB/s][A
-
-
-model-00002-of-00003.safetensors:  25%|█████████▊                             | 1.01G/3.99G [02:08<02:53, 17.1MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  27%|██████████▌                            | 1.08G/3.99G [02:08<02:10, 22.3MB/s][A[A[A
-model-00001-of-00003.safetensors:  92%|███████████████████████████████████▋   | 3.62G/3.96G [02:10<00:10, 31.4MB/s][A
-
-
-model-00002-of-00003.safetensors:  28%|██████████▊                            | 1.11G/3.99G [02:10<02:14, 21.4MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  29%|███████████▍                           | 1.17G/3.99G [02:11<01:44, 27.0MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  31%|████████████▏                          | 1.24G/3.99G [02:13<01:35, 28.8MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  33%|████████████▊                          | 1.31G/3.99G [02:14<01:19, 33.6MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  34%|█████████████▍                         | 1.38G/3.99G [02:15<00:58, 44.6MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  36%|██████████████                         | 1.44G/3.99G [02:16<00:59, 42.9MB/s][A[A[A
-model-00001-of-00003.safetensors:  93%|████████████████████████████████████▎  | 3.69G/3.96G [02:17<00:15, 17.6MB/s][A
-
-
-model-00002-of-00003.safetensors:  38%|██████████████▊                        | 1.51G/3.99G [02:18<00:53, 46.5MB/s][A[A[A
-model-00001-of-00003.safetensors:  95%|█████████████████████████████████████  | 3.76G/3.96G [02:22<00:11, 16.8MB/s][A
-
-
-model-00002-of-00003.safetensors:  40%|███████████████▍                       | 1.58G/3.99G [02:23<01:31, 26.3MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  41%|████████████████                       | 1.64G/3.99G [02:24<01:16, 30.8MB/s][A[A[A
-model-00001-of-00003.safetensors:  97%|█████████████████████████████████████▋ | 3.82G/3.96G [02:26<00:08, 16.2MB/s][A
-
-
-model-00002-of-00003.safetensors:  43%|████████████████▋                      | 1.71G/3.99G [02:26<01:15, 30.1MB/s][A[A[A
-model-00001-of-00003.safetensors:  98%|██████████████████████████████████████▎| 3.89G/3.96G [02:29<00:03, 18.7MB/s][A
-
-
-model-00002-of-00003.safetensors:  45%|█████████████████▎                     | 1.78G/3.99G [02:29<01:21, 27.0MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  46%|██████████████████                     | 1.84G/3.99G [02:32<01:19, 26.9MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  48%|██████████████████▋                    | 1.91G/3.99G [02:32<00:54, 37.8MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  50%|███████████████████▎                   | 1.98G/3.99G [02:32<00:40, 49.2MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  51%|███████████████████▉                   | 2.04G/3.99G [02:34<00:45, 42.7MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  55%|█████████████████████▎                 | 2.18G/3.99G [02:35<00:28, 63.3MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  56%|█████████████████████▉                 | 2.24G/3.99G [02:36<00:26, 66.2MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  60%|███████████████████████▎               | 2.38G/3.99G [02:37<00:17, 89.5MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  61%|███████████████████████▉               | 2.45G/3.99G [02:38<00:18, 82.6MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  63%|████████████████████████▌              | 2.51G/3.99G [02:38<00:15, 96.7MB/s][A[A[A
-model-00001-of-00003.safetensors:  98%|██████████████████████████████████████▎| 3.89G/3.96G [02:41<00:03, 18.7MB/s][A
-
-
-model-00002-of-00003.safetensors:  65%|█████████████████████████▏             | 2.58G/3.99G [02:43<00:35, 39.6MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  66%|█████████████████████████▉             | 2.65G/3.99G [02:44<00:31, 42.9MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  68%|██████████████████████████▌            | 2.71G/3.99G [02:46<00:32, 38.8MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  70%|███████████████████████████▏           | 2.78G/3.99G [02:47<00:26, 44.9MB/s][A[A[A
-model-00001-of-00003.safetensors: 100%|███████████████████████████████████████| 3.96G/3.96G [02:47<00:00, 8.21MB/s][Amodel-00001-of-00003.safetensors: 100%|███████████████████████████████████████| 3.96G/3.96G [02:47<00:00, 23.6MB/s]
-Fetching 3 files:  33%|████████████████████▎                                        | 1/3 [02:48<05:37, 168.53s/it]
-
-
-model-00002-of-00003.safetensors:  71%|███████████████████████████▊           | 2.85G/3.99G [02:49<00:28, 39.5MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  73%|████████████████████████████▌          | 2.91G/3.99G [02:50<00:20, 51.9MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  75%|█████████████████████████████▏         | 2.98G/3.99G [02:50<00:16, 62.4MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  78%|██████████████████████████████▍        | 3.12G/3.99G [02:52<00:11, 75.1MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  80%|███████████████████████████████▏       | 3.18G/3.99G [02:52<00:10, 78.2MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  82%|███████████████████████████████▊       | 3.25G/3.99G [02:53<00:08, 87.7MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  83%|█████████████████████████████████▎      | 3.32G/3.99G [02:53<00:05, 114MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  85%|█████████████████████████████████      | 3.38G/3.99G [02:57<00:12, 47.5MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  87%|█████████████████████████████████▊     | 3.45G/3.99G [02:58<00:11, 45.1MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  90%|███████████████████████████████████    | 3.59G/3.99G [02:59<00:06, 64.6MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  92%|███████████████████████████████████▋   | 3.65G/3.99G [03:00<00:04, 74.2MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  93%|████████████████████████████████████▍  | 3.72G/3.99G [03:00<00:03, 80.2MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  95%|█████████████████████████████████████▉  | 3.79G/3.99G [03:01<00:02, 100MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  97%|██████████████████████████████████████▋ | 3.85G/3.99G [03:01<00:01, 107MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors:  98%|███████████████████████████████████████▎| 3.92G/3.99G [03:01<00:00, 136MB/s][A[A[A
-
-
-model-00002-of-00003.safetensors: 100%|███████████████████████████████████████| 3.99G/3.99G [03:03<00:00, 89.8MB/s][A[A[Amodel-00002-of-00003.safetensors: 100%|███████████████████████████████████████| 3.99G/3.99G [03:03<00:00, 21.8MB/s]
-Fetching 3 files:  67%|█████████████████████████████████████████▎                    | 2/3 [03:03<01:18, 78.30s/it]Fetching 3 files: 100%|██████████████████████████████████████████████████████████████| 3/3 [03:03<00:00, 61.22s/it]
-Loading checkpoint shards:   0%|                                                             | 0/3 [00:00<?, ?it/s]Loading checkpoint shards: 100%|████████████████████████████████████████████████████| 3/3 [00:00<00:00, 192.07it/s]
-generation_config.json:   0%|                                                            | 0.00/238 [00:00<?, ?B/s]generation_config.json: 100%|█████████████████████████████████████████████████████| 238/238 [00:00<00:00, 4.52MB/s]
-tokenizer_config.json: 0.00B [00:00, ?B/s]tokenizer_config.json: 9.38kB [00:00, 71.5MB/s]
-vocab.json: 0.00B [00:00, ?B/s]vocab.json: 2.78MB [00:00, 107MB/s]
-merges.txt: 0.00B [00:00, ?B/s]merges.txt: 1.67MB [00:00, 208MB/s]
-tokenizer.json:   0%|                                                                  | 0.00/11.4M [00:00<?, ?B/s]tokenizer.json: 100%|█████████████████████████████████████████████████████████| 11.4M/11.4M [00:01<00:00, 7.93MB/s]tokenizer.json: 100%|█████████████████████████████████████████████████████████| 11.4M/11.4M [00:01<00:00, 7.93MB/s]
-Initializing ToolRetriever with Google Gemini Embeddings...
-Found existing index at '/home/llm/MinhPV/SlideGenFunctionCalling/rl/faiss_index'. Checking for updates...
-  - No changes detected for 'INTRO_TOOLS'. Skipping rebuild.
-2026-07-21 09:08:47,089 | INFO | faiss.loader | Loading faiss with AVX512 support.
-2026-07-21 09:08:47,108 | INFO | faiss.loader | Successfully loaded faiss with AVX512 support.
-  - No changes detected for 'TRANSITION_TOOLS'. Skipping rebuild.
-  - No changes detected for 'CONTENT_TOOLS'. Skipping rebuild.
-  - No changes detected for 'TEAM_TOOLS'. Skipping rebuild.
-  - No changes detected for 'THANK_YOU_TOOLS'. Skipping rebuild.
-  - No changes detected for 'CHART_TOOLS'. Skipping rebuild.
-  - Pre-computing tool description embeddings for MMR cache...
-  - Cached 111 tool embeddings.
-ToolRetriever initialized successfully.
-  Tool retriever initialized at /home/llm/MinhPV/SlideGenFunctionCalling/rl/faiss_index
-
-============================================================
-Starting Sequential GRPO Training
-  Model: Qwen/Qwen3-4B-Instruct-2507, Steps: 500, Docs/step: 1
-  Generations (GRPO): 2
-============================================================
-
-
---- Step 1/500 ---
-  Step 1 skipped (checkpoint found at /home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0001_adapter)
-
---- Step 2/500 ---
-  Loaded 9/9 slides across 1 docs from /home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0002_docs.json
-  Loaded 9 cached plans from /home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0002_cache.json
-  [Step 2 Doc 0 Slide 0] Planner → cached → INTRO_TOOLS
-2026-07-21 09:09:32,640 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 0] Preparer → OK (891 chars)
-  [Step 2 Doc 0 Slide 0] Qwen → attempt 1/3 OK → generate_minimalist_slide
-2026-07-21 09:09:37,876 | INFO | pikepdf._core | pikepdf C++ to Python logger bridge initialized
-2026-07-21 09:09:38,078 | WARNING | root | Playwright render failed, using fallback PNG: BrowserType.launch: Executable doesn't exist at /home/llm/MinhPV/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
-╔════════════════════════════════════════════════════════════╗
-║ Looks like Playwright was just installed or updated.       ║
-║ Please run the following command to download new browsers: ║
-║                                                            ║
-║     playwright install                                     ║
-║                                                            ║
-║ <3 Playwright Team                                         ║
-╚════════════════════════════════════════════════════════════╝
-  [Step 2 Doc 0 Slide 0] Render → OK
-2026-07-21 09:09:38,284 | WARNING | root | Playwright render failed, using fallback PNG: BrowserType.launch: Executable doesn't exist at /home/llm/MinhPV/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
-╔════════════════════════════════════════════════════════════╗
-║ Looks like Playwright was just installed or updated.       ║
-║ Please run the following command to download new browsers: ║
-║                                                            ║
-║     playwright install                                     ║
-║                                                            ║
-║ <3 Playwright Team                                         ║
-╚════════════════════════════════════════════════════════════╝
-  [Step 2 Doc 0 Slide 0] Embed → OK
-  [Step 2 Doc 0 Slide 1] Planner → cached → CONTENT_TOOLS
-2026-07-21 09:09:44,163 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 1] Preparer → OK (1033 chars)
-  [Step 2 Doc 0 Slide 1] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_body_slide12", "arguments": {"main_title": "Lịch Sử VÀ TẦM NHÌN CỦA FPT", "main_content": "<b>FPT được thành lập vào năm 1988</b>, khởi đầu từ một nhóm các nhà khoa học trẻ với khát vọng công nghệ. Trải qua hơn ba thập kỷ phát triển, FPT đã vươn mình trở thành tập đoàn công nghệ hàng đầu Việt Nam, hoạt động trong ba lĩnh vực cốt lõi: <b>Công nghệ thông tin</b>, <b
-    ====================================
-  [Step 2 Doc 0 Slide 1] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    </tool_call>
-    ====================================
-  [Step 2 Doc 0 Slide 1] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 2] Planner → cached → CONTENT_TOOLS
-2026-07-21 09:09:58,027 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 2] Preparer → OK (1324 chars)
-  [Step 2 Doc 0 Slide 2] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_icon_list_slide", "arguments": {"main_title": "Công Nghệ Lõi 4.0", "points": [{"icon_name": "ai", "title": "Trí tuệ Nhân tạo (AI)", "description": "Công nghệ giúp tự động hóa quy trình, phân tích dữ liệu và đưa ra quyết định thông minh."}, {"icon_name": "cloud", "title": "Điện toán Đám mây (Cloud Computing)", "description": "Cung cấp hạ tầng lưu trữ và xử lý dữ liệu linh hoạt, mở rộng và tiết kiệm
-    ====================================
-  [Step 2 Doc 0 Slide 2] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 2] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 3] Planner → cached → CONTENT_TOOLS
-2026-07-21 09:10:10,847 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 3] Preparer → OK (1270 chars)
-  [Step 2 Doc 0 Slide 3] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_body_slide12", "arguments": {"main_title": "Dấu Ấn FPT Trên Bản Đồ Công Nghệ Thế Giới", "main_content": "<p>FPT đã và đang khẳng định vị thế vững chắc trên bản đồ công nghệ toàn cầu thông qua mạng lưới văn phòng và trung tâm phát triển tại hơn 29 quốc gia. Chúng tôi đặc biệt chú trọng vào các thị trường trọng điểm như Hoa Kỳ, Nhật Bản, Châu Âu và khu vực Châu Á - Thái Bình Dương (APAC). FPT tự hào là đối tác chiến lược của nhiều tập đoàn đa
-    ====================================
-  [Step 2 Doc 0 Slide 3] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    gni Tech Thế Giới", "main_content": "<p>FPT đã và đang khẳng định vị thế vững chắc trên bản đồ công nghệ toàn cầu thông qua mạng lưới văn phòng và trung tâm phát triển tại hơn 29 quốc gia. Chúng tôi đặc biệt chú trọng vào các thị trường trọng điểm như Hoa Kỳ, Nhật Bản, Châu Âu và khu vực Châu Á - Thái Bình Dương (APAC). FPT tự hào là đối tác chiến lược của nhiều tập đoàn đa quốc gia hàng đầu thế giới, triển khai các dự án chuyển đổi số quy mô lớn và phức tạp. Năng lực triển khai
-    ====================================
-  [Step 2 Doc 0 Slide 3] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    }
-    ====================================
-  [Step 2 Doc 0 Slide 4] Planner → cached → CONTENT_TOOLS
-2026-07-21 09:10:26,453 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 4] Preparer → OK (1150 chars)
-  [Step 2 Doc 0 Slide 4] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_icon_list_slide", "arguments": {"main_title": "Văn hóa doanh nghiệp FPT", "points": [{"icon_name": "star", "title": "Tôn đổi đồng", "description": "Tôn trọng, Đổi mới, Đồng đội – kim chỉ nam cho mọi hoạt động"}, {"icon_name": "lightbulb", "title": "Tinh thần khởi nghiệp", "description": "Khuyến khích dám nghĩ, dám làm, chấp nhận thử thách"}, {"icon_name": "users", "title": "Đầu tư vào con người
-    ====================================
-  [Step 2 Doc 0 Slide 4] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    PT", "points": [{"icon_name": "star", "title": "Tôn trọng, Đổi mới, Đồng đội", "description": "Giá trị cốt lõi hướng dẫn mọi hoạt động"}, {"icon_name": "lightbulb", "title": "Tinh thần khởi nghiệp", "description": "Khuyến khích dám nghĩ, dám làm, chấp nhận thử thách"}, {"icon_name": "people", "title": "Đầu tư vào con người", "description": "Đào tạo chuyên sâu và phát triển kỹ năng mềm"}, {"icon_name": "globe",
-    ====================================
-  [Step 2 Doc 0 Slide 4] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 5] Planner → cached → CHART_TOOLS
-2026-07-21 09:10:42,488 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 5] Preparer → OK (1104 chars)
-  [Step 2 Doc 0 Slide 5] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    with soft gradients
-- Typography: Clean, modern sans-serif (Inter, sans-serif)
-- Visual Elements: Minimalist, with subtle grid patterns and clean lines
-- Data Representation: Line charts with clear axis labels and consistent color coding
-- Audience Focus: Technical professionals and data analysts
-
-[PREVIOUS SLIDE CONTENT]
-- Title: "Model Accuracy Converges with Minor Overfitting"
-- Subtitle: "ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)"
-- Insight: "Training and validation accuracy both increase steadily during the first 15 epochs, indicating effective learning and rapid
-    ====================================
-  [Step 2 Doc 0 Slide 5] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    with soft gradients
-- Typography: Clean, modern sans-serif (Inter, sans-serif)
-- Visual Elements: Minimalist, with subtle grid patterns and clean lines
-- Data Representation: Line charts with clear axis labels and consistent color coding
-- Audience Focus: Technical professionals and data analysts
-
-[PREVIOUS SLIDE CONTENT]
-- Title: "Model Accuracy Converges with Minor Overfitting"
-- Subtitle: "ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)"
-- Insight: "Training and validation accuracy both increase steadily during the first 15 epochs, indicating effective learning and rapid
-    ====================================
-  [Step 2 Doc 0 Slide 5] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    with soft gradients
-- Typography: Clean, modern sans-serif (Inter, sans-serif)
-- Visual Elements: Minimalist, with subtle grid patterns and clean lines
-- Data Representation: Line charts with clear axis labels and consistent color coding
-- Audience Focus: Technical professionals and data analysts
-
-[PREVIOUS SLIDE CONTENT]
-- Title: "Model Accuracy Converges with Minor Overfitting"
-- Subtitle: "ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)"
-- Insight: "Training and validation accuracy both increase steadily during the first 15 epochs, indicating effective learning and rapid
-    ====================================
-  [Step 2 Doc 0 Slide 6] Planner → cached → TEAM_TOOLS
-2026-07-21 09:11:04,440 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 6] Preparer → OK (1277 chars)
-  [Step 2 Doc 0 Slide 6] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_colorful_team_grid_slide", "arguments": {"main_title": "FPT tự hào có một đội ngũ lãnh đạo tài năng và giàu kinh nghiệm", "subtitle": "", "team_members": [{"name": "Trương Gia Bình", "role": "Chủ tịch HĐQT FPT", "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop", "color
-    ====================================
-  [Step 2 Doc 0 Slide 6] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 6] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 7] Planner → cached → CONTENT_TOOLS
-2026-07-21 09:11:15,802 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 7] Preparer → OK (813 chars)
-  [Step 2 Doc 0 Slide 7] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_process_slide", "arguments": {"main_title": "FPT Digital Transformation Journey", "left_title": "Past Achievements", "right_title": "Future Vision", "left_content": "FPT has successfully driven digital transformation across global markets, establishing a strong foundation through innovation, strategic partnerships, and scalable technology solutions.", "right_content": "FPT will continue to innovate, expand its capabilities, and pursue strategic collaborations to create sustainable value and maintain its leadership position in the digital era.", "title_color": "#2563EB", "left_box_color": "#E0F2FE
-    ====================================
-  [Step 2 Doc 0 Slide 7] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 7] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 8] Planner → cached → THANK_YOU_TOOLS
-2026-07-21 09:11:28,222 | INFO | httpx | HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
-  [Step 2 Doc 0 Slide 8] Preparer → OK (1550 chars)
-  [Step 2 Doc 0 Slide 8] Qwen → attempt 1/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 1) ===
-    <tool_call>{"name": "generate_corporate2_thank_you_slide", "arguments": {"main_title": "CẢM ƠN QUÝ VỊ", "closing_message": "Chúng tôi hy vọng đã mang đến cho quý vị những thông tin hữu ích về hành trình chuyển đổi số toàn cầu của FPT.", "contact_email": "info@fpt.com.vn", "website": "www.fpt.com.vn", "primary_color": "#2563EB", "accent_color": "#3B82F6", "text_color": "#1E293B", "bg_color":
-    ====================================
-  [Step 2 Doc 0 Slide 8] Qwen → attempt 2/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 2) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide 8] Qwen → attempt 3/3 NOT_JSON — full output:
-    === FULL OUTPUT (attempt 3) ===
-    
-    ====================================
-  [Step 2 Doc 0 Slide -] Done → 9 slides, 2 renders
-  Saved 9 plans to /home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0002_cache.json
-  Collected 9 prompts. Running GRPO update...
-  0%|                                                                                        | 0/1 [00:00<?, ?it/s]Traceback (most recent call last):
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/rl/train.py", line 542, in <module>
-    trainer.train()
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/trainer.py", line 2325, in train
-    return inner_training_loop(
-           ^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/trainer.py", line 2674, in _inner_training_loop
-    tr_loss_step = self.training_step(model, inputs, num_items_in_batch)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py", line 1277, in training_step
-    output = super().training_step(model, inputs, num_items_in_batch)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/trainer.py", line 4014, in training_step
-    inputs = self._prepare_inputs(inputs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/trl/extras/profiling.py", line 209, in wrapper
-    return func(self, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py", line 1306, in _prepare_inputs
-    generation_batch = self._generate_and_score_completions(generation_batch)
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py", line 2029, in _generate_and_score_completions
-    ) = self._generate(prompts)
-        ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py", line 1874, in _generate
-    completion_ids, logprobs = self._generate_single_turn(prompt_ids, images, multimodal_fields)
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py", line 1563, in _generate_single_turn
-    prompt_completion_ids = unwrapped_model.generate(
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/peft/peft_model.py", line 2122, in generate
-    outputs = self.base_model.generate(*args, **kwargs)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/generation/utils.py", line 2564, in generate
-    result = decoding_method(
-             ^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/generation/utils.py", line 2784, in _sample
-    outputs = self(**model_inputs, return_dict=True)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 918, in wrapper
-    output = func(self, *args, **kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/models/qwen3/modeling_qwen3.py", line 480, in forward
-    outputs: BaseModelOutputWithPast = self.model(
-                                       ^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 1064, in wrapper
-    outputs = func(self, *args, **kwargs)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/models/qwen3/modeling_qwen3.py", line 410, in forward
-    hidden_states = decoder_layer(
-                    ^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 94, in __call__
-    return super().__call__(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/utils/deprecation.py", line 172, in wrapped_func
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/models/qwen3/modeling_qwen3.py", line 275, in forward
-    hidden_states = self.mlp(hidden_states)
-                    ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/transformers/models/qwen3/modeling_qwen3.py", line 82, in forward
-    down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-                                                                ^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1786, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/peft/tuners/lora/layer.py", line 969, in forward
-    result = result + lora_B(lora_A(dropout(x))) * scaling
-                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
-torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 5.04 GiB. GPU 0 has a total capacity of 47.37 GiB of which 4.76 GiB is free. Including non-PyTorch memory, this process has 42.60 GiB memory in use. Of the allocated memory 41.80 GiB is allocated by PyTorch, and 404.48 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

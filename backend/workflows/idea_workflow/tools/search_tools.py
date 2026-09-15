@@ -3,38 +3,30 @@
 from langchain.tools import tool
 from pydantic import BaseModel, field_validator
 from tavily import TavilyClient
-import os
+from backend.config import TAVILY_API_KEYS
 
 # --- Singleton client ---
 _TAVILY_CLIENT = None
 index = 0
 
-tavily_keys = {
-    0: "TAVILY_API_KEY1",
-    1: "TAVILY_API_KEY2",
-    2: "TAVILY_API_KEY3",
-}
-
-
 def get_tavily_client() -> TavilyClient:
     global _TAVILY_CLIENT, index
     if _TAVILY_CLIENT is None:
         # Try keys in order until we find one that works
-        for i in range(3):
-            current_index = (index + i) % 3
-            api_key = os.getenv(tavily_keys[current_index])
+        for i in range(len(TAVILY_API_KEYS)):
+            current_index = (index + i) % len(TAVILY_API_KEYS)
+            api_key = TAVILY_API_KEYS[current_index]
             if api_key:
                 try:
                     _TAVILY_CLIENT = TavilyClient(api_key=api_key)
-                    index = (current_index + 1) % 3  # Update for next creation attempt
-                    print(f"Using Tavily API key {tavily_keys[current_index]}")
+                    index = (current_index + 1) % len(TAVILY_API_KEYS)
                     break
                 except Exception as e:
-                    print(f"Failed to create Tavily client with {tavily_keys[current_index]}: {e}")
+                    print(f"Failed to create Tavily client: {e}")
                     continue
 
         if _TAVILY_CLIENT is None:
-            raise ValueError("No valid TAVILY_API_KEY environment variables found (checked TAVILY_API_KEY1, TAVILY_API_KEY2, TAVILY_API_KEY3)")
+            raise ValueError("No Tavily API key is configured")
 
     return _TAVILY_CLIENT
 

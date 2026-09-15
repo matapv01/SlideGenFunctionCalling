@@ -37,6 +37,7 @@ from backend.infrastructure.converter.omml import (
     M_NS,
     latex_to_omml,
 )
+from backend.config import MATHLIVE_PACKAGE_DIR, PUPPETEER_EXECUTABLE_PATH
 
 
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -97,9 +98,8 @@ class XMLSlideConverter:
                 / "Google/Chrome/Application/chrome.exe"
             )
 
-        configured_browser = os.environ.get("PUPPETEER_EXECUTABLE_PATH")
-        if configured_browser:
-            candidates.insert(0, Path(configured_browser))
+        if PUPPETEER_EXECUTABLE_PATH:
+            candidates.insert(0, Path(PUPPETEER_EXECUTABLE_PATH))
 
         return [candidate for candidate in candidates if candidate.exists()]
 
@@ -110,9 +110,8 @@ class XMLSlideConverter:
         candidates = [
             repo_root / "frontend" / "node_modules" / "mathlive",
         ]
-        configured = os.environ.get("MATHLIVE_PACKAGE_DIR")
-        if configured:
-            candidates.insert(0, Path(configured).expanduser())
+        if MATHLIVE_PACKAGE_DIR:
+            candidates.insert(0, Path(MATHLIVE_PACKAGE_DIR).expanduser())
 
         for candidate in candidates:
             if (candidate / "mathlive-ssr.min.mjs").exists():

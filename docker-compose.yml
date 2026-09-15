@@ -4,9 +4,9 @@ services:
     container_name: slidegen_nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8082:80"
     environment:
-      BACKEND_URL: ${BACKEND_URL}
+      BACKEND_URL: http://slidegen:12008
     volumes:
       - ./docker/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
     depends_on:
@@ -18,23 +18,23 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_API_BASE_URL: /api/v1
     platform: linux/amd64
     image: slidegen:latest
     container_name: slidegen
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "12008:12008"
     env_file:
       - .env
-    environment:
-      EMBEDDING_DEVICE: cpu
     volumes:
       - ./.env:/app/.env:ro
       - ./models:/app/models:ro
       - slidegen_db:/app/backend/infrastructure/database
       - slidegen_static:/app/static
-      - slidegen_faiss:/app/backend/infrastructure/faiss_tool_retriever_index
+      - slidegen_faiss_local:/app/backend/infrastructure/faiss_tool_retriever_index_multilingual_minilm
       - huggingface_cache:/root/.cache/huggingface
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:12008/health"]
@@ -46,5 +46,5 @@ services:
 volumes:
   slidegen_db:
   slidegen_static:
-  slidegen_faiss:
+  slidegen_faiss_local:
   huggingface_cache:

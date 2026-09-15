@@ -32,6 +32,7 @@ web/
 **/context
 unsloth_compiled_cache/
 faiss_tool_retriever_index/
+backend/infrastructure/faiss_tool_retriever_index_multilingual_minilm/
 static/
 
 # Local ML model checkpoints

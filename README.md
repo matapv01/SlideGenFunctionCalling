@@ -45,13 +45,6 @@ User Input (Idea / Document)
 - Generator dùng Qwen local: minimal system prompt + tool schemas + design instruction từ Gemini Preparer.
 - Generator dùng Gemini API: system prompt = slide-type rules + tool binding.
 
-## Training
-Tài liệu training nằm ở [rl/README.md](rl/README.md).
-
-- SDFT official: Hugging Face Transformers + TRL `DistilTrainer` + PEFT LoRA.
-- GRPO current: TRL `GRPOTrainer` + rollout/reward custom của repo.
-- Output SDFT: `./qwen_slidegen_sdft/final_adapter`.
-
 ## API Endpoints
 
 | Method | Path | Description |
@@ -90,13 +83,12 @@ Truy cập: `http://localhost:12008`
 ```
 backend/
 ├── domain/ports/           # Interfaces (LLM, Capture, Embedding, Aesthetic)
-├── infrastructure/         # Implementations (Gemini, Playwright, DINOv2, ViT)
+├── infrastructure/         # Implementations (Gemini, Playwright, local embeddings, ViT)
 └── workflows/
     ├── slidegen_workflow/  # Pipeline chính (nodes, graph, tools, prompts)
     ├── doc_workflow/       # Xử lý document
     └── idea_workflow/      # Idea -> structure
 frontend/                   # React + TypeScript
-rl/                         # SDFT + GRPO training (xem rl/README.md)
 ```
 
 Xem [ARCHITECTURE.md](ARCHITECTURE.md) để hiểu chi tiết thiết kế hệ thống.

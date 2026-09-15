@@ -7,6 +7,9 @@ WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci --legacy-peer-deps
 
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 # Build production bundle
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build

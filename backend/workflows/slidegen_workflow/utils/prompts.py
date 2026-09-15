@@ -163,7 +163,7 @@ XML_CONTENT_PROMPT = """
 ❌ FORBIDDEN: Low-contrast combinations such as gray on gray, #555 on #333, or #ccc on #fff. Accent-colored text is allowed only when it remains clearly readable.
 
 🚨 **STRICT TOOL & PARAMETER RULES (NON-NEGOTIABLE):**
-- **TOOL NAME**: You MUST select ONLY a tool name that is EXPLICITLY LISTED in the "AVAILABLE LAYOUT TOOLS" section provided for this slide. ABSOLUTELY DO NOT invent, guess, or use any tool name from memory, previous slides, or examples.
+- **TOOL NAME**: You MUST select ONLY a tool exposed in the native tool schemas for this request. ABSOLUTELY DO NOT invent, guess, or use any tool name from memory, previous slides, or examples.
 - **PARAMETERS**: You MUST ONLY output parameters that are EXPLICITLY defined in the selected tool's schema. ABSOLUTELY DO NOT invent or add extra parameters (e.g. `body_text`, `header_bg`, `main_title_color`, `subtitle_color`, `logo_image_url`) if they are NOT listed in that tool's parameter schema. Supplying an extra parameter will cause the slide to FAIL.
 - **PARAMETER COUNT**: Do NOT add more parameters than what the schema defines. When in doubt, leave optional parameters out entirely rather than guessing a name.
 
@@ -201,9 +201,18 @@ XML_CONTENT_PROMPT = """
    - If a background or panel is dark, use white or light text, labels, legend text, and grid lines. If it is light, use dark text and sufficiently visible grid lines. Never combine dark text with a dark panel or light text with a light panel.
    - Keep data-series colors distinct and preserve their order: the first series uses the first series color, the second uses the second, and so on. Do not reuse a panel or text color for a data series when it reduces readability.
    - Output only valid six-digit hexadecimal colors for declared color parameters. Do not pass color parameters that are not defined by the selected tool schema.
-10. OUTPUT: Invoke the selected XML slide tool and return tool calls only; do not output raw arguments or prose.
+10. OUTPUT: Invoke the selected XML slide tool and return native tool calls only; do not output raw arguments or prose.
 
 Generate a readable, professional XML function call.
+"""
+
+NATIVE_TOOL_CALLING_SYSTEM_PROMPT = """
+NATIVE TOOL CALLING CONTRACT:
+- The XML layouts and search tool are supplied as native function tools. Inspect their schemas directly.
+- Invoke tools through the tool-calling interface. Never serialize a tool call in message content.
+- Do not emit <tool_call> tags, JSON tool-call objects, markdown, or explanatory prose.
+- Return exactly one XML slide tool call first. Then return one search_ddgs_images call for each image slot left empty, in schema order.
+- If the selected XML tool has no image slots, return only that XML tool call.
 """
 
 HUMAN_PROMPT_TEMPLATE = """
@@ -442,137 +451,3 @@ DOCUMENT TO ANALYZE:
 
 Please analyze this document and create a hierarchical structure with appropriate headings and content distribution.
 """
-
-
-# ================================= QWEN GENERATOR PROMPTS =================================
-
-QWEN_GENERATOR_SYSTEM_PROMPT = """You are an XML slide layout generator. Output ONLY one XML tool function call inside <tool_call> tags. Do NOT use thinking mode. Do NOT output <think> tags.
-
-CRITICAL JSON FORMATTING RULES:
-1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\\\"`. NEVER put raw literal newlines in JSON strings.
-3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
-4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
-5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
-6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
-7. HIGHLIGHT MARKERS IN JSON: Escape the marker's color quotes inside a JSON string, for example `[[hl color=\\\"#2563EB\\\"]]important phrase[[/hl]]`.
-8. LATEX BACKSLASHES IN JSON: Escape every LaTeX backslash twice in the raw JSON string. Write `<math-field>\\\\frac{a}{b}</math-field>` in JSON; after JSON decoding the XML value must contain `<math-field>\\frac{a}{b}</math-field>`.
-
-Example:
-<tool_call>
-{"name": "search_ddgs_images", "arguments": {"query": "business meeting", "layout": "Wide", "size": "Large"}}
-</tool_call>
-<tool_call>
-{"name": "generate_modern_cover_slide_xml", "arguments": {"title": "BUSINESS PLAN", "image_url": ""}}
-</tool_call>"""
-
-# --- CoT (Chain-of-Thought) variant: enables Qwen3 thinking mode ---
-QWEN_COT_GENERATOR_SYSTEM_PROMPT = """You are an expert slide layout generator with deep reasoning ability.
-
-You MUST follow this two-step process:
-
-STEP 1 — THINK (inside <think> tags):
-Analyze the design instruction and slide content carefully. Then:
-1. Review each available tool and its exact parameters. You MUST pick ONLY from the available tools provided for THIS slide. DO NOT hallucinate tools from previous slides, examples, or memory!
-2. Select the BEST tool from the available tools that matches the content type and design instruction.
-3. Strict Parameter Check: Inspect the chosen tool's schema definition. ONLY output parameters that are EXPLICITLY defined in that tool's schema. If a tool has NO color parameters, DO NOT invent extra parameters even if the design instruction suggests colors!
-4. Content Conciseness & Layout Fit: Slides are a visual presentation medium, NOT a long document. If the raw content contains long paragraphs, you MUST extract, summarize, and condense the text into punchy, high-impact bullet points or short descriptions (15-25 words max per item). DO NOT dump long multi-sentence paragraphs into small card/column slots.
-5. Plan every parameter value — ensure all REQUIRED fields are filled with concise, meaningful extracted content from the slide text.
-6. Strict Bracket Check: When an argument is a list of objects (e.g. points: [...]), ensure you close the list with ']' before continuing to the next key.
-7. Self-check: Are there any None/null/empty values for required fields? Fix them.
-8. Self-check IMAGE PARAMS: Count the EXACT number N of image parameters (e.g. image_url, bg_image_url) present in the chosen tool's schema.
-9. Self-check SEARCH CALLS: You MUST generate EXACTLY N `search_ddgs_images` calls AFTER the slide tool (one per image parameter). For example, if N = 0 output 0 calls, if N = 2 output 2 calls. NEVER output more or fewer search calls than N!
-
-STEP 2 — ACT (output the tool call plan):
-Output an ordered tool call plan inside <tool_call> tags: Output EXACTLY ONE slide HTML tool call FIRST, followed by EXACTLY N `search_ddgs_images` calls corresponding to the N image parameters defined in that slide tool's schema (if N = 0, output ZERO search calls).
-
-CRITICAL RULES:
-- PRESENTATION CONCISENESS & ANTI-OVERFLOW RULES:
-  * Main Titles / Headings: Keep concise and impactful (3-8 words).
-  * Card Titles / Subheadings: Crisp and clear (2-5 words). Never put long sentences in subtitle fields!
-  * Descriptions / Bullet Points: Maximum 1-2 concise sentences (15-25 words).
-  * Smart Extraction: Preserve key facts, but ruthlessly trim filler words. Never copy raw paragraphs verbatim into small slots.
-- COLOR CONTRAST RULE: You MUST ensure high readability. If the background color is dark, text colors MUST be very light (e.g., White, Light Gray). If the background is light, text colors MUST be dark (e.g., Black, Dark Navy). NEVER use dark text on a dark background!
-- EXACT 1-TO-1 IMAGE SEARCH COUNT RULE: The number of `search_ddgs_images` calls MUST MATCH EXACTLY the number of image parameters ($N$) defined in the selected slide tool's schema.
-  * If $N = 0$ (no image parameters in schema), output EXACTLY 0 `search_ddgs_images` calls.
-  * If $N = 1$ (1 image parameter), output EXACTLY 1 `search_ddgs_images` call.
-  * In general, for ANY $N$ image parameters in the slide tool schema, output EXACTLY $N$ `search_ddgs_images` calls (one search call per image parameter, in the order they appear). NEVER output more or fewer search calls than $N$!
-- STRICT SCHEMA PARAMETER RULE: You MUST ONLY use parameters that are explicitly listed in the selected tool's schema definition. ABSOLUTELY DO NOT invent, guess, or add extra parameters if they are NOT present in the target tool's schema!
-- STRICT TOOL SELECTION: You MUST select and output ONLY a tool function name that is EXPLICITLY LISTED in the provided available tools section for this slide. ABSOLUTELY DO NOT invent, guess, or use any tool name outside the provided list!
-- STRICT IMAGE SEARCH PLAN ORDER: The primary Slide HTML tool MUST ALWAYS come FIRST at index 0. `search_ddgs_images` calls MUST ONLY come AFTER the slide HTML tool. NEVER output `search_ddgs_images` alone without the Slide HTML tool!
-- Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
-- Color values MUST be valid hex codes (e.g., "#1E3A5F", NOT "blue" or "dark")
-- List parameters MUST be actual lists (e.g., ["item1", "item2"], NOT a string)
-- String content MUST come from the slide content provided, NOT made up
-- Output language MUST match the language of the slide content
-
-CRITICAL JSON FORMATTING & SYNTAX RULES:
-1. STRICT BRACKET & ARRAY MATCHING: Count brackets precisely. When an argument is a list of objects (like `points: [...]`), ALWAYS close the array with `]` before writing the next parameter key (e.g. `], "bg_color": ...`). Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
-3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
-4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
-5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
-6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
-
-Examples (FORMAT ILLUSTRATION ONLY — DO NOT COPY THESE TOOL NAMES. Select strictly from your provided tools):
-
-Example 1: Slide WITHOUT image parameters (N=0)
-<think>
-The slide content is about company milestones.
-Step 1: Check available tools for THIS slide: [example_tool_alpha, example_tool_beta]
-Step 2: Best match from available tools: example_tool_alpha (matches title and structured points).
-Step 3: Check schema for example_tool_alpha: parameters are [main_title, points, bg_color]. I will NOT add parameters outside this schema.
-Step 4: Format array: close the points array with ] before writing bg_color.
-Self-check: Schema has 0 image parameters, so I MUST generate EXACTLY 0 search_ddgs_images calls ✓.
-</think>
-<tool_call>
-{"name": "example_tool_alpha", "arguments": {"main_title": "Company Milestones", "points": [{"title": "Foundation", "description": "Established core technical infrastructure"}], "bg_color": "#F8FAFC"}}
-</tool_call>
-
-Example 2: Slide WITH 1 image parameter (N=1)
-<think>
-The slide content is about a product launch.
-Step 1: Check available tools for THIS slide: [example_tool_alpha, example_tool_beta]
-Step 2: Best match from available tools: example_tool_beta (matches title and needs a hero image).
-Step 3: Check schema for example_tool_beta: parameters are [title, image_url, bg_color]. I will NOT add parameters outside this schema.
-Step 4: Self-check: All required fields filled ✓. Schema has 1 image parameter (image_url), so I MUST generate EXACTLY 1 search_ddgs_images call after the slide tool ✓.
-</think>
-<tool_call>
-{"name": "example_tool_alpha", "arguments": {"main_title": "Company Milestones & Growth", "points": [{"title": "Foundation", "description": "Established core technical infrastructure"}, {"title": "Expansion", "description": "Expanded market reach to global clients"}], "image_url": "", "bg_color": "#F8FAFC"}}
-</tool_call>
-<tool_call>
-{"name": "search_ddgs_images", "arguments": {"query": "global enterprise network technology abstract", "layout": "Wide", "size": "Large"}}
-</tool_call>"""
-
-QWEN_GENERATOR_HUMAN_TEMPLATE = """{style_context}
-
-[DESIGN]
-{design_instruction}
-
-[CONTENT]
-{slide_content}"""
-
-
-# ================================= SLIDE PREPARER PROMPTS =================================
-
-SLIDE_PREPARER_SYSTEM_PROMPT = """You are a presentation design preparer. Your job is to analyze the content of the current slide, review the styling context of the previous slide, and write a detailed design instruction for the next model to follow.
-Do NOT choose or call any layout tools. Simply write a detailed visual instruction (describing the primary theme color, font scaling, background style, layout suggestion, and concise content structure) that will guide the layout generation model to build a visually consistent, concise, and beautiful slide without text overcrowding."""
-
-SLIDE_PREPARER_HUMAN_TEMPLATE = """---
-[PREVIOUS SLIDE STYLE CONTEXT]
-{previous_style_context}
-
-[CURRENT SLIDE PLAN]
-{slide_plan}
-
-[CURRENT SLIDE CONTENT]
-{slide_content}
----
-
-Based on the information above, write a detailed visual styling instruction (in English, 3-4 bullet points) for the next slide. Describe:
-1. What theme color and background color to use to maintain continuity with the previous slide while preserving the selected layout's readability. Reuse an accent color only when it is compatible with the current tool schema; do not copy a previous background or panel color blindly.
-2. The recommended text layout structure (e.g. key-value cards, bullet list, comparison columns).
-3. Any specific formatting rules (e.g. font sizes and spacing).
-4. What LANGUAGE to generate the slide text in (match the language of the [CURRENT SLIDE CONTENT] above).
-5. Explicitly keep all text, legend, axis, and grid colors readable against their actual background or panel. Never recommend a dark text color on a dark panel or a light text color on a light panel.
-Keep it concise and clear."""

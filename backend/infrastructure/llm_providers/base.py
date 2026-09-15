@@ -4,19 +4,18 @@
 LLM Provider Adapters.
 
 Cung cấp interface thống nhất cho việc gọi LLM từ nhiều nguồn:
-1. LocalPyTorchLLMProvider : Chạy GPU local (model.generate) dùng cho RL Training (train.py)
-2. NvidiaQwenLLMProvider   : Gọi NVIDIA API / vLLM / OpenAI-compatible API
-3. GeminiLLMProvider       : Gọi Google Gemini API qua LangChain
+1. NvidiaQwenLLMProvider   : Gọi NVIDIA API / vLLM / OpenAI-compatible API
+2. GeminiLLMProvider       : Gọi Google Gemini API qua LangChain
 """
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 import json
-import os
 from dataclasses import dataclass
 import httpx
 import logging
 import asyncio
+from backend.config import API_TIMEOUT, REMOTE_API_URL
 
 logger = logging.getLogger(__name__)
 
@@ -56,65 +55,6 @@ class BaseLLMProvider(ABC):
             def __init__(self, text):
                 self.content = text
         return ProviderAIMessage(content)
-
-
-class LocalPyTorchLLMProvider(BaseLLMProvider):
-    """
-    Adapter dành riêng cho RL Training (train.py).
-    Thực thi model.generate() trực tiếp trên PyTorch GPU VRAM local.
-    """
-
-    def __init__(
-        self,
-        model: Any,
-        tokenizer: Any,
-        model_name: str = "Qwen/Qwen3-8B",
-        max_completion_length: int = 2048,
-        gen_lock: Any = None,
-        device: Any = None,
-    ):
-        super().__init__(provider_name="local_pytorch_qwen", model_type="qwen")
-        self.model = model
-        self.tokenizer = tokenizer
-        self.model_name = model_name        # dùng bởi _get_qwen_config() trong slide_generator
-        self.max_completion_length = max_completion_length
-        self.gen_lock = gen_lock            # threading.Lock để thread-safe GPU inference
-        self.device = device or getattr(model, "device", "cuda")
-
-    def generate_completion(
-        self,
-        messages: List[Dict[str, str]],
-        tools: Optional[List[Dict[str, Any]]] = None,
-        max_tokens: int = 2000,
-        temperature: float = 0.0,
-    ) -> str:
-        import torch
-
-        prompt = self.tokenizer.apply_chat_template(
-            messages,
-            tools=tools,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
-        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(self.device)
-
-        # Sử dụng max_completion_length của provider nếu max_tokens không được ghi đè
-        effective_max_new_tokens = min(max_tokens, self.max_completion_length)
-
-        import contextlib
-        lock_ctx = self.gen_lock if self.gen_lock else contextlib.nullcontext()
-        with lock_ctx:
-            with torch.no_grad():
-                out = self.model.generate(
-                    **inputs,
-                    max_new_tokens=effective_max_new_tokens,
-                    temperature=temperature,
-                    do_sample=(temperature > 0.0),
-                    pad_token_id=self.tokenizer.eos_token_id,
-                )
-
-        completion = self.tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-        return completion.strip()
 
 
 class NvidiaQwenLLMProvider(BaseLLMProvider):
@@ -218,24 +158,24 @@ Remote API Client để gọi FastAPI server
 
 @dataclass
 class APIConfig:
-    """Configuration from environment variables."""
- 
-    generate_api_url: str = ""
-    api_timeout: int = 600
- 
+    """Configuration for the optional remote generation provider."""
+
+    generate_api_url: str = REMOTE_API_URL
+    api_timeout: int = API_TIMEOUT
+
     def __post_init__(self):
-        env_url = os.getenv("REMOTE_API_URL") or os.getenv("HOST_NAME", "https://mood-forestry-attending-organizations.trycloudflare.com")
-        env_url = env_url.rstrip("/")
-        if not env_url.endswith("/generate"):
-            self.generate_api_url = env_url + "/generate"
+        configured_url = self.generate_api_url.rstrip("/")
+        if not configured_url.endswith("/generate"):
+            self.generate_api_url = configured_url + "/generate"
         else:
-            self.generate_api_url = env_url
+            self.generate_api_url = configured_url
  
         if self.api_timeout <= 0:
             raise ValueError("API_TIMEOUT must be positive")
  
     @classmethod
     def from_env(cls):
+        """Backward-compatible constructor using backend.config values."""
         return cls()
  
  
