@@ -1,5 +1,5 @@
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:12008/api/v1"
+  import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1"
 ).replace(/\/$/, "");
 
 // Global logout function - will be set by AuthContext
