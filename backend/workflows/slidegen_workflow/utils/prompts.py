@@ -107,12 +107,16 @@ validates and canonicalizes the order, so do not emit multiple slide XML tools.
    - Call 1 maps to the first image parameter.
    - Call 2 maps to the second image parameter.
    - Call N maps to the Nth image parameter.
-4. Apply the IMAGE STRATEGY from the user message:
+4. Apply the IMAGE MODE and IMAGE THEME from the user message:
+   - `none`: use a layout with no image parameters and emit only the slide XML
+     tool call. Do not emit `search_ddgs_images`.
    - `semantic`: derive the query from the concrete subject and the role of
      the image slot. Keep the subject specific and factual.
    - `decorative`: derive a generic conceptual illustration from the slide
      purpose and image slot. Never include a person's name, company/book title,
      literal slide title, or text that should be readable inside the image.
+     Use the supplied IMAGE THEME so different content slides get different
+     purpose-led visuals instead of the same generic query.
      For example, an introduction/profile can use "friendly person waving hello
      illustration".
 5. For each `search_ddgs_images` call fill the arguments:
@@ -231,8 +235,11 @@ DECK STYLE CONTRACT (IMMUTABLE FOR ALL SLIDES):
 SLIDE TOPIC:
 {slide_topic}
 
-IMAGE STRATEGY:
-{image_strategy}
+IMAGE MODE:
+{image_mode}
+
+IMAGE THEME:
+{image_theme}
 
 ASSIGNED LAYOUT:
 {recent_tools}
@@ -301,23 +308,37 @@ You are an expert presentation designer and slide planner. Your task is to analy
    roughly 3-10 words. It should guide relevant imagery and content emphasis,
    but must not override the deck palette.
 
-6. **Choose the Image Strategy** (`image_strategy`):
+6. **Choose the Image Mode** (`image_mode`):
+   - `none`: Choose this when the slide is complete with text, shapes, or a
+     chart and an image would add noise or an arbitrary search result. Charts
+     normally use `none` unless the slide explicitly needs a visual subject.
    - `semantic`: Use only when the slide contains a concrete, searchable
      subject such as a place, object, process, event, scientific concept, or
      clearly described scene. Search that subject directly.
-   - `decorative`: Use when the image is supporting mood or composition rather
+   - `decorative`: Use when an image is supporting mood or composition rather
      than evidence. Do not search a person's name, book title, company name,
      literal slide title, or text that may appear inside an image. Search a
      generic conceptual illustration based on the slide purpose instead.
    - For introductions, names, bios, greetings, and section dividers, prefer
-     `decorative` unless the source explicitly asks for a specific known image.
+     `none` or `decorative` unless the source explicitly asks for a specific
+     known image.
+
+7. **Choose the Image Theme** (`image_theme`): Return a short lower-case English
+   visual motif of 2-5 words that is safe to search. For `semantic`, name the concrete
+   subject. For `decorative`, name the concept or human activity the image
+   should communicate, not the literal slide heading. Examples: `workflow
+   collaboration`, `customer support conversation`, `abstract growth trend`.
+   Never return a person's name, book title, company name, or text to render in
+   the image.
 
 **OUTPUT REQUIREMENT:**
-- Populate only the structured fields `slide_topic`, `thought`, `image_strategy`,
-  and `action`.
+- Populate only the structured fields `slide_topic`, `thought`, `image_mode`,
+  `image_theme`, and `action`.
 - Do not add explanations, markdown, or fields outside the schema. The caller
   validates the structured response; do not serialize the object manually.
-- The 'image_strategy' field must be either 'semantic' or 'decorative'.
+- The 'image_mode' field must be one of 'none', 'semantic', or 'decorative'.
+- The 'image_theme' field must be a short safe English visual motif, not a
+  literal name or title.
 - The 'action' field must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS',
   'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
 """

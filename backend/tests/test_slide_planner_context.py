@@ -1,4 +1,5 @@
 from backend.workflows.slidegen_workflow.nodes.slide_planner import (
+    _normalize_image_mode,
     _normalize_image_strategy,
     _normalize_plan_action,
     build_compact_slide_outline,
@@ -30,6 +31,9 @@ def test_planner_action_is_normalized_to_document_markers():
 
 
 def test_identity_slides_use_decorative_image_strategy():
+    assert _normalize_image_mode({"image_mode": "none"}) == "none"
+    assert _normalize_image_mode({"image_strategy": "semantic"}) == "semantic"
+
     assert _normalize_image_strategy(
         {"action": "TEAM_TOOLS", "image_strategy": "semantic"},
         {"heading": "Team"},
@@ -39,14 +43,17 @@ def test_identity_slides_use_decorative_image_strategy():
     query = _build_decorative_image_query(
         {"description": "portrait image"},
         "TEAM_TOOLS",
+        "team brainstorming",
     )
     assert "John Smith" not in query
     assert "team" in query
     assert "illustration" in query
+    assert "brainstorming" in query
 
     generic_query = _build_decorative_image_query(
         {"description": "supporting illustration"},
         "CONTENT_TOOLS",
+        "workflow collaboration",
     )
     assert "John Smith" not in generic_query
-    assert generic_query == "conceptual editorial illustration presentation"
+    assert generic_query == "workflow collaboration conceptual illustration"

@@ -32,13 +32,30 @@ class SlidePlan(BaseModel):
             "deck style contract; do not invent a separate palette or typography."
         )
     )
+    image_mode: Literal["none", "semantic", "decorative"] = Field(
+        default="decorative",
+        description=(
+            "Choose none when the slide is complete without an image. Choose "
+            "semantic when an image is a concrete subject to search directly. "
+            "Choose decorative when an image only supports mood or composition; "
+            "never search a person's name, book title, or literal slide title."
+        ),
+    )
     image_strategy: Literal["semantic", "decorative"] = Field(
         default="decorative",
         description=(
-            "Choose semantic when the slide contains a concrete subject that "
-            "should be searched directly. Choose decorative when the image is "
-            "only a supporting illustration; never search a person's name, "
-            "book title, or literal slide title for decorative imagery."
+            "Legacy compatibility field. Keep aligned with image_mode when the "
+            "mode is semantic or decorative; use decorative for none."
+        ),
+    )
+    image_theme: str = Field(
+        default="",
+        description=(
+            "A short lower-case English visual motif for image search. For semantic "
+            "imagery use the concrete subject; for decorative imagery use a "
+            "safe conceptual motif such as 'workflow collaboration' or "
+            "'customer support conversation'. Never use a person's name, "
+            "book title, company name, or literal slide heading."
         ),
     )
     action: ToolCategory = Field(

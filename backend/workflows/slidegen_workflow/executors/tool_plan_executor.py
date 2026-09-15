@@ -124,6 +124,49 @@ def get_image_targets_in_order(tool, arguments: dict) -> list[dict]:
     return targets
 
 
+def tool_has_image_slots(tool) -> bool:
+    """Detect image fields from a tool schema, including nested list objects."""
+    try:
+        schema = tool.args_schema.model_json_schema()
+    except Exception:
+        return False
+
+    def contains_image_field(node: Any) -> bool:
+        if not isinstance(node, dict):
+            return False
+
+        properties = node.get("properties")
+        if isinstance(properties, dict):
+            if any(_is_image_param_name(name) for name in properties):
+                return True
+            if any(contains_image_field(child) for child in properties.values()):
+                return True
+
+        items = node.get("items")
+        if contains_image_field(items):
+            return True
+
+        for key in ("$defs", "definitions", "anyOf", "oneOf", "allOf"):
+            value = node.get(key)
+            if isinstance(value, dict):
+                if any(contains_image_field(child) for child in value.values()):
+                    return True
+            elif isinstance(value, list):
+                if any(contains_image_field(child) for child in value):
+                    return True
+        return False
+
+    return contains_image_field(schema)
+
+
+def tool_matches_image_mode(tool, image_mode: str) -> bool:
+    """Match a layout to the planner's none/semantic/decorative decision."""
+    if image_mode not in {"none", "semantic", "decorative"}:
+        return True
+    has_images = tool_has_image_slots(tool)
+    return not has_images if image_mode == "none" else has_images
+
+
 def _infer_layout(description: str) -> str:
     normalized = (description or "").lower()
     if any(token in normalized for token in ("portrait", "tall", "vertical")):

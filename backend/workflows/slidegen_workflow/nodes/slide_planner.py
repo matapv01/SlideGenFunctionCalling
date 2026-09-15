@@ -74,6 +74,7 @@ VALID_SLIDE_ACTIONS = {
     "THANK_YOU_TOOLS",
     "CHART_TOOLS",
 }
+VALID_IMAGE_MODES = {"none", "semantic", "decorative"}
 VALID_IMAGE_STRATEGIES = {"semantic", "decorative"}
 
 
@@ -150,6 +151,23 @@ def _normalize_image_strategy(plan: Dict, content, index: int) -> str:
     if strategy not in VALID_IMAGE_STRATEGIES:
         return "decorative"
     return strategy
+
+
+def _normalize_image_mode(plan: Dict) -> str:
+    """Normalize the planner's image policy with legacy strategy support."""
+    mode = str(plan.get("image_mode") or "").lower()
+    if mode in VALID_IMAGE_MODES:
+        return mode
+    legacy = str(plan.get("image_strategy") or "").lower()
+    if legacy in VALID_IMAGE_STRATEGIES:
+        return legacy
+    return "decorative"
+
+
+def _normalize_image_theme(plan: Dict) -> str:
+    """Keep the planner's safe visual motif compact for downstream queries."""
+    theme = " ".join(str(plan.get("image_theme") or "").split())
+    return theme[:160]
 
 
 def planning_slide(state: State, config: RunnableConfig) -> State:
@@ -310,6 +328,13 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
                     slide_chunks[global_idx],
                     global_idx,
                 )
+                plan_dict["image_mode"] = _normalize_image_mode(plan_dict)
+                plan_dict["image_strategy"] = (
+                    plan_dict["image_mode"]
+                    if plan_dict["image_mode"] in VALID_IMAGE_STRATEGIES
+                    else "decorative"
+                )
+                plan_dict["image_theme"] = _normalize_image_theme(plan_dict)
 
                 normalized_action = _normalize_plan_action(
                     plan_dict,
@@ -352,6 +377,8 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
                     "slide_topic": _fallback_slide_topic(content, index),
                     "thought": "Use a readable layout with concise editable text.",
                     "image_strategy": _normalize_image_strategy({}, content, index),
+                    "image_mode": "decorative",
+                    "image_theme": "",
                     "action": _normalize_plan_action({}, content, index),
                 }
             )

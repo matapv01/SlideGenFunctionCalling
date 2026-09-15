@@ -11,6 +11,9 @@ from langgraph.constants import Send
 
 from backend.config import TOOL_RETRIEVER_TOP_K
 from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    tool_matches_image_mode,
+)
 from backend.workflows.slidegen_workflow.utils.section_batches import (
     build_section_batches,
     group_slide_jobs,
@@ -46,25 +49,49 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
         plan = job.get("plan") or {}
         category = plan.get("action", "CONTENT_TOOLS")
         category_tools = list(tools_dict.get(category, []))
+        image_mode = str(plan.get("image_mode") or "").lower()
+        if image_mode not in {"none", "semantic", "decorative"}:
+            image_mode = ""
+        compatible_tools = (
+            [tool for tool in category_tools if tool_matches_image_mode(tool, image_mode)]
+            if image_mode
+            else category_tools
+        )
+        if (
+            image_mode in {"semantic", "decorative"}
+            and category_tools
+            and not compatible_tools
+            and all(not tool_matches_image_mode(tool, "semantic") for tool in category_tools)
+        ):
+            # Some categories, notably charts, are intentionally text/vector
+            # only. Do not force the generator to invent an image layout.
+            image_mode = "none"
+            plan["image_mode"] = image_mode
+            plan["image_strategy"] = "decorative"
+            compatible_tools = category_tools
         candidates = []
-        if tool_retriever and category_tools:
+        if tool_retriever and compatible_tools:
             try:
                 candidates = list(
                     tool_retriever.get_relevant_tools(
                         category=category,
                         query=plan.get("slide_topic") or plan.get("thought", ""),
-                        top_k=TOOL_RETRIEVER_TOP_K,
+                        top_k=max(TOOL_RETRIEVER_TOP_K, len(category_tools)),
                         current_slide_index=int(job.get("index", 0)),
                     ) or []
                 )
+                candidates = [
+                    tool for tool in candidates
+                    if tool.name in {candidate.name for candidate in compatible_tools}
+                ]
             except Exception as exc:
                 print(f"Warning: layout pre-assignment retrieval failed: {exc}")
 
         # Keep semantic retrieval order, then append every category fallback so
         # local duplicate retries always have another layout available.
         ordered_names = []
-        known_names = {tool.name for tool in category_tools}
-        for tool in [*candidates, *category_tools]:
+        known_names = {tool.name for tool in compatible_tools}
+        for tool in [*candidates, *compatible_tools]:
             name = getattr(tool, "name", None)
             if name and name in known_names and name not in ordered_names:
                 ordered_names.append(name)
@@ -93,11 +120,13 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
             usage[chosen] += 1
             last_global_tool = chosen
             last_tool_by_section[section_id] = chosen
+        job["plan"] = plan
         assignments.append(
             {
                 "index": job.get("index"),
                 "section_id": section_id,
                 "category": category,
+                "image_mode": image_mode or "any",
                 "preferred_tool": chosen,
             }
         )

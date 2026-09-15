@@ -202,7 +202,8 @@ class SearchDDGSImagesInput(BaseModel):
         ...,
         min_length=1,
         description=(
-            "A concise English image query following the slide's image strategy. "
+            "A concise English image query following the slide's image strategy "
+            "and image theme. "
             "For semantic imagery, describe the concrete subject and the role "
             "of this exact image slot. For decorative imagery, describe a generic "
             "conceptual illustration and never search a person's name, company, "

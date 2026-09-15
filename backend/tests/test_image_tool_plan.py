@@ -8,6 +8,8 @@ from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
     ToolPlanError,
     execute_image_search_plan,
     get_image_targets_in_order,
+    tool_has_image_slots,
+    tool_matches_image_mode,
 )
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import (
     _parse_target_dimensions,
@@ -39,6 +41,14 @@ class NoImageSlideInput(BaseModel):
 class FakeTool:
     def __init__(self, schema):
         self.args_schema = schema
+
+
+def test_image_mode_matches_layout_schema():
+    assert tool_has_image_slots(FakeTool(TwoImageSlideInput))
+    assert not tool_has_image_slots(FakeTool(NoImageSlideInput))
+    assert tool_matches_image_mode(FakeTool(NoImageSlideInput), "none")
+    assert not tool_matches_image_mode(FakeTool(TwoImageSlideInput), "none")
+    assert tool_matches_image_mode(FakeTool(TwoImageSlideInput), "decorative")
 
 
 def test_parse_repeated_qwen_tool_calls_preserves_order():
