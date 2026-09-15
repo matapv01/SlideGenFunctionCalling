@@ -3,6 +3,7 @@ from backend.workflows.slidegen_workflow.nodes.slide_planner import (
     _normalize_image_strategy,
     _normalize_plan_action,
     build_compact_slide_outline,
+    normalize_image_sequence,
 )
 from backend.workflows.slidegen_workflow.nodes.slide_generator import (
     _build_decorative_image_query,
@@ -57,3 +58,30 @@ def test_identity_slides_use_decorative_image_strategy():
     )
     assert "John Smith" not in generic_query
     assert generic_query == "workflow collaboration conceptual illustration"
+
+
+def test_content_image_policy_defaults_to_none_and_spaces_decorative_images():
+    assert _normalize_image_mode({"action": "CONTENT_TOOLS"}) == "none"
+    assert _normalize_image_mode({"action": "INTRO_TOOLS"}) == "decorative"
+
+    plans = [
+        {
+            "action": "CONTENT_TOOLS",
+            "image_mode": "semantic",
+            "image_theme": "factory robotics",
+        },
+        {
+            "action": "CONTENT_TOOLS",
+            "image_mode": "decorative",
+            "image_theme": "workflow collaboration",
+        },
+        {
+            "action": "CONTENT_TOOLS",
+            "image_mode": "decorative",
+            "image_theme": "customer support",
+        },
+    ]
+
+    normalize_image_sequence(plans)
+
+    assert [plan["image_mode"] for plan in plans] == ["semantic", "none", "decorative"]

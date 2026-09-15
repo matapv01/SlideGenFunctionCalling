@@ -5,7 +5,7 @@ import json
 from xml.sax.saxutils import escape
 
 from typing import List, Dict, Optional, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from langchain_core.tools import StructuredTool
 
 from backend.workflows.slidegen_workflow.utils.rich_text import (
@@ -306,15 +306,19 @@ class GenerateTwoIdeasSlideInput(BaseModel):
     )
     idea_titles: List[str] = Field(
         ...,
-        description="List of idea headings. Must have the same length as idea_descriptions. example: ['Venus', 'Mercury']",
+        min_length=2,
+        max_length=2,
+        description="Exactly two idea headings. example: ['Venus', 'Mercury']",
     )
     idea_descriptions: List[str] = Field(
         ...,
-        description="List of supporting descriptions for each idea title. example: ['Venus is the second planet from the Sun.', 'Mercury is the closest planet to the Sun.']",
+        min_length=2,
+        max_length=2,
+        description="Exactly two supporting descriptions, one for each idea title. example: ['Venus is the second planet from the Sun.', 'Mercury is the closest planet to the Sun.']",
     )
     image_url: str = Field(
-        default="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=85&w=1200&auto=format&fit=crop",
-        description="URL for a portrait image sized 520 × 900 px with an approximately 0.58:1 aspect ratio.",
+        default="",
+        description="Image URL for the required portrait panel. Leave empty so the image search step can populate it.",
     )
     background_color: str = Field(
         default="#1A1A1A",
@@ -341,10 +345,14 @@ class GenerateThreeIdeasSlideInput(BaseModel):
     )
     idea_titles: List[str] = Field(
         ... ,
+        min_length=3,
+        max_length=3,
         description="List of idea headings. Must have the same length as idea_descriptions. example: ['Mercury', 'Mars', 'Venus']",
     )
     idea_descriptions: List[str] = Field(
         ...,
+        min_length=3,
+        max_length=3,
         description="List of supporting descriptions for each idea title. example: ['Mercury is the closest planet to the Sun.', 'Mars is known as the Red Planet.', 'Venus has a thick, toxic atmosphere.']",
     )
     image_url: str = Field(
@@ -372,9 +380,22 @@ class GenerateOurHistorySlideInput(BaseModel):
     """Input schema for generate_our_history_slide_xml."""
 
     title: str = Field(..., description="Main slide title displayed at the top of the content area. example: 'OUR HISTORY'")
-    event_titles: List[str] = Field(..., description="List of event headings displayed in vertically stacked history sections. Must have the same length as event_descriptions and event_years. example: ['SATURN', 'MARS', 'NEPTUNE']")
-    event_descriptions: List[str] = Field(..., description="List of supporting descriptions for each history event. Must have the same length as event_titles and event_years. example: ['Saturn is composed of hydrogen and helium.', 'Despite being red, Mars is actually a cold place.', 'Neptune is the farthest planet from the Sun.']")
-    event_years: List[str] = Field(..., description="List of year or timeline labels displayed beside each history event. Must have the same length as event_titles and event_descriptions. example: ['1998', '2005', '2024']")
+    event_titles: List[str] = Field(..., min_length=1, description="List of event headings displayed in vertically stacked history sections. Must have the same length as event_descriptions and event_years. example: ['SATURN', 'MARS', 'NEPTUNE']")
+    event_descriptions: List[str] = Field(..., min_length=1, description="List of supporting descriptions for each history event. Must have the same length as event_titles and event_years. example: ['Saturn is composed of hydrogen and helium.', 'Despite being red, Mars is actually a cold place.', 'Neptune is the farthest planet from the Sun.']")
+    event_years: List[str] = Field(..., min_length=1, description="List of year or timeline labels displayed beside each history event. Must have the same length as event_titles and event_descriptions. example: ['1998', '2005', '2024']")
+
+    @model_validator(mode="after")
+    def validate_event_lengths(self):
+        lengths = {
+            len(self.event_titles),
+            len(self.event_descriptions),
+            len(self.event_years),
+        }
+        if len(lengths) != 1:
+            raise ValueError(
+                "event_titles, event_descriptions, and event_years must have matching lengths"
+            )
+        return self
     image_url: str = Field(default="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=85&w=1200&auto=format&fit=crop", description="URL for a portrait image sized 445 × 900 px with an approximately 1:2 aspect ratio.")    
     background_color: str = Field(default="#151515", description="Background color of the slide.")
     title_color: str = Field(default="#FFFFFF", description="Color of the main title text.")
@@ -405,8 +426,8 @@ class GenerateSplitContentSlideInput(BaseModel):
     """Input schema for generate_split_content_slide_xml."""
 
     title: str = Field(..., description="Main slide title displayed at the top-left of the dark diagonal content panel. example: 'YOU CAN ALSO SPLIT YOUR CONTENT'")
-    column_titles: List[str] = Field(..., description="List of column headings displayed below the main title. Must have the same length as column_descriptions. example: ['White', 'Black']")
-    column_descriptions: List[str] = Field(..., description="List of supporting descriptions for each column heading. Must have the same length as column_titles. example: ['White is the color of milk and fresh snow.', 'Black is the color of ebony and outer space.']")
+    column_titles: List[str] = Field(..., min_length=2, max_length=2, description="Exactly two column headings displayed below the main title. example: ['White', 'Black']")
+    column_descriptions: List[str] = Field(..., min_length=2, max_length=2, description="Exactly two supporting descriptions, one for each column heading. example: ['White is the color of milk and fresh snow.', 'Black is the color of ebony and outer space.']")
     image_url: str = Field(default="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=85&w=1600&auto=format&fit=crop", description="URL for a full-slide landscape image rendered at 1600 × 900 px with a 16:9 aspect ratio. The image covers the entire slide, while a dark diagonal panel overlays most of the left side. Use a wide, high-resolution image with the main subject positioned toward the right side so it remains visible and is not obscured by the content panel.")    
     background_color: str = Field(default="#F3F4F7", description="Background color of the slide.")
     dark_panel_color: str = Field(default="#34343B", description="Color of the dark diagonal content panel covering the left side.")

@@ -8318,27 +8318,9 @@ def generate_ai_content_slide_xml(
 
 def generate_two_ideas_slide_xml(
     title: str = "TWO IDEAS",
-    idea_titles: list[str] = [
-        "VENUS",
-        "MERCURY",
-    ],
-    idea_descriptions: list[str] = [
-        (
-            "Venus has a beautiful name and is the second planet "
-            "from the Sun. It’s hot and is the second-brightest "
-            "natural object in the night sky."
-        ),
-        (
-            "Mercury is the closest planet to the Sun and the "
-            "smallest one in the Solar System. This planet’s name "
-            "has nothing to do with the liquid metal."
-        ),
-    ],
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1529139574466-a303027c1d8b"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
+    idea_titles: list[str] | None = None,
+    idea_descriptions: list[str] | None = None,
+    image_url: str = "",
     background_color: str = "#1A1A1A",
     title_color: str = "#FFFFFF",
     heading_color: str = "#FFFFFF",
@@ -8351,6 +8333,28 @@ def generate_two_ideas_slide_xml(
     content area on the right containing a main title and vertically
     stacked idea sections with headings and descriptions.
     """
+
+    if idea_titles is None:
+        idea_titles = ["VENUS", "MERCURY"]
+    if idea_descriptions is None:
+        idea_descriptions = [
+            (
+                "Venus has a beautiful name and is the second planet "
+                "from the Sun. It’s hot and is the second-brightest "
+                "natural object in the night sky."
+            ),
+            (
+                "Mercury is the closest planet to the Sun and the "
+                "smallest one in the Solar System. This planet’s name "
+                "has nothing to do with the liquid metal."
+            ),
+        ]
+
+    if len(idea_titles) != 2 or len(idea_descriptions) != 2:
+        raise ValueError(
+            "generate_two_ideas_slide_xml requires exactly two idea titles "
+            "and two idea descriptions."
+        )
 
     canvas_width = 1600
     canvas_height = 900
@@ -9000,25 +9004,8 @@ def generate_two_ideas_slide_xml(
 
 def generate_three_ideas_slide_xml(
     title: str = "THREE IDEAS",
-    idea_titles: list[str] = [
-        "MERCURY",
-        "MARS",
-        "VENUS",
-    ],
-    idea_descriptions: list[str] = [
-        (
-            "Mercury is the closest planet to the Sun and the Mercury is the closest planet to the Sun and the "
-            "smallest one in the Solar System."
-        ),
-        (
-            "Despite being red, Mars is actually a cold place. "
-            "It’s full of iron oxide dust."
-        ),
-        (
-            "Venus has a beautiful name and is the second "
-            "planet from the Sun."
-        ),
-    ],
+    idea_titles: list[str] | None = None,
+    idea_descriptions: list[str] | None = None,
     image_url: str = (
         "https://images.unsplash.com/"
         "photo-1594035910387-fea47794261f"
@@ -9038,6 +9025,30 @@ def generate_three_ideas_slide_xml(
     sections. Each section includes a heading and a centered
     description below it.
     """
+
+    if idea_titles is None:
+        idea_titles = ["MERCURY", "MARS", "VENUS"]
+    if idea_descriptions is None:
+        idea_descriptions = [
+            (
+                "Mercury is the closest planet to the Sun and the "
+                "smallest one in the Solar System."
+            ),
+            (
+                "Despite being red, Mars is actually a cold place. "
+                "It’s full of iron oxide dust."
+            ),
+            (
+                "Venus has a beautiful name and is the second "
+                "planet from the Sun."
+            ),
+        ]
+
+    if len(idea_titles) != 3 or len(idea_descriptions) != 3:
+        raise ValueError(
+            "generate_three_ideas_slide_xml requires exactly three idea "
+            "titles and three idea descriptions."
+        )
 
 
     # =====================================================
@@ -9684,24 +9695,9 @@ def generate_three_ideas_slide_xml(
 
 def generate_our_history_slide_xml(
     title: str = "OUR HISTORY",
-    event_titles: list[str] = [
-        "SATURN",
-        "MARS",
-        "NEPTUNE",
-    ],
-    event_descriptions: list[str] = [
-        "Saturn is composed of hydrogen and helium.",
-        "Despite being red, Mars is actually a cold place.",
-        "Neptune is the farthest planet from the Sun.",
-        "Neptune is the farthest planet from the Sun.",
-
-    ],
-    event_years: list[str] = [
-        "XX",
-        "XX",
-        "XX",
-        "XX"
-    ],
+    event_titles: list[str] | None = None,
+    event_descriptions: list[str] | None = None,
+    event_years: list[str] | None = None,
     image_url: str = (
         "https://images.unsplash.com/"
         "photo-1495474472287-4d71bcdd2085"
@@ -9723,6 +9719,27 @@ def generate_our_history_slide_xml(
     sections. Each section includes a heading, a description,
     a year marker, and a thin vertical separator line.
     """
+
+    if event_titles is None:
+        event_titles = ["SATURN", "MARS", "NEPTUNE"]
+    if event_descriptions is None:
+        event_descriptions = [
+            "Saturn is composed of hydrogen and helium.",
+            "Despite being red, Mars is actually a cold place.",
+            "Neptune is the farthest planet from the Sun.",
+        ]
+    if event_years is None:
+        event_years = ["XX", "XX", "XX"]
+
+    if not event_titles or not (
+        len(event_titles)
+        == len(event_descriptions)
+        == len(event_years)
+    ):
+        raise ValueError(
+            "generate_our_history_slide_xml requires non-empty event_titles, "
+            "event_descriptions, and event_years with matching lengths."
+        )
 
 
     canvas_width = 1600
@@ -11288,22 +11305,8 @@ def generate_instructions_slide_xml(
 
 def generate_split_content_slide_xml(
     title: str = "YOU CAN ALSO SPLIT YOUR CONTENT  YOUR CONTENT  YOUR CONTENT",
-    column_titles: list[str] = [
-        "White",
-        "Black",
-    ],
-    column_descriptions: list[str] = [
-        (
-            "Is the color of milk and fresh snow, the color "
-            "produced by the combination of all the colors "
-            "of the visible spectrum."
-        ),
-        (
-            "Is the color of ebony and of outer space. It has "
-            "been the symbolic color of elegance, solemnity "
-            "and authority."
-        ),
-    ],
+    column_titles: list[str] | None = None,
+    column_descriptions: list[str] | None = None,
     image_url: str = (
         "https://images.unsplash.com/"
         "photo-1497366754035-f200968a6e72"
@@ -11325,27 +11328,31 @@ def generate_split_content_slide_xml(
     the diagonal edge.
     """
 
-    raw_column_titles = column_titles if isinstance(column_titles, (list, tuple)) else [column_titles]
-    raw_column_descriptions = (
-        column_descriptions
-        if isinstance(column_descriptions, (list, tuple))
-        else [column_descriptions]
-    )
-    column_titles = [str(value or "").strip() for value in raw_column_titles[:2]]
+    if column_titles is None:
+        column_titles = ["White", "Black"]
+    if column_descriptions is None:
+        column_descriptions = [
+            (
+                "Is the color of milk and fresh snow, the color "
+                "produced by the combination of all the colors "
+                "of the visible spectrum."
+            ),
+            (
+                "Is the color of ebony and of outer space. It has "
+                "been the symbolic color of elegance, solemnity "
+                "and authority."
+            ),
+        ]
+
+    if len(column_titles) != 2 or len(column_descriptions) != 2:
+        raise ValueError(
+            "generate_split_content_slide_xml requires exactly two column "
+            "titles and two column descriptions."
+        )
+
+    column_titles = [str(value or "").strip() for value in column_titles]
     column_descriptions = [
         str(value or "").strip()
-        for value in raw_column_descriptions[:2]
-    ]
-    while len(column_titles) < 2:
-        column_titles.append("")
-    while len(column_descriptions) < 2:
-        column_descriptions.append("")
-    column_titles = [
-        value
-        for index, value in enumerate(column_titles)
-    ]
-    column_descriptions = [
-        value
         for value in column_descriptions
     ]
 

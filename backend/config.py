@@ -118,6 +118,8 @@ ENABLE_SECTION_PARALLELISM = ENABLE_SLIDE_PARALLELISM
 # Allow up to five independent slide workers while keeping an explicit cap
 # around the local Qwen endpoint.
 SLIDE_MAX_CONCURRENCY = 5
+# Match the configured planner batch concurrency.
+PLANNER_MAX_CONCURRENCY = 5
 # Backward-compatible alias for integrations that still import the old name.
 SECTION_MAX_CONCURRENCY = SLIDE_MAX_CONCURRENCY
 SECTION_FALLBACK_BATCH_SIZE = 3

@@ -161,13 +161,230 @@ def _normalize_image_mode(plan: Dict) -> str:
     legacy = str(plan.get("image_strategy") or "").lower()
     if legacy in VALID_IMAGE_STRATEGIES:
         return legacy
-    return "decorative"
+    action = str(plan.get("action") or "CONTENT_TOOLS").upper()
+    if action in {
+        "INTRO_TOOLS",
+        "TRANSITION_TOOLS",
+        "TEAM_TOOLS",
+        "THANK_YOU_TOOLS",
+    }:
+        return "decorative"
+    return "none"
 
 
 def _normalize_image_theme(plan: Dict) -> str:
     """Keep the planner's safe visual motif compact for downstream queries."""
     theme = " ".join(str(plan.get("image_theme") or "").split())
     return theme[:160]
+
+
+def normalize_planner_result(plan, content, index: int) -> Dict:
+    """Convert one structured planner response into the canonical plan shape."""
+    if hasattr(plan, "model_dump"):
+        plan_dict = plan.model_dump()
+    elif hasattr(plan, "dict"):
+        plan_dict = plan.dict()
+    else:
+        plan_dict = dict(plan or {})
+
+    plan_dict["slide_topic"] = str(
+        plan_dict.get("slide_topic") or _fallback_slide_topic(content, index)
+    ).strip()[:160]
+    normalized_action = _normalize_plan_action(plan_dict, content, index)
+    if normalized_action != plan_dict.get("action"):
+        print(
+            f"  -> Normalized slide {index + 1} action "
+            f"from '{plan_dict.get('action')}' to '{normalized_action}'"
+        )
+        plan_dict["action"] = normalized_action
+    plan_dict["image_strategy"] = _normalize_image_strategy(
+        plan_dict,
+        content,
+        index,
+    )
+    plan_dict["image_mode"] = _normalize_image_mode(plan_dict)
+    plan_dict["image_strategy"] = (
+        plan_dict["image_mode"]
+        if plan_dict["image_mode"] in VALID_IMAGE_STRATEGIES
+        else "decorative"
+    )
+    plan_dict["image_theme"] = _normalize_image_theme(plan_dict)
+    return plan_dict
+
+
+def fallback_slide_plan(content, index: int) -> Dict:
+    """Return the safe plan used when one planner request cannot be completed."""
+    return {
+        "slide_topic": _fallback_slide_topic(content, index),
+        "thought": "Use a readable layout with concise editable text.",
+        "image_strategy": _normalize_image_strategy({}, content, index),
+        "image_mode": "none",
+        "image_theme": "",
+        "action": _normalize_plan_action({}, content, index),
+    }
+
+
+def normalize_image_sequence(plans: List[Dict]) -> List[Dict]:
+    """Apply conservative image spacing after independent planner responses.
+
+    Planner calls are independent, so they can all choose decorative imagery
+    even when a text-heavy deck would be clearer with visual breathing room.
+    Keep intentional structural/team imagery, but suppress repeated decorative
+    images on ordinary content slides.
+    """
+    previous_plan = None
+    for plan in plans:
+        action = str(plan.get("action") or "CONTENT_TOOLS").upper()
+        mode = str(plan.get("image_mode") or "none").lower()
+        theme = _normalize_image_theme(plan)
+        plan["image_theme"] = theme
+
+        if action == "CHART_TOOLS":
+            mode = "none"
+        elif action == "CONTENT_TOOLS" and mode == "decorative":
+            previous_mode = str((previous_plan or {}).get("image_mode") or "none").lower()
+            previous_action = str((previous_plan or {}).get("action") or "").upper()
+            if not theme or (
+                previous_mode in {"semantic", "decorative"}
+                and previous_action == "CONTENT_TOOLS"
+            ):
+                mode = "none"
+
+        if mode not in VALID_IMAGE_MODES:
+            mode = "none"
+        plan["image_mode"] = mode
+        plan["image_strategy"] = (
+            mode if mode in VALID_IMAGE_STRATEGIES else "decorative"
+        )
+        if mode == "none":
+            plan["image_theme"] = ""
+        previous_plan = plan
+    return plans
+
+
+def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
+    """Prepare shared planner inputs once for both batch and pipeline modes."""
+    configurable = config.get("configurable", {}) if config else {}
+    llm = configurable.get("planner_llm") or configurable.get("llm")
+    if not llm:
+        raise ValueError("LLM instance not found in config.")
+
+    stream_callback = configurable.get("stream_callback")
+    if stream_callback:
+        stream_callback(
+            "status",
+            {
+                "step": 3,
+                "title": "Prepare Content",
+                "description": "Planning slide design...",
+                "message": "Analyzing content to design slides",
+            },
+        )
+
+    slide_chunks = list(state.get("slide_chunks") or [])
+    slide_context_maps = list(state.get("slide_context_maps") or [])
+    slide_positions = list(state.get("slide_positions") or [])
+    section_ids = list(state.get("section_ids") or [])
+    deck_style_plan = state.get("deck_style_plan", {})
+
+    if not slide_chunks:
+        print("WARNING: No slide chunks found. Skipping planning.")
+        state["slide_plans"] = []
+        return {
+            "slide_chunks": [],
+            "slide_context_maps": [],
+            "slide_positions": slide_positions,
+            "section_ids": section_ids,
+            "all_inputs": [],
+            "planner_chain": None,
+            "stream_callback": stream_callback,
+        }
+
+    has_intro = any(
+        isinstance(chunk, dict)
+        and chunk.get("heading") == "INTRO"
+        and chunk.get("position") == 0
+        for chunk in slide_chunks
+    )
+    if not has_intro:
+        print("ℹ️  No INTRO slide in chunks (expected for manual mode without explicit intro)")
+
+    thank_you_positions = [
+        index
+        for index, chunk in enumerate(slide_chunks)
+        if isinstance(chunk, dict)
+        and (chunk.get("position") == -2 or chunk.get("heading") == "THANK_YOU")
+    ]
+    if len(thank_you_positions) > 1:
+        print(
+            f"⚠️  Found {len(thank_you_positions)} thank you slides at positions: "
+            f"{thank_you_positions}"
+        )
+        for position in reversed(thank_you_positions[:-1]):
+            print(f"   Removing duplicate thank you slide at index {position}")
+            slide_chunks.pop(position)
+            if position < len(slide_context_maps):
+                slide_context_maps.pop(position)
+            if position < len(slide_positions):
+                slide_positions.pop(position)
+            if position < len(section_ids):
+                section_ids.pop(position)
+        print("✅ Kept only the last thank you slide")
+
+    if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
+        print(
+            f"⚠️  Context maps mismatch (maps: {len(slide_context_maps)}, "
+            f"chunks: {len(slide_chunks)}). Regenerating..."
+        )
+        slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode="detect")
+        state["slide_plans"] = []
+
+    if len(slide_chunks) != len(slide_context_maps):
+        print("❌ CRITICAL: Array mismatch detected during batch processing!")
+        slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode="detect")
+
+    state["slide_chunks"] = slide_chunks
+    state["slide_context_maps"] = slide_context_maps
+    state["slide_positions"] = slide_positions
+    state["section_ids"] = section_ids
+
+    full_outline = build_compact_slide_outline(slide_chunks, slide_context_maps)
+    all_inputs = []
+    for index, content in enumerate(slide_chunks):
+        context_map = (
+            slide_context_maps[index]
+            if index < len(slide_context_maps)
+            else f"[Slide {index + 1}] Content Slide"
+        )
+        all_inputs.append(
+            {
+                "slide_number": index + 1,
+                "slide_context_map": context_map,
+                "full_outline": full_outline,
+                "slide_content": content,
+                "deck_style_plan": json.dumps(
+                    deck_style_plan,
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+            }
+        )
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
+            ("human", SLIDE_PLANNER_HUMAN_PROMPT),
+        ]
+    )
+    return {
+        "slide_chunks": slide_chunks,
+        "slide_context_maps": slide_context_maps,
+        "slide_positions": slide_positions,
+        "section_ids": section_ids,
+        "all_inputs": all_inputs,
+        "planner_chain": prompt | llm.with_structured_output(SlidePlan),
+        "stream_callback": stream_callback,
+    }
 
 
 def planning_slide(state: State, config: RunnableConfig) -> State:
@@ -178,116 +395,15 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     print("\n---------------- Executing Node: slide_planner (Chunked Batch Mode) ----------------")
 
     start_time = time.time()
-    configurable = config["configurable"]
-    llm = configurable.get('planner_llm') or configurable.get('llm')
+    planner_context = prepare_planner_context(state, config)
+    slide_chunks = planner_context["slide_chunks"]
+    slide_context_maps = planner_context["slide_context_maps"]
+    all_inputs = planner_context["all_inputs"]
+    planner_chain = planner_context["planner_chain"]
+    stream_callback = planner_context["stream_callback"]
 
-    # Emit streaming event
-    stream_callback = configurable.get('stream_callback')
-    if stream_callback:
-        stream_callback('status', {
-            'step': 3,
-            'title': 'Prepare Content',
-            'description': 'Planning slide design...',
-            'message': 'Analyzing content to design slides'
-        })
-
-    if not llm:
-        raise ValueError("LLM instance not found in config.")
-
-    slide_chunks = state.get('slide_chunks', [])
-    slide_context_maps = state.get('slide_context_maps', [])
-    slide_positions = state.get('slide_positions', [])
-    section_ids = state.get('section_ids', [])
-    document_structure = state.get('document_structure', {})
-    deck_style_plan = state.get('deck_style_plan', {})
-
-    if not slide_chunks:
-        print("WARNING: No slide chunks found. Skipping planning.")
-        state['slide_plans'] = []
+    if not all_inputs or planner_chain is None:
         return state
-
-    # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
-    # Kiểm tra xem đã có intro slide thực (heading=='INTRO' và position==0) chưa
-    # NOTE: Chỉ log cảnh báo, KHÔNG insert ở đây vì slide_planner chạy TRƯỚC provide_next_slide
-    # Nếu insert ở đây, length_slide_chunks sẽ bị set sai (thiếu 1 slide)
-    has_intro = any(c.get('heading') == 'INTRO' and c.get('position') == 0 for c in slide_chunks)
-    if not has_intro:
-        print("ℹ️  No INTRO slide in chunks (expected for manual mode without explicit intro)")
-
-    # --- REMOVE DUPLICATE THANK YOU SLIDES ---
-    thank_you_positions = []
-    for i, chunk in enumerate(slide_chunks):
-        if chunk.get('position') == -2 or chunk.get('heading') == 'THANK_YOU':
-            thank_you_positions.append(i)
-
-    if len(thank_you_positions) > 1:
-        print(f"⚠️  Found {len(thank_you_positions)} thank you slides at positions: {thank_you_positions}")
-        # Keep only the last one (remove duplicates from end to start to preserve indices)
-        for pos in reversed(thank_you_positions[:-1]):
-            print(f"   Removing duplicate thank you slide at index {pos}")
-            slide_chunks.pop(pos)
-            # IMPORTANT: Also remove corresponding context map to keep arrays in sync
-            if slide_context_maps and pos < len(slide_context_maps):
-                slide_context_maps.pop(pos)
-            if slide_positions and pos < len(slide_positions):
-                slide_positions.pop(pos)
-            if section_ids and pos < len(section_ids):
-                section_ids.pop(pos)
-        print("✅ Kept only the last thank you slide")
-
-    # Update state with cleaned chunks
-    state['slide_chunks'] = slide_chunks
-    state['slide_positions'] = slide_positions
-    state['section_ids'] = section_ids
-
-    # Recreate or update context maps to match current chunks
-    if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
-        print(f"⚠️  Context maps mismatch (maps: {len(slide_context_maps)}, chunks: {len(slide_chunks)}). Regenerating...")
-        slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode='detect')
-
-        # Also clear slide_plans so they get regenerated with correct number of chunks
-        state['slide_plans'] = []
-        print(f"   ✓ Cleared slide_plans for regeneration (will be recreated with correct count)")
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
-        ("human", SLIDE_PLANNER_HUMAN_PROMPT)
-    ])
-
-    planner_chain = prompt | llm.with_structured_output(SlidePlan)
-
-    # --- CHUNKED BATCH PROCESSING LOGIC ---
-
-    # SAFETY CHECK: Ensure arrays are in sync before building inputs
-    if len(slide_chunks) != len(slide_context_maps):
-        print(f"❌ CRITICAL: Array mismatch detected during batch processing!")
-        print(f"   slide_chunks: {len(slide_chunks)}, slide_context_maps: {len(slide_context_maps)}")
-        print(f"   Regenerating context_maps to match chunks...")
-        slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode='detect')
-        print(f"   ✓ Context maps regenerated with {len(slide_context_maps)} items")
-
-    full_outline = build_compact_slide_outline(
-        slide_chunks,
-        slide_context_maps,
-    )
-
-    # 1. Prepare a list of all inputs.
-    all_inputs = []
-    for i, content in enumerate(slide_chunks):
-        # SAFETY: Verify index exists in context_maps
-        if i >= len(slide_context_maps):
-            print(f"⚠️  WARNING: Index {i} out of bounds for slide_context_maps (length: {len(slide_context_maps)})")
-            context_map = f"[Slide {i+1}] Content Slide"
-        else:
-            context_map = slide_context_maps[i]
-
-        all_inputs.append({
-            "slide_number": i + 1,  # Add slide number (1-indexed)
-            "slide_context_map": context_map,
-            "full_outline": full_outline,
-            "slide_content": content,
-            "deck_style_plan": json.dumps(deck_style_plan, ensure_ascii=False, indent=2),
-        })
 
     total_slides = len(all_inputs)
     all_slide_plans = []
@@ -314,47 +430,19 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             chunk_plans = []
             for j, plan in enumerate(batch_results):
                 global_idx = i + j
-                plan_dict = (
-                    plan.model_dump()
-                    if hasattr(plan, "model_dump")
-                    else plan.dict()
-                )
-                plan_dict["slide_topic"] = str(
-                    plan_dict.get("slide_topic")
-                    or _fallback_slide_topic(slide_chunks[global_idx], global_idx)
-                ).strip()[:160]
-                plan_dict["image_strategy"] = _normalize_image_strategy(
-                    plan_dict,
-                    slide_chunks[global_idx],
-                    global_idx,
-                )
-                plan_dict["image_mode"] = _normalize_image_mode(plan_dict)
-                plan_dict["image_strategy"] = (
-                    plan_dict["image_mode"]
-                    if plan_dict["image_mode"] in VALID_IMAGE_STRATEGIES
-                    else "decorative"
-                )
-                plan_dict["image_theme"] = _normalize_image_theme(plan_dict)
-
-                normalized_action = _normalize_plan_action(
-                    plan_dict,
-                    slide_chunks[global_idx],
-                    global_idx,
-                )
-                if normalized_action != plan_dict.get("action"):
-                    print(
-                        f"  -> Normalized slide {global_idx + 1} action "
-                        f"from '{plan_dict.get('action')}' to '{normalized_action}'"
+                chunk_plans.append(
+                    normalize_planner_result(
+                        plan,
+                        slide_chunks[global_idx],
+                        global_idx,
                     )
-                    plan_dict["action"] = normalized_action
-                
-                chunk_plans.append(plan_dict)
-                
+                )
+
             all_slide_plans.extend(chunk_plans)
             print("     ... done.")
 
         print(f"\n  -> Successfully generated plans for all {len(all_slide_plans)} slides.")
-        state['slide_plans'] = all_slide_plans
+        state['slide_plans'] = normalize_image_sequence(all_slide_plans)
         # Save context maps to state (important for idea workflow)
         state['slide_context_maps'] = slide_context_maps
 
@@ -374,12 +462,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         for index, content in enumerate(slide_chunks):
             state['slide_plans'].append(
                 {
-                    "slide_topic": _fallback_slide_topic(content, index),
-                    "thought": "Use a readable layout with concise editable text.",
-                    "image_strategy": _normalize_image_strategy({}, content, index),
-                    "image_mode": "decorative",
-                    "image_theme": "",
-                    "action": _normalize_plan_action({}, content, index),
+                    **fallback_slide_plan(content, index),
                 }
             )
         state['slide_context_maps'] = slide_context_maps  # Still save context maps

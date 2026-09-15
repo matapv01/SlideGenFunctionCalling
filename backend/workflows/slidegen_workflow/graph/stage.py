@@ -33,12 +33,13 @@ class SlidePlan(BaseModel):
         )
     )
     image_mode: Literal["none", "semantic", "decorative"] = Field(
-        default="decorative",
+        default="none",
         description=(
-            "Choose none when the slide is complete without an image. Choose "
-            "semantic when an image is a concrete subject to search directly. "
-            "Choose decorative when an image only supports mood or composition; "
-            "never search a person's name, book title, or literal slide title."
+            "Default to none. Choose semantic only when an image is a concrete "
+            "subject to search directly. Choose decorative only when the slide "
+            "genuinely benefits from a supporting visual or is an intentional "
+            "intro/transition/closing composition; never search a person's name, "
+            "book title, or literal slide title."
         ),
     )
     image_strategy: Literal["semantic", "decorative"] = Field(

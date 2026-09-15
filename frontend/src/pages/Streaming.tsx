@@ -125,12 +125,17 @@ const Streaming = () => {
     if (!msg) return "";
     const lowerMsg = msg.toLowerCase();
     
-    // Process "Completed X/Y slides" pattern
-    const slideMatch = lowerMsg.match(/completed (\d+)\/(\d+) slides/);
+    // During pipelined generation the final total is unknown until planning
+    // finishes, so support both "Completed X slides" and "Completed X/Y slides".
+    const slideMatch = lowerMsg.match(/completed (\d+)(?:\/(\d+))? slides/);
     if (slideMatch) {
+      const current = slideMatch[1];
       const total = slideMatch[2];
-      setTotalSlides(total);
-      return `${t.streaming_slide_completed} ${slideMatch[1]}/${total} ${t.streaming_slides_unit}`;
+      if (total) {
+        setTotalSlides(total);
+        return `${t.streaming_slide_completed} ${current}/${total} ${t.streaming_slides_unit}`;
+      }
+      return `${t.streaming_slide_completed} ${current} ${t.streaming_slides_unit}`;
     }
 
     if (lowerMsg.includes("analyzing content")) return t.streaming_msg_analyzing;
@@ -230,7 +235,7 @@ const Streaming = () => {
       
       // When we receive progress events about slide completion, we're in Design stage
       const message = (data.message || '').toLowerCase();
-      if (message.includes('completed') && message.includes('/')) {
+      if (message.includes('completed') && message.includes('slide')) {
         updateStage(2); // Design Slides - actively creating slides
       }
     });

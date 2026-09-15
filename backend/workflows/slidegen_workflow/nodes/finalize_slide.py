@@ -42,10 +42,18 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
             if isinstance(slide_text, dict)
             else "Untitled"
         )
+        progress_tracker = configurable.get("parallel_progress_tracker")
         total_slides = state.get("deck_slide_count") or (
             len(state["final_slides"]) + len(state.get("slide_chunks", []))
         )
-        progress_tracker = configurable.get("parallel_progress_tracker")
+        total_known = True
+        if progress_tracker is not None:
+            total_known = bool(progress_tracker.get("total_known", True))
+            if progress_tracker.get("total_slides"):
+                total_slides = progress_tracker["total_slides"]
+        if not total_known:
+            total_slides = None
+
         is_new_completion = True
         if progress_tracker:
             lock = progress_tracker.get("lock")
@@ -63,32 +71,34 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
         else:
             current = len(state["final_slides"])
         percentage = current / total_slides * 100 if total_slides else 0
-        stream_callback(
-            "slide_completed",
-            {
-                "index": idx,
-                "title": slide_title,
-                "xml_path": xml_path,
-                "content_path": xml_path,
-                "format": "xml",
-                "png_path": "",
-                "transitions": state.get("current_transitions", []),
-                "vlm_evaluation_url": state.get("vlm_evaluation_url", ""),
-                "overflow_report": state.get("overflow_report", {}),
-                "overflow_rewrite_count": state.get("overflow_rewrite_count", 0),
-                "current": current,
-                "total": total_slides,
-            },
-        )
+        slide_completed_event = {
+            "index": idx,
+            "title": slide_title,
+            "xml_path": xml_path,
+            "content_path": xml_path,
+            "format": "xml",
+            "png_path": "",
+            "transitions": state.get("current_transitions", []),
+            "vlm_evaluation_url": state.get("vlm_evaluation_url", ""),
+            "overflow_report": state.get("overflow_report", {}),
+            "overflow_rewrite_count": state.get("overflow_rewrite_count", 0),
+            "current": current,
+        }
+        if total_slides is not None:
+            slide_completed_event["total"] = total_slides
+        stream_callback("slide_completed", slide_completed_event)
         if is_new_completion:
+            progress_message = f"Completed {current} slides"
+            if total_slides is not None:
+                progress_message = f"Completed {current}/{total_slides} slides"
             stream_callback(
                 "progress",
                 {
                     "current": current,
-                    "total": total_slides,
+                    **({"total": total_slides} if total_slides is not None else {}),
                     "percentage": percentage,
                     "title": "Creating slides",
-                    "message": f"Completed {current}/{total_slides} slides",
+                    "message": progress_message,
                 },
             )
 

@@ -77,7 +77,7 @@ def _normalize_native_tool_calls(response) -> list[dict]:
 
 
 def _resolve_image_mode(plan: dict) -> str:
-    """Resolve none/semantic/decorative with compatibility for old plans."""
+    """Resolve none/semantic/decorative with a conservative default."""
     action = str((plan or {}).get("action") or "CONTENT_TOOLS").upper()
     explicit_mode = str((plan or {}).get("image_mode") or "").lower()
     if explicit_mode in {"none", "semantic", "decorative"}:
@@ -92,7 +92,14 @@ def _resolve_image_mode(plan: dict) -> str:
     legacy = str((plan or {}).get("image_strategy") or "").lower()
     if legacy in {"semantic", "decorative"}:
         return legacy
-    return "decorative"
+    if action in {
+        "INTRO_TOOLS",
+        "TRANSITION_TOOLS",
+        "TEAM_TOOLS",
+        "THANK_YOU_TOOLS",
+    }:
+        return "decorative"
+    return "none"
 
 
 def _resolve_image_strategy(plan: dict) -> str:

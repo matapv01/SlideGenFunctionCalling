@@ -309,19 +309,24 @@ You are an expert presentation designer and slide planner. Your task is to analy
    but must not override the deck palette.
 
 6. **Choose the Image Mode** (`image_mode`):
-   - `none`: Choose this when the slide is complete with text, shapes, or a
-     chart and an image would add noise or an arbitrary search result. Charts
-     normally use `none` unless the slide explicitly needs a visual subject.
+   - `none`: This is the DEFAULT and should be used for most text, explanation,
+     definition, summary, agenda, quote, and data slides. Choose this when the
+     slide is complete with text, shapes, or a chart and an image would add
+     noise or an arbitrary search result. Charts normally use `none` unless the
+     slide explicitly needs a visual subject.
    - `semantic`: Use only when the slide contains a concrete, searchable
      subject such as a place, object, process, event, scientific concept, or
      clearly described scene. Search that subject directly.
-   - `decorative`: Use when an image is supporting mood or composition rather
-     than evidence. Do not search a person's name, book title, company name,
-     literal slide title, or text that may appear inside an image. Search a
-     generic conceptual illustration based on the slide purpose instead.
+   - `decorative`: Use sparingly, only when a supporting visual materially
+     improves the composition or for an intentional intro, transition, team,
+     or closing composition. Do not use it just to fill empty space. Do not
+     search a person's name, book title, company name, literal slide title,
+     or text that may appear inside an image. Search a generic conceptual
+     illustration based on the slide purpose instead.
    - For introductions, names, bios, greetings, and section dividers, prefer
-     `none` or `decorative` unless the source explicitly asks for a specific
-     known image.
+     `none`; use `decorative` only when the visual composition genuinely needs
+     it. Never choose images for two ordinary content slides in a row merely
+     because both layouts support image slots.
 
 7. **Choose the Image Theme** (`image_theme`): Return a short lower-case English
    visual motif of 2-5 words that is safe to search. For `semantic`, name the concrete
