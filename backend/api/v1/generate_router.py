@@ -19,7 +19,7 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Q
 from fastapi.responses import JSONResponse, StreamingResponse
 
 # Config & Domain
-from backend.config import OUTPUT_DIR, TEMP_DIR, THRESHOLD_CHAR_LIMIT
+from backend.config import DOCX_MAX_CHARS, OUTPUT_DIR, TEMP_DIR, THRESHOLD_CHAR_LIMIT
 
 # Dependencies
 from backend.api.dependencies import (
@@ -77,20 +77,39 @@ def _cleanup_temp_dir():
 
 
 def _check_docx_slide_limit(temp_path, subscription_service, user):
-    """Estimate slide count from DOCX and validate subscription limits."""
+    """Reject oversized DOCX files before preprocessing or slide planning."""
     try:
         from docx import Document
 
         doc = Document(temp_path)
         heading_count = 0
-        for paragraph in doc.paragraphs:
+        content_chars = 0
+
+        def visit_paragraph(paragraph) -> None:
+            nonlocal content_chars, heading_count
+            text = (paragraph.text or '').strip()
+            content_chars += len(text)
             if paragraph.style.name.startswith('Heading'):
                 heading_count += 1
 
-        content_chars = sum(
-            len((paragraph.text or '').strip())
-            for paragraph in doc.paragraphs
-        )
+        for paragraph in doc.paragraphs:
+            visit_paragraph(paragraph)
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    for paragraph in cell.paragraphs:
+                        visit_paragraph(paragraph)
+
+        if DOCX_MAX_CHARS > 0 and content_chars > DOCX_MAX_CHARS:
+            raise HTTPException(
+                status_code=413,
+                detail=(
+                    f"Tài liệu quá dài ({content_chars:,} ký tự). "
+                    f"Hệ thống chỉ hỗ trợ tối đa {DOCX_MAX_CHARS:,} ký tự cho mỗi DOCX. "
+                    "Vui lòng rút ngắn tài liệu rồi thử lại."
+                ),
+            )
+
         chars_per_slide = max(1, THRESHOLD_CHAR_LIMIT)
         content_slide_estimate = math.ceil(content_chars / chars_per_slide)
         slide_count = max(heading_count, content_slide_estimate, 1)
@@ -138,7 +157,14 @@ def _workflow_error_payload(error: Exception) -> dict:
     message = detail if isinstance(detail, str) else str(error or "").strip()
     normalized = message.lower()
 
-    if (
+    if "does not contain heading structure" in normalized and "auto_heading" in normalized:
+        message = (
+            "Tài liệu không có tiêu đề (Heading) để chia slide. "
+            "Vui lòng chọn chế độ ‘Tự động không tiêu đề’ hoặc thêm Heading vào tài liệu rồi thử lại."
+        )
+        status_code = status_code or 400
+        code = "DOCUMENT_MISSING_HEADINGS"
+    elif (
         "recursion limit" in normalized
         or "maximum number of steps" in normalized
         or "too many slides" in normalized
@@ -147,6 +173,9 @@ def _workflow_error_payload(error: Exception) -> dict:
             "Tài liệu hoặc số lượng slide quá lớn nên workflow không thể hoàn tất. "
             "Vui lòng rút ngắn tài liệu rồi thử lại."
         )
+        status_code = status_code or 413
+        code = "DOCUMENT_TOO_LONG"
+    elif "tài liệu quá dài" in normalized or "exceeds the slide limit" in normalized:
         status_code = status_code or 413
         code = "DOCUMENT_TOO_LONG"
     elif not message:
@@ -277,7 +306,10 @@ async def generate_from_docx_normal(
         if normalized_output_format != "xml":
             raise HTTPException(400, "This workflow is XML-only; output_format must be xml")
 
-        slide_options = {"output_format": normalized_output_format}
+        slide_options = {
+            "output_format": normalized_output_format,
+            "max_docx_slides": user.get_daily_limits()["max_docx_slides"],
+        }
         output_folder_path = await slidegen_workflow_service.process_docx(
             docx_path=str(temp_path),
             output_folder=str(output_folder),
@@ -312,7 +344,11 @@ async def generate_from_docx_normal(
         raise
     except Exception as e:
         logger.error(f"DOCX Upload failed: {e}")
-        raise HTTPException(500, _workflow_error_payload(e)["message"])
+        error_payload = _workflow_error_payload(e)
+        raise HTTPException(
+            status_code=error_payload.get("status_code", 500),
+            detail=error_payload["message"],
+        )
     finally:
         _safe_unlink(temp_path)
 
@@ -366,6 +402,7 @@ async def prepare_docx_stream(
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
         "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on'),
         "output_format": normalized_output_format,
+        "max_docx_slides": user.get_daily_limits()["max_docx_slides"],
         "original_filename": original_filename,
     }
     stored_filename = temp_path.name

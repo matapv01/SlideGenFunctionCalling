@@ -92,18 +92,22 @@ IDEA_STRUCTURE_LLM_TEMPERATURE = 0.7
 IDEA_STRUCTURE_LLM_MAX_TOKENS = 4096
 
 # --- Content Splitting ---
+# Giới hạn ký tự cho mỗi slide (vượt quá sẽ được split)
+SLIDE_CHAR_LIMIT = 600
+# Giới hạn ký tự để quyết định có cần split content hay không
+CONTENT_CHAR_LIMIT_FOR_SPLIT = 800
+# Giới hạn ký tự cho 1 chunk content (cũng dùng để ước lượng số slide)
+THRESHOLD_CHAR_LIMIT = 800
 # Maximum number of slides allowed for Free and Plus DOCX generation.
 # Ultra remains unlimited. Keep this in config so plan limits are not hidden
 # inside routers or workflow nodes.
 DOCX_MAX_SLIDES = 50
+# Hard input limit checked before document preprocessing/planning.
+# 40,000 characters is equivalent to the current 50-slide estimate at
+# THRESHOLD_CHAR_LIMIT characters per slide.
+DOCX_MAX_CHARS = 40_000
 # LangGraph steps needed by long-document preprocessing and slide batches.
 WORKFLOW_RECURSION_LIMIT = 2000
-# Giới hạn ký tự cho mỗi slide (vượt quá sẽ không split nữa)
-SLIDE_CHAR_LIMIT = 600
-# Giới hạn ký tự để quyết định có cần split content hay không
-CONTENT_CHAR_LIMIT_FOR_SPLIT = 800
-# Giới hạn ký tự cho 1 chunk content (nếu vượt quá sẽ split)
-THRESHOLD_CHAR_LIMIT = 800
 
 # --- Slide Planning ---
 # Số lượng slides được plan cùng lúc trong 1 batch (tăng = nhanh hơn nhưng tốn RAM)

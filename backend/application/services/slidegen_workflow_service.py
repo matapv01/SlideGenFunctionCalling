@@ -62,6 +62,21 @@ class SlideGenWorkflowService(BaseWorkflowService):
                 callback=_stream_callback,
             )
 
+            prepared_slide_count = len(doc_state.get("slide_chunks") or [])
+            try:
+                max_docx_slides = int(_slide_options.get("max_docx_slides", -1))
+            except (TypeError, ValueError):
+                max_docx_slides = -1
+
+            # Stop after document preprocessing but before expensive slide
+            # generation/tool calls. Ultra passes -1 for unlimited slides.
+            if max_docx_slides != -1 and prepared_slide_count > max_docx_slides:
+                raise ValueError(
+                    f"Tài liệu quá dài: nội dung được chia thành {prepared_slide_count} "
+                    f"slide, vượt quá giới hạn {max_docx_slides} slide của gói hiện tại. "
+                    "Vui lòng rút ngắn tài liệu hoặc nâng cấp lên Ultra rồi thử lại."
+                )
+
             # Step 2: Run slidegen_workflow only after doc_workflow finished.
             # Hàm main_workflow trả về đường dẫn file ZIP
             return await main_workflow(
