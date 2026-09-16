@@ -110,7 +110,6 @@ def test_social_media_cards_accept_loose_string_items() -> None:
     assert "Slide content is temporarily unavailable" not in xml
     assert ET.fromstring(xml).tag == "presentation"
 
-
 def test_problem_slide_accepts_object_items_and_scalar_card_colors() -> None:
     call = {
         "name": "generate_problem_slide_xml",
@@ -171,18 +170,3 @@ def test_three_ideas_accepts_combined_idea_objects() -> None:
     xml = execute_tool(call)
     assert "Slide content is temporarily unavailable" not in xml
     assert ET.fromstring(xml).tag == "presentation"
-
-
-def test_deep_schema_validation_rejects_invalid_nested_items_before_execution() -> None:
-    call = {
-        "name": "generate_how_forge_works_slide_xml",
-        "arguments": {
-            "title": "Quy trình",
-            "subtitle": "Các bước",
-            "steps": ["Bước không đúng schema"],
-        },
-    }
-
-    valid, errors = validate_tool_call(call)
-    assert not valid
-    assert any("SCHEMA_VALIDATION_ERROR" in error for error in errors)

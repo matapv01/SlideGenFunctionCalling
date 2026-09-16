@@ -50,7 +50,6 @@ from backend.workflows.slidegen_workflow.tools.xml_tool import (
     generate_picture_quote_slide_xml,
     generate_bullet_content_slide_xml,
     generate_client_snapshot_slide_xml,
-    generate_how_forge_works_slide_xml,
     generate_implementation_timeline_slide_xml,
     generate_problem_slide_xml,
     generate_topics_overview_slide_xml,
@@ -474,19 +473,6 @@ class GenerateClientSnapshotSlideInput(BaseModel):
     subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
     body_color: str = Field(default="#F7F2FF", description="Color of the client details text.")
 
-class GenerateHowForgeWorksSlideInput(BaseModel):
-    """Input schema for generate_how_forge_works_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'How Forge works'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'From setup to daily use, Forge fits into how your team operates.'")
-    steps: List[Dict[str, str]] = Field(..., description="List of process steps displayed as vertically connected cards. Each item must contain a 'step' label and a 'content' description. example: [{'step': 'Step 1', 'content': 'Connect teams, files, and existing systems'}, {'step': 'Step 2', 'content': 'Configure shared workspaces and approval workflows'}]")
-    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
-    title_color: str = Field(default="#A678FF", description="Color of the main title.")
-    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
-    step_label_color: str = Field(default="#FFFFFF", description="Color of the step labels.")
-    step_body_color: str = Field(default="#F7F2FF", description="Color of the step descriptions.")
-    arrow_color: str = Field(default="#FFFFFF", description="Color of the arrows connecting the step cards.")
-
 class GenerateImplementationTimelineSlideInput(BaseModel):
     """Input schema for generate_implementation_timeline_slide_xml."""
 
@@ -866,12 +852,6 @@ CONTENT_TOOLS = [
     name="generate_client_snapshot_slide_xml",
      description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as plain text only—never include •, -, *, 1., or 1); use two leading spaces only for nested goals. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
     args_schema=GenerateClientSnapshotSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_how_forge_works_slide_xml,
-    name="generate_how_forge_works_slide_xml",
-    description="Generates a process overview slide with a title and subtitle on the left, an abstract vector decoration, and vertically connected process-step cards on the right. Ideal for workflows, implementation plans, onboarding processes, operating models, and step-by-step explanations.",
-    args_schema=GenerateHowForgeWorksSlideInput,
     ),
     StructuredTool.from_function(
     func=generate_implementation_timeline_slide_xml,
