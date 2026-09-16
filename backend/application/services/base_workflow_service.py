@@ -48,7 +48,9 @@ class BaseWorkflowService:
             logger.error(f"❌ Error executing workflow {prefix}: {e}")
             if is_temp:
                 shutil.rmtree(temp_workflow_dir, ignore_errors=True)
-            return None, None
+            # Do not hide the original exception. API/SSE layers need the
+            # concrete reason to show the user instead of "Workflow failed".
+            raise
 
     def check_health(self) -> Dict[str, Any]:
         """Kiểm tra sức khỏe chung của module workflow"""

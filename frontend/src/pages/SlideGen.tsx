@@ -78,10 +78,11 @@ const SlideGen = () => {
     } catch (err: any) {
       const isRateLimit = err.status === 429;
       const rawMsg = (err.message || "").toLowerCase();
+      const isDocxTooLong = err.status === 413 || rawMsg.includes("tài liệu quá dài") || rawMsg.includes("tài liệu quá lớn");
       const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
       toast({
-        title: isRateLimit ? t.error_rate_limit_title : t.error_upload_title,
-        description: isRateLimit ? t.error_rate_limit_desc : (isAuth ? t.error_auth_required : undefined),
+        title: isDocxTooLong ? t.error_docx_too_long_title : (isRateLimit ? t.error_rate_limit_title : t.error_upload_title),
+        description: isDocxTooLong ? (err.message || t.error_docx_too_long_title) : (isRateLimit ? t.error_rate_limit_desc : (isAuth ? t.error_auth_required : (err.message || undefined))),
         variant: "destructive"
       });
     } finally {

@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 from langchain_core.runnables import RunnableConfig
 from langgraph.constants import Send
 
-from backend.config import TOOL_RETRIEVER_TOP_K
+from backend.config import TOOL_RETRIEVER_TOP_K, WORKFLOW_RECURSION_LIMIT
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
     tool_matches_image_mode,
@@ -188,7 +188,10 @@ def _worker_config(config: RunnableConfig) -> Dict[str, Any]:
         }
     )
     worker_config["configurable"] = configurable
-    worker_config["recursion_limit"] = max(500, int(worker_config.get("recursion_limit", 500)))
+    worker_config["recursion_limit"] = max(
+        WORKFLOW_RECURSION_LIMIT,
+        int(worker_config.get("recursion_limit", WORKFLOW_RECURSION_LIMIT)),
+    )
     return worker_config
 
 

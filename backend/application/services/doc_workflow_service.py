@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
 from backend.application.services.base_workflow_service import BaseWorkflowService
+from backend.config import WORKFLOW_RECURSION_LIMIT
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.workflows.doc_workflow.main import run_doc_workflow
 
@@ -24,7 +25,7 @@ class DocWorkflowService(BaseWorkflowService):
                 "llm": self.llm_provider.llm_client,
                 "stream_callback": callback,
             },
-            "recursion_limit": 500,
+            "recursion_limit": WORKFLOW_RECURSION_LIMIT,
         }
 
         doc_state = await run_doc_workflow(

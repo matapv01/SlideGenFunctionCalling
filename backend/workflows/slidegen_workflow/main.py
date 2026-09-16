@@ -10,7 +10,11 @@ from collections import Counter
 from typing import Optional, Callable, Dict, Any, Tuple, List
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
 from backend.workflows.slidegen_workflow.graph.parallel_builder import build_parallel_workflow
-from backend.config import ENABLE_SLIDE_PARALLELISM, SLIDE_MAX_CONCURRENCY
+from backend.config import (
+    ENABLE_SLIDE_PARALLELISM,
+    SLIDE_MAX_CONCURRENCY,
+    WORKFLOW_RECURSION_LIMIT,
+)
 from backend.workflows.manual_workflow.main import run_manual_workflow
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
 from backend.domain.ports.llm_provider import LLMProvider
@@ -157,7 +161,7 @@ async def main_workflow(
                     max(1, int(SLIDE_MAX_CONCURRENCY))
                 ),
             },
-            "recursion_limit": 500,
+            "recursion_limit": WORKFLOW_RECURSION_LIMIT,
             "max_concurrency": SLIDE_MAX_CONCURRENCY,
         }
 
@@ -190,13 +194,18 @@ async def main_workflow(
         # Run planning and generation workflow
         print("\n🚀 Running Workflow with Singleton Infrastructure...")
         final_state = await app.ainvoke(initial_input, config=graph_config)
+        if not final_state or not final_state.get("final_slides"):
+            raise ValueError(
+                "Không tạo được slide từ tài liệu. "
+                "Vui lòng kiểm tra nội dung hoặc rút ngắn tài liệu rồi thử lại."
+            )
         _log_slide_tool_summary(final_state, "XML WORKFLOW")
         print("\n🚀 Workflow completed.")
         return output_folder
 
     except Exception as e:
         logger.error(f"❌ Workflow Error: {e}")
-        return None
+        raise
 
 
 async def main_workflow_from_chunks(
@@ -271,7 +280,7 @@ async def main_workflow_from_chunks(
                     max(1, int(SLIDE_MAX_CONCURRENCY))
                 ),
             },
-            "recursion_limit": 500,
+            "recursion_limit": WORKFLOW_RECURSION_LIMIT,
             "max_concurrency": SLIDE_MAX_CONCURRENCY,
         }
 
@@ -323,8 +332,10 @@ async def main_workflow_from_chunks(
 
         # --- FINALIZE ---
         if not final_state or not final_state.get('final_slides'):
-            _emit_event(callback, 'error', {'message': 'No slides were created'})
-            return None
+            raise ValueError(
+                "Không tạo được slide từ tài liệu. "
+                "Vui lòng kiểm tra nội dung hoặc rút ngắn tài liệu rồi thử lại."
+            )
 
         _emit_event(callback, 'status', {
             'step': 3, 'title': 'Completed', 'description': 'Packaging...', 
@@ -337,4 +348,4 @@ async def main_workflow_from_chunks(
     except Exception as e:
         print(f"❌ Workflow Failed: {e}")
         import traceback; traceback.print_exc()
-        return None
+        raise

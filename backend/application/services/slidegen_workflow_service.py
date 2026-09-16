@@ -77,13 +77,11 @@ class SlideGenWorkflowService(BaseWorkflowService):
         if output_folder:
             kwargs['output_folder'] = output_folder
             
-        raw_result, temp_dir = await self._execute_workflow_logic(run_logic, "docx", **kwargs)
+        raw_result, _ = await self._execute_workflow_logic(run_logic, "docx", **kwargs)
         
         # Hàm main_workflow giờ trả về folder output thay vì ZIP.
         if raw_result and isinstance(raw_result, str):
             return raw_result
-        elif temp_dir:
-            return str(temp_dir)
         return None
 
     async def process_chunks(self, slide_chunks: list, title: str, output_folder: str = None, **kwargs) -> Optional[str]:
@@ -106,10 +104,8 @@ class SlideGenWorkflowService(BaseWorkflowService):
         if output_folder:
             kwargs['output_folder'] = output_folder
 
-        raw_result, temp_dir = await self._execute_workflow_logic(run_logic, "chunk", **kwargs)
+        raw_result, _ = await self._execute_workflow_logic(run_logic, "chunk", **kwargs)
         
         if raw_result and isinstance(raw_result, str):
             return raw_result
-        elif temp_dir:
-            return str(temp_dir)
         return None

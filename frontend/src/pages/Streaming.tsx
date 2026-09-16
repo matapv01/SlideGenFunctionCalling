@@ -119,6 +119,7 @@ const Streaming = () => {
 
   const eventSourceRef = useRef<EventSource | null>(null);
   const completedRef = useRef(false);
+  const failedRef = useRef(false);
   const streamProjectIdRef = useRef<number | null>(null);
   
   const translateBackendMessage = (msg: string | undefined): string => {
@@ -154,6 +155,7 @@ const Streaming = () => {
     setError(null);
     setCompleted(false);
     completedRef.current = false;
+    failedRef.current = false;
     streamProjectIdRef.current = null;
     setProgress(0);
     setCurrentStage(0);
@@ -295,12 +297,13 @@ const Streaming = () => {
 
     es.addEventListener("error_event", (e) => {
       const data = JSON.parse(e.data);
+      failedRef.current = true;
       setError(data.message || t.streaming_err_generic);
       es.close();
     });
 
     es.onerror = () => {
-      if (!completedRef.current) {
+      if (!completedRef.current && !failedRef.current) {
         // Redirect to slidegen page when connection lost
         navigate("/slidegen", { replace: true });
       }

@@ -92,6 +92,12 @@ IDEA_STRUCTURE_LLM_TEMPERATURE = 0.7
 IDEA_STRUCTURE_LLM_MAX_TOKENS = 4096
 
 # --- Content Splitting ---
+# Maximum number of slides allowed for Free and Plus DOCX generation.
+# Ultra remains unlimited. Keep this in config so plan limits are not hidden
+# inside routers or workflow nodes.
+DOCX_MAX_SLIDES = 50
+# LangGraph steps needed by long-document preprocessing and slide batches.
+WORKFLOW_RECURSION_LIMIT = 2000
 # Giới hạn ký tự cho mỗi slide (vượt quá sẽ không split nữa)
 SLIDE_CHAR_LIMIT = 600
 # Giới hạn ký tự để quyết định có cần split content hay không

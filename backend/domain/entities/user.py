@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional, Dict, Any
 
+from backend.config import DOCX_MAX_SLIDES
+
 @dataclass
 class User:
     id: Optional[int]
@@ -31,9 +33,9 @@ class User:
     def get_daily_limits(self) -> Dict[str, int]:
         """Get daily usage limits based on subscription tier"""
         if self.subscription_tier == "free":
-            return {"idea_generation": 2, "docx_upload": 3, "max_docx_slides": 20}
+            return {"idea_generation": 2, "docx_upload": 3, "max_docx_slides": DOCX_MAX_SLIDES}
         elif self.subscription_tier == "plus":
-            return {"idea_generation": 10, "docx_upload": 10, "max_docx_slides": 20}
+            return {"idea_generation": 10, "docx_upload": 10, "max_docx_slides": DOCX_MAX_SLIDES}
         elif self.subscription_tier == "ultra":
             return {"idea_generation": -1, "docx_upload": -1, "max_docx_slides": -1}  # -1 = unlimited
         return {"idea_generation": 0, "docx_upload": 0, "max_docx_slides": 0}

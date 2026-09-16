@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import asyncio
+import math
 import re
 import uuid
 from typing import AsyncGenerator, Optional
@@ -18,7 +19,7 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Q
 from fastapi.responses import JSONResponse, StreamingResponse
 
 # Config & Domain
-from backend.config import TEMP_DIR, OUTPUT_DIR
+from backend.config import OUTPUT_DIR, TEMP_DIR, THRESHOLD_CHAR_LIMIT
 
 # Dependencies
 from backend.api.dependencies import (
@@ -79,16 +80,29 @@ def _check_docx_slide_limit(temp_path, subscription_service, user):
     """Estimate slide count from DOCX and validate subscription limits."""
     try:
         from docx import Document
+
         doc = Document(temp_path)
-        slide_count = 0
+        heading_count = 0
         for paragraph in doc.paragraphs:
             if paragraph.style.name.startswith('Heading'):
-                slide_count += 1
-        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
+                heading_count += 1
+
+        content_chars = sum(
+            len((paragraph.text or '').strip())
+            for paragraph in doc.paragraphs
+        )
+        chars_per_slide = max(1, THRESHOLD_CHAR_LIMIT)
+        content_slide_estimate = math.ceil(content_chars / chars_per_slide)
+        slide_count = max(heading_count, content_slide_estimate, 1)
         subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.warning(f"Could not estimate slide count: {e}")
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
+        # A failed estimate must not be converted into a fake 25-slide
+        # violation. Let the workflow perform the real validation instead.
+        subscription_service.check_feature_access(user, "docx_upload")
 
 def prepare_output_folder(name: str):
     """Helper to create unique output folder"""
@@ -115,6 +129,50 @@ def sanitize_event_data(event_type: str, data: dict):
         if 'xml_path' in new_data: new_data['is_temp'] = True
         if 'image_path' in new_data: new_data['is_temp'] = True
     return new_data
+
+
+def _workflow_error_payload(error: Exception) -> dict:
+    """Convert workflow exceptions into a safe, useful SSE error payload."""
+    status_code = getattr(error, "status_code", None)
+    detail = getattr(error, "detail", None)
+    message = detail if isinstance(detail, str) else str(error or "").strip()
+    normalized = message.lower()
+
+    if (
+        "recursion limit" in normalized
+        or "maximum number of steps" in normalized
+        or "too many slides" in normalized
+    ):
+        message = (
+            "Tài liệu hoặc số lượng slide quá lớn nên workflow không thể hoàn tất. "
+            "Vui lòng rút ngắn tài liệu rồi thử lại."
+        )
+        status_code = status_code or 413
+        code = "DOCUMENT_TOO_LONG"
+    elif not message:
+        message = "Không thể tạo slide. Vui lòng thử lại."
+        code = "WORKFLOW_ERROR"
+    else:
+        if not normalized.startswith(
+            ("tài liệu", "không thể", "workflow", "gói", "phiên", "dịch vụ")
+        ):
+            message = f"Không thể tạo slide: {message}"
+        code = "DOCUMENT_TOO_LONG" if status_code == 413 else "WORKFLOW_ERROR"
+
+    return {
+        "code": code,
+        "message": message,
+        **({"status_code": status_code} if status_code else {}),
+    }
+
+
+async def _run_stream_task(queue: asyncio.Queue, runner, label: str) -> None:
+    """Run a background workflow and preserve its real error for the SSE client."""
+    try:
+        await runner()
+    except Exception as exc:
+        logger.exception("[%s] Workflow failed", label)
+        await queue.put((EventTypes.ERROR_EVENT, _workflow_error_payload(exc)))
 
 
 def count_workflow_slides(output_folder: Path, output_format: str = "xml") -> int:
@@ -202,10 +260,11 @@ async def generate_from_docx_normal(
         content = await file.read()
         f.write(content)
 
-    # Estimate slide count and validate subscription limits
-    _check_docx_slide_limit(temp_path, subscription_service, user)
-
     try:
+        # Estimate slide count and validate subscription limits. Keeping this
+        # inside the try/finally also removes rejected uploads immediately.
+        _check_docx_slide_limit(temp_path, subscription_service, user)
+
         # Increment usage counter
         subscription_service.increment_usage(current_user.id, "docx_upload")
 
@@ -227,7 +286,13 @@ async def generate_from_docx_normal(
         )
 
         if not output_folder_path:
-            raise HTTPException(500, "Workflow thất bại")
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    "Không tạo được slide từ tài liệu. "
+                    "Vui lòng kiểm tra nội dung hoặc rút ngắn tài liệu rồi thử lại."
+                ),
+            )
 
         # 3. Import Project
         project_service.import_project_from_workflow(
@@ -243,9 +308,11 @@ async def generate_from_docx_normal(
         slides = slide_service.build_slides_from_output(str(output_folder), normalized_output_format)
         return JSONResponse({"slides": slides, "project_name": project_name})
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"DOCX Upload failed: {e}")
-        raise HTTPException(500, str(e))
+        raise HTTPException(500, _workflow_error_payload(e)["message"])
     finally:
         _safe_unlink(temp_path)
 
@@ -284,8 +351,11 @@ async def prepare_docx_stream(
     with open(temp_path, "wb") as f:
         f.write(content)
 
-    # Estimate slide count and validate subscription limits
-    _check_docx_slide_limit(temp_path, subscription_service, user)
+    try:
+        _check_docx_slide_limit(temp_path, subscription_service, user)
+    except Exception:
+        _safe_unlink(temp_path)
+        raise
 
     normalized_output_format = output_format.strip().lower()
     if normalized_output_format != "xml":
@@ -400,8 +470,10 @@ async def stream_docx_generation(
             )
             
             if not res:
-                await queue.put((EventTypes.ERROR_EVENT, {'message': "Workflow failed"}))
-                return
+                raise RuntimeError(
+                    "Workflow không tạo được slide từ tài liệu. "
+                    "Vui lòng rút ngắn tài liệu rồi thử lại."
+                )
 
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
@@ -427,7 +499,7 @@ async def stream_docx_generation(
                 'temp_dir': workflow_temp_dir
             }))
 
-        asyncio.create_task(run_bg())
+        asyncio.create_task(_run_stream_task(queue, run_bg, "DOCX"))
 
         # Common streaming loop
         while True:
@@ -475,8 +547,11 @@ async def create_manual_session_from_docx(
     with open(temp_path, "wb") as f:
         f.write(content)
 
-    # Estimate slide count and validate subscription limits
-    _check_docx_slide_limit(temp_path, subscription_service, user)
+    try:
+        _check_docx_slide_limit(temp_path, subscription_service, user)
+    except Exception:
+        _safe_unlink(temp_path)
+        raise
 
     try:
         normalized_output_format = output_format.strip().lower()
@@ -702,8 +777,9 @@ async def stream_idea_generation(
             )
             
             if not res:
-                await queue.put(('error_event', {'message': "Workflow failed"}))
-                return
+                raise RuntimeError(
+                    "Workflow không tạo được slide. Vui lòng thử lại."
+                )
 
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
@@ -723,7 +799,7 @@ async def stream_idea_generation(
                 'temp_dir': workflow_temp_dir
             }))
 
-        asyncio.create_task(run_bg())
+        asyncio.create_task(_run_stream_task(queue, run_bg, "IDEA"))
 
         while True:
             try:
@@ -873,8 +949,9 @@ async def stream_manual_generation(
             )
             
             if not res:
-                await queue.put((EventTypes.ERROR_EVENT, {'message': "Workflow failed"}))
-                return
+                raise RuntimeError(
+                    "Workflow không tạo được slide. Vui lòng thử lại."
+                )
 
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
@@ -907,7 +984,7 @@ async def stream_manual_generation(
                 'temp_dir': workflow_temp_dir
             }))
 
-        asyncio.create_task(run_bg())
+        asyncio.create_task(_run_stream_task(queue, run_bg, "MANUAL"))
 
         while True:
             try:

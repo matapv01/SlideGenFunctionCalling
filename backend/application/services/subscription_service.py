@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 from fastapi import HTTPException
+from backend.config import DOCX_MAX_SLIDES
 from backend.domain.entities.user import User
 from backend.domain.ports.user_repository import UserRepository
 
@@ -72,10 +73,15 @@ class SubscriptionService:
                 )
 
             # Check slide count limit
-            if user.subscription_tier in ["free", "plus"] and slide_count > 20:
+            max_slides = user.get_daily_limits()["max_docx_slides"]
+            if max_slides != -1 and slide_count > max_slides:
                 raise HTTPException(
-                    status_code=429,
-                    detail=f"Tài liệu quá lớn ({slide_count} slides). Gói Free và Plus giới hạn 20 slides. Nâng cấp lên Ultra để không giới hạn."
+                    status_code=413,
+                    detail=(
+                        f"Tài liệu quá dài ({slide_count} slides). "
+                        f"Gói hiện tại chỉ hỗ trợ tối đa {max_slides} slides. "
+                        "Vui lòng rút ngắn tài liệu hoặc nâng cấp lên Ultra để không giới hạn."
+                    ),
                 )
 
         elif feature_type == "content_length":
@@ -140,7 +146,7 @@ class SubscriptionService:
                     "features": {
                         "idea_generation": "2 per day",
                         "docx_upload": "3 per day",
-                        "max_slides": "20 slides max",
+                        "max_slides": f"{DOCX_MAX_SLIDES} slides max",
                         "content_length": "Brief only",
                         "priority_support": False
                     }
@@ -154,7 +160,7 @@ class SubscriptionService:
                     "features": {
                         "idea_generation": "10 per day",
                         "docx_upload": "10 per day",
-                        "max_slides": "20 slides max",
+                        "max_slides": f"{DOCX_MAX_SLIDES} slides max",
                         "content_length": "All lengths",
                         "priority_support": True
                     }
