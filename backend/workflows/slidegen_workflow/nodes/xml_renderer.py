@@ -11,6 +11,9 @@ from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.utils.xml_contrast import (
     enforce_xml_text_contrast,
 )
+from backend.workflows.slidegen_workflow.utils.xml_fallback import (
+    fallback_xml_for_failed_tool,
+)
 from langchain_core.runnables import RunnableConfig
 
 
@@ -28,7 +31,15 @@ async def render_xml(state: State, config: RunnableConfig) -> State:
 
     xml_content = state.get("current_xml_content", "")
     if not xml_content:
-        raise ValueError("XML tool returned empty content.")
+        # The executor normally supplies a fallback after the final retry. Keep
+        # this boundary defensive as well so one failed worker cannot abort the
+        # whole deck or leak an internal renderer error to the user.
+        xml_content = fallback_xml_for_failed_tool(
+            state.get("current_tool_call") or {},
+            "empty_xml_renderer_boundary",
+            source_content=state.get("current_slide_text", ""),
+        )
+        state["current_xml_content"] = xml_content
 
     # This is the final boundary after tool execution and overflow rewriting.
     # Validate the actual persisted XML rather than trusting prompt/style

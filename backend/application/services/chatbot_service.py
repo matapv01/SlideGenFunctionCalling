@@ -33,6 +33,18 @@ from backend.domain.ports.user_repository import UserRepository
 logger = logging.getLogger(__name__)
 
 
+def _friendly_slide_generation_error(exc: Exception) -> str:
+    """Keep internal workflow/parser details out of the chat UI."""
+    message = str(exc or "").strip()
+    if "XML tool returned empty content" in message:
+        return "Một slide không tạo được nội dung hoàn chỉnh. Hệ thống đã giữ các slide hợp lệ; vui lòng thử lại."
+    if "XML tool returned invalid XML" in message:
+        return "Một slide tạo ra cấu trúc không hợp lệ. Vui lòng thử lại."
+    if "XML root element" in message:
+        return "Một slide tạo ra cấu trúc không hợp lệ. Vui lòng thử lại."
+    return message or "Không thể tạo slide lúc này. Vui lòng thử lại."
+
+
 class ChatContextProvider(Protocol):
     """Retrieval boundary for the document RAG service."""
 
@@ -1478,7 +1490,10 @@ class ChatbotService:
             self._publish_slide_generation_event(
                 job,
                 "error_event",
-                {"message": str(exc), "code": "invalid_request"},
+                {
+                    "message": _friendly_slide_generation_error(exc),
+                    "code": "invalid_request",
+                },
             )
         except Exception:
             logger.exception("Detached chat slide generation failed for job %s", job.id)
