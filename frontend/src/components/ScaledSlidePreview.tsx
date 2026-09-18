@@ -134,7 +134,7 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
         // Attempt to load MathLive from our local assets
         try {
           const ml = await import('/node_modules/mathlive/dist/mathlive.min.mjs');
-          const absoluteFontsUrl = window.location.origin + '/fonts';
+          const absoluteFontsUrl = new URL('./fonts', document.baseURI).toString();
           if (ml && ml.setOptions) ml.setOptions({ fontsDirectory: absoluteFontsUrl });
           else if (window.MathLive && window.MathLive.setOptions) window.MathLive.setOptions({ fontsDirectory: absoluteFontsUrl });
         } catch(e) { 

@@ -407,6 +407,9 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     previous_function_call = state.get('current_tool_call') or {}
     deck_style_plan = state.get('deck_style_plan', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
+    presentation_instruction = str(
+        (state.get("slide_options") or {}).get("presentation_instruction") or ""
+    ).strip()
     
     if isinstance(current_text, (dict, list)):
         current_text = _format_content_as_str(current_text)
@@ -587,6 +590,7 @@ OUTPUT FORMAT: TOOL CALLS ONLY
         slide_context_map=current_context_map,
         deck_style_contract=style_context_str,
         slide_topic=slide_topic,
+        presentation_instruction=presentation_instruction,
         image_mode=image_mode,
         image_theme=image_theme,
         recent_tools=recent_tools_str,

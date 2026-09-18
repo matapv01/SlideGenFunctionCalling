@@ -222,7 +222,7 @@ export const EventHandlersMixin = {
         if (el._mathfieldActive) return;
 
         import('mathlive').then((ml) => {
-            const fontsUrl = window.location.origin + '/fonts';
+            const fontsUrl = new URL('./fonts', document.baseURI).toString();
             if (ml.setOptions) ml.setOptions({ fontsDirectory: fontsUrl });
             else if (window.MathLive?.setOptions) window.MathLive.setOptions({ fontsDirectory: fontsUrl });
             
@@ -299,7 +299,7 @@ export const EventHandlersMixin = {
         if (mf._mathfieldActive) return;
 
         import('mathlive').then((ml) => {
-            const fontsUrl = window.location.origin + '/fonts';
+            const fontsUrl = new URL('./fonts', document.baseURI).toString();
             if (ml.setOptions) ml.setOptions({ fontsDirectory: fontsUrl });
             else if (window.MathLive?.setOptions) window.MathLive.setOptions({ fontsDirectory: fontsUrl });
             

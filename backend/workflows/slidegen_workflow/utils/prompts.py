@@ -235,6 +235,9 @@ DECK STYLE CONTRACT (IMMUTABLE FOR ALL SLIDES):
 SLIDE TOPIC:
 {slide_topic}
 
+DECK-LEVEL PRESENTATION DIRECTION (SHARED ACROSS ALL BATCHES):
+{presentation_instruction}
+
 IMAGE MODE:
 {image_mode}
 
@@ -369,6 +372,15 @@ Use this complete slide map to understand the narrative and identify section
 breaks. It contains headings/context only, not the full document text.
 
 {full_outline}
+
+---
+**DECK-LEVEL PRESENTATION DIRECTION (SHARED ACROSS ALL BATCHES):**
+{presentation_instruction}
+
+Apply this direction together with the complete outline. It is shared context
+for every independent planner batch: decide how it applies to this slide from
+the slide content and the whole-deck outline. Do not assume that a batch
+boundary changes the user's requested scope.
 
 **CURRENT SLIDE CONTEXT:**
 The slide being planned is marked below. Make the action and topic specific to

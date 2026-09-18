@@ -44,7 +44,7 @@ class ProjectService:
             user_id=user_id,
             title=data_dict.get("title", "Untitled Project"),
             description=data_dict.get("description"),
-            source_type=data_dict.get("source_type", "idea"),
+            source_type=data_dict.get("source_type", "manual"),
             source_data=data_dict.get("source_data")
         )
 
@@ -188,13 +188,17 @@ class ProjectService:
         source_type: str,
         source_data: dict,
         slide_options: dict,
-        output_folder: Path
+        output_folder: Path | str,
     ) -> int:
         """
         Import project từ kết quả XML workflow AI.
         Lưu các XML slide vào DB.
         """
         try:
+            # Workflow adapters may return either a ``Path`` or its serialized
+            # string form. Normalize at this application boundary so every
+            # caller uses the same filesystem contract below.
+            output_folder = Path(output_folder)
             if str((slide_options or {}).get("output_format", "xml")).lower() != "xml":
                 raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
 

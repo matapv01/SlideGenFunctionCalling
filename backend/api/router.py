@@ -14,6 +14,7 @@ from backend.api.v1.project_router import router as project_router
 from backend.api.v1.subscription_router import router as subscription_router
 from backend.api.v1.collaboration_router import router as collaboration_router
 from backend.api.v1.image_search_router import router as image_search_router
+from backend.api.v1.chatbot_router import router as chatbot_router
 
 def create_router():
     """Create and configure the main API router"""
@@ -26,6 +27,7 @@ def create_router():
     router.include_router(subscription_router)
     router.include_router(collaboration_router)
     router.include_router(image_search_router)
+    router.include_router(chatbot_router)
 
     # Include router for infrastructure-related endpoints
     router.include_router(capture_router)

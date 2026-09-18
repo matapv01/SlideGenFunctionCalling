@@ -528,7 +528,6 @@ interface Translations {
   structure_transition_label: string;
   streaming_err_no_file: string;
   streaming_err_generic: string;
-  streaming_err_prepare: string;
   editor_reset_zoom: string;
   editor_add_slide_prefix: string;
   editor_add_el_prefix: string;
@@ -1061,7 +1060,6 @@ const vi: Translations = {
   structure_transition_label: "(Chuyển tiếp)",
   streaming_err_no_file: "Không có file hoặc session. Vui lòng tải lên file trước.",
   streaming_err_generic: "Đã xảy ra lỗi",
-  streaming_err_prepare: "Chuẩn bị cấu trúc ý tưởng thất bại",
   editor_reset_zoom: "Đặt lại zoom",
   editor_add_slide_prefix: "Thêm slide",
   editor_add_el_prefix: "Thêm",
@@ -1594,7 +1592,6 @@ const en: Translations = {
   structure_transition_label: "(Transition)",
   streaming_err_no_file: "No file or session specified for streaming. Please upload a file first.",
   streaming_err_generic: "An error occurred",
-  streaming_err_prepare: "Failed to prepare idea structure",
   editor_reset_zoom: "Reset zoom",
   editor_add_slide_prefix: "Add slide",
   editor_add_el_prefix: "Add",

@@ -21,8 +21,11 @@ class Project:
     user_id: int
     title: str
     description: Optional[str]
-    source_type: str # 'docx', 'idea'
+    source_type: str # 'chatbot', 'docx', 'manual'
     status: str # 'processing', 'completed'
+    # Kept as project metadata for list responses, while the repository also
+    # derives it from the slides table when reading projects.
+    slide_count: int = 0
     updated_at: Optional[datetime] = None
     created_at: datetime = field(default_factory=datetime.now)
     slides: List[Slide] = field(default_factory=list)

@@ -6,7 +6,10 @@ import os
 
 def migrate_database():
     """Migrate existing database to add subscription fields"""
-    db_path = "backend/infrastructure/database/slidegen.db"
+    db_path = os.getenv(
+        "SLIDEGEN_DATABASE_PATH",
+        "backend/infrastructure/database/slidegen.db",
+    )
 
     if not os.path.exists(db_path):
         print("Database not found")

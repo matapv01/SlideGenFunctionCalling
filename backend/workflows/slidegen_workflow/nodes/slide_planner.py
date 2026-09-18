@@ -307,7 +307,7 @@ def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
         for chunk in slide_chunks
     )
     if not has_intro:
-        print("ℹ️  No INTRO slide in chunks (expected for manual mode without explicit intro)")
+        print("ℹ️  No INTRO slide in chunks; the planner will use content slides")
 
     thank_you_positions = [
         index
@@ -343,6 +343,13 @@ def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
         print("❌ CRITICAL: Array mismatch detected during batch processing!")
         slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode="detect")
 
+    slide_options = state.get("slide_options") or {}
+    presentation_instruction = str(
+        slide_options.get("presentation_instruction") or ""
+    ).strip()
+    if not presentation_instruction:
+        presentation_instruction = "No additional deck-level presentation instruction."
+
     state["slide_chunks"] = slide_chunks
     state["slide_context_maps"] = slide_context_maps
     state["slide_positions"] = slide_positions
@@ -362,6 +369,7 @@ def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
                 "slide_context_map": context_map,
                 "full_outline": full_outline,
                 "slide_content": content,
+                "presentation_instruction": presentation_instruction,
                 "deck_style_plan": json.dumps(
                     deck_style_plan,
                     ensure_ascii=False,
@@ -382,6 +390,7 @@ def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
         "slide_positions": slide_positions,
         "section_ids": section_ids,
         "all_inputs": all_inputs,
+        "presentation_instruction": presentation_instruction,
         "planner_chain": prompt | llm.with_structured_output(SlidePlan),
         "stream_callback": stream_callback,
     }
@@ -443,7 +452,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
         print(f"\n  -> Successfully generated plans for all {len(all_slide_plans)} slides.")
         state['slide_plans'] = normalize_image_sequence(all_slide_plans)
-        # Save context maps to state (important for idea workflow)
+        # Save context maps for the canonical renderer and project metadata.
         state['slide_context_maps'] = slide_context_maps
 
         # Emit final status to signal Stage 2 (Design Slides)
@@ -462,7 +471,10 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         for index, content in enumerate(slide_chunks):
             state['slide_plans'].append(
                 {
-                    **fallback_slide_plan(content, index),
+                    **fallback_slide_plan(
+                        content,
+                        index,
+                    ),
                 }
             )
         state['slide_context_maps'] = slide_context_maps  # Still save context maps

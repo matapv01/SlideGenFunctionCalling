@@ -1339,7 +1339,7 @@
     min-height: calc(100vh - 5.9rem);
   }
 
-  /* Idea Structure: make right column wider than left settings column */
+  /* Legacy structure editor: make the preview column wider than the settings column */
   .legacy-idea-structure-page .editor-column {
     flex: 4;
   }

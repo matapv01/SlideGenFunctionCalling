@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
+  loginWithAccessToken: (accessToken: string) => Promise<void>;
   register: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
@@ -89,6 +90,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("user", JSON.stringify(res.user));
   }, []);
 
+  const loginWithAccessToken = useCallback(async (accessToken: string) => {
+    setToken(accessToken);
+    localStorage.setItem("token", accessToken);
+    try {
+      const user = await api.me();
+      setUser(user);
+      localStorage.setItem("user", JSON.stringify(user));
+    } catch (error) {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      throw error;
+    }
+  }, []);
+
   const register = useCallback(async (fullName: string, email: string, password: string) => {
     const res = await api.register(fullName, email, password);
     setToken(res.token);
@@ -107,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, loginWithAccessToken, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

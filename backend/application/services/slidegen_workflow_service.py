@@ -7,14 +7,16 @@ from backend.domain.ports.capture_provider import CaptureProvider
 from backend.domain.ports.parser_provider import ParserProvider
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from backend.application.services.base_workflow_service import BaseWorkflowService
-from backend.application.services.doc_workflow_service import DocWorkflowService
 
 logger = logging.getLogger(__name__)
 
 class SlideGenWorkflowService(BaseWorkflowService):
     """
-    Service chuyên trách chạy 'SlideGen Workflow'.
-    Nhiệm vụ: Nhận (DOCX hoặc Chunks) -> Chạy Graphic Engine -> Trả về ZIP (HTML/PNG).
+    Core XML slide renderer shared by every application entry point.
+
+    Source-specific preparation happens before this service. The renderer
+    receives canonical chunks and does not know about DOCX, chatbot, Idea, or
+    Manual workflows.
     """
 
     def __init__(
@@ -25,7 +27,6 @@ class SlideGenWorkflowService(BaseWorkflowService):
         capture_provider: CaptureProvider,
         parser_provider: ParserProvider,
         tool_retriever: ToolRetrieveProvider,
-        doc_workflow_service: DocWorkflowService
     ):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
@@ -33,7 +34,6 @@ class SlideGenWorkflowService(BaseWorkflowService):
         self.capture_provider = capture_provider
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
-        self.doc_workflow_service = doc_workflow_service
 
     def _get_providers(self) -> Dict[str, Any]:
         """Gói các providers cần thiết để inject vào workflow"""
@@ -45,66 +45,14 @@ class SlideGenWorkflowService(BaseWorkflowService):
             "tool_retriever": self.tool_retriever
         }
 
-    async def process_docx(self, docx_path: str, output_folder: str = None, **kwargs) -> Optional[str]:
-        """Tạo slide từ file DOCX"""
-        from backend.workflows.slidegen_workflow.main import main_workflow
+    async def generate_from_chunks(self, slide_chunks: list, title: str, output_folder: str = None, **kwargs) -> Optional[str]:
+        """Render canonical slide chunks into the XML project output."""
+        from backend.workflows.slidegen_workflow.main import (
+            run_canonical_slide_workflow,
+        )
 
         async def run_logic(output_folder, **kw):
-            _slide_options = kw.get('slide_options', {})
-            _workflow_mode = _slide_options.get('workflow_mode', 'auto_no_heading')
-            _stream_callback = kw.get('callback')
-
-            # Step 1: Run dedicated doc_workflow service first.
-            doc_state = await self.doc_workflow_service.preprocess_docx(
-                docx_file=docx_path,
-                workflow_mode=_workflow_mode,
-                slide_options=_slide_options,
-                callback=_stream_callback,
-            )
-
-            prepared_slide_count = len(doc_state.get("slide_chunks") or [])
-            try:
-                max_docx_slides = int(_slide_options.get("max_docx_slides", -1))
-            except (TypeError, ValueError):
-                max_docx_slides = -1
-
-            # Stop after document preprocessing but before expensive slide
-            # generation/tool calls. Ultra passes -1 for unlimited slides.
-            if max_docx_slides != -1 and prepared_slide_count > max_docx_slides:
-                raise ValueError(
-                    f"Tài liệu quá dài: nội dung được chia thành {prepared_slide_count} "
-                    f"slide, vượt quá giới hạn {max_docx_slides} slide của gói hiện tại. "
-                    "Vui lòng rút ngắn tài liệu hoặc nâng cấp lên Ultra rồi thử lại."
-                )
-
-            # Step 2: Run slidegen_workflow only after doc_workflow finished.
-            # Hàm main_workflow trả về đường dẫn file ZIP
-            return await main_workflow(
-                docx_file=docx_path,
-                output_folder=output_folder,
-                doc_state=doc_state,
-                infra_providers=self._get_providers(),
-                router_flags=kw.get('router_flags', False),
-                callback=_stream_callback,
-                slide_options=_slide_options
-            )
-        
-        if output_folder:
-            kwargs['output_folder'] = output_folder
-            
-        raw_result, _ = await self._execute_workflow_logic(run_logic, "docx", **kwargs)
-        
-        # Hàm main_workflow giờ trả về folder output thay vì ZIP.
-        if raw_result and isinstance(raw_result, str):
-            return raw_result
-        return None
-
-    async def process_chunks(self, slide_chunks: list, title: str, output_folder: str = None, **kwargs) -> Optional[str]:
-        """Tạo slide từ danh sách chunks (Kết quả của Idea Workflow)"""
-        from backend.workflows.slidegen_workflow.main import main_workflow_from_chunks
-
-        async def run_logic(output_folder, **kw):
-            return await main_workflow_from_chunks(
+            return await run_canonical_slide_workflow(
                 slide_chunks=slide_chunks,
                 title=title,
                 output_folder=output_folder,
@@ -114,6 +62,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
                 slide_positions=kw.get('slide_positions', []),
                 slide_context_maps=kw.get('slide_context_maps', []),
                 section_ids=kw.get('section_ids', []),
+                max_retries_per_slide=kw.get('max_retries_per_slide', 1),
             )
 
         if output_folder:

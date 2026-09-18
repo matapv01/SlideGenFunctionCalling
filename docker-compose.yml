@@ -29,10 +29,12 @@ services:
       - "12008:12008"
     env_file:
       - .env
+    environment:
+      SLIDEGEN_DATABASE_PATH: /app/db/slidegen.db
     volumes:
       - ./.env:/app/.env:ro
       - ./models:/app/models:ro
-      - slidegen_db:/app/backend/infrastructure/database
+      - slidegen_db:/app/db
       - slidegen_static:/app/static
       - slidegen_faiss_local:/app/backend/infrastructure/faiss_tool_retriever_index_multilingual_minilm
       - huggingface_cache:/root/.cache/huggingface

@@ -119,8 +119,9 @@ def build_slide_jobs(state: Dict[str, Any]) -> List[Dict[str, Any]]:
             elif kind == "thank_you":
                 batch_id, root_section = "999_thank_you", None
         else:
-            # Idea/manual input may not expose DFS positions. A transition marks
-            # the start of the next section, so it stays with the slides it introduces.
+            # Some canonical input may not expose DFS positions. A transition
+            # marks the start of the next section, so it stays with the slides
+            # it introduces.
             if (
                 not has_explicit_section_ids
                 and not has_outline_positions

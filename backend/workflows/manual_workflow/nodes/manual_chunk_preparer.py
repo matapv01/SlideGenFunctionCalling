@@ -1,20 +1,14 @@
-from typing import Any, Dict, List
-
 from backend.workflows.manual_workflow.graph.stage import State
+from backend.domain.canonical_chunks import normalize_canonical_chunks
+
 
 def prepare_manual_chunks(state: State) -> State:
-	"""Normalize manual chunks and ensure context maps are aligned."""
-	slide_chunks = state.get("slide_chunks", [])
-
-	if not slide_chunks:
-		state["slide_chunks"] = []
-		state["slide_context_maps"] = []
-		return state
-
-	slide_context_maps = state.get("slide_context_maps", [])
-	if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
-		# Defer generic context-map generation to planning node.
-		state["slide_context_maps"] = []
-
-	state["slide_chunks"] = slide_chunks
-	return state
+    """Normalize editor input before it is handed to the shared renderer."""
+    normalized = normalize_canonical_chunks(
+        state.get("slide_chunks", []),
+        slide_positions=state.get("slide_positions", []),
+        slide_context_maps=state.get("slide_context_maps", []),
+        section_ids=state.get("section_ids", []),
+    )
+    state.update(normalized)
+    return state

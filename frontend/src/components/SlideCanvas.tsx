@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { SlideEditorLogic } from '@/lib/SlideLogicCore';
+import { cn } from '@/lib/utils';
 
 interface SlideCanvasProps {
   slideId: string;
@@ -372,8 +373,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     try {
       const ml = await import('mathlive') as any; // registers <math-field> custom element globally
       
-      // Robust font path — use absolute URL to ensure we hit /fonts on the server
-      const fontsUrl = window.location.origin + '/fonts';
+      // Resolve the font directory from the FE document base.
+      const fontsUrl = new URL('./fonts', document.baseURI).toString();
       console.log('[SlideCanvas] Setting fontsDirectory to:', fontsUrl);
       
       if (ml && ml.setOptions) {
@@ -983,6 +984,14 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       `}
       ${isReadOnly ? `
       * { pointer-events: none !important; cursor: default !important; }
+      /* Project thumbnails must be a stable snapshot while the page scrolls.
+         Generated slide HTML may contain entrance/keyframe effects that make
+         several Shadow DOM previews repaint and appear to jump. */
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
       ` : ''}
     `;
 
@@ -1135,7 +1144,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
   return (
     <div
       ref={containerRef}
-      className="w-full h-full shadow-2xl"
+      className={cn("w-full h-full", !props.readOnly && "shadow-2xl")}
       style={{
         width: '1920px',
         height: '1080px',

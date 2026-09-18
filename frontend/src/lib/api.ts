@@ -1,5 +1,5 @@
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1"
+  import.meta.env.VITE_API_BASE_URL?.trim() || new URL("../api/v1", document.baseURI).pathname
 ).replace(/\/$/, "");
 
 // Global logout function - will be set by AuthContext
@@ -61,6 +61,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     error.status = res.status;
     throw error;
   }
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
@@ -119,6 +120,81 @@ export interface ProjectComment {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface ChatSessionResponse {
+  id: string;
+  project_id?: number | null;
+  title?: string | null;
+  history_summary?: string | null;
+  max_turns: number;
+  created_at: string;
+  updated_at: string;
+  archived: boolean;
+}
+
+export interface ChatMessageResponse {
+  id: number;
+  session_id: string;
+  role: "user" | "assistant" | "system" | "tool";
+  content: string;
+  standalone_query?: string | null;
+  model?: string | null;
+  effort?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ChatTurnResponse {
+  session: ChatSessionResponse;
+  user_message: ChatMessageResponse;
+  assistant_message: ChatMessageResponse;
+  standalone_query: string;
+  citations: Array<Record<string, unknown>>;
+  project_id?: number | null;
+}
+
+export interface ChatDocumentResponse {
+  id: string;
+  original_filename: string;
+  title?: string | null;
+  status: "processing" | "ready" | "failed";
+  content_hash: string;
+  error_message?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatbotConfigResponse {
+  default_model: string;
+  default_effort: "low" | "medium" | "high";
+  models: Array<{ id: string; temperature: number; top_p: number }>;
+  efforts: Array<{ id: "low" | "medium" | "high"; max_tokens: number; temperature_delta: number }>;
+  max_slide_count: number;
+}
+
+export interface ChatSlideGenerationResponse {
+  id: string;
+  session_id: string;
+  phase: "running" | "completed" | "error";
+  status: {
+    stage?: string;
+    title?: string;
+    description?: string;
+    message?: string;
+  };
+  progress: number;
+  slides: Array<{
+    index: number;
+    title: string;
+    content_path?: string;
+    xml_path?: string;
+  }>;
+  total_slides?: number | null;
+  target_slide_count?: number | null;
+  project_id?: number | null;
+  project_name: string;
+  error: string;
+}
 export interface ImageSearchResult {
   url: string;
 }
@@ -149,6 +225,83 @@ export const api = {
   },
 
   me: () => request<UserResponse>("/auth/me"),
+
+  // Chatbot endpoints - /api/chat/*
+  getChatbotConfig: () => request<ChatbotConfigResponse>("/chat/config"),
+
+  getChatSessions: () => request<ChatSessionResponse[]>("/chat/sessions"),
+
+  createChatSession: (data: { project_id?: number; title?: string }) =>
+    request<ChatSessionResponse>("/chat/sessions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getChatMessages: (sessionId: string) =>
+    request<ChatMessageResponse[]>(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`),
+
+  sendChatMessage: (sessionId: string, data: { content: string; model?: string; effort?: string; slide_count?: number; document_ids?: string[] }) =>
+    request<ChatTurnResponse>(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getActiveChatSlideGeneration: () =>
+    request<ChatSlideGenerationResponse | null>("/chat/slide-generations/active"),
+
+  // The slide stream is consumed as SSE by the new chatbot workspace, so it
+  // intentionally returns the raw response instead of passing through the
+  // JSON request helper.
+  streamChatSlideGeneration: (
+    sessionId: string,
+    data: { content: string; model?: string; effort?: string; slide_count?: number; document_ids?: string[] },
+    signal?: AbortSignal,
+  ) => {
+    const token = localStorage.getItem("token");
+    return fetch(`${API_BASE_URL}/chat/sessions/${encodeURIComponent(sessionId)}/slide-stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+      signal,
+    });
+  },
+
+  reconnectChatSlideGeneration: (generationId: string, signal?: AbortSignal) => {
+    const token = localStorage.getItem("token");
+    return fetch(`${API_BASE_URL}/chat/slide-generations/${encodeURIComponent(generationId)}/stream`, {
+      method: "GET",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal,
+    });
+  },
+
+  uploadChatDocument: (sessionId: string, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return request<ChatDocumentResponse>(
+      `/chat/sessions/${encodeURIComponent(sessionId)}/documents`,
+      { method: "POST", body },
+    );
+  },
+
+  getChatDocuments: (sessionId: string) =>
+    request<ChatDocumentResponse[]>(
+      `/chat/sessions/${encodeURIComponent(sessionId)}/documents`,
+    ),
+
+  deleteChatDocument: (sessionId: string, documentId: string) =>
+    request<void>(
+      `/chat/sessions/${encodeURIComponent(sessionId)}/documents/${encodeURIComponent(documentId)}`,
+      { method: "DELETE" },
+    ),
+
+  archiveChatSession: (sessionId: string) =>
+    request<void>(`/chat/sessions/${encodeURIComponent(sessionId)}/archive`, { method: "POST" }),
+
+  googleLoginUrl: () => `${API_BASE_URL}/auth/google/login`,
 
   logout: () => request<{ message: string }>("/auth/logout", { method: "POST" }),
 
@@ -438,65 +591,6 @@ export const api = {
     const token = localStorage.getItem("token");
     return `${API_BASE_URL}/generate/manual/stream?session_id=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(token || "")}`;
   },
-
-  // SSE streaming for idea workflow
-  ideaStreamUrl: (sessionId: string) => {
-    const token = localStorage.getItem("token");
-    return `${API_BASE_URL}/generate/idea/stream?session_id=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(token || "")}`;
-  },
-
-  // Generate idea structure
-  generateIdeaStructure: (data: {
-    title?: string;
-    prompt: string;
-    content_length?: string;
-    output_format?: OutputFormat;
-  }) =>
-    request<{
-      session_id: string;
-      filename: string;
-      slide_count: number;
-      is_from_idea: boolean;
-      output_format?: OutputFormat;
-    }>("/generate/idea/structure", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-
-    // Convert idea session to manual structure session (L0/L1 editor flow)
-    convertIdeaToManualSession: (sessionId: string) =>
-      request<{
-        success: boolean;
-        session_id: string;
-        document_title: string;
-        output_format?: OutputFormat;
-      }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}/manual-session`, {
-        method: "POST",
-      }),
-
-  // Get idea structure details
-  getIdeaStructure: (sessionId: string) =>
-    request<{
-      session_id: string;
-      title: string;
-      slide_chunks: any[];
-      metadata?: any;
-    }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`),
-
-  // Update idea structure
-  updateIdeaStructure: (sessionId: string, data: {
-    title: string;
-    slide_chunks: any[];
-  }) =>
-    request<{
-      session_id: string;
-      title: string;
-      slide_chunks: any[];
-      metadata?: any;
-    }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
 
   // Image URL - /api/image-serve/*
   imageUrl: (imageName: string) => `${API_BASE_URL}/image-serve/${encodeURIComponent(imageName)}`,

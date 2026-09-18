@@ -1,0 +1,1235 @@
+import { ChangeEvent, FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  ChatMessage,
+  ChatDocument,
+  ChatSession,
+  archiveChatSession,
+  createChatSession,
+  deleteChatDocument,
+  loadChatbotConfig,
+  loadChatMessages,
+  loadChatDocuments,
+  loadChatSessions,
+  loadWorkspaceProject,
+  sendChatMessage,
+  uploadChatDocument,
+} from "./data/workspaceApi";
+import { ChatSlideStreamPanel } from "./ChatSlideStreamPanel";
+import { ChatSlidePlanPanel } from "./ChatSlidePlanPanel";
+import { ChatSlideGenerationCard } from "./ChatSlideGenerationCard";
+import { useSlideGeneration } from "./SlideGenerationContext";
+
+const defaultModels = ["genius-1", "genius-2", "genius-3"];
+const defaultEfforts = ["low", "medium", "high"] as const;
+
+interface SlideFlowOption {
+  label: string;
+  value: string;
+  is_other: boolean;
+  action: "answer" | "other" | "upgrade";
+}
+
+interface SlideFlowAnswer {
+  question: string;
+  answer: string;
+}
+
+interface SlideFlow {
+  state: "clarifying" | "awaiting_confirmation" | "limit_reached";
+  question: string | null;
+  options: SlideFlowOption[];
+  originalPrompt: string;
+  brief: string;
+  answers: SlideFlowAnswer[];
+  targetSlideCount: number | null;
+  maxSlideCount: number | null;
+  questionKind: "slide_count" | "content" | null;
+}
+
+interface SendMessageOptions {
+  streamSlides?: boolean;
+  slideCount?: number;
+}
+
+interface SlideGenerationLog {
+  projectId: number | null;
+  projectName: string;
+  slideCount: number | null;
+}
+
+interface MessageAttachment {
+  id: string;
+  name: string;
+}
+
+function getSlideGenerationLog(message: ChatMessage): SlideGenerationLog | null {
+  const candidate = message.metadata?.slide_generation;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+  const raw = candidate as Record<string, unknown>;
+  const projectIdValue = Number(raw.project_id);
+  const slideCountValue = Number(raw.slide_count);
+  return {
+    projectId: Number.isInteger(projectIdValue) && projectIdValue > 0 ? projectIdValue : null,
+    projectName: typeof raw.project_name === "string" ? raw.project_name.trim() : "",
+    slideCount: Number.isInteger(slideCountValue) && slideCountValue > 0 ? slideCountValue : null,
+  };
+}
+
+function getMessageAttachments(message: ChatMessage): MessageAttachment[] {
+  const candidate = message.metadata?.attachments;
+  if (!Array.isArray(candidate)) return [];
+  return candidate.flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+    const raw = item as Record<string, unknown>;
+    const id = typeof raw.id === "string" ? raw.id.trim() : "";
+    const name = typeof raw.name === "string"
+      ? raw.name.trim()
+      : typeof raw.title === "string"
+        ? raw.title.trim()
+        : typeof raw.original_filename === "string"
+          ? raw.original_filename.trim()
+          : "";
+    if (!id || !name) return [];
+    return [{ id, name }];
+  });
+}
+
+function getSentDocumentIds(messages: ChatMessage[]) {
+  return new Set(
+    messages.flatMap((message) => getMessageAttachments(message).map((item) => item.id)),
+  );
+}
+
+function isMissingProjectError(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const status = Number((value as { status?: unknown }).status);
+  return status === 404 || status === 403;
+}
+
+function getSlideFlow(message: ChatMessage): SlideFlow | null {
+  const candidate = message.metadata?.slide_flow;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+
+  const raw = candidate as Record<string, unknown>;
+  const state = raw.state;
+  if (state !== "clarifying" && state !== "awaiting_confirmation" && state !== "limit_reached") return null;
+
+  const options = (Array.isArray(raw.options) ? raw.options : []).flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+    const option = item as Record<string, unknown>;
+    const label = typeof option.label === "string" ? option.label.trim() : "";
+    if (!label) return [];
+    const action = option.action === "upgrade" || option.action === "other" ? option.action : "answer";
+    return [{
+      label,
+      value: typeof option.value === "string" && option.value.trim() ? option.value : label,
+      is_other: option.is_other === true || action === "other",
+      action,
+    }];
+  });
+
+  const answers = (Array.isArray(raw.answers) ? raw.answers : []).flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+    const answer = item as Record<string, unknown>;
+    const question = typeof answer.question === "string" ? answer.question.trim() : "";
+    const value = typeof answer.answer === "string" ? answer.answer.trim() : "";
+    if (!question && !value) return [];
+    return [{ question: question || "", answer: value || "" }];
+  });
+
+  return {
+    state,
+    question: typeof raw.question === "string" ? raw.question : null,
+    options,
+    originalPrompt: typeof raw.original_prompt === "string" ? raw.original_prompt.trim() : "",
+    brief: typeof raw.brief === "string" ? raw.brief.trim() : "",
+    answers,
+    targetSlideCount: Number.isFinite(Number(raw.target_slide_count)) && Number(raw.target_slide_count) > 0
+      ? Number(raw.target_slide_count)
+      : null,
+    maxSlideCount: Number.isFinite(Number(raw.max_slide_count))
+      ? Number(raw.max_slide_count)
+      : null,
+    questionKind: raw.question_kind === "slide_count" || raw.question_kind === "content"
+      ? raw.question_kind
+      : null,
+  };
+}
+
+function normalizeDocumentQuestion(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/đ/g, "d")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isDocumentSourceFlow(flow: SlideFlow) {
+  const question = normalizeDocumentQuestion(flow.question || "");
+  const sourcePhrases = [
+    "tai lieu nao",
+    "nguon nao",
+    "chon nguon",
+    "tai len",
+    "dan noi dung",
+    "document",
+    "source",
+    "material",
+    "upload",
+    "paste",
+  ];
+  if (sourcePhrases.some((phrase) => question.includes(phrase))) return true;
+  const options = normalizeDocumentQuestion(flow.options.map((option) => `${option.label} ${option.value}`).join(" "));
+  return sourcePhrases.filter((phrase) => options.includes(phrase)).length >= 2;
+}
+
+function getVisibleDocumentFlow(flow: SlideFlow, language: "vi" | "en"): SlideFlow {
+  if (!isDocumentSourceFlow(flow)) return flow;
+  const confirmationOptions: SlideFlowOption[] = language === "vi"
+    ? [
+        { label: "Bắt đầu tạo slide", value: "Bắt đầu tạo slide", is_other: false, action: "answer" },
+        { label: "Tôi muốn bổ sung", value: "Tôi muốn bổ sung thêm yêu cầu", is_other: false, action: "answer" },
+      ]
+    : [
+        { label: "Start creating slides", value: "Start creating slides", is_other: false, action: "answer" },
+        { label: "I want to add more", value: "I want to add more requirements", is_other: false, action: "answer" },
+      ];
+  return {
+    ...flow,
+    state: "awaiting_confirmation",
+    question: null,
+    options: confirmationOptions,
+    questionKind: null,
+  };
+}
+
+function extractSlideCount(value: string, allowBareNumber = false): number | null {
+  const text = String(value || "");
+  if (/(?<!\d)\d{1,3}\s*-\s*\d{1,3}\s*(?:slides?|trang|pages?)\b/i.test(text)) {
+    return null;
+  }
+  const match = text.match(/(?:^|\s)(\d{1,3})\s*(?:-\s*)?(?:slides?|trang|pages?)\b/i)
+    || text.match(/\b(?:slides?|trang|pages?)\s*(\d{1,3})(?!\d)\b/i);
+  if (match) {
+    const parsed = Number(match[1]);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+  if (allowBareNumber && /^\s*\d{1,3}\s*$/.test(text)) {
+    const parsed = Number(text.trim());
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+  return null;
+}
+
+function formatSessionDate(value: string, language: "vi" | "en") {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(language === "vi" ? "vi-VN" : "en-US", {
+    day: "2-digit",
+    month: "short",
+  }).format(date);
+}
+
+function messageTime(value: string, language: "vi" | "en") {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return language === "vi" ? "Vừa xong" : "Just now";
+  return new Intl.DateTimeFormat(language === "vi" ? "vi-VN" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export default function SlidegeniusChat() {
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+  const {
+    generation,
+    isGenerating,
+    openRequest,
+    startSlideGeneration,
+    openSlideStream,
+    closeSlideStream,
+  } = useSlideGeneration();
+  const [message, setMessage] = useState("");
+  const [model, setModel] = useState("genius-3");
+  const [effort, setEffort] = useState<"low" | "medium" | "high">("medium");
+  const [models, setModels] = useState(defaultModels);
+  const [efforts, setEfforts] = useState<readonly string[]>(defaultEfforts);
+  const [maxSlideCount, setMaxSlideCount] = useState(50);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [slidePlanOpen, setSlidePlanOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
+  const [searchEnabled, setSearchEnabled] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState<string | null>(null);
+  const [sessionDocuments, setSessionDocuments] = useState<ChatDocument[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<ChatDocument[]>([]);
+  const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [deletedProjectIds, setDeletedProjectIds] = useState<Set<number>>(() => new Set());
+  const [clarificationOtherOpen, setClarificationOtherOpen] = useState(false);
+  const [clarificationOther, setClarificationOther] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const clarificationInputRef = useRef<HTMLInputElement>(null);
+  const threadRef = useRef<HTMLDivElement>(null);
+  const lastOpenRequestRef = useRef(0);
+  const [showScrollToLatest, setShowScrollToLatest] = useState(false);
+
+  const isActiveGeneration = generation.sessionId !== null && generation.sessionId === activeSessionId;
+  const showSlideStream = isActiveGeneration && generation.panelOpen;
+
+  const text = language === "vi"
+    ? {
+        helper: "Hãy để Slidegenius phát triển ý tưởng, lập kế hoạch hoặc biến điều khó thành điều hiển nhiên.",
+        placeholder: "Hãy nói điều bạn muốn tạo...",
+        prompts: ["Xây dựng câu chuyện ra mắt sản phẩm mới", "Biến ghi chú thành một deck sắc nét", "Tìm hướng hình ảnh cho chiến dịch"],
+        newConversation: "Cuộc trò chuyện mới",
+        conversations: "CUỘC TRÒ CHUYỆN",
+        justNow: "Vừa xong",
+        regenerate: "Tạo lại",
+        editMessage: "Sửa tin nhắn",
+        copyMessage: "Sao chép tin nhắn",
+        unavailable: "Không thể tải cuộc trò chuyện.",
+        sending: "Đang suy nghĩ...",
+        upload: "Tải tài liệu DOCX",
+        uploading: "Đang xử lý DOCX...",
+        uploaded: "Đã gắn tài liệu",
+        removeAttachment: "Xóa tài liệu",
+        scrollToLatest: "Cuộn đến tin nhắn mới nhất",
+        otherPlaceholder: "Nhập hướng bạn muốn...",
+        slideCountPlaceholder: "Nhập số slide, ví dụ 12 slide...",
+        sendAnswer: "Gửi",
+        deleteConversation: "Xóa cuộc trò chuyện",
+        deleteConversationConfirm: "Bạn có chắc muốn xóa cuộc trò chuyện này không?",
+        slideStreamClose: "Ẩn luồng tạo slide",
+        slideStreamOpenProject: "Mở project",
+        slideStreamSlide: "SLIDE",
+        slideStreamCompleted: "Đã hoàn thành",
+        slideStreamWaiting: "Đang chờ slide đầu tiên...",
+        slideStreamError: "Không thể tạo slide lúc này.",
+        slideGenerationBusy: "Hiện đang có một deck được tạo. Bạn vẫn có thể trò chuyện, nhưng hãy đợi deck này hoàn tất trước khi tạo deck khác.",
+        slideGenerationTitle: "Deck đang được tạo",
+        slideGenerationRunning: "Đang tạo",
+        slideGenerationOpen: "Xem tiến trình",
+        slideGenerated: "Đã tạo slide thành công",
+        slideGeneratedProject: "Project đã được lưu",
+        projectDeleted: "Project này đã bị xóa nên không thể mở lại.",
+        viewSlidePlan: "Xem plan tạo slide",
+        slidePlanClose: "Đóng plan tạo slide",
+        slidePlanTitle: "Kế hoạch tạo slide",
+        slidePlanRequest: "Yêu cầu ban đầu",
+        slidePlanBrief: "Brief sẽ dùng để tạo slide",
+        slidePlanAnswers: "Các lựa chọn đã chốt",
+        slidePlanSource: "Tài liệu tham chiếu",
+        slidePlanSettings: "Thiết lập tạo",
+        slidePlanNoAnswers: "Chưa có lựa chọn bổ sung.",
+        slidePlanNoBrief: "Brief sẽ được hoàn thiện từ yêu cầu này.",
+        slideCountLabel: "Số lượng slide",
+        slideLimitLabel: "Giới hạn gói hiện tại",
+        slideCountNotSet: "Chưa chốt",
+        slideCountUnlimited: "Không giới hạn",
+        modelLabel: "Model",
+        effortLabel: "Effort",
+      }
+    : {
+        helper: "Ask Slidegenius to shape an idea, plan a project, or make something impossible feel obvious.",
+        placeholder: "Tell me what you want to create...",
+        prompts: ["Build a launch story for a new product", "Turn these notes into a sharp deck", "Find a visual direction for our campaign"],
+        newConversation: "New conversation",
+        conversations: "CONVERSATIONS",
+        justNow: "Just now",
+        regenerate: "Regenerate",
+        editMessage: "Edit message",
+        copyMessage: "Copy message",
+        unavailable: "Unable to load conversations.",
+        sending: "Thinking...",
+        upload: "Upload DOCX",
+        uploading: "Processing DOCX...",
+        uploaded: "Document attached",
+        removeAttachment: "Remove document",
+        scrollToLatest: "Scroll to latest message",
+        otherPlaceholder: "Add your own direction...",
+        slideCountPlaceholder: "Enter a slide count, for example 12 slides...",
+        sendAnswer: "Send",
+        deleteConversation: "Delete conversation",
+        deleteConversationConfirm: "Are you sure you want to delete this conversation?",
+        slideStreamClose: "Hide slide stream",
+        slideStreamOpenProject: "Open project",
+        slideStreamSlide: "SLIDE",
+        slideStreamCompleted: "Completed",
+        slideStreamWaiting: "Waiting for the first slide...",
+        slideStreamError: "Unable to create slides right now.",
+        slideGenerationBusy: "A deck is already being created. You can keep chatting, but wait for it to finish before creating another deck.",
+        slideGenerationTitle: "Deck in progress",
+        slideGenerationRunning: "Creating",
+        slideGenerationOpen: "View progress",
+        slideGenerated: "Slides created successfully",
+        slideGeneratedProject: "Project saved",
+        projectDeleted: "This project was deleted and can no longer be opened.",
+        viewSlidePlan: "View slide creation plan",
+        slidePlanClose: "Close slide creation plan",
+        slidePlanTitle: "Slide creation plan",
+        slidePlanRequest: "Original request",
+        slidePlanBrief: "Brief used for generation",
+        slidePlanAnswers: "Confirmed choices",
+        slidePlanSource: "Reference document",
+        slidePlanSettings: "Generation settings",
+        slidePlanNoAnswers: "No additional choices yet.",
+        slidePlanNoBrief: "The brief will be refined from this request.",
+        slideCountLabel: "Slide count",
+        slideLimitLabel: "Current plan limit",
+        slideCountNotSet: "Not chosen",
+        slideCountUnlimited: "Unlimited",
+        modelLabel: "Model",
+        effortLabel: "Effort",
+      };
+
+  const hasUploadedDocuments = uploadedDocuments.length > 0;
+  const sessionDocumentNames = sessionDocuments
+    .map((document) => document.title || document.original_filename)
+    .filter(Boolean);
+  const sessionDocumentLabel = sessionDocumentNames.join(", ");
+  const sessionDocumentSummary = sessionDocumentNames.length > 2
+    ? sessionDocumentNames.slice(0, 2).join(", ") + " +" + (sessionDocumentNames.length - 2)
+    : sessionDocumentLabel;
+  const hasSessionDocuments = sessionDocuments.length > 0;
+
+  useEffect(() => {
+    let active = true;
+    const initialize = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const [config, existingSessions] = await Promise.all([
+          loadChatbotConfig(),
+          loadChatSessions(),
+        ]);
+        if (!active) return;
+        setModels(config.models.map((item) => item.id));
+        setEfforts(config.efforts.map((item) => item.id));
+        setMaxSlideCount(Number.isFinite(config.max_slide_count) ? config.max_slide_count : 50);
+        setModel(config.default_model);
+        setEffort(config.default_effort);
+
+        const generationSession = generation.sessionId
+          ? existingSessions.find((session) => session.id === generation.sessionId)
+          : undefined;
+        const nextSession = generationSession || existingSessions[0] || await createChatSession();
+        if (!active) return;
+        setSessions(existingSessions.length ? existingSessions : [nextSession]);
+        setActiveSessionId(nextSession.id);
+        const [sessionMessages, sessionDocuments] = await Promise.all([
+          loadChatMessages(nextSession.id),
+          loadChatDocuments(nextSession.id),
+        ]);
+        const readyDocuments = sessionDocuments.filter((item) => item.status === "ready");
+        const sentDocumentIds = getSentDocumentIds(sessionMessages);
+        setMessages(sessionMessages);
+        setUploadingDocument(null);
+        setSessionDocuments(readyDocuments);
+        setUploadedDocuments(readyDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+      } catch {
+        if (active) setError(text.unavailable);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void initialize();
+    return () => { active = false; };
+  }, []);
+
+  const loadSessionData = async (sessionId: string) => {
+    const [sessionMessages, sessionDocuments] = await Promise.all([
+      loadChatMessages(sessionId),
+      loadChatDocuments(sessionId),
+    ]);
+    const readyDocuments = sessionDocuments.filter((item) => item.status === "ready");
+    const sentDocumentIds = getSentDocumentIds(sessionMessages);
+    setMessages(sessionMessages);
+    setUploadingDocument(null);
+    setSessionDocuments(readyDocuments);
+    setUploadedDocuments(readyDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+  };
+
+  useEffect(() => {
+    let active = true;
+    const projectIds = Array.from(new Set(
+      messages.flatMap((item) => {
+        if (item.role !== "assistant") return [];
+        const log = getSlideGenerationLog(item);
+        return log?.projectId !== null && log?.projectId !== undefined ? [log.projectId] : [];
+      }),
+    ));
+
+    if (!projectIds.length) {
+      setDeletedProjectIds(new Set());
+      return () => { active = false; };
+    }
+
+    void Promise.all(projectIds.map(async (projectId) => {
+      try {
+        await loadWorkspaceProject(projectId);
+        return null;
+      } catch (requestError) {
+        return isMissingProjectError(requestError) ? projectId : null;
+      }
+    })).then((missingProjectIds) => {
+      if (!active) return;
+      setDeletedProjectIds(new Set(
+        missingProjectIds.filter((projectId): projectId is number => projectId !== null),
+      ));
+    });
+
+    return () => { active = false; };
+  }, [messages]);
+
+  const openGeneratedProject = async (projectId: number) => {
+    if (deletedProjectIds.has(projectId)) return;
+    try {
+      await loadWorkspaceProject(projectId);
+      navigate(`/projects/${projectId}`);
+    } catch (requestError) {
+      if (isMissingProjectError(requestError)) {
+        setDeletedProjectIds((current) => {
+          const next = new Set(current);
+          next.add(projectId);
+          return next;
+        });
+        setError(text.projectDeleted);
+        return;
+      }
+      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+    }
+  };
+
+  useEffect(() => {
+    if (!openRequest || openRequest === lastOpenRequestRef.current || !generation.sessionId) return;
+    const targetSession = sessions.find((session) => session.id === generation.sessionId);
+    if (!targetSession || sending || deletingSessionId) return;
+
+    lastOpenRequestRef.current = openRequest;
+    if (targetSession.id === activeSessionId) return;
+
+    setError("");
+    setActiveSessionId(targetSession.id);
+    setSlidePlanOpen(false);
+    setClarificationOtherOpen(false);
+    setClarificationOther("");
+    void loadSessionData(targetSession.id).catch(() => setError(text.unavailable));
+  }, [activeSessionId, deletingSessionId, generation.sessionId, openRequest, sending, sessions]);
+
+  useEffect(() => {
+    if (!activeSessionId || generation.sessionId !== activeSessionId) return;
+    if (generation.phase !== "completed" && generation.phase !== "error") return;
+
+    let active = true;
+    void Promise.all([
+      loadChatMessages(activeSessionId),
+      loadChatSessions(),
+      loadChatDocuments(activeSessionId),
+    ])
+      .then(([sessionMessages, freshSessions, sessionDocuments]) => {
+        if (!active) return;
+        const readyDocuments = sessionDocuments.filter((item) => item.status === "ready");
+        const sentDocumentIds = getSentDocumentIds(sessionMessages);
+        setMessages(sessionMessages);
+        setSessions(freshSessions);
+        setSessionDocuments(readyDocuments);
+        setUploadedDocuments(readyDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+        if (generation.phase === "error" && generation.error) setError(generation.error);
+      })
+      .catch(() => {
+        if (active) setError(text.unavailable);
+      });
+    return () => { active = false; };
+  }, [activeSessionId, generation.error, generation.phase, generation.sessionId]);
+
+  const selectSession = async (session: ChatSession) => {
+    if (session.id === activeSessionId || sending || deletingSessionId || removingDocumentId) return;
+    setError("");
+    setActiveSessionId(session.id);
+    setSlidePlanOpen(false);
+    setClarificationOtherOpen(false);
+    setClarificationOther("");
+    try {
+      await loadSessionData(session.id);
+    } catch {
+      setError(text.unavailable);
+    }
+  };
+
+  const startNewConversation = async () => {
+    if (sending || deletingSessionId || removingDocumentId) return;
+    setError("");
+    try {
+      const session = await createChatSession();
+      setSessions((current) => [session, ...current]);
+      setActiveSessionId(session.id);
+      setMessages([]);
+      setUploadingDocument(null);
+      setSessionDocuments([]);
+      setUploadedDocuments([]);
+      setSlidePlanOpen(false);
+      setClarificationOtherOpen(false);
+      setClarificationOther("");
+    } catch {
+      setError(text.unavailable);
+    }
+  };
+
+  const deleteSession = async (event: MouseEvent<HTMLButtonElement>, session: ChatSession) => {
+    event.stopPropagation();
+    if (sending || deletingSessionId || removingDocumentId) return;
+    if (isGenerating && generation.sessionId === session.id) {
+      setError(text.slideGenerationBusy);
+      return;
+    }
+    if (!window.confirm(text.deleteConversationConfirm)) return;
+
+    setDeletingSessionId(session.id);
+    setError("");
+    try {
+      await archiveChatSession(session.id);
+      const remainingSessions = sessions.filter((item) => item.id !== session.id);
+      setSessions(remainingSessions);
+
+      if (session.id !== activeSessionId) return;
+
+      setActiveSessionId(null);
+      setMessages([]);
+      setSessionDocuments([]);
+      setUploadedDocuments([]);
+      setSlidePlanOpen(false);
+      setClarificationOtherOpen(false);
+      setClarificationOther("");
+
+      const nextSession = remainingSessions[0] || await createChatSession();
+      setSessions(remainingSessions.length ? remainingSessions : [nextSession]);
+      setActiveSessionId(nextSession.id);
+      await loadSessionData(nextSession.id);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+    } finally {
+      setDeletingSessionId(null);
+    }
+  };
+
+  useEffect(() => {
+    const thread = threadRef.current;
+    if (!thread) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      thread.scrollTo({
+        top: thread.scrollHeight,
+        behavior: sending ? "smooth" : "auto",
+      });
+      setShowScrollToLatest(false);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeSessionId, loading, messages.length, sending]);
+
+  const handleThreadScroll = () => {
+    const thread = threadRef.current;
+    if (!thread) return;
+    const distanceFromLatest = thread.scrollHeight - thread.scrollTop - thread.clientHeight;
+    const shouldShow = distanceFromLatest > 48;
+    setShowScrollToLatest((current) => current === shouldShow ? current : shouldShow);
+  };
+
+  const scrollThreadToLatest = () => {
+    const thread = threadRef.current;
+    if (!thread) return;
+    thread.scrollTo({ top: thread.scrollHeight, behavior: "smooth" });
+    setShowScrollToLatest(false);
+  };
+
+  const sendMessageContent = async (
+    cleanMessage: string,
+    options: SendMessageOptions = {},
+  ) => {
+    const streamSlides = options.streamSlides === true;
+    if (!cleanMessage || !activeSessionId || sending) return;
+    // Keep ordinary chat available while a deck is rendering. The explicit
+    // slide-stream action is the only operation that must be blocked here.
+    if (streamSlides && isGenerating) {
+      setMessage(cleanMessage);
+      setError(text.slideGenerationBusy);
+      return;
+    }
+    const sessionId = activeSessionId;
+    const pendingDocuments = [...uploadedDocuments];
+    const documentIds = pendingDocuments.map((document) => document.id);
+    const messageAttachments: MessageAttachment[] = pendingDocuments.map((document) => ({
+      id: document.id,
+      name: document.title || document.original_filename,
+    }));
+
+    const optimisticMessage: ChatMessage = {
+      id: -Date.now(),
+      session_id: activeSessionId,
+      role: "user",
+      content: cleanMessage,
+      model,
+      effort,
+      metadata: {
+        optimistic: true,
+        ...(messageAttachments.length ? { attachments: messageAttachments } : {}),
+      },
+      created_at: new Date().toISOString(),
+    };
+
+    setMessage("");
+    setClarificationOther("");
+    setClarificationOtherOpen(false);
+    setError("");
+    setMessages((current) => [...current, optimisticMessage]);
+    // Once submitted, the attachment belongs to this user message. Keep the
+    // composer reserved for files that have not been sent yet; restore them
+    // below if the request fails.
+    setUploadedDocuments([]);
+
+    if (streamSlides) {
+      const started = startSlideGeneration({
+        sessionId,
+        content: cleanMessage,
+        model,
+        effort,
+        slideCount: options.slideCount,
+        documentIds,
+      });
+      if (!started) {
+        setMessages((current) => current.filter((item) => item.id !== optimisticMessage.id));
+        setMessage(cleanMessage);
+        setUploadedDocuments(pendingDocuments);
+        setError(text.slideGenerationBusy);
+      }
+      return;
+    }
+
+    setSending(true);
+    try {
+      const result = await sendChatMessage(
+        sessionId,
+        cleanMessage,
+        model,
+        effort,
+        options.slideCount,
+        documentIds,
+      );
+      setMessages((current) => [
+        ...current.filter((item) => item.id !== optimisticMessage.id),
+        result.user_message,
+        result.assistant_message,
+      ]);
+      setSessions((current) => current.map((session) => (
+        session.id === result.session.id ? result.session : session
+      )));
+    } catch (requestError) {
+      setMessages((current) => current.filter((item) => item.id !== optimisticMessage.id));
+      setMessage(cleanMessage);
+      setUploadedDocuments(pendingDocuments);
+      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const submitMessage = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const cleanMessage = message.trim();
+    void sendMessageContent(cleanMessage);
+  };
+
+  const submitSlideOption = (option: SlideFlowOption, optionIndex: number) => {
+    if (sending || isGenerating) return;
+    if (option.action === "upgrade") {
+      setSlidePlanOpen(false);
+      setClarificationOtherOpen(false);
+      navigate("/subscription");
+      return;
+    }
+    if (option.is_other || option.action === "other") {
+      setSlidePlanOpen(false);
+      setClarificationOtherOpen(true);
+      window.requestAnimationFrame(() => clarificationInputRef.current?.focus());
+      return;
+    }
+    setSlidePlanOpen(false);
+    const latestFlow = [...messages]
+      .reverse()
+      .map((item) => item.role === "assistant" ? getSlideFlow(item) : null)
+      .find((item): item is SlideFlow => Boolean(item));
+    const visibleFlow = latestFlow && hasSessionDocuments
+      ? getVisibleDocumentFlow(latestFlow, language)
+      : latestFlow;
+    const selectedSlideCount = extractSlideCount(option.value || option.label)
+      ?? visibleFlow?.targetSlideCount
+      ?? undefined;
+    void sendMessageContent(option.value || option.label, {
+      streamSlides: visibleFlow?.state === "awaiting_confirmation"
+        && optionIndex === 0
+        && selectedSlideCount !== undefined,
+      slideCount: selectedSlideCount,
+    });
+  };
+
+  const submitOtherAnswer = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const cleanAnswer = clarificationOther.trim();
+    if (!cleanAnswer || sending || isGenerating) return;
+    const latestFlow = [...messages]
+      .reverse()
+      .map((item) => item.role === "assistant" ? getSlideFlow(item) : null)
+      .find((item): item is SlideFlow => Boolean(item));
+    const isCountQuestion = latestFlow?.questionKind === "slide_count"
+      || latestFlow?.state === "limit_reached";
+    const slideCount = extractSlideCount(cleanAnswer, isCountQuestion);
+    if (isCountQuestion && slideCount === null) {
+      setError(language === "vi"
+        ? "Hãy nhập số lượng slide, ví dụ: 12 slide."
+        : "Enter a slide count, for example: 12 slides.");
+      return;
+    }
+    if (isCountQuestion && slideCount !== null && slideCount < 3) {
+      setError(language === "vi"
+        ? "Số lượng slide tối thiểu là 3."
+        : "The minimum slide count is 3.");
+      return;
+    }
+    setSlidePlanOpen(false);
+    void sendMessageContent(cleanAnswer, { slideCount: slideCount ?? undefined });
+  };
+
+  const handleDocumentSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !activeSessionId || uploading) return;
+    if (!file.name.toLowerCase().endsWith(".docx")) {
+      setError(language === "vi" ? "Chỉ hỗ trợ file DOCX." : "Only DOCX files are supported.");
+      return;
+    }
+    setUploading(true);
+    setUploadingDocument(file.name);
+    setError("");
+    try {
+      const document = await uploadChatDocument(activeSessionId, file);
+      setSessionDocuments((current) => [
+        ...current.filter((item) => item.id !== document.id),
+        document,
+      ]);
+      setUploadedDocuments((current) => [
+        ...current.filter((item) => item.id !== document.id),
+        document,
+      ]);
+    } catch (requestError) {
+      setUploadingDocument(null);
+      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+    } finally {
+      setUploading(false);
+      setUploadingDocument(null);
+    }
+  };
+
+  const removeDocument = async (
+    event: MouseEvent<HTMLButtonElement>,
+    document: ChatDocument,
+  ) => {
+    event.stopPropagation();
+    if (!activeSessionId || removingDocumentId || uploading) return;
+    const sessionId = activeSessionId;
+    setRemovingDocumentId(document.id);
+    setError("");
+    try {
+      await deleteChatDocument(sessionId, document.id);
+      setSessionDocuments((current) => current.filter((item) => item.id !== document.id));
+      setUploadedDocuments((current) => current.filter((item) => item.id !== document.id));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+    } finally {
+      setRemovingDocumentId(null);
+    }
+  };
+
+  const displayedMessages = messages.filter((item) => item.role === "user" || item.role === "assistant");
+  const latestAssistantMessageId = [...displayedMessages]
+    .reverse()
+    .find((item) => item.role === "assistant")?.id;
+  const latestSlideFlowMessage = [...displayedMessages]
+    .reverse()
+    .find((item) => item.role === "assistant" && item.metadata && Object.prototype.hasOwnProperty.call(item.metadata, "slide_flow"));
+  const latestSlideFlow = latestSlideFlowMessage ? getSlideFlow(latestSlideFlowMessage) : null;
+  const latestInteractiveAssistantId = latestSlideFlowMessage && latestSlideFlow
+    ? latestSlideFlowMessage.id
+    : undefined;
+  const hasPersistedGeneration = generation.phase === "completed" && displayedMessages.some((item) => {
+    if (item.role !== "assistant") return false;
+    const log = getSlideGenerationLog(item);
+    if (!log) return false;
+    if (generation.projectId !== null) return log.projectId === generation.projectId;
+    return Boolean(generation.projectName && log.projectName === generation.projectName);
+  });
+  const hasActiveGeneration = isActiveGeneration && generation.phase !== "idle" && !hasPersistedGeneration;
+
+  return (
+    <section className={`chat-layout ${showSlideStream || slidePlanOpen ? "chat-layout-streaming" : ""}`} onClick={() => { setToolsOpen(false); setModelOpen(false); }}>
+      <aside className="chat-history">
+        <div className="chat-history-top">
+          <span>{text.conversations}</span>
+          <button aria-label={text.newConversation} onClick={() => void startNewConversation()} />
+        </div>
+        <button className="new-chat-button" onClick={() => void startNewConversation()}>{text.newConversation}</button>
+        <div className="chat-history-list">
+          {sessions.map((session) => (
+            <div className="chat-history-row" key={session.id}>
+              <button
+                className={`chat-history-item ${session.id === activeSessionId ? "active" : ""}`}
+                onClick={() => void selectSession(session)}
+              >
+                <span>{formatSessionDate(session.updated_at, language)}</span>
+                {session.title || text.newConversation}
+              </button>
+              <button
+                className="chat-history-delete"
+                type="button"
+                aria-label={text.deleteConversation}
+                title={text.deleteConversation}
+                disabled={Boolean(deletingSessionId)}
+                onClick={(event) => void deleteSession(event, session)}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      </aside>
+
+      <div className="chat-panel">
+        <div className="chat-panel-header">
+          <p className="workspace-eyebrow">SLIDEGENIUS / CHAT</p>
+        </div>
+
+        {loading ? <div className="chat-empty"><p>{text.sending}</p></div> : messages.length || sending || hasActiveGeneration ? (
+          <div className="chat-thread-wrap">
+            <div className="chat-thread" ref={threadRef} onScroll={handleThreadScroll} aria-live="polite">
+              {displayedMessages.map((item) => {
+                const rawFlow = item.role === "assistant" ? getSlideFlow(item) : null;
+                const flow = rawFlow && hasSessionDocuments
+                  ? getVisibleDocumentFlow(rawFlow, language)
+                  : rawFlow;
+                const generation = item.role === "assistant" ? getSlideGenerationLog(item) : null;
+                const attachments = item.role === "user" ? getMessageAttachments(item) : [];
+                const showFlow = item.id === latestInteractiveAssistantId;
+                const visibleContent = flow && rawFlow && flow !== rawFlow
+                  ? language === "vi"
+                    ? "Mình đã nhận tài liệu" + (sessionDocumentSummary ? " “" + sessionDocumentSummary + "”" : "") + ". Bắt đầu tạo slide với tài liệu này nhé?"
+                    : "I’ve received the" + (sessionDocumentSummary ? " “" + sessionDocumentSummary + "”" : "") + " document. Shall I start creating the slides with it?"
+                  : item.content;
+                return item.role === "assistant" ? (
+                  <article className="chat-assistant-message" key={item.id} tabIndex={0}>
+                    <span className="chat-assistant-mark" aria-hidden="true">✦</span>
+                    <p style={{ whiteSpace: "pre-wrap" }}>{visibleContent}</p>
+                    <div className="chat-message-meta">
+                      <time>{messageTime(item.created_at, language) || text.justNow}</time>
+                      {item.id === latestAssistantMessageId && <button type="button" aria-label={text.regenerate} title={text.regenerate}>↻</button>}
+                      <button type="button" aria-label={text.copyMessage} title={text.copyMessage} onClick={() => void navigator.clipboard?.writeText(visibleContent)}>▣</button>
+                    </div>
+                    {generation && (
+                      <div className="chat-slide-generation-log">
+                        <span className="chat-slide-generation-mark" aria-hidden="true">✓</span>
+                        <div className="chat-slide-generation-copy">
+                          <p>{text.slideGenerated}</p>
+                          <strong>{generation.projectName || text.slideGeneratedProject}</strong>
+                          {generation.slideCount !== null && <span>{generation.slideCount} {text.slideStreamSlide.toLowerCase()}</span>}
+                        </div>
+                        {generation.projectId !== null && (
+                          deletedProjectIds.has(generation.projectId) ? (
+                            <span className="chat-slide-generation-deleted">{text.projectDeleted}</span>
+                          ) : (
+                            <button type="button" onClick={() => void openGeneratedProject(generation.projectId!)}>{text.slideStreamOpenProject} ↗</button>
+                          )
+                        )}
+                      </div>
+                    )}
+                    {flow && showFlow && (
+                      <div className={`chat-slide-flow ${flow.state === "awaiting_confirmation" ? "confirmation" : ""} ${flow.state === "limit_reached" ? "limit-reached" : ""}`}>
+                        {flow.state === "awaiting_confirmation" && (
+                          <button
+                            className="chat-plan-button"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSlidePlanOpen(true);
+                            }}
+                          >
+                            <span>{text.viewSlidePlan}</span>
+                            <span aria-hidden="true">↗</span>
+                          </button>
+                        )}
+                        <div className="chat-flow-options">
+                          {flow.options.map((option, optionIndex) => (
+                            <button
+                              className={`chat-flow-option ${flow.state === "awaiting_confirmation" && optionIndex === 0 ? "primary" : ""} ${option.action === "upgrade" ? "upgrade" : ""}`}
+                              disabled={sending || isGenerating}
+                              key={`${item.id}-${option.label}`}
+                              type="button"
+                              onClick={() => submitSlideOption(option, optionIndex)}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                        {(flow.state === "clarifying" || flow.state === "limit_reached") && clarificationOtherOpen && (
+                          <form className="chat-flow-other" onSubmit={submitOtherAnswer}>
+                            <input
+                              ref={clarificationInputRef}
+                              value={clarificationOther}
+                              onChange={(event) => setClarificationOther(event.target.value)}
+                              disabled={sending || isGenerating}
+                              placeholder={flow.questionKind === "slide_count" ? text.slideCountPlaceholder : text.otherPlaceholder}
+                              aria-label={flow.questionKind === "slide_count" ? text.slideCountPlaceholder : text.otherPlaceholder}
+                            />
+                            <button type="submit" disabled={sending || isGenerating || !clarificationOther.trim()}>{text.sendAnswer}</button>
+                          </form>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                ) : (
+                  <article className="chat-user-message" key={item.id} tabIndex={0}>
+                    <div className="chat-user-bubble"><p style={{ whiteSpace: "pre-wrap" }}>{item.content}</p></div>
+                    {attachments.length > 0 && (
+                      <div className="chat-message-attachments" role="list" aria-label={text.uploaded}>
+                        {attachments.map((attachment) => (
+                          <div className="chat-message-attachment" key={attachment.id} role="listitem" title={attachment.name}>
+                            <span className="chat-message-attachment-icon" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M7 3.75h7.2L19 8.55v11.7H7z" />
+                                <path d="M14 3.75v5h5M9.5 13h7M9.5 16h5" />
+                              </svg>
+                            </span>
+                            <strong>{attachment.name}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="chat-message-meta">
+                      <time>{messageTime(item.created_at, language) || text.justNow}</time>
+                      <button type="button" aria-label={text.regenerate} title={text.regenerate}>↻</button>
+                      <button type="button" aria-label={text.editMessage} title={text.editMessage} onClick={() => setMessage(item.content)}>✎</button>
+                      <button type="button" aria-label={text.copyMessage} title={text.copyMessage} onClick={() => void navigator.clipboard?.writeText(item.content)}>▣</button>
+                    </div>
+                  </article>
+                );
+              })}
+              {hasActiveGeneration && (
+                <ChatSlideGenerationCard
+                  phase={generation.phase}
+                  slides={generation.slides}
+                  totalSlides={generation.totalSlides}
+                  targetSlideCount={generation.targetSlideCount}
+                  progress={generation.progress}
+                  projectName={generation.projectName}
+                  error={generation.error}
+                  title={text.slideGenerationTitle}
+                  generatingLabel={text.slideGenerationRunning}
+                  completedLabel={text.slideStreamCompleted}
+                  openStreamLabel={text.slideGenerationOpen}
+                  openProjectLabel={text.slideStreamOpenProject}
+                  slideLabel={text.slideStreamSlide}
+                  onOpenStream={openSlideStream}
+                  projectId={generation.projectId !== null && !deletedProjectIds.has(generation.projectId) ? generation.projectId : null}
+                  onOpenProject={(projectId) => void openGeneratedProject(projectId)}
+                />
+              )}
+              {sending && (
+                <div className="chat-pending-message" role="status" aria-live="polite">
+                  <span className="chat-assistant-mark" aria-hidden="true">✦</span>
+                  <div className="chat-pending-copy">
+                    <span className="chat-pending-loader" aria-hidden="true" />
+                    <span>{text.sending}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            {showScrollToLatest && (
+              <button
+                className="chat-scroll-latest"
+                type="button"
+                aria-label={text.scrollToLatest}
+                title={text.scrollToLatest}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  scrollThreadToLatest();
+                }}
+              >
+                ↓
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="chat-empty">
+            <div className="genius-orbit" aria-hidden="true"><span /><span /><span /></div>
+            <p>{text.helper}</p>
+            <div className="chat-suggestions">
+              {text.prompts.map((prompt) => <button key={prompt} onClick={() => setMessage(prompt)}>{prompt}<span>↗</span></button>)}
+            </div>
+          </div>
+        )}
+
+        {error && <p className="chat-error" role="alert">{error}</p>}
+        <form className="chat-composer" onSubmit={submitMessage}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            hidden
+            onChange={(event) => void handleDocumentSelected(event)}
+          />
+          {(uploading || hasUploadedDocuments) && (
+            <div
+              className="chat-composer-attachments"
+              id="chat-composer-attachment"
+              role="list"
+              aria-label={text.uploaded}
+            >
+              {uploadingDocument && (
+                <div
+                  className="chat-composer-attachment is-loading"
+                  role="listitem"
+                  aria-label={text.uploading + " " + uploadingDocument}
+                >
+                  <span className="chat-composer-attachment-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M7 3.75h7.2L19 8.55v11.7H7z" />
+                      <path d="M14 3.75v5h5M9.5 13h7M9.5 16h5" />
+                    </svg>
+                  </span>
+                  <strong title={uploadingDocument}>{uploadingDocument}</strong>
+                  <span className="chat-composer-attachment-state is-loading" aria-hidden="true"><span /></span>
+                </div>
+              )}
+              {uploadedDocuments.map((document) => {
+                const documentName = document.title || document.original_filename;
+                return (
+                  <div
+                    className="chat-composer-attachment is-ready"
+                    key={document.id}
+                    role="listitem"
+                    aria-label={documentName + " — " + text.uploaded}
+                  >
+                    <span className="chat-composer-attachment-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 3.75h7.2L19 8.55v11.7H7z" />
+                        <path d="M14 3.75v5h5M9.5 13h7M9.5 16h5" />
+                      </svg>
+                    </span>
+                    <strong title={documentName}>{documentName}</strong>
+                    <button
+                      className="chat-composer-attachment-remove"
+                      type="button"
+                      aria-label={text.removeAttachment + " " + documentName}
+                      title={text.removeAttachment}
+                      disabled={removingDocumentId === document.id}
+                      onClick={(event) => void removeDocument(event, document)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <textarea
+            {...((uploading || hasUploadedDocuments) ? { "aria-describedby": "chat-composer-attachment" } : {})}
+            value={message}
+            onChange={(event) => {
+              setMessage(event.target.value);
+              event.currentTarget.style.height = "auto";
+              const contentHeight = event.currentTarget.scrollHeight;
+              event.currentTarget.style.height = `${Math.min(220, Math.max(44, contentHeight))}px`;
+              event.currentTarget.style.overflowY = contentHeight > 220 ? "auto" : "hidden";
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }}
+            placeholder={text.placeholder}
+            aria-label={text.placeholder}
+            rows={1}
+            disabled={loading || sending || !activeSessionId}
+          />
+          <div className="composer-controls" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="composer-plus" aria-label="Open tools" aria-expanded={toolsOpen} onClick={() => { setToolsOpen(!toolsOpen); setModelOpen(false); }}>+</button>
+            {toolsOpen && <div className="composer-tools-menu"><button type="button" onClick={() => { fileInputRef.current?.click(); setToolsOpen(false); }}>{text.upload}</button><button type="button" className={searchEnabled ? "selected" : ""} onClick={() => { setSearchEnabled(!searchEnabled); setToolsOpen(false); }}>Search</button></div>}
+            <div className="composer-spacer" />
+            <div className="composer-model">
+              <button type="button" className="composer-model-button" aria-expanded={modelOpen} onClick={() => { setModelOpen(!modelOpen); setToolsOpen(false); }}>Genius {model.slice(-1)} <span>{effort[0].toUpperCase() + effort.slice(1)}</span></button>
+              {modelOpen && <div className="composer-model-menu"><p className="composer-model-menu-label">Model</p>{models.map((item) => <button type="button" key={item} className={model === item ? "selected" : ""} onClick={() => { setModel(item); setModelOpen(false); }}>Genius {item.slice(-1)}{model === item && <i>✓</i>}</button>)}<div className="composer-model-divider" /><p className="composer-model-menu-label">Effort</p>{efforts.map((item) => <button type="button" key={item} className={effort === item ? "selected" : ""} onClick={() => { if (item === "low" || item === "medium" || item === "high") setEffort(item); setModelOpen(false); }}>{item[0].toUpperCase() + item.slice(1)}{effort === item && <i>✓</i>}</button>)}</div>}
+            </div>
+            <button className="composer-send" type="submit" aria-label="Send message" disabled={sending || !message.trim()}>↗</button>
+          </div>
+        </form>
+        <p className="chat-disclaimer">Slidegenius can make mistakes. Review important work before sharing.</p>
+      </div>
+
+      {showSlideStream && (
+        <ChatSlideStreamPanel
+          status={generation.status}
+          progress={generation.progress}
+          slides={generation.slides}
+          totalSlides={generation.totalSlides}
+          completed={generation.phase === "completed"}
+          projectId={generation.projectId}
+          error={generation.error}
+          closeLabel={text.slideStreamClose}
+          openProjectLabel={text.slideStreamOpenProject}
+          slideLabel={text.slideStreamSlide}
+          completedLabel={text.slideStreamCompleted}
+          waitingLabel={text.slideStreamWaiting}
+          onClose={closeSlideStream}
+          onOpenProject={(projectId) => navigate(`/projects/${projectId}`)}
+        />
+      )}
+      {slidePlanOpen && !showSlideStream && latestSlideFlow && (
+        <ChatSlidePlanPanel
+          originalPrompt={latestSlideFlow.originalPrompt}
+          brief={latestSlideFlow.brief}
+          answers={latestSlideFlow.answers}
+          targetSlideCount={latestSlideFlow.targetSlideCount}
+          maxSlideCount={latestSlideFlow.maxSlideCount ?? maxSlideCount}
+          model={model}
+          effort={effort}
+          document={sessionDocumentLabel || null}
+          title={text.slidePlanTitle}
+          closeLabel={text.slidePlanClose}
+          requestLabel={text.slidePlanRequest}
+          briefLabel={text.slidePlanBrief}
+          answersLabel={text.slidePlanAnswers}
+          sourceLabel={text.slidePlanSource}
+          settingsLabel={text.slidePlanSettings}
+          noAnswersLabel={text.slidePlanNoAnswers}
+          noBriefLabel={text.slidePlanNoBrief}
+          slideCountLabel={text.slideCountLabel}
+          slideLimitLabel={text.slideLimitLabel}
+          slideCountNotSet={text.slideCountNotSet}
+          slideCountUnlimited={text.slideCountUnlimited}
+          modelLabel={text.modelLabel}
+          effortLabel={text.effortLabel}
+          onClose={() => setSlidePlanOpen(false)}
+        />
+      )}
+    </section>
+  );
+}

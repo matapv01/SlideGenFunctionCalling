@@ -35,7 +35,7 @@ CONTENT TO SPLIT:
 """
 
 AUTO_STRUCTURE_SYSTEM_PROMPT = """
-You are an expert document analyst. Your task is to analyze plain text content and create a logical hierarchical structure.
+You are an expert document analyst. Your task is to analyze one completely unstructured document and create a logical hierarchical structure.
 
 INSTRUCTIONS:
 
@@ -43,11 +43,12 @@ INSTRUCTIONS:
 2. Identify Structure: Determine logical sections, main topics, and subtopics even if no headings exist.
 3. Create Hierarchy: Build a nested structure with appropriate levels (Level 1, 2, 3, etc.).
 4. Generate Headings: Create clear, concise headings for each section you identify.
-5. Distribute Content: Assign content to appropriate sections.
+5. Distribute Content: Assign every source paragraph and sentence to the most appropriate section.
 
 CRITICAL RULES:
 
-- SUMMARIZE CONCISELY: Do not copy full text verbatim. Summarize the main points efficiently.
+- PRESERVE THE SOURCE: Do not drop, invent, or materially summarize away facts. The resulting tree is also the source used for document question answering.
+- RE-ORGANIZE, DON'T REWRITE: Keep the original wording wherever practical; only create concise headings and move content under the right heading.
 - PRESERVE KEY PHRASES: Retain specific terminology, technical terms, key marketing phrases, and important names/data.
 - LOGICAL GROUPING: Group related concepts together.
 - CLEAR HEADINGS: Create descriptive headings that reflect the content.

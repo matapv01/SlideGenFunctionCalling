@@ -7,11 +7,9 @@ import asyncio
 import math
 import re
 import uuid
-from typing import AsyncGenerator, Optional
 from pathlib import Path
 from datetime import datetime
 from backend.api.schemas.generate_schema import (
-    IdeaStructureRequest, IdeaStructureResponse, IdeaStructureDetailResponse, IdeaStructureUpdateRequest,
     DocxPrepareResponse, ManualSessionResponse
 )
 from backend.api.schemas.auth_schema import UserResponse
@@ -29,21 +27,21 @@ from backend.api.dependencies import (
     get_structure_service,
     get_slide_service,
     get_slidegen_workflow_service,
-    get_idea_service,
+    get_legacy_docx_generation_service,
     get_subscription_service,
 )
 from backend.application.services.subscription_service import SubscriptionService
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
-from backend.api.rate_limiting import idea_structure_rate_limiter, idea_stream_rate_limiter
-from backend.api.constants import EventTypes, SourceTypes, FilePatterns
-from backend.utils.session_utils import SessionManager
+from backend.api.constants import EventTypes
 
 # Services
 from backend.application.services.project_service import ProjectService
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
-from backend.application.services.idea_service import IdeaService
+from backend.application.services.legacy_docx_generation_service import (
+    LegacyDocxGenerationService,
+)
 
 router = APIRouter(prefix="/generate", tags=["GENERATE"])
 logger = logging.getLogger("SlideGen-Generation")
@@ -212,42 +210,6 @@ def count_workflow_slides(output_folder: Path, output_format: str = "xml") -> in
     return len(list(slide_dir.glob("*.xml"))) if slide_dir.exists() else 0
 
 
-def _to_idea_text(value: Optional[str], fallback: str = "") -> str:
-    if value is None:
-        return fallback
-    txt = str(value).strip()
-    return txt if txt else fallback
-
-
-def _parse_intro_title_subtitle(raw_content: str, fallback_title: str) -> tuple[str, str]:
-    """
-    Parse intro content formatted like:
-      Title: ...\nSubtitle: ...
-    Returns clean (title, subtitle) without labels.
-    """
-    text = _to_idea_text(raw_content, "")
-    if not text:
-        return fallback_title, ""
-
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-    parsed_title = ""
-    parsed_subtitle = ""
-
-    for line in lines:
-        lower_line = line.lower()
-        if lower_line.startswith("title:"):
-            parsed_title = line.split(":", 1)[1].strip()
-        elif lower_line.startswith("subtitle:"):
-            parsed_subtitle = line.split(":", 1)[1].strip()
-
-    if parsed_title or parsed_subtitle:
-        return parsed_title or fallback_title, parsed_subtitle
-
-    # Fallback: no explicit labels, use first line as title and the rest as subtitle.
-    first = lines[0]
-    rest = "\n".join(lines[1:]).strip()
-    return first or fallback_title, rest
-
 # ==========================================
 # 1. GENERATE FROM FILE (DOCX)
 # ==========================================
@@ -260,7 +222,9 @@ async def generate_from_docx_normal(
     current_user: UserResponse = Depends(get_current_active_user),
     project_service: ProjectService = Depends(get_project_service),
     slide_service: SlideService = Depends(get_slide_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    docx_generation_service: LegacyDocxGenerationService = Depends(
+        get_legacy_docx_generation_service
+    ),
     subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """
@@ -299,7 +263,7 @@ async def generate_from_docx_normal(
 
         # 2. Run Workflow
         logger.info(f"🤖 Processing DOCX: {file.filename}")
-        if not slidegen_workflow_service.is_available():
+        if not docx_generation_service.is_available():
             raise HTTPException(503, "Dịch vụ workflow không khả dụng")
 
         normalized_output_format = output_format.strip().lower()
@@ -310,10 +274,9 @@ async def generate_from_docx_normal(
             "output_format": normalized_output_format,
             "max_docx_slides": user.get_daily_limits()["max_docx_slides"],
         }
-        output_folder_path = await slidegen_workflow_service.process_docx(
+        output_folder_path = await docx_generation_service.generate_from_docx(
             docx_path=str(temp_path),
             output_folder=str(output_folder),
-            router_flags=False,
             slide_options=slide_options,
         )
 
@@ -413,7 +376,7 @@ async def prepare_docx_stream(
 
 
 # ==========================================
-# MARKDOWN PARSER - Reusable for Manual & Idea
+# MARKDOWN PARSER - Reusable for document preprocessing and Manual
 # ==========================================
 
 @router.post("/markdown/parse")
@@ -423,7 +386,7 @@ async def parse_markdown(
 ):
     """
     Parse markdown text into hierarchical structure.
-    Can be used by both Manual Mode and Idea Mode.
+    Can be used by document preprocessing and Manual Mode.
     
     Request body:
     {
@@ -467,7 +430,9 @@ async def stream_docx_generation(
     filename: str = Query(..., description="DOCX filename"),
     current_user: UserResponse = Depends(get_current_user_from_token_param),
     project_service: ProjectService = Depends(get_project_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    docx_generation_service: LegacyDocxGenerationService = Depends(
+        get_legacy_docx_generation_service
+    ),
     subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """
@@ -498,10 +463,9 @@ async def stream_docx_generation(
             queue.put_nowait((event_type, safe_data))
 
         async def run_bg():
-            res = await slidegen_workflow_service.process_docx(
+            res = await docx_generation_service.generate_from_docx(
                 docx_path=str(temp_path),
                 output_folder=str(output_folder),
-                router_flags=False,
                 callback=callback,
                 slide_options=slide_options
             )
@@ -632,313 +596,6 @@ async def create_manual_session_from_docx(
 
 
 # ==========================================
-# 2. GENERATE FROM IDEA (AI)
-# ==========================================
-
-
-@router.post("/idea/structure", response_model=IdeaStructureResponse)
-async def generate_idea_structure(
-    request: IdeaStructureRequest,
-    current_user: UserResponse = Depends(idea_structure_rate_limiter),
-    idea_service: IdeaService = Depends(get_idea_service),
-    subscription_service: SubscriptionService = Depends(get_subscription_service)
-):
-    """Step 1 Idea: Generate structure from prompt"""
-    # Get full user from repository with subscription data
-    user_repo = SqliteUserRepository()
-    user = user_repo.get_by_id(current_user.id)
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Check subscription limits for idea generation
-    subscription_service.check_feature_access(user, "idea_generation")
-
-    # Check content length restrictions
-    data = request.model_dump()
-    content_length = data.get('content_length', 'standard')
-    subscription_service.check_feature_access(user, "content_length", content_length=content_length)
-
-    try:
-        # Increment usage counter
-        subscription_service.increment_usage(current_user.id, "idea_generation")
-
-        return await idea_service.generate_structure(
-            title=data.get('title', '').strip(),
-            prompt=data.get('prompt', '').strip(),
-            content_length=content_length,
-            enable_transition=data.get('enable_transition_slides', True),
-            enable_thank_you=data.get('enable_thank_you_slide', True),
-            output_format=data.get('output_format', 'xml'),
-        )
-    except Exception as e:
-        logger.error(f"Idea structure error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/idea/structure/{session_id}/manual-session", response_model=ManualSessionResponse)
-async def convert_idea_to_manual_session(
-    session_id: str,
-    current_user: UserResponse = Depends(get_current_active_user),
-    structure_service: StructureService = Depends(get_structure_service)
-):
-    """
-    Convert idea JSON session into StructureEditor-compatible manual session.
-    This pre-populates L0 intro + L1 blocks so user can edit with manual UI immediately.
-    """
-    try:
-        idea_data = await SessionManager.read_session_json(session_id, "idea")
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Idea session read error: {e}")
-        raise HTTPException(status_code=500, detail="Không thể đọc dữ liệu idea session")
-
-    document_title = _to_idea_text(idea_data.get("title"), "Untitled")
-    slide_chunks = idea_data.get("slide_chunks", [])
-    output_format = "xml"
-
-    if not slide_chunks:
-        raise HTTPException(status_code=400, detail="Idea session không có slide chunk để chuyển đổi")
-
-    manual_structure = []
-    intro_title = document_title
-    intro_subtitle = ""
-    plain_text_parts = []
-
-    for idx, chunk in enumerate(slide_chunks):
-        title = _to_idea_text(chunk.get("title") or chunk.get("heading"), f"Slide {idx + 1}")
-        content = _to_idea_text(
-            chunk.get("content") or chunk.get("description") or chunk.get("text_content"),
-            ""
-        )
-        slide_type = _to_idea_text(chunk.get("slide_type"), "content").lower()
-
-        if slide_type == "intro":
-            intro_title, intro_subtitle = _parse_intro_title_subtitle(
-                content or title or document_title,
-                document_title,
-            )
-            continue
-
-        plain_text_parts.append(title)
-        if content:
-            plain_text_parts.append(content)
-
-        manual_structure.append({
-            "node_id": f"idea_node_{idx + 1}",
-            "level": 1,
-            "title": title,
-            "content": content,
-            "children": [],
-            "is_transition": slide_type == "transition",
-        })
-
-    full_text = "\n\n".join(plain_text_parts) if plain_text_parts else document_title
-
-    manual_session_id = structure_service.create_session(
-        filename=f"{document_title}.docx",
-        full_text=full_text,
-        paragraphs=[],
-        docx_path="",
-        output_format=output_format,
-    )
-
-    intro_node = {
-        "node_id": "intro_slide_0",
-        "level": 0,
-        "title": intro_title,
-        "content": intro_subtitle,
-        "children": [],
-        "is_transition": False,
-    }
-
-    # Put intro directly into structure so StructureEditor can render L0 immediately on first load.
-    structure_with_intro = [intro_node] + manual_structure
-
-    structure_service.update_session_structure(
-        session_id=manual_session_id,
-        structure=structure_with_intro,
-        intro_slide=None,
-        output_format=output_format,
-    )
-
-    return {
-        "success": True,
-        "session_id": manual_session_id,
-        "document_title": document_title,
-        "output_format": output_format,
-    }
-
-
-@router.get("/idea/stream")
-async def stream_idea_generation(
-    session_id: str = Query(...),
-    current_user: UserResponse = Depends(idea_stream_rate_limiter),
-    project_service: ProjectService = Depends(get_project_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
-):
-    """Step 2 Idea: SSE Generation"""
-    try:
-        idea_data = await SessionManager.read_session_json(session_id, "idea")
-    except HTTPException as e:
-        # Re-raise with localized message
-        raise HTTPException(400, "Phiên không hợp lệ")
-
-    title = idea_data.get('title', 'Untitled')
-    output_folder = prepare_output_folder(f"idea_{session_id}")
-
-    async def event_generator():
-        queue = asyncio.Queue()
-        
-        def callback(event_type, data):
-            safe_data = sanitize_event_data(event_type, data)
-            queue.put_nowait((event_type, safe_data))
-
-        async def run_bg():
-            idea_slide_options = {
-                'enable_transition_slides': idea_data.get('enable_transition_slides'),
-                'enable_thank_you_slide': idea_data.get('enable_thank_you_slide'),
-                'output_format': 'xml',
-            }
-            res = await slidegen_workflow_service.process_chunks(
-                slide_chunks=idea_data.get('slide_chunks', []),
-                title=title,
-                output_folder=str(output_folder),
-                callback=callback,
-                slide_options=idea_slide_options,
-                section_ids=[
-                    chunk.get("section_id")
-                    for chunk in idea_data.get("slide_chunks", [])
-                ],
-            )
-            
-            if not res:
-                raise RuntimeError(
-                    "Workflow không tạo được slide. Vui lòng thử lại."
-                )
-
-            pid = project_service.import_project_from_workflow(
-                user_id=current_user.id,
-                project_name=f"idea_{session_id}",
-                source_type='idea',
-                source_data=idea_data,
-                slide_options=idea_slide_options,
-                output_folder=output_folder
-            )
-
-            workflow_temp_dir = str(output_folder)
-
-            await queue.put(('complete', {
-                'project_id': pid,
-                'project_name': f"idea_{session_id}",
-                'total_slides': len(idea_data.get('slide_chunks', [])),
-                'temp_dir': workflow_temp_dir
-            }))
-
-        asyncio.create_task(_run_stream_task(queue, run_bg, "IDEA"))
-
-        while True:
-            try:
-                ev = await asyncio.wait_for(queue.get(), timeout=1.0)
-                yield f"event: {ev[0]}\ndata: {json.dumps(ev[1])}\n\n"
-                if ev[0] in [EventTypes.COMPLETE, EventTypes.ERROR_EVENT]: break
-            except asyncio.TimeoutError:
-                yield ": keepalive\n\n"
-
-        # Cleanup idea session file after stream
-        await SessionManager.delete_session(session_id, "idea")
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-
-
-@router.get("/idea/structure/{session_id}", response_model=IdeaStructureDetailResponse)
-async def get_idea_structure(
-    session_id: str,
-    current_user: UserResponse = Depends(get_current_active_user)
-):
-    """Get idea structure details for preview/editing"""
-    try:
-        data = await SessionManager.read_session_json(session_id, "idea")
-
-        # Sanitize slide_chunks to ensure all required fields are present
-        slide_chunks = data.get('slide_chunks', [])
-        sanitized_chunks = []
-
-        for i, chunk in enumerate(slide_chunks):
-            # Map different field formats to expected schema
-            title = chunk.get("title") or chunk.get("heading", f"Slide {i + 1}")
-            content = chunk.get("content") or chunk.get("description", "Content not available")
-
-            sanitized_chunk = {
-                "title": str(title).strip() if title else f"Slide {i + 1}",
-                "content": str(content).strip() if content else "Content not available",
-                "slide_type": chunk.get("slide_type", "content"),
-                "section_id": chunk.get("section_id"),
-                "section_order": chunk.get("section_order"),
-                "order_in_section": chunk.get("order_in_section"),
-            }
-            sanitized_chunks.append(sanitized_chunk)
-
-        return IdeaStructureDetailResponse(
-            session_id=session_id,
-            title=data.get('title', ''),
-            slide_chunks=sanitized_chunks,
-            enable_transition_slides=data.get('enable_transition_slides', True),
-            enable_thank_you_slide=data.get('enable_thank_you_slide', True),
-            output_format=data.get('output_format', 'xml'),
-            metadata=data.get('metadata', {})
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
-    except Exception as e:
-        logger.error(f"Error reading structure: {e}")
-        raise HTTPException(500, "Failed to read structure")
-
-
-@router.put("/idea/structure/{session_id}", response_model=IdeaStructureDetailResponse)
-async def update_idea_structure(
-    session_id: str,
-    request: IdeaStructureUpdateRequest,
-    current_user: UserResponse = Depends(get_current_active_user)
-):
-    """Update idea structure before generation"""
-    try:
-        # Read existing data to preserve metadata
-        existing_data = await SessionManager.read_session_json(session_id, "idea")
-
-        # Update with new data
-        updated_data = {
-            'title': request.title.strip(),
-            'slide_chunks': [chunk.dict() for chunk in request.slide_chunks],
-            'enable_transition_slides': request.enable_transition_slides,
-            'enable_thank_you_slide': request.enable_thank_you_slide,
-            'output_format': request.output_format,
-            'prompt': existing_data.get('prompt', ''),  # Keep original prompt
-            'is_from_idea': True,
-            'metadata': existing_data.get('metadata', {})
-        }
-
-        # Save updated structure
-        await SessionManager.write_session_json(session_id, updated_data, "idea")
-
-        return IdeaStructureDetailResponse(
-            session_id=session_id,
-            title=updated_data['title'],
-            slide_chunks=updated_data['slide_chunks'],
-            enable_transition_slides=updated_data['enable_transition_slides'],
-            enable_thank_you_slide=updated_data['enable_thank_you_slide'],
-            output_format=updated_data.get('output_format', 'xml'),
-            metadata=updated_data.get('metadata', {})
-        )
-    except HTTPException:
-        raise  # Re-raise HTTP exceptions as-is
-    except Exception as e:
-        logger.error(f"Error updating structure: {e}")
-        raise HTTPException(500, "Failed to update structure")
-
-
-# ==========================================
 # 3. GENERATE FROM MANUAL STRUCTURE
 # ==========================================
 
@@ -948,7 +605,9 @@ async def stream_manual_generation(
     session_id: str,
     current_user: UserResponse = Depends(get_current_user_from_token_param),
     project_service: ProjectService = Depends(get_project_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service)
+    slide_workflow_service: SlideGenWorkflowService = Depends(
+        get_slidegen_workflow_service
+    )
 ):
     """Step 2 Manual: SSE Generation"""
     file_path = TEMP_DIR / f"approved_structure_{session_id}.json"
@@ -974,7 +633,7 @@ async def stream_manual_generation(
             }
             slide_chunks = data.get('slide_chunks', [])
             logger.info(f"[Manual Stream] Starting with {len(slide_chunks)} chunks, options={slide_options}")
-            res = await slidegen_workflow_service.process_chunks(
+            res = await slide_workflow_service.generate_from_chunks(
                 slide_chunks=slide_chunks,
                 title=title,
                 output_folder=str(output_folder),

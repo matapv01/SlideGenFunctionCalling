@@ -85,7 +85,7 @@ class DeckStylePlan(BaseModel):
     layout_density: Literal["airy", "balanced", "compact"] = "balanced"
 
 class SlideJob(TypedDict, total=False):
-    """Canonical scheduler input shared by DOCX, Idea, and Manual flows."""
+    """Canonical scheduler input shared by every slide source."""
 
     index: int
     section_id: str
@@ -107,7 +107,6 @@ class State(TypedDict, total=False):
     # Input
     docx_file: str
     slide_options: Dict  # Options for slide generation
-    workflow_mode: str  # Workflow mode (auto, no_structure, manual)
     output_format: str  # XML-only output format
 
 

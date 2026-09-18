@@ -4,7 +4,10 @@ import sqlite3
 import os
 from contextlib import contextmanager
 
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), "slidegen.db")
+DATABASE_PATH = os.getenv(
+    "SLIDEGEN_DATABASE_PATH",
+    os.path.join(os.path.dirname(__file__), "slidegen.db"),
+)
 
 
 @contextmanager
@@ -167,6 +170,110 @@ def init_db():
             )
         """)
 
+        # Chatbot sessions and short-term conversation memory. The chatbot is
+        # a separate application service, so its conversation state does not
+        # share the temporary structure/generation sessions above.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                project_id INTEGER,
+                title TEXT,
+                history_summary TEXT,
+                max_turns INTEGER NOT NULL DEFAULT 5,
+                archived BOOLEAN NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system', 'tool')),
+                content TEXT NOT NULL,
+                standalone_query TEXT,
+                model TEXT,
+                effort TEXT,
+                metadata_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES chatbot_sessions(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Canonical documents owned by the chatbot. The original DOCX is
+        # preprocessed into Markdown + hierarchical JSON before these rows
+        # are indexed for retrieval.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_documents (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                project_id INTEGER,
+                original_filename TEXT NOT NULL,
+                title TEXT,
+                status TEXT NOT NULL DEFAULT 'processing'
+                    CHECK (status IN ('processing', 'ready', 'failed')),
+                content_hash TEXT NOT NULL,
+                markdown_path TEXT,
+                structure_json TEXT,
+                error_message TEXT,
+                chunk_index_version INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_session_documents (
+                session_id TEXT NOT NULL,
+                document_id TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (session_id, document_id),
+                FOREIGN KEY (session_id) REFERENCES chatbot_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (document_id) REFERENCES chatbot_documents(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_document_chunks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                document_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                section_path TEXT NOT NULL,
+                content TEXT NOT NULL,
+                level INTEGER NOT NULL DEFAULT 1,
+                node_key TEXT NOT NULL DEFAULT '',
+                parent_node_key TEXT,
+                node_kind TEXT NOT NULL DEFAULT 'content',
+                embedding_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(document_id, ordinal),
+                FOREIGN KEY (document_id) REFERENCES chatbot_documents(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Citation rows make retrieved sources auditable instead of keeping
+        # them only in an opaque assistant-message blob.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_message_citations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id INTEGER NOT NULL,
+                document_id TEXT NOT NULL,
+                chunk_id INTEGER NOT NULL,
+                similarity REAL NOT NULL,
+                citation_order INTEGER NOT NULL,
+                FOREIGN KEY (message_id) REFERENCES chatbot_messages(id) ON DELETE CASCADE,
+                FOREIGN KEY (document_id) REFERENCES chatbot_documents(id) ON DELETE CASCADE,
+                FOREIGN KEY (chunk_id) REFERENCES chatbot_document_chunks(id) ON DELETE CASCADE
+            )
+        """)
+
         # Subscription codes table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS subscription_codes (
@@ -218,6 +325,32 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_collaborators_user ON project_collaborators(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_versions_project ON project_versions(project_id, created_at DESC)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_comments_project ON project_comments(project_id, created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_user ON chatbot_sessions(user_id, updated_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_project ON chatbot_sessions(project_id, updated_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_messages_session ON chatbot_messages(session_id, id DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_documents_user ON chatbot_documents(user_id, updated_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_documents_status ON chatbot_documents(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_session_documents_session ON chatbot_session_documents(session_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_document_chunks_document ON chatbot_document_chunks(document_id, ordinal)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_citations_message ON chatbot_message_citations(message_id, citation_order)")
+
+        # Add first-class generation choices to databases created before the
+        # chatbot model/effort fields were introduced.
+        for statement in (
+            "ALTER TABLE chatbot_messages ADD COLUMN model TEXT",
+            "ALTER TABLE chatbot_messages ADD COLUMN effort TEXT",
+            "ALTER TABLE chatbot_documents ADD COLUMN chunk_index_version INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE chatbot_document_chunks ADD COLUMN node_key TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE chatbot_document_chunks ADD COLUMN parent_node_key TEXT",
+            "ALTER TABLE chatbot_document_chunks ADD COLUMN node_kind TEXT NOT NULL DEFAULT 'content'",
+        ):
+            try:
+                cursor.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
+
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_document_chunks_tree ON chatbot_document_chunks(document_id, node_key, level)")
 
         # Migrate: add code_type column to existing DB if missing (must run before INSERT below)
         try:

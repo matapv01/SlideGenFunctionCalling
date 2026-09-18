@@ -21,9 +21,10 @@ UPLOAD_DIR = STATIC_DIR / "uploads"
 OUTPUT_DIR = STATIC_DIR / "output"
 TEMP_DIR = STATIC_DIR / "temp"
 CAPTURES_DIR = STATIC_DIR / "captures"
+CHATBOT_DOCUMENTS_DIR = STATIC_DIR / "chatbot_documents"
 
 # Create directories
-for directory in [UPLOAD_DIR, OUTPUT_DIR, TEMP_DIR, CAPTURES_DIR]:
+for directory in [UPLOAD_DIR, OUTPUT_DIR, TEMP_DIR, CAPTURES_DIR, CHATBOT_DOCUMENTS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 # CORS settings
@@ -58,6 +59,10 @@ TAVILY_API_KEYS = tuple(
     if key
 )
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
+GOOGLE_FRONTEND_URL = os.getenv("GOOGLE_FRONTEND_URL", "").strip().rstrip("/")
 
 # ============================================================================
 # HYPERPARAMETERS - Tùy chỉnh để điều chỉnh hành vi của hệ thống
@@ -79,17 +84,87 @@ LLM_TEMPERATURE = 0.5
 LLM_MAX_TOKENS = 20000
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
 LLM_TOP_P = 1.0
+# Short-term conversation memory configuration.
+CHATBOT_MAX_HISTORY_TURNS = 5
+CHATBOT_DEFAULT_MODEL = "genius-3"
+CHATBOT_DEFAULT_EFFORT = "medium"
+
+# The UI exposes stable product names. Each profile maps to the provider model
+# currently available in this deployment and owns its generation defaults.
+# Keep these aliases independent from the provider's internal model name so a
+# future model rollout does not require changing the API contract.
+CHATBOT_MODEL_CONFIGS = {
+    "genius-1": {
+        "provider_model": LLM_MODEL,
+        "temperature": 0.25,
+        "top_p": 0.90,
+    },
+    "genius-2": {
+        "provider_model": LLM_MODEL,
+        "temperature": 0.45,
+        "top_p": 0.95,
+    },
+    "genius-3": {
+        "provider_model": LLM_MODEL,
+        "temperature": 0.60,
+        "top_p": 1.00,
+    },
+}
+
+# Effort controls response budget and a small creativity adjustment. It is
+# deliberately separate from model profiles so every model supports the same
+# product-level effort choices.
+CHATBOT_EFFORT_CONFIGS = {
+    "low": {"max_tokens": 2048, "temperature_delta": -0.05},
+    "medium": {"max_tokens": 4096, "temperature_delta": 0.00},
+    "high": {"max_tokens": 8192, "temperature_delta": 0.05},
+}
+
+# Document RAG configuration. The index is intentionally stored as SQLite
+# rows plus JSON embeddings so Docker dev/prod use the same persisted format;
+# no second database or vector service is required.
+CHATBOT_RAG_TOP_K = 6
+CHATBOT_RAG_MAX_CONTEXT_CHARS = 14_000
+CHATBOT_RAG_MIN_SIMILARITY = 0.28
+CHATBOT_RAG_CHUNK_CHARS = 2_400
+# Tree-aware retrieval budgets. Summary nodes provide coverage first; detail
+# nodes are expanded only for the facets that need evidence.
+CHATBOT_RAG_MAX_ANCESTOR_DEPTH = 4
+CHATBOT_RAG_MAX_SIBLINGS = 3
+CHATBOT_RAG_OVERVIEW_SECTION_LIMIT = 24
+CHATBOT_RAG_DETAIL_NODE_LIMIT = 8
+CHATBOT_UPLOAD_MAX_BYTES = 25 * 1024 * 1024
+
+
+def resolve_chatbot_generation_config(
+    model: str | None = None,
+    effort: str | None = None,
+) -> dict[str, str | float | int]:
+    """Resolve public chatbot choices into one validated LLM configuration."""
+    model_key = (model or CHATBOT_DEFAULT_MODEL).strip().lower()
+    effort_key = (effort or CHATBOT_DEFAULT_EFFORT).strip().lower()
+    model_config = CHATBOT_MODEL_CONFIGS.get(model_key)
+    effort_config = CHATBOT_EFFORT_CONFIGS.get(effort_key)
+    if model_config is None:
+        raise ValueError(f"Unsupported chatbot model: {model_key}")
+    if effort_config is None:
+        raise ValueError(f"Unsupported chatbot effort: {effort_key}")
+
+    temperature = max(
+        0.0,
+        min(1.0, model_config["temperature"] + effort_config["temperature_delta"]),
+    )
+    return {
+        "model": model_key,
+        "provider_model": model_config["provider_model"],
+        "effort": effort_key,
+        "temperature": temperature,
+        "max_tokens": effort_config["max_tokens"],
+        "top_p": model_config["top_p"],
+    }
+
 # Số lần retry tối đa khi gọi LLM thất bại (network error, timeout, v.v.)
 MAX_REMAKE = 3
-
-# --- Idea Structure LLM Configuration ---
-# Model cho việc tạo cấu trúc slide từ idea (create with idea feature)
-# IDEA_STRUCTURE_LLM_MODEL = "gemini-2.5-flash"
-IDEA_STRUCTURE_LLM_MODEL = "qwen"
-# Temperature cao hơn để sáng tạo structure (0.7 = khá creative nhưng vẫn có logic)
-IDEA_STRUCTURE_LLM_TEMPERATURE = 0.7
-# Max tokens cho structure generation (cần ít hơn vì chỉ gen JSON structure)
-IDEA_STRUCTURE_LLM_MAX_TOKENS = 4096
 
 # --- Content Splitting ---
 # Giới hạn ký tự cho mỗi slide (vượt quá sẽ được split)

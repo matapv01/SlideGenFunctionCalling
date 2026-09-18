@@ -23,6 +23,8 @@ services:
       - "12008:12008"
       - "5173:5173"
     env_file: .env
+    environment:
+      SLIDEGEN_DATABASE_PATH: /app/db/slidegen.db
     volumes:
       # ── Source code (live edits) ────────────────────────────────────────────
       - ./backend:/app/backend
@@ -38,8 +40,10 @@ services:
 
       # ── Persistent data ─────────────────────────────────────────────────────
       - ./static:/app/static
+      - slidegen_dev_db:/app/db
       - huggingface_cache:/root/.cache/huggingface
 
 volumes:
   frontend_node_modules:
+  slidegen_dev_db:
   huggingface_cache:

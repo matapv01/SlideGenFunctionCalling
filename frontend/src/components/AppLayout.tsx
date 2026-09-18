@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
 const navItemDefs = [
-  { labelKey: "sidebar_slidegen" as const, path: "/slidegen", icon: Home },
+  { labelKey: "sidebar_slidegen" as const, path: "/home", icon: Home },
   { labelKey: "sidebar_projects" as const, path: "/projects", icon: FolderOpen },
   { labelKey: "sidebar_guide" as const, path: "/guide", icon: BookOpen },
 ];
@@ -100,7 +100,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode; headerContent?: Re
               // Check if current path matches or is a related sub-route
               const isActive = location.pathname === item.path ||
                 (item.path === "/projects" && (
-                  location.pathname.startsWith("/view/") ||
+                  location.pathname.startsWith("/projects/") ||
                   location.pathname.startsWith("/editor/") ||
                   location.pathname.startsWith("/streaming/")
                 ));

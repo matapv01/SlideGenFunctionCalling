@@ -79,6 +79,7 @@ import { cn } from "@/lib/utils";
 import { api, type ImageSearchResult, type ProjectCollaborator, type ProjectComment, type ProjectVersion, type ProjectRole } from "@/lib/api";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { XmlSlideCanvas } from "@/components/XmlSlideCanvas";
+import "../features/slidegenius/slidegenius-editor.css";
 import {
   XML_GROUP_ATTR,
   cloneXmlElements,
@@ -533,7 +534,7 @@ const Tip = ({
   return (
     <Tooltip delayDuration={350}>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side} className="max-w-[180px] text-left">
+      <TooltipContent side={side} className="sg-editor-tooltip max-w-[180px] text-left">
         <p className="text-xs font-semibold">
           {translateEditorLabel(label, language)}
           {shortcut && <span className="ml-1.5 rounded bg-muted/40 px-1 py-0.5 text-[10px] font-normal opacity-60">{shortcut}</span>}
@@ -591,7 +592,7 @@ const makeElement = (kind: AddElementKind): XmlSlideElement => {
         y: "220",
         width: "480",
         height: "300",
-        src: "/placeholder.svg",
+        src: new URL("./placeholder.svg", document.baseURI).toString(),
       },
     };
   }
@@ -2226,7 +2227,7 @@ const XmlSlideEditor = () => {
   if (isLoadingProject) {
     return (
       <TooltipProvider>
-        <div className="flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
+        <div className="sg-editor-shell flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-7 w-7 animate-spin text-primary" aria-hidden="true" />
             <p className="text-sm font-semibold">{editorCopy.loading}</p>
@@ -2239,7 +2240,7 @@ const XmlSlideEditor = () => {
   if (projectId && parseError) {
     return (
       <TooltipProvider>
-        <div className="flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
+        <div className="sg-editor-shell flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
           <div className="max-w-md rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
             <p className="text-sm font-semibold text-destructive">{editorCopy.loadError}</p>
             <p className="mt-2 text-xs leading-relaxed">{parseError}</p>
@@ -2255,7 +2256,7 @@ const XmlSlideEditor = () => {
   if (!resolvedActiveSlide) {
     return (
       <TooltipProvider>
-        <div className="flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
+        <div className="sg-editor-shell flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
           <div>
             <p className="text-sm font-semibold">{translateEditorLabel("No slides available", language)}</p>
             <p className="mt-1 text-xs">{translateEditorLabel("The presentation does not contain a valid slide.", language)}</p>
@@ -2348,9 +2349,11 @@ const XmlSlideEditor = () => {
           .xml-pdf-print-page:last-child { page-break-after: auto; }
         }
       `}</style>
-      <div className="xml-editor-shell flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
-        <div className="sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-background/95 px-3 shadow-sm backdrop-blur-sm">
-          <div className="flex items-center gap-1.5">
+      <div className="xml-editor-shell sg-editor-shell flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
+        <div className="sg-editor-toolbar sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-background/95 px-3 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="sg-editor-brand" aria-label="Slidegen"><span>slide</span><b>gen</b></span>
+            <span className="h-5 w-px bg-border/70" aria-hidden="true" />
             <Tip label="Back">
               <Button aria-label={translateEditorLabel("Back to projects", language)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => void handleExitEditor()}>
                 <ArrowLeft className="h-4 w-4" />
@@ -2428,7 +2431,7 @@ const XmlSlideEditor = () => {
                   {!isExporting && <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-70" />}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-52">
+              <DropdownMenuContent align="center" className="sg-editor-popover w-52">
                 <DropdownMenuItem onClick={downloadPowerPoint} disabled={isExportingPptx}>
                   <Download className="mr-2 h-4 w-4" />
                   {isExportingPptx ? translateEditorLabel("Exporting…", language) : translateEditorLabel("PowerPoint (.pptx)", language)}
@@ -2481,9 +2484,9 @@ const XmlSlideEditor = () => {
           </div>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="sg-editor-workspace flex flex-1 overflow-hidden">
           <div className="relative flex shrink-0">
-            <div className={cn("flex shrink-0 overflow-hidden border-r bg-background transition-[width] duration-300 ease-in-out", isSidebarOpen ? "w-56" : "w-12")}>
+            <div className={cn("sg-editor-sidebar flex shrink-0 overflow-hidden border-r bg-background transition-[width] duration-300 ease-in-out", isSidebarOpen ? "w-56" : "w-12")}>
               <div className={cn("flex flex-col items-center gap-1 py-2 transition-opacity duration-200", isSidebarOpen ? "w-0 overflow-hidden opacity-0 pointer-events-none" : "w-12 opacity-100")}>
                 {xmlDocument.slides.map((_, index) => (
                   <button
@@ -2626,7 +2629,7 @@ const XmlSlideEditor = () => {
                             <span className="text-[9px] leading-tight">{translateEditorLabel("Shape", language)}</span>
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-40">
+                        <DropdownMenuContent align="start" className="sg-editor-popover w-40">
                           {[
                             { kind: "shape" as const, label: "Rectangle" },
                             { kind: "rounded" as const, label: "Rounded" },
@@ -2652,7 +2655,7 @@ const XmlSlideEditor = () => {
                             <span className="text-[9px] leading-tight">{translateEditorLabel("Chart", language)}</span>
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-40">
+                        <DropdownMenuContent align="start" className="sg-editor-popover w-40">
                           <DropdownMenuItem onSelect={() => addElement("bar-chart")}>{translateEditorLabel("Bar chart", language)}</DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => addElement("line-chart")}>{translateEditorLabel("Line chart", language)}</DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => addElement("pie-chart")}>{translateEditorLabel("Pie chart", language)}</DropdownMenuItem>
@@ -2693,7 +2696,7 @@ const XmlSlideEditor = () => {
 
           <div
             ref={canvasShellRef}
-            className="relative flex flex-1 items-center justify-center overflow-auto"
+            className="sg-editor-canvas relative flex flex-1 items-center justify-center overflow-auto"
             style={{
               padding: PAD,
               backgroundColor: "hsl(var(--muted) / 0.35)",
@@ -2735,7 +2738,7 @@ const XmlSlideEditor = () => {
                   </div>
                 </div>
               </ContextMenuTrigger>
-              <ContextMenuContent className="w-56">
+              <ContextMenuContent className="sg-editor-popover w-56">
                 <ContextMenuItem disabled={selectedElements.length === 0} onClick={copySelected}>
                   {translateEditorLabel("Copy", language)} <ContextMenuShortcut>Ctrl+C</ContextMenuShortcut>
                 </ContextMenuItem>
@@ -2793,7 +2796,7 @@ const XmlSlideEditor = () => {
               {isPropsPanelOpen ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
             </button>
             <div className={cn("overflow-hidden transition-[width] duration-300 ease-in-out", isPropsPanelOpen ? "w-72" : "w-0")}>
-              <aside className="flex h-full w-72 flex-col overflow-y-auto border-l bg-background [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+              <aside className="sg-editor-properties flex h-full w-72 flex-col overflow-y-auto border-l bg-background [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
                 {selectedIds.length > 1 ? (
                   <div className="flex h-full flex-col">
                     <div className="flex items-center justify-between border-b px-3 py-2.5">

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
@@ -91,7 +90,6 @@ const Streaming = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const { t } = useLanguage();
 
   const stages = [
@@ -109,8 +107,6 @@ const Streaming = () => {
   const [previewSlide, setPreviewSlide] = useState<SlideThumb | null>(null);
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [ideaSessionId, setIdeaSessionId] = useState<string | null>(null);
-  const [isPreparingIdea, setIsPreparingIdea] = useState(false);
   const [totalSlides, setTotalSlides] = useState<number | string>('...');
   
   const updateStage = (newStage: number) => {
@@ -164,8 +160,7 @@ const Streaming = () => {
 
     // Get parameters from location state
     const filename = location.state?.filename;
-    const sessionId = location.state?.sessionId || ideaSessionId;
-    const isFromStructure = location.state?.isFromStructure;
+    const sessionId = location.state?.sessionId;
 
     if (!filename && !sessionId) {
       setError(t.streaming_err_no_file);
@@ -177,10 +172,7 @@ const Streaming = () => {
 
     // Determine which stream URL to use
     let url: string;
-    if (ideaSessionId || isFromStructure) {
-      // Idea workflow (either from direct idea generation or from structure preview)
-      url = api.ideaStreamUrl(sessionId || ideaSessionId);
-    } else if (sessionId) {
+    if (sessionId) {
       // Manual structure workflow
       url = api.manualStreamUrl(sessionId);
     } else {
@@ -305,65 +297,26 @@ const Streaming = () => {
     es.onerror = () => {
       if (!completedRef.current && !failedRef.current) {
         // Redirect to slidegen page when connection lost
-        navigate("/slidegen", { replace: true });
+        navigate("/", { replace: true });
       }
     };
   };
-
-  // Handle idea workflow - prepare structure first
-  useEffect(() => {
-    const title = location.state?.title;
-    const description = location.state?.description;
-    const contentLength = location.state?.contentLength || "standard";
-
-    // Check if this is an idea workflow
-    if (title && description) {
-      setIsPreparingIdea(true);
-      setActivity(t.streaming_preparing_activity);
-      
-      api.generateIdeaStructure({
-        title: title,
-        prompt: description,
-        content_length: contentLength,
-      })
-        .then((response) => {
-          setIdeaSessionId(response.session_id);
-          setIsPreparingIdea(false);
-          toast({ title: t.streaming_toast_ready, description: t.streaming_toast_starting });
-        })
-        .catch((err) => {
-          setError(t.streaming_err_prepare);
-          setIsPreparingIdea(false);
-          toast({ title: t.streaming_toast_failed, variant: "destructive" });
-        });
-      return;
-    }
-  }, []);
 
   // Start streaming when we have the necessary data
   useEffect(() => {
     const filename = location.state?.filename;
     const sessionId = location.state?.sessionId;
-    const title = location.state?.title;
     
     // No state means user navigated back - redirect to slidegen
-    if (!filename && !sessionId && !title && !ideaSessionId) {
-      navigate("/slidegen", { replace: true });
+    if (!filename && !sessionId) {
+      navigate("/", { replace: true });
       return;
     }
     
-    // For idea workflow, wait until we have the session ID
-    if (title && !ideaSessionId) {
-      return; // Still preparing
-    }
-    
-    // Start streaming for all workflows
-    if (filename || sessionId || ideaSessionId) {
-      startStreaming();
-    }
+    startStreaming();
     
     return () => eventSourceRef.current?.close();
-  }, [ideaSessionId]);
+  }, []);
 
   // Centralized keyboard navigation for Presentation and Preview modes
   useEffect(() => {
@@ -493,7 +446,7 @@ const Streaming = () => {
             </h1>
           </div>
           <p className="text-muted-foreground animate-fade-in">
-          {completed ? t.streaming_completed : isPreparingIdea ? t.streaming_preparing : t.streaming_creating}
+          {completed ? t.streaming_completed : t.streaming_creating}
           </p>
         </div>
 
@@ -737,7 +690,7 @@ const Streaming = () => {
             </Button>
             <Button 
               size="lg"
-              onClick={() => navigate("/slidegen")}
+              onClick={() => navigate("/")}
               className="border-2 border-violet-500 !text-violet-700 dark:!text-violet-300 bg-white dark:bg-gray-900 hover:bg-white dark:hover:bg-violet-950/50 hover:border-violet-500 transition-all hover:scale-105 shadow-md font-medium hover:!text-violet-700 dark:hover:!text-violet-300"
             >
               <Home className="mr-2 h-4 w-4" /> {t.streaming_back}

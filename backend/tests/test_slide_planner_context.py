@@ -4,10 +4,16 @@ from backend.workflows.slidegen_workflow.nodes.slide_planner import (
     _normalize_plan_action,
     build_compact_slide_outline,
     normalize_image_sequence,
+    prepare_planner_context,
 )
 from backend.workflows.slidegen_workflow.nodes.slide_generator import (
     _build_decorative_image_query,
 )
+
+
+class _PlannerLLM:
+    def with_structured_output(self, _schema):
+        return lambda value: value
 
 
 def test_compact_outline_contains_all_slide_contexts_without_raw_content():
@@ -29,6 +35,28 @@ def test_planner_action_is_normalized_to_document_markers():
     assert _normalize_plan_action({"action": "INTRO_TOOLS"}, {"heading": "Results"}, 1) == "CONTENT_TOOLS"
     assert _normalize_plan_action({"action": "CONTENT_TOOLS"}, {"slide_type": "transition"}, 2) == "TRANSITION_TOOLS"
     assert _normalize_plan_action({"action": "not_a_category"}, {"heading": "Results"}, 1) == "CONTENT_TOOLS"
+
+
+def test_deck_instruction_is_shared_by_every_planner_input():
+    instruction = "Apply a coherent visual direction to all relevant content slides."
+    result = prepare_planner_context(
+        {
+            "slide_chunks": [
+                {"heading": "Opening", "slide_type": "intro"},
+                {"heading": "Results", "slide_type": "content"},
+                {"heading": "Conclusion", "slide_type": "content"},
+            ],
+            "slide_options": {"presentation_instruction": instruction},
+        },
+        {"configurable": {"planner_llm": _PlannerLLM()}},
+    )
+
+    assert result["presentation_instruction"] == instruction
+    assert [item["presentation_instruction"] for item in result["all_inputs"]] == [
+        instruction,
+        instruction,
+        instruction,
+    ]
 
 
 def test_identity_slides_use_decorative_image_strategy():

@@ -10,7 +10,7 @@ from backend.config import TEMP_DIR
 logger = logging.getLogger(__name__)
 
 class BaseWorkflowService:
-    """Base Service chứa các logic dùng chung cho mọi Workflow (Idea, SlideGen...)"""
+    """Shared execution helpers for the document, manual, and slide workflows."""
 
     def __init__(self, project_dir: str):
         self.project_dir = project_dir

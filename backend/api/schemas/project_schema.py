@@ -46,7 +46,7 @@ class ProjectCreate(BaseModel):
     """Schema khi tạo Project mới"""
     title: str = "Untitled Project"
     description: Optional[str] = None
-    source_type: str = "manual" # idea, docx, manual
+    source_type: str = "manual" # chatbot, docx, manual
     source_data: Optional[Dict[str, Any]] = None
 
 class ProjectUpdate(BaseModel):

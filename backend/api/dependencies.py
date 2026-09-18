@@ -4,7 +4,7 @@ from backend.config import (
     CAPTURES_DIR, PROJECT_DIR, STATIC_DIR,
     LLM_API_KEY,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
-    IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS,
+    CHATBOT_MAX_HISTORY_TURNS,
     FAISS_INDEX_PATH,
 )
 from fastapi import Depends, HTTPException, status, Query
@@ -26,21 +26,30 @@ from backend.infrastructure.database.repositories.sqlite_project_repo import Sql
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
 from backend.infrastructure.parser.markitdown_parser import MarkItDownParser
 from backend.infrastructure.rag.gemini_provider import LocalEmbeddingToolRetrieveProvider
+from backend.infrastructure.database.repositories.sqlite_chat_repo import SqliteChatRepository
+from backend.infrastructure.database.repositories.sqlite_chat_document_repo import SqliteChatDocumentRepository
 
 # --- 3. Imports Services (Application) ---
 from backend.application.services.auth_service import AuthService
 from backend.application.services.user_service import UserService
 from backend.application.services.project_service import ProjectService
-from backend.application.services.idea_service import IdeaService
 from backend.application.services.capture_service import CaptureService
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
-from backend.application.services.doc_workflow_service import DocWorkflowService
-from backend.application.services.idea_workflow_service import IdeaWorkflowService
+from backend.application.services.document_preprocessing_service import (
+    DocumentPreprocessingService,
+)
 from backend.application.services.manual_workflow_service import ManualWorkflowService
+from backend.application.services.legacy_docx_generation_service import (
+    LegacyDocxGenerationService,
+)
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
 from backend.application.services.subscription_service import SubscriptionService
 from backend.application.services.collaboration_service import CollaborationService
+from backend.application.services.chatbot_service import ChatbotService
+from backend.application.services.document_rag_service import DocumentRagService
+from backend.application.services.rag_query_planner import RagQueryPlanner
+from backend.application.services.slide_generation_service import SlideGenerationService
 
 from backend.api.schemas.auth_schema import UserResponse
 
@@ -52,14 +61,6 @@ security = HTTPBearer()
 # Infrastructure global instances
 _capture_infra = PlaywrightCaptureProvider()
 _parser_infra = MarkItDownParser()
-
-_idea_llm = GeminiLLMProvider(
-    api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
-    model=IDEA_STRUCTURE_LLM_MODEL,
-    base_url=LLM_BASE_URL,
-    temperature=IDEA_STRUCTURE_LLM_TEMPERATURE,
-    max_tokens=IDEA_STRUCTURE_LLM_MAX_TOKENS,
-)
 
 _slidegen_llm = GeminiLLMProvider(
     api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
@@ -78,16 +79,11 @@ _retriever_infra = LocalEmbeddingToolRetrieveProvider(
 _structure_service = StructureService()
 _slide_service = SlideService(static_dir=STATIC_DIR)
 
-_idea_workflow_service = IdeaWorkflowService(
-    project_dir=str(PROJECT_DIR),
-    llm_provider=_idea_llm
-)
-
 _manual_workflow_service = ManualWorkflowService(
     project_dir=str(PROJECT_DIR)
 )
 
-_doc_workflow_service = DocWorkflowService(
+_document_preprocessing_service = DocumentPreprocessingService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
 )
@@ -95,11 +91,50 @@ _doc_workflow_service = DocWorkflowService(
 _slidegen_workflow_service = SlideGenWorkflowService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
-    planner_llm_provider=_idea_llm,
+    planner_llm_provider=_slidegen_llm,
     capture_provider=_capture_infra,
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
-    doc_workflow_service=_doc_workflow_service
+)
+
+# The old DOCX endpoints are adapters. They preprocess the file and then call
+# the same canonical chunk renderer used by chatbot generation.
+_legacy_docx_generation_service = LegacyDocxGenerationService(
+    document_preprocessor=_document_preprocessing_service,
+    slide_workflow=_slidegen_workflow_service,
+)
+
+# Chatbot document RAG reuses the existing local embedding model and SQLite
+# connection. It does not create a second database or import the clone's
+# PostgreSQL runtime.
+_chat_document_repo = SqliteChatDocumentRepository()
+_document_rag_service = DocumentRagService(
+    repository=_chat_document_repo,
+    embedding_provider=_retriever_infra.embeddings,
+    preprocessing_service=_document_preprocessing_service,
+)
+_chat_project_service = ProjectService(SqliteProjectRepository())
+_chatbot_user_repository = SqliteUserRepository()
+_chatbot_subscription_service = SubscriptionService(_chatbot_user_repository)
+_slide_generation_service = SlideGenerationService(
+    llm_provider=_slidegen_llm,
+    slide_workflow=_slidegen_workflow_service,
+    project_service=_chat_project_service,
+)
+_rag_query_planner = RagQueryPlanner(_slidegen_llm)
+
+# Chatbot is an isolated application service with its own session repository,
+# while reusing the existing configured LLM, document preprocessing and
+# project slide workflow.
+_chatbot_service = ChatbotService(
+    repository=SqliteChatRepository(),
+    llm_provider=_slidegen_llm,
+    context_provider=_document_rag_service,
+    slide_generator=_slide_generation_service,
+    rag_query_planner=_rag_query_planner,
+    user_repository=_chatbot_user_repository,
+    subscription_service=_chatbot_subscription_service,
+    default_max_turns=CHATBOT_MAX_HISTORY_TURNS,
 )
 
 def get_user_repo() -> UserRepository:
@@ -126,22 +161,21 @@ def get_user_service(user_repo: UserRepository = Depends(get_user_repo)) -> User
     return UserService(user_repo)
 
 
-def get_idea_workflow_service() -> IdeaWorkflowService:
-    return _idea_workflow_service
-
-
 def get_manual_workflow_service() -> ManualWorkflowService:
     return _manual_workflow_service
 
 
-def get_doc_workflow_service() -> DocWorkflowService:
-    return _doc_workflow_service
+def get_document_preprocessing_service() -> DocumentPreprocessingService:
+    return _document_preprocessing_service
 
 
-def get_idea_service(
-    workflow_service: IdeaWorkflowService = Depends(get_idea_workflow_service)
-) -> IdeaService:
-    return IdeaService(workflow_service)
+def get_doc_workflow_service() -> DocumentPreprocessingService:
+    """Legacy dependency name; canonical code uses the preprocessor getter."""
+    return _document_preprocessing_service
+
+
+def get_legacy_docx_generation_service() -> LegacyDocxGenerationService:
+    return _legacy_docx_generation_service
 
 
 def get_capture_service(
@@ -166,6 +200,14 @@ def get_slide_service() -> SlideService:
 
 def get_slidegen_workflow_service() -> SlideGenWorkflowService:
     return _slidegen_workflow_service
+
+
+def get_chatbot_service() -> ChatbotService:
+    return _chatbot_service
+
+
+def get_document_rag_service() -> DocumentRagService:
+    return _document_rag_service
 
 
 async def get_current_user(

@@ -1,4 +1,4 @@
-import { memo, useRef, useEffect, useState, useCallback } from "react";
+import { memo, useRef, useLayoutEffect, useState, useCallback } from "react";
 import { SlideCanvas } from "./SlideCanvas";
 import { cn } from "@/lib/utils";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "@/pages/SlideEditor/constants";
@@ -32,7 +32,10 @@ export const ReadOnlySlide = memo(({ slideId, htmlContent, backgroundColor, back
     setScale(rounded);
   }, []);
 
-  useEffect(() => {
+  // Measure before the browser paints the thumbnail. Starting at a fake scale
+  // and correcting it in useEffect makes every card visibly jump when it
+  // enters the scroll viewport.
+  useLayoutEffect(() => {
     const scheduleScaleUpdate = () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
       frameRef.current = requestAnimationFrame(() => {
@@ -68,7 +71,6 @@ export const ReadOnlySlide = memo(({ slideId, htmlContent, backgroundColor, back
             position: "absolute",
             top: 0,
             left: 0,
-            willChange: "transform",
             backfaceVisibility: "hidden",
           }}>
             <SlideCanvas

@@ -17,9 +17,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import type { OutputFormat } from "@/lib/api";
-import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSlideGeneration } from "@/features/slidegenius/SlideGenerationContext";
+import { SlidegeniusWorkspaceShell } from "@/features/slidegenius/SlidegeniusWorkspaceShell";
+import "@/features/slidegenius/structure-editor.css";
 
 // ============ TYPES ============
 
@@ -89,7 +91,11 @@ const StructureEditor = () => {
   const sessionId = searchParams.get("session") || projectId || null;
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const {
+    isGenerating,
+    startManualSlideGeneration,
+  } = useSlideGeneration();
 
   // State
   const [documentTitle, setDocumentTitle] = useState("");
@@ -137,6 +143,7 @@ const StructureEditor = () => {
         title: "Không có session ID",
         description: "Vui lòng tải lên tài liệu trước",
         variant: "destructive",
+        className: "sg-manual-toast",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,6 +174,7 @@ const StructureEditor = () => {
         title: "Lỗi tải cấu trúc",
         description: err.message,
         variant: "destructive",
+        className: "sg-manual-toast",
       });
     } finally {
       setLoading(false);
@@ -382,7 +390,16 @@ const StructureEditor = () => {
   // Handle approve
   const handleApprove = async () => {
     if (!sessionId || !parsedStructureRef.current) {
-      toast({ title: "Vui lòng nhập markdown trước tiên", variant: "destructive" });
+      toast({ title: "Vui lòng nhập markdown trước tiên", variant: "destructive", className: "sg-manual-toast" });
+      return;
+    }
+    if (isGenerating) {
+      toast({
+        title: language === "vi" ? "Đang có một deck được tạo" : "A deck is already being generated",
+        description: language === "vi" ? "Bạn có thể tiếp tục chỉnh sửa, nhưng hãy chờ deck hiện tại hoàn thành." : "You can keep editing, but wait for the current deck to finish.",
+        variant: "destructive",
+        className: "sg-manual-toast",
+      });
       return;
     }
 
@@ -390,14 +407,22 @@ const StructureEditor = () => {
     try {
       await api.updateStructure(sessionId, parsedStructureRef.current, undefined, outputFormat);
       const result = await api.approveStructure(sessionId, outputFormat);
+      const expectedSlides = result.slide_types?.length || slidePreview.length;
+      const started = startManualSlideGeneration(sessionId, expectedSlides);
+
+      if (!started) {
+        throw new Error(language === "vi" ? "Không thể bắt đầu tạo deck lúc này." : "Unable to start deck generation right now.");
+      }
 
       toast({
-        title: "Đã duyệt cấu trúc!",
-        description: `${result.slide_types?.length || 0} slides đã chuẩn bị`,
+        title: language === "vi" ? "Đã bắt đầu tạo slide" : "Slide generation started",
+        description: language === "vi" ? `${expectedSlides} slide đã được chuẩn bị.` : `${expectedSlides} slides are queued.`,
+        className: "sg-manual-toast",
       });
-      navigate(`/streaming/manual`, { state: { sessionId, documentTitle, outputFormat: result.output_format || outputFormat } });
+      setApproveDialogOpen(false);
+      navigate("/home");
     } catch (err: any) {
-      toast({ title: "Lỗi", description: err.message, variant: "destructive" });
+      toast({ title: "Lỗi", description: err.message, variant: "destructive", className: "sg-manual-toast" });
     } finally {
       setSaving(false);
     }
@@ -423,7 +448,7 @@ const StructureEditor = () => {
       <button
         className="btn btn-sm btn-success"
         onClick={() => setApproveDialogOpen(true)}
-        disabled={saving || !parsedStructureRef.current || slidePreview.length === 0}
+        disabled={saving || isGenerating || !parsedStructureRef.current || slidePreview.length === 0}
       >
         {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Check className="mr-1.5 h-4 w-4" />}
         {saving ? "Processing..." : "Approve & Continue"}
@@ -451,7 +476,9 @@ const StructureEditor = () => {
   );
 
   return (
-    <AppLayout headerContent={desktopHeaderBar}>
+    <div className="sg-manual-editor">
+      <SlidegeniusWorkspaceShell activeTab="manual">
+      <div className="sg-manual-editor-header">{desktopHeaderBar}</div>
       <div className="legacy-structure-page bg-background text-foreground">
         <div className="legacy-structure-content">
           <div ref={containerRef} className="flex h-full flex-col gap-4 p-4 lg:flex-row relative">
@@ -611,10 +638,10 @@ Note: Each # heading creates a new slide`}
 
       {/* Cancel Confirmation */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sg-manual-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel editing?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="sg-manual-dialog-description">
               Các thay đổi chưa lưu sẽ bị mất. Bạn chắc chắn muốn thoát chứ?
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -629,10 +656,10 @@ Note: Each # heading creates a new slide`}
 
       {/* Approve Confirmation */}
       <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sg-manual-dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Duyệt cấu trúc?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="sg-manual-dialog-description">
               Xác nhận cấu trúc với {slidePreview.length} slide? Hệ thống sẽ bắt đầu thiết kế slide tự động.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -644,7 +671,8 @@ Note: Each # heading creates a new slide`}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AppLayout>
+      </SlidegeniusWorkspaceShell>
+    </div>
   );
 };
 

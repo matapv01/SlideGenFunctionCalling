@@ -6,12 +6,18 @@ from backend.workflows.doc_workflow.graph.stage import State
 
 async def run_doc_workflow(
     docx_file: str,
-    workflow_mode: str,
-    slide_options: Optional[Dict[str, Any]],
-    graph_config: Dict[str, Any],
+    workflow_mode: str = "auto",
+    slide_options: Optional[Dict[str, Any]] = None,
+    graph_config: Optional[Dict[str, Any]] = None,
+    include_slide_chunks: bool = True,
 ) -> State:
-    """Run document preprocessing and return state for slide planning workflow."""
-    workflow = build_doc_workflow()
+    """Run canonical document preprocessing.
+
+    The optional slide stage remains enabled by default for existing DOCX
+    generation callers. Chatbot ingestion disables it and receives only the
+    document artifact needed by the RAG index.
+    """
+    workflow = build_doc_workflow(include_slide_chunks=include_slide_chunks)
     app = workflow.compile()
 
     initial_input: State = {
@@ -20,5 +26,5 @@ async def run_doc_workflow(
         "slide_options": slide_options or {},
     }
 
-    final_state: State = await app.ainvoke(initial_input, config=graph_config)
+    final_state: State = await app.ainvoke(initial_input, config=graph_config or {})
     return final_state

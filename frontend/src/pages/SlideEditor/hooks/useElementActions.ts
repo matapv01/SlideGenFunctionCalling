@@ -41,6 +41,7 @@ export const useElementActions = ({
     // ── Build the HTML fragment that will be injected into the canvas ──────
     // injectElement() will compute maxZIndex from the live canvas and apply +1
     let html = '';
+    const placeholderUrl = new URL("./placeholder.svg", document.baseURI).toString();
 
     if (item.type === 'text') {
       let fontSize = 28, fontWeight = 'normal', content = 'Click to edit';
@@ -109,7 +110,7 @@ export const useElementActions = ({
     } else if (item.type === 'image') {
       html = `<div id="${id}" class="element" data-type="image" data-selectable="true"
         style="position:absolute;left:${x}px;top:${y}px;width:400px;height:280px;cursor:move;">
-        <img style="width:100%;height:100%;object-fit:cover;pointer-events:none;" src="/placeholder.svg" alt="Image" />
+        <img style="width:100%;height:100%;object-fit:cover;pointer-events:none;" src="${placeholderUrl}" alt="Image" />
       </div>`;
 
     } else if (item.type === 'video') {

@@ -8,6 +8,19 @@ from backend.domain.entities.user import User
 from backend.domain.ports.user_repository import UserRepository
 
 
+class SlideCountLimitError(ValueError):
+    """Raised before generation when a deck exceeds the user's plan limit."""
+
+    def __init__(self, requested: int, maximum: int, tier: str) -> None:
+        self.requested = requested
+        self.maximum = maximum
+        self.tier = tier
+        super().__init__(
+            f"Gói {tier.title()} chỉ hỗ trợ tối đa {maximum} slide; "
+            f"yêu cầu hiện tại là {requested} slide."
+        )
+
+
 class SubscriptionService:
     """Service for managing user subscriptions and usage limits"""
 
@@ -30,6 +43,28 @@ class SubscriptionService:
             "usage_reset_date": user.daily_usage_reset_date,
             "cancel_at_period_end": user.cancel_at_period_end
         }
+
+    @staticmethod
+    def get_max_slide_count(user: User) -> int:
+        """Return the canonical per-plan slide limit (-1 means unlimited)."""
+        return int(user.get_daily_limits().get("max_docx_slides", 0))
+
+    def validate_slide_count(self, user: User, slide_count: int) -> int:
+        """Validate a requested deck size before any LLM/workflow work starts."""
+        if not user.is_subscription_active() and user.subscription_tier != "free":
+            raise HTTPException(
+                status_code=402,
+                detail="Gói đăng ký đã hết hạn. Vui lòng nâng cấp để tiếp tục sử dụng tính năng này.",
+            )
+
+        requested = int(slide_count)
+        if requested < 1:
+            raise ValueError("Số lượng slide phải lớn hơn 0.")
+
+        maximum = self.get_max_slide_count(user)
+        if maximum != -1 and requested > maximum:
+            raise SlideCountLimitError(requested, maximum, user.subscription_tier)
+        return requested
 
     def check_feature_access(self, user: User, feature_type: str, **kwargs) -> bool:
         """Check if user can access a specific feature"""
@@ -83,6 +118,9 @@ class SubscriptionService:
                         "Vui lòng rút ngắn tài liệu hoặc nâng cấp lên Ultra để không giới hạn."
                     ),
                 )
+
+        elif feature_type == "slide_generation":
+            self.validate_slide_count(user, kwargs.get("slide_count", 0))
 
         elif feature_type == "content_length":
             content_length = kwargs.get("content_length", "standard")

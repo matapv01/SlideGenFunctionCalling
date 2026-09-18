@@ -1,0 +1,532 @@
+/*
+ * The structure editor keeps the original editing surface and parsing logic.
+ * This file only gives that surface the same dark Slidegen visual language and
+ * hosts the shared generation drawer; it does not style the editor globally.
+ */
+.sg-manual-editor {
+  min-height: 100svh;
+  background: #202020;
+  color: #e8e8e2;
+  font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+/* Radix portals are mounted outside the editor shell, so give manual-only
+   feedback an explicit class instead of inheriting the legacy purple theme. */
+.sg-manual-toast {
+  border: 1px solid #ffffff1c !important;
+  border-radius: 8px !important;
+  background: #292a29 !important;
+  color: #e8e8e2 !important;
+  box-shadow: 0 18px 38px #00000050 !important;
+}
+
+.sg-manual-toast.destructive {
+  border-color: #e4867266 !important;
+  background: #332826 !important;
+  color: #f5d1c8 !important;
+}
+
+.sg-manual-toast .text-sm {
+  color: inherit !important;
+}
+
+.sg-manual-dialog {
+  border: 1px solid #ffffff1c !important;
+  border-radius: 8px !important;
+  background: #292a29 !important;
+  color: #e8e8e2 !important;
+  box-shadow: 0 22px 54px #00000066 !important;
+}
+
+.sg-manual-dialog-description {
+  color: #999c94 !important;
+}
+
+.sg-manual-dialog button {
+  border-radius: 4px;
+  font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.sg-manual-dialog button:not(.gradient-primary) {
+  border: 1px solid #ffffff24;
+  background: #ffffff08 !important;
+  color: #d9dad4 !important;
+}
+
+.sg-manual-dialog button.bg-secondary {
+  border: 1px solid #ffffff24;
+  background: #ffffff08 !important;
+  color: #d9dad4 !important;
+}
+
+.sg-manual-dialog button.gradient-primary {
+  border: 1px solid #f5a08a;
+  background: #f5a08a !important;
+  color: #242524 !important;
+}
+
+.sg-manual-editor .sgx-home.workspace-page .workspace-main {
+  display: flex;
+  height: 100svh;
+  min-height: 0;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px clamp(20px, 3vw, 42px);
+  overflow: hidden;
+  background: #202020;
+  scrollbar-color: #5f625b transparent;
+  scrollbar-width: thin;
+}
+
+.sg-manual-editor .workspace-main::-webkit-scrollbar {
+  width: 7px;
+}
+
+.sg-manual-editor .workspace-main::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #5f625b;
+}
+
+.sg-manual-editor-header {
+  flex: 0 0 auto;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #ffffff12;
+}
+
+.sg-manual-editor .legacy-structure-page {
+  min-height: 0;
+  height: auto;
+  flex: 1 1 auto;
+  padding: 0;
+  overflow: hidden;
+  background: #202020 !important;
+  color: #e8e8e2;
+}
+
+.sg-manual-editor .legacy-structure-content {
+  min-height: 0;
+  height: 100%;
+}
+
+.sg-manual-editor .legacy-structure-content > div {
+  min-height: 0;
+  height: 100%;
+  padding: 0;
+}
+
+.sg-manual-editor .legacy-app-header {
+  gap: 9px;
+}
+
+.sg-manual-editor .legacy-app-header .header-title {
+  color: #f2f2ed;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sg-manual-editor .legacy-app-header .document-info {
+  color: #858980;
+  font-size: 11px;
+}
+
+.sg-manual-editor .legacy-app-header .btn,
+.sg-manual-editor .legacy-structure-page .btn {
+  border-color: #ffffff24;
+  border-radius: 4px;
+  background: #ffffff08;
+  color: #d9dad4;
+  box-shadow: none;
+  font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.sg-manual-editor .legacy-app-header .btn:hover:not(:disabled),
+.sg-manual-editor .legacy-structure-page .btn:hover:not(:disabled) {
+  border-color: #f5a08a88;
+  background: #f5a08a12;
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.sg-manual-editor .legacy-app-header .btn-danger,
+.sg-manual-editor .legacy-structure-page .btn-danger {
+  border-color: #e4867266;
+  background: transparent;
+  color: #e48672;
+}
+
+.sg-manual-editor .legacy-app-header .btn-success,
+.sg-manual-editor .legacy-structure-page .btn-success {
+  border-color: #f5a08a;
+  background: #f5a08a;
+  color: #242524;
+}
+
+.sg-manual-editor .legacy-app-header .save-indicator {
+  border-color: #ffffff1c;
+  background: #ffffff08;
+  color: #92958e;
+}
+
+.sg-manual-editor .legacy-structure-page .text-foreground {
+  color: #e8e8e2 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .text-muted-foreground {
+  color: #858980 !important;
+}
+
+.sg-manual-editor .legacy-structure-page textarea {
+  min-height: 0 !important;
+  border: 1px solid #ffffff1c !important;
+  border-radius: 5px;
+  background: #292a29 !important;
+  color: #e8e8e2 !important;
+  box-shadow: none !important;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  scrollbar-color: #5f625b transparent;
+  scrollbar-width: thin;
+}
+
+.sg-manual-editor .legacy-structure-page textarea::placeholder {
+  color: #686b64;
+}
+
+.sg-manual-editor .legacy-structure-page textarea:focus {
+  border-color: #f5a08a88 !important;
+  box-shadow: 0 0 0 2px #f5a08a18 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .bg-muted\/30,
+.sg-manual-editor .legacy-structure-page .bg-muted\/20 {
+  border-color: #ffffff1c;
+  background: #252625 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .border-border,
+.sg-manual-editor .legacy-structure-page .border-border\/60 {
+  border-color: #ffffff1c !important;
+}
+
+.sg-manual-editor .legacy-structure-page .hover\:bg-primary\/20:hover {
+  background: #f5a08a18;
+}
+
+/* The old editor's slide previews intentionally stay paper-white. */
+.sg-manual-editor .legacy-structure-page .bg-white {
+  background: #f8f8f4 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .text-gray-800 {
+  color: #202020 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .text-gray-700 {
+  color: #3c3d39 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .text-gray-400 {
+  color: #777a73 !important;
+}
+
+.sg-manual-editor .legacy-structure-page .border-gray-200,
+.sg-manual-editor .legacy-structure-page .border-dashed {
+  border-color: #d8d8d1 !important;
+}
+
+.sg-manual-editor .sg-manual-stream-drawer {
+  position: fixed;
+  top: 82px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 60;
+  display: flex;
+  width: min(360px, calc(100vw - 36px));
+  min-height: 0;
+  pointer-events: none;
+}
+
+.sg-manual-editor .chat-slide-stream-panel {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+  pointer-events: auto;
+  border: 1px solid #ffffff1c;
+  border-radius: 6px;
+  background: #252625;
+  box-shadow: 0 18px 42px #00000066;
+}
+
+.sg-manual-editor .chat-slide-stream-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #ffffff12;
+}
+
+.sg-manual-editor .chat-slide-stream-eyebrow {
+  margin: 0 0 7px;
+  color: #f5a08a;
+  font-size: 9px;
+  letter-spacing: .18em;
+}
+
+.sg-manual-editor .chat-slide-stream-header h3 {
+  margin: 0;
+  color: #f2f2ed;
+  font: 600 23px/1.05 "Slidegen Dancing", cursive;
+}
+
+.sg-manual-editor .chat-slide-stream-header button {
+  width: 24px;
+  height: 24px;
+  padding: 0 0 2px;
+  border: 1px solid #ffffff1b;
+  border-radius: 50%;
+  background: #ffffff08;
+  color: #a3a69e;
+  cursor: pointer;
+  font: 17px/1 system-ui, sans-serif;
+}
+
+.sg-manual-editor .chat-slide-stream-header button:hover {
+  border-color: #f5a08a88;
+  color: #f5a08a;
+}
+
+.sg-manual-editor .chat-slide-stream-progress-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  color: #999c94;
+  font-size: 10px;
+}
+
+.sg-manual-editor .chat-slide-stream-progress-copy span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sg-manual-editor .chat-slide-stream-progress-copy strong {
+  flex: 0 0 auto;
+  color: #f5a08a;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.sg-manual-editor .chat-slide-stream-progress {
+  height: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #ffffff12;
+}
+
+.sg-manual-editor .chat-slide-stream-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #f5a08a;
+  transition: width .25s ease;
+}
+
+.sg-manual-editor .chat-slide-stream-description {
+  min-height: 31px;
+  margin: 9px 0 12px;
+  color: #777a73;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.sg-manual-editor .chat-slide-stream-list {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  height: 0;
+  max-height: 100%;
+  flex: 1 1 0;
+  grid-auto-rows: max-content;
+  align-content: start;
+  align-items: start;
+  gap: 11px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  padding: 1px 4px 4px 0;
+  scrollbar-color: #5f625b #ffffff08;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.sg-manual-editor .chat-slide-stream-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sg-manual-editor .chat-slide-stream-list::-webkit-scrollbar-track {
+  border-radius: 6px;
+  background: #ffffff08;
+}
+
+.sg-manual-editor .chat-slide-stream-list::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background: #5f625b;
+}
+
+.sg-manual-editor .chat-slide-stream-card {
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  overflow: hidden;
+  border: 1px solid #ffffff18;
+  border-radius: 5px;
+  background: #2c2d2b;
+  contain: layout paint;
+}
+
+.sg-manual-editor .chat-slide-stream-preview {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #e8e7e1;
+}
+
+.sg-manual-editor .chat-slide-stream-preview > span {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  padding: 12px;
+  color: #3c3d39;
+  font-size: 11px;
+  text-align: center;
+}
+
+.sg-manual-editor .chat-slide-stream-preview-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.sg-manual-editor .chat-slide-stream-card-meta {
+  display: grid;
+  gap: 4px;
+  padding: 9px 10px 10px;
+}
+
+.sg-manual-editor .chat-slide-stream-card-meta span {
+  color: #f5a08a;
+  font-size: 8px;
+  letter-spacing: .13em;
+}
+
+.sg-manual-editor .chat-slide-stream-card-meta strong {
+  overflow: hidden;
+  color: #d9dad4;
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sg-manual-editor .chat-slide-stream-empty {
+  display: grid;
+  min-height: 120px;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  border: 1px dashed #ffffff20;
+  border-radius: 5px;
+  color: #777a73;
+  text-align: center;
+}
+
+.sg-manual-editor .chat-slide-stream-empty p {
+  margin: 0;
+  font-size: 10px;
+}
+
+.sg-manual-editor .chat-slide-stream-empty-mark {
+  color: #f5a08a;
+  font-size: 14px;
+}
+
+.sg-manual-editor .chat-slide-stream-complete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ffffff12;
+  color: #a9aca4;
+  font-size: 10px;
+}
+
+.sg-manual-editor .chat-slide-stream-complete button {
+  padding: 7px 9px;
+  border: 1px solid #f5a08a66;
+  border-radius: 4px;
+  background: #f5a08a;
+  color: #242524;
+  cursor: pointer;
+  font: 600 10px "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.sg-manual-editor .chat-slide-stream-complete button:hover {
+  background: #ffc0ad;
+}
+
+@media (max-width: 900px) {
+  .sg-manual-editor .legacy-structure-page {
+    height: auto;
+  }
+
+  .sg-manual-editor .legacy-structure-content > div {
+    height: auto;
+    min-height: calc(100svh - 104px);
+  }
+
+  .sg-manual-editor .legacy-structure-content > div > div {
+    width: 100% !important;
+  }
+
+  .sg-manual-editor .legacy-structure-content > div > div:nth-child(2) {
+    display: none;
+  }
+
+  .sg-manual-editor .legacy-structure-page textarea {
+    min-height: 340px !important;
+  }
+
+  .sg-manual-editor .sg-manual-stream-drawer {
+    top: 74px;
+    right: 12px;
+    bottom: 12px;
+    width: min(360px, calc(100vw - 24px));
+  }
+}
+
+@media (max-width: 760px) {
+  .sg-manual-editor .legacy-structure-page {
+    padding: 14px;
+  }
+
+  .sg-manual-editor .legacy-app-header .header-title {
+    display: none;
+  }
+
+  .sg-manual-editor .legacy-app-header .document-info {
+    max-width: 35vw;
+  }
+}

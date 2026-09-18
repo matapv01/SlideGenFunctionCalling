@@ -473,7 +473,7 @@ const elementFrame = (element: XmlSlideElement, metrics: CanvasMetrics) => {
   };
 };
 
-const elementStyle = (element: XmlSlideElement, selected: boolean, baseZIndex: number, metrics: CanvasMetrics): CSSProperties => {
+const elementStyle = (element: XmlSlideElement, selected: boolean, baseZIndex: number, metrics: CanvasMetrics, readOnly: boolean): CSSProperties => {
   const tag = element.tag.toLowerCase();
   const frame = elementFrame(element, metrics);
   const transforms: string[] = [];
@@ -488,7 +488,7 @@ const elementStyle = (element: XmlSlideElement, selected: boolean, baseZIndex: n
     zIndex: baseZIndex,
     boxSizing: "border-box",
     outline: selected ? "2px solid #2563eb" : "none",
-    cursor: "move",
+    cursor: readOnly ? "default" : "move",
     userSelect: tag === "textbox" ? "text" : "none",
   };
 
@@ -942,7 +942,7 @@ export const XmlSlideCanvas = ({
     const hasMathFields = element.children.some(
       (child) => child.tag.toLowerCase() === "math-field",
     );
-    const style = elementStyle(element, selected, elementIndex + 1, metrics);
+    const style = elementStyle(element, selected, elementIndex + 1, metrics, readOnly);
     const common = {
       "data-xml-element-id": element.id,
       "data-xml-element-tag": tag,
