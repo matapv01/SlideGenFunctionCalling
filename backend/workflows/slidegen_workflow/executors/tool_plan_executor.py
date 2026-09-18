@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
+from backend.config import OUTPUT_DIR
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import search_ddgs_images
 
 
@@ -17,6 +18,11 @@ _FALLBACK_IMAGE_URL = (
     "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
     "?auto=compress&cs=tinysrgb&w=1600"
 )
+_MAX_VERIFIED_CANDIDATES = 5
+
+
+class NoApprovedImageError(ValueError):
+    """Signal that the current image layout must be regenerated without images."""
 
 
 class ToolPlanError(ValueError):
@@ -283,7 +289,14 @@ def _pick_live_url(urls: list, timeout: float = 5.0) -> str | None:
 
 
 def _materialize_document_image(source_path: str, asset_dir: str | None) -> str | None:
-    """Copy a verified DOCX asset into the generated project's private assets."""
+    """Copy a verified DOCX asset and return a stable public asset URL.
+
+    XML is persisted in the database and is rendered by both the PPTX
+    converter and the browser editor.  Returning the container's absolute
+    filesystem path works for python-pptx, but browsers cannot load that path
+    and consequently hide the image.  A ``/static/output/...`` URL is usable
+    by the browser; the converter maps that URL back to the same local file.
+    """
     source = Path(str(source_path or "").strip())
     if not source.is_file():
         return None
@@ -296,7 +309,13 @@ def _materialize_document_image(source_path: str, asset_dir: str | None) -> str 
     try:
         if not destination.exists() or destination.stat().st_size != source.stat().st_size:
             shutil.copy2(source, destination)
-        return str(destination)
+        try:
+            relative = destination.resolve().relative_to(OUTPUT_DIR.resolve())
+        except ValueError:
+            # Keep the old local-path behavior for non-standard callers that
+            # render outside the application's persistent output directory.
+            return str(destination)
+        return f"/static/output/{relative.as_posix()}"
     except OSError:
         return str(source)
 
@@ -343,7 +362,7 @@ def _run_one_search(
             query=query,
             layout=layout,
             size=size,
-            max_results=12,
+            max_results=_MAX_VERIFIED_CANDIDATES,
             target_description=target.get("description", ""),
         )
         urls = json.loads(raw_result)
@@ -356,14 +375,33 @@ def _run_one_search(
                 presentation_instruction=str(
                     (verification_context or {}).get("presentation_instruction") or ""
                 ),
+                slide_topic=str((verification_context or {}).get("slide_topic") or ""),
+                slide_purpose=str((verification_context or {}).get("slide_purpose") or ""),
+                deck_topic=str((verification_context or {}).get("deck_topic") or ""),
+                deck_outline=str((verification_context or {}).get("deck_outline") or ""),
+                rendered_slide_content=str(
+                    (verification_context or {}).get("rendered_slide_content") or ""
+                ),
             )
         if verification and verification.get("available"):
             # When Qwen-VL is available, only its approved candidates are
-            # eligible. The generic fallback remains a rendering safeguard for
-            # the rare case where no candidate passes.
-            url = _pick_live_url(list(verification.get("approved") or []))
+            # eligible. An explicit rejection of every candidate is different
+            # from a verifier outage: ask the workflow to regenerate this
+            # slide with a layout that has no image slot instead of inserting
+            # an unrelated stock image or leaving a blank image box.
+            approved = list(verification.get("approved") or [])
+            if not approved:
+                candidate_count = len(urls) if isinstance(urls, list) else 0
+                raise NoApprovedImageError(
+                    f"IMAGE_VERIFICATION_REJECTED: none of the {candidate_count or _MAX_VERIFIED_CANDIDATES} "
+                    f"candidates matched image target '{target['path_string']}' "
+                    f"for query '{query}'."
+                )
+            url = _pick_live_url(approved)
         else:
             url = _pick_live_url(urls)  # Check từng URL, bỏ qua những cái hỏng
+    except NoApprovedImageError:
+        raise
     except Exception as exc:
         url = None
         error = str(exc)
@@ -416,6 +454,16 @@ def execute_image_search_plan(
     if not search_calls:
         return final_html_call, []
 
+    # The raw chunk can be sparse (especially for intro slides). Include the
+    # actual selected XML tool arguments so the verifier sees the title, cards,
+    # labels, and other content that will really be rendered.
+    effective_verification_context = dict(verification_context or {})
+    effective_verification_context["rendered_slide_content"] = json.dumps(
+        html_call.get("arguments") or {},
+        ensure_ascii=False,
+        default=str,
+    )[:5000]
+
     results: list[str | None] = [None] * len(search_calls)
     histories: list[dict | None] = [None] * len(search_calls)
     with ThreadPoolExecutor(max_workers=len(search_calls)) as executor:
@@ -426,7 +474,7 @@ def execute_image_search_plan(
                 call,
                 image_targets[index],
                 image_verifier=image_verifier,
-                verification_context=verification_context,
+                verification_context=effective_verification_context,
                 preferred_image=(preferred_images or [])[index]
                 if index < len(preferred_images or [])
                 else None,

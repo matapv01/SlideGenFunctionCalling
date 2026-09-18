@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from backend.workflows.slidegen_workflow.executors import tool_plan_executor
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    NoApprovedImageError,
     ToolPlanError,
     execute_image_search_plan,
     get_image_targets_in_order,
@@ -182,6 +183,92 @@ def test_execute_searches_then_injects_by_search_order(monkeypatch):
         "image_url_1",
         "image_url_2",
     ]
+
+
+def test_rejected_image_candidates_signal_no_image_retry(monkeypatch):
+    def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
+        return json.dumps([f"https://example.com/{index}.jpg" for index in range(5)])
+
+    class RejectingVerifier:
+        def verify_search_candidates(self, **kwargs):
+            return {
+                "available": True,
+                "approved": [],
+                "decisions": [
+                    {"index": index, "use": False, "confidence": 0.1}
+                    for index in range(5)
+                ],
+            }
+
+    monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
+
+    plan = [
+        {
+            "name": "generate_test_slide",
+            "arguments": {"title": "AI in healthcare"},
+        },
+        {
+            "name": "search_ddgs_images",
+            "arguments": {"query": "medical diagnosis", "layout": "Tall"},
+        },
+        {
+            "name": "search_ddgs_images",
+            "arguments": {"query": "hospital equipment", "layout": "Wide"},
+        },
+    ]
+
+    with pytest.raises(NoApprovedImageError, match="IMAGE_VERIFICATION_REJECTED"):
+        execute_image_search_plan(
+            plan,
+            {"generate_test_slide": FakeTool(TwoImageSlideInput)},
+            image_verifier=RejectingVerifier(),
+        )
+
+
+def test_image_verifier_receives_deck_and_rendered_slide_context(monkeypatch):
+    seen = []
+
+    def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
+        return json.dumps([f"https://example.com/{query.replace(' ', '-')}.jpg"])
+
+    class AcceptingVerifier:
+        def verify_search_candidates(self, **kwargs):
+            seen.append(kwargs)
+            return {
+                "available": True,
+                "approved": [kwargs["candidates"][0]],
+                "decisions": [],
+            }
+
+    monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
+    monkeypatch.setattr(tool_plan_executor, "_pick_live_url", lambda urls: urls[0])
+
+    execute_image_search_plan(
+        [
+            {
+                "name": "generate_test_slide",
+                "arguments": {"title": "Hành trình ra đi", "image_url_1": ""},
+            },
+            {
+                "name": "search_ddgs_images",
+                "arguments": {"query": "historical departure", "layout": "Tall"},
+            },
+        ],
+        {"generate_test_slide": FakeTool(TwoImageSlideInput)},
+        image_verifier=AcceptingVerifier(),
+        verification_context={
+            "deck_topic": "Hồ Chí Minh và hành trình cách mạng Việt Nam",
+            "deck_outline": "Slide 1 INTRO\nSlide 2 Hành trình ra đi",
+            "slide_topic": "Hành trình ra đi",
+            "slide_purpose": "Mở đầu hành trình Nguyễn Ái Quốc ra đi tìm đường cứu nước năm 1911.",
+            "slide_content": "1911: Khởi hành",
+        },
+    )
+
+    assert len(seen) == 1
+    assert seen[0]["deck_topic"].startswith("Hồ Chí Minh")
+    assert "Nguyễn Ái Quốc" in seen[0]["slide_purpose"]
+    assert "Hành trình ra đi" in seen[0]["rendered_slide_content"]
 
 
 def test_execute_tool_plan_renders_real_xml_slide_with_injected_image(monkeypatch):

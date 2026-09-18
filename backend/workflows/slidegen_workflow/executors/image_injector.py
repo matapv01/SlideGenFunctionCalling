@@ -5,6 +5,7 @@ slide XML tool. This module intentionally contains no planner-LLM path.
 """
 
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    NoApprovedImageError,
     ToolPlanError,
     execute_image_search_plan,
     get_image_targets_in_order,
@@ -12,6 +13,7 @@ from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
 )
 
 __all__ = [
+    "NoApprovedImageError",
     "ToolPlanError",
     "execute_image_search_plan",
     "get_image_targets_in_order",

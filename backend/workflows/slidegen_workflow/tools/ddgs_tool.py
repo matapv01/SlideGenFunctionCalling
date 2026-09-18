@@ -128,7 +128,7 @@ def search_ddgs_images(
     type_image: str = "photo",
     layout: str = None,
     license_image: str = None,
-    max_results: int = 3,
+    max_results: int = 5,
     target_description: str = None,
 ):
     """
@@ -177,7 +177,9 @@ def search_ddgs_images(
             )
             urls = [res.get("image") for res in results if res.get("image")]
             if urls:
-                res_json = json.dumps(urls[:3], ensure_ascii=False)
+                # Keep five candidates so the multimodal verifier can reject
+                # weak matches without forcing an unrelated fallback image.
+                res_json = json.dumps(urls[:5], ensure_ascii=False)
                 _IMAGE_CACHE[cache_key] = res_json
                 return res_json
 

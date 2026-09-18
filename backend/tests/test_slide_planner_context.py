@@ -3,6 +3,7 @@ from backend.workflows.slidegen_workflow.nodes.slide_planner import (
     _normalize_image_strategy,
     _normalize_plan_action,
     build_compact_slide_outline,
+    normalize_planner_result,
     normalize_image_sequence,
     prepare_planner_context,
 )
@@ -113,3 +114,20 @@ def test_content_image_policy_defaults_to_none_and_spaces_decorative_images():
     normalize_image_sequence(plans)
 
     assert [plan["image_mode"] for plan in plans] == ["semantic", "none", "decorative"]
+
+
+def test_planner_normalizes_slide_purpose_for_image_context():
+    plan = normalize_planner_result(
+        {
+            "slide_topic": "Hành trình ra đi",
+            "slide_purpose": "Mở đầu hành trình Nguyễn Ái Quốc ra đi tìm đường cứu nước năm 1911.",
+            "thought": "Use a strong historical opening composition.",
+            "image_mode": "semantic",
+            "image_theme": "nguyen ai quoc departure 1911",
+            "action": "INTRO_TOOLS",
+        },
+        {"heading": "Hành trình ra đi"},
+        0,
+    )
+
+    assert plan["slide_purpose"].startswith("Mở đầu hành trình Nguyễn Ái Quốc")

@@ -66,6 +66,14 @@ def _fallback_slide_topic(content, index: int) -> str:
     return f"Slide {index + 1}"
 
 
+def _fallback_slide_purpose(content, index: int) -> str:
+    """Derive a compact semantic brief when the planner omits it."""
+    topic = _fallback_slide_topic(content, index)
+    if topic.startswith("Slide "):
+        return f"This slide presents the main idea for slide {index + 1}."
+    return f"This slide explains {topic}."
+
+
 VALID_SLIDE_ACTIONS = {
     "INTRO_TOOLS",
     "TRANSITION_TOOLS",
@@ -190,6 +198,12 @@ def normalize_planner_result(plan, content, index: int) -> Dict:
     plan_dict["slide_topic"] = str(
         plan_dict.get("slide_topic") or _fallback_slide_topic(content, index)
     ).strip()[:160]
+    plan_dict["slide_purpose"] = " ".join(
+        str(
+            plan_dict.get("slide_purpose")
+            or _fallback_slide_purpose(content, index)
+        ).split()
+    ).strip()[:320]
     normalized_action = _normalize_plan_action(plan_dict, content, index)
     if normalized_action != plan_dict.get("action"):
         print(
@@ -216,6 +230,7 @@ def fallback_slide_plan(content, index: int) -> Dict:
     """Return the safe plan used when one planner request cannot be completed."""
     return {
         "slide_topic": _fallback_slide_topic(content, index),
+        "slide_purpose": _fallback_slide_purpose(content, index),
         "thought": "Use a readable layout with concise editable text.",
         "image_strategy": _normalize_image_strategy({}, content, index),
         "image_mode": "none",

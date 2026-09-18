@@ -14,7 +14,10 @@ from backend.workflows.slidegen_workflow.utils.rich_text import (
     materialize_markdown_bold_runs,
     materialize_math_fields_in_xml,
 )
-from backend.workflows.slidegen_workflow.executors.tool_plan_executor import ToolPlanError
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    NoApprovedImageError,
+    ToolPlanError,
+)
 
 
 
@@ -1296,6 +1299,10 @@ def execute_tool_plan(
             preferred_images=preferred_images,
             asset_dir=asset_dir,
         )
+    except NoApprovedImageError:
+        # This is a deliberate workflow signal. The executor retries the
+        # slide with an XML tool that has no image slots.
+        raise
     except ToolPlanError as error:
         # ToolPlanError means the model generated a structurally invalid plan
         # (e.g. missing search_ddgs_images calls, wrong tool name in plan, etc.)

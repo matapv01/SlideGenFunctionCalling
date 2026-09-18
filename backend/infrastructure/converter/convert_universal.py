@@ -37,7 +37,7 @@ from backend.infrastructure.converter.omml import (
     M_NS,
     latex_to_omml,
 )
-from backend.config import MATHLIVE_PACKAGE_DIR, PUPPETEER_EXECUTABLE_PATH
+from backend.config import MATHLIVE_PACKAGE_DIR, OUTPUT_DIR, PUPPETEER_EXECUTABLE_PATH
 
 
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -2223,6 +2223,12 @@ if ($closed) {
             elif os.name == "nt" and path_text.startswith("/") and len(path_text) > 2 and path_text[2] == ":":
                 path_text = path_text[1:]
             image_path = Path(path_text)
+        elif value.lower().startswith("/static/output/"):
+            # Generated DOCX assets are stored under the persistent static
+            # volume.  The XML keeps this browser-readable URL so the editor
+            # can display it; export must resolve it back to the local file.
+            relative_path = unquote(value[len("/static/output/"):].lstrip("/"))
+            image_path = OUTPUT_DIR / relative_path
         else:
             image_path = Path(unquote(value))
 

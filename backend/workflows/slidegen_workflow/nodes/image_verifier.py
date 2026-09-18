@@ -84,6 +84,6 @@ def verify_document_images(state: State, config: RunnableConfig) -> State:
         )
         print(f"  -> Verified {len(assignments)} document image placement(s)")
     else:
-        print("  -> No document image was approved for the generated deck")
+        print("  -> No document image was approved; slide generation may use search or a no-image layout")
     state["slide_options"] = options
     return state

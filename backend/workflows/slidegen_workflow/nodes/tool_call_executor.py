@@ -30,6 +30,9 @@ from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     normalize_tool_arguments,
     normalize_tool_call,
 )
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    NoApprovedImageError,
+)
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.utils.xml_transitions import (
     apply_random_slide_transitions,
@@ -556,13 +559,37 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                 verification_context={
                     "slide_content": state.get("current_slide_text", ""),
                     "slide_topic": (state.get("current_slide_plan") or {}).get("slide_topic", ""),
+                    "slide_purpose": (state.get("current_slide_plan") or {}).get("slide_purpose", ""),
                     "presentation_instruction": slide_options.get("presentation_instruction", ""),
+                    "deck_topic": (state.get("deck_style_plan") or {}).get("deck_topic", ""),
+                    "deck_outline": "\n".join(
+                        str(item).strip()
+                        for item in (state.get("slide_context_maps") or [])
+                        if str(item).strip()
+                    )[:3000],
                 },
                 preferred_images=preferred_images,
                 asset_dir=configurable.get("output_folder"),
             )
             if not slide_content:
                 raise ValueError(f"Tool '{tool_name}' returned empty XML content.")
+        except NoApprovedImageError as e:
+            # A verifier rejection is a quality decision, not a rendering
+            # failure. Keep the same slide content but ask the generator to
+            # call again with a layout that has no image slots.
+            print(f"  IMAGE VERIFICATION: {e}")
+            state["force_no_image_layout"] = True
+            state["executor_decision"] = "fail"
+            state["executor_feedback"] = (
+                f"{e}\n"
+                "Regenerate this slide with an XML layout that has no image "
+                "parameters. Do not call search_ddgs_images on this retry. "
+                "Preserve the slide's content, hierarchy, and visual intent "
+                "using typography, shapes, tables, or charts instead."
+            )
+            state["executor_retry_count"] = retry_count + 1
+            state["retry_count"] = int(state.get("retry_count", 0)) + 1
+            return state
         except Exception as e:
             print(f"  FAIL - Tool plan execution failed: {e}")
             state['executor_decision'] = 'fail'

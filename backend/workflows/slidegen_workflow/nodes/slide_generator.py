@@ -161,7 +161,11 @@ def _build_decorative_image_query(
     if action == "TEAM_TOOLS":
         return f"{theme} professional team illustration" if theme else "diverse professional team collaboration illustration"
     if action == "INTRO_TOOLS":
-        return "friendly person waving hello illustration"
+        return (
+            f"{theme} editorial opening visual"
+            if theme
+            else "abstract editorial opening visual"
+        )
     if any(
         token in description for token in ("portrait", "avatar", "profile", "person")
     ):
@@ -182,6 +186,7 @@ def _build_fallback_image_query(
     slide_content: str,
     target: dict,
     slide_topic: str = "",
+    slide_purpose: str = "",
     image_strategy: str = "semantic",
     slide_action: str = "CONTENT_TOOLS",
     image_theme: str = "",
@@ -195,7 +200,7 @@ def _build_fallback_image_query(
         )
 
     description = str(target.get("description") or "")
-    raw = f"{slide_topic} {slide_content} {description}"
+    raw = f"{slide_topic} {slide_purpose} {slide_content} {description}"
     raw = re.sub(r"https?://\S+", " ", raw)
     raw = re.sub(r"[\[\]{}<>\"']", " ", raw)
 
@@ -219,6 +224,7 @@ def _complete_native_tool_plan(
     candidate_tools: list,
     slide_content: str,
     slide_topic: str = "",
+    slide_purpose: str = "",
     image_strategy: str = "semantic",
     slide_action: str = "CONTENT_TOOLS",
     image_theme: str = "",
@@ -264,6 +270,7 @@ def _complete_native_tool_plan(
                         slide_content,
                         target,
                         slide_topic=slide_topic,
+                        slide_purpose=slide_purpose,
                         image_strategy=image_strategy,
                         slide_action=slide_action,
                         image_theme=image_theme,
@@ -386,6 +393,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     if state.get("last_processed_slide_index") != idx:
         state["candidate_tools"] = None
         state["design_instruction"] = None
+        state["force_no_image_layout"] = False
         state["last_processed_slide_index"] = idx
     current_text = state.get("current_slide_text", "")
     current_plan = state.get('current_slide_plan')
@@ -439,7 +447,11 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '')
     slide_topic = str(current_plan.get('slide_topic') or creative_thought)
-    image_mode = _resolve_image_mode(current_plan)
+    image_mode = (
+        "none"
+        if state.get("force_no_image_layout")
+        else _resolve_image_mode(current_plan)
+    )
     image_strategy = _resolve_image_strategy(current_plan)
     image_theme = str(current_plan.get('image_theme') or '').strip()
     
@@ -567,9 +579,14 @@ TRANSITION SLIDE CONTRACT:
     # read mutable tool history from another slide worker.
     assigned_tool_name = str(state.get("preferred_tool_name") or "").strip()
     recent_tools_str = (
-        f"Use only the assigned XML layout tool: {assigned_tool_name}"
-        if assigned_tool_name
-        else "No layout was pre-assigned; choose one supplied XML layout tool."
+        "The previous image layout was rejected by the image verifier. Choose "
+        "only a supplied XML layout with no image parameters."
+        if state.get("force_no_image_layout")
+        else (
+            f"Use only the assigned XML layout tool: {assigned_tool_name}"
+            if assigned_tool_name
+            else "No layout was pre-assigned; choose one supplied XML layout tool."
+        )
     )
     style_context_str = json.dumps(deck_style_plan, ensure_ascii=False, indent=2)
 
@@ -712,6 +729,7 @@ OUTPUT FORMAT: TOOL CALLS ONLY
             my_tools,
             f"{slide_topic}\n{current_text}",
             slide_topic=slide_topic,
+            slide_purpose=str(current_plan.get("slide_purpose") or ""),
             image_strategy=image_strategy,
             slide_action=tool_category,
             image_theme=image_theme,

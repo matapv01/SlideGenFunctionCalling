@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 _MAX_REMOTE_BYTES = 8 * 1024 * 1024
 _MAX_MODEL_IMAGE_BYTES = 2 * 1024 * 1024
 _MAX_IMAGE_EDGE = 1400
-_MAX_SEARCH_CANDIDATES = 6
+_MAX_SEARCH_CANDIDATES = 5
 
 
 def _as_bool(value: Any) -> bool:
@@ -64,6 +64,11 @@ class ImageRelevanceService:
         slide_content: str,
         target_description: str,
         presentation_instruction: str = "",
+        slide_topic: str = "",
+        slide_purpose: str = "",
+        deck_topic: str = "",
+        deck_outline: str = "",
+        rendered_slide_content: str = "",
     ) -> dict[str, Any]:
         """Return approved search URLs in relevance order.
 
@@ -83,16 +88,27 @@ class ImageRelevanceService:
             {
                 "type": "text",
                 "text": (
-                    "Compare the following image-search candidates with the real "
-                    "slide requirement. Reject an image when it is only broadly "
-                    "related, depicts a different entity, or cannot support the "
-                    "requested visual role. Do not reward aesthetic quality alone. "
+                    "Compare the following image-search candidates with the full "
+                    "semantic requirement of the slide. First understand the deck "
+                    "subject and the slide's purpose, then inspect the candidate "
+                    "image. Reject an image when it is only broadly related, "
+                    "depicts a different entity, event, place, or time period, or "
+                    "cannot support the requested visual role. Do not reward "
+                    "aesthetic quality alone. A title-only or intro slide must be "
+                    "judged from the deck topic and slide purpose, not from the "
+                    "amount of text on that slide. The rendered slide arguments "
+                    "are the most concrete representation of what will be shown. "
                     "Return JSON only in the form "
                     '{"candidates":[{"index":0,"use":true,"confidence":0.0,"reason":"..."}]}.'
                     " Candidate indexes are zero-based.\n\n"
+                    f"Deck topic: {str(deck_topic or '')[:800]}\n"
+                    f"Deck outline: {str(deck_outline or '')[:2200]}\n"
+                    f"Slide topic: {str(slide_topic or '')[:500]}\n"
+                    f"Slide purpose: {str(slide_purpose or '')[:900]}\n"
                     f"Search query: {query}\n"
                     f"Image slot role: {target_description}\n"
-                    f"Slide content:\n{str(slide_content or '')[:2600]}\n"
+                    f"Source slide content:\n{str(slide_content or '')[:2600]}\n"
+                    f"Rendered slide content:\n{str(rendered_slide_content or '')[:3200]}\n"
                     f"Deck-level visual instruction:\n{str(presentation_instruction or '')[:1200]}\n"
                 ),
             }
@@ -125,6 +141,11 @@ class ImageRelevanceService:
             query,
             slide_content,
             target_description,
+            slide_topic,
+            slide_purpose,
+            deck_topic,
+            deck_outline,
+            rendered_slide_content,
         )
         cached = self._get_cache(cache_key)
         if cached is not None:

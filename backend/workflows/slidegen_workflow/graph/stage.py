@@ -25,6 +25,16 @@ class SlidePlan(BaseModel):
             "layout, editable text, icons, and image-search queries."
         ),
     )
+    slide_purpose: str = Field(
+        default="",
+        description=(
+            "One short sentence explaining the slide's main message in the "
+            "context of the whole deck. Mention the concrete subject, person, "
+            "event, place, time period, or relationship that a relevant visual "
+            "must support. This is semantic context for image verification, not "
+            "a layout instruction."
+        ),
+    )
     thought: str = Field(
         description=(
             "A concise creative brief of at most two sentences covering the "
@@ -157,6 +167,7 @@ class State(TypedDict, total=False):
     current_slide_position: Any
     current_slide_type: str
     current_document_images: List[Dict[str, Any]]
+    force_no_image_layout: bool
     current_tool_plan: List[Dict]
     current_search_history: List[Dict]
     current_tool_call: Dict

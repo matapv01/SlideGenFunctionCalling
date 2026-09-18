@@ -38,6 +38,20 @@ function remoteImageProxyUrl(source: string): string | null {
   return `/api/v1/image-serve/remote-proxy?url=${encodeURIComponent(source)}`;
 }
 
+function projectAssetProxyUrl(source: string): string | null {
+  // The backend stores DOCX-derived assets as /static/output/... in XML so
+  // the same document works for both browser preview and PPTX export.  The
+  // Vite dev server and production API expose the authenticated app below
+  // /api, so resolve the asset through the small safe backend bridge.
+  const normalized = source.replace(/\\/g, "/");
+  const marker = "/static/output/";
+  const markerIndex = normalized.toLowerCase().indexOf(marker);
+  if (markerIndex < 0) return null;
+  const relativePath = normalized.slice(markerIndex + marker.length);
+  if (!relativePath || relativePath.includes("..")) return null;
+  return `/api/v1/image-serve/project-asset?path=${encodeURIComponent(relativePath)}`;
+}
+
 const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => {
   const hostRef = useRef<HTMLSpanElement>(null);
 
@@ -974,12 +988,13 @@ export const XmlSlideCanvas = ({
 
     if (tag === "image") {
       const source = element.attrs.src || "";
+      const projectAssetSource = projectAssetProxyUrl(source);
       const proxySource = remoteImageProxyUrl(source);
       return (
         <div key={element.id} {...common} className="overflow-hidden bg-slate-200">
           <img
             key={source}
-            src={source}
+            src={projectAssetSource || source}
             alt={element.attrs.alt || "Slide element"}
             className="h-full w-full"
             style={{ display: "block", objectFit: (element.attrs.fit || "cover") as CSSProperties["objectFit"] }}
@@ -989,6 +1004,11 @@ export const XmlSlideCanvas = ({
             }}
             onError={(event) => {
               const image = event.currentTarget;
+              if (projectAssetSource && image.dataset.projectAssetAttempted !== "true") {
+                image.dataset.projectAssetAttempted = "true";
+                image.src = source;
+                return;
+              }
               if (proxySource && image.dataset.proxyAttempted !== "true") {
                 image.dataset.proxyAttempted = "true";
                 image.src = proxySource;
