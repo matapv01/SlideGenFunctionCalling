@@ -251,6 +251,13 @@ export interface SubscriptionInfoResponse {
   usage_reset_date?: string;
 }
 
+export interface UserSettingsResponse {
+  user_id: number;
+  theme: "light" | "dark" | "system";
+  language: "vi" | "en";
+  notifications_enabled: boolean;
+}
+
 export interface AdminUsageWeight {
   id: string;
   percentage: number;
@@ -442,7 +449,7 @@ export const api = {
     }),
 
   // Settings endpoints - /api/profile/settings
-  getSettings: () => request<any>("/profile/settings"),
+  getSettings: () => request<UserSettingsResponse>("/profile/settings"),
 
   updateSettings: (settings: any) =>
     request<{ message: string }>("/profile/settings", {

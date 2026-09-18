@@ -75,7 +75,7 @@
 .sgx-home.workspace-page .chat-composer-attachment-remove:hover,
 .sgx-home.workspace-page .chat-composer-attachment-remove:focus-visible { background: #ffffff12; color: #f5a08a; outline: 0; }
 .sgx-home.workspace-page .chat-composer-attachment.is-loading .chat-composer-attachment-remove { width: 20px; max-width: 20px; opacity: 1; }
-.sgx-home.workspace-page .chat-composer-attachment-remove:disabled { cursor: wait; opacity: .55; }
+.sgx-home.workspace-page .chat-composer-attachment-remove:disabled { cursor: not-allowed; opacity: .55; }
 .sgx-home.workspace-page .composer-usage-inline { display: flex; align-items: center; gap: 7px; margin-right: 10px; }
 .sgx-home.workspace-page .composer-usage-meter { position: relative; display: flex; align-items: center; gap: 3px; padding: 2px; border-radius: 4px; outline: 0; cursor: help; }
 .sgx-home.workspace-page .composer-usage-meter:focus-visible { box-shadow: 0 0 0 2px #f5a08a55; }
@@ -323,7 +323,7 @@
 .sgx-home.workspace-page .chat-history-row:hover .chat-history-delete,
 .sgx-home.workspace-page .chat-history-row:focus-within .chat-history-delete { opacity: 1; pointer-events: auto; }
 .sgx-home.workspace-page .chat-history-delete:hover { border-color: #f5a08a55; background: #ffffff12; color: #f5a08a; }
-.sgx-home.workspace-page .chat-history-delete:disabled { cursor: wait; opacity: .4; }
+.sgx-home.workspace-page .chat-history-delete:disabled { cursor: not-allowed; opacity: .4; }
 .sgx-home.workspace-page .project-card { position: relative; }
 .sgx-home.workspace-page .project-slide-preview,
 .sgx-home.workspace-page .project-slide-preview * { cursor: default !important; }
@@ -332,7 +332,7 @@
 .sgx-home.workspace-page .project-card:hover .project-card-rename,
 .sgx-home.workspace-page .project-card:focus-within .project-card-rename { opacity: 1; pointer-events: auto; transform: scale(1); }
 .sgx-home.workspace-page .project-card-rename:hover { border-color: #f5a08a99; background: #30312f; color: #f5a08a; }
-.sgx-home.workspace-page .project-card-rename:disabled { cursor: wait; opacity: .5; }
+.sgx-home.workspace-page .project-card-rename:disabled { cursor: not-allowed; opacity: .5; }
 .sgx-home.workspace-page .project-card-rename-form { display: flex; min-width: 0; align-items: center; gap: 5px; margin: 10px 17px 18px; }
 .sgx-home.workspace-page .project-card-rename-input { min-width: 0; flex: 1 1 auto; padding: 7px 8px; border: 1px solid #f5a08a88; border-radius: 4px; outline: 0; background: #242524; color: #f0f0eb; font: 12px "Avenir Next", "Segoe UI", system-ui, sans-serif; }
 .sgx-home.workspace-page .project-card-rename-input:focus { box-shadow: 0 0 0 2px #f5a08a18; }
@@ -341,12 +341,12 @@
 .sgx-home.workspace-page .project-card-rename-save:hover { border-color: #f5a08a99; background: #f5a08a; color: #242524; }
 .sgx-home.workspace-page .project-card-rename-cancel:hover { border-color: #e4867299; background: #332826; color: #f5d1c8; }
 .sgx-home.workspace-page .project-card-rename-save:disabled,
-.sgx-home.workspace-page .project-card-rename-cancel:disabled { cursor: wait; opacity: .5; }
+.sgx-home.workspace-page .project-card-rename-cancel:disabled { cursor: not-allowed; opacity: .5; }
 .sgx-home.workspace-page .project-card-delete { position: absolute; top: 10px; right: 10px; z-index: 4; display: grid; width: 25px; height: 25px; place-items: center; padding: 0 0 2px; border: 1px solid #ffffff25; border-radius: 50%; background: #242524bb; color: #d6d7d0; cursor: pointer; font: 17px/1 system-ui, sans-serif; opacity: 0; pointer-events: none; transform: scale(.92); transition: border-color .16s ease, background .16s ease, color .16s ease, opacity .16s ease, transform .16s ease; }
 .sgx-home.workspace-page .project-card:hover .project-card-delete,
 .sgx-home.workspace-page .project-card:focus-within .project-card-delete { opacity: 1; pointer-events: auto; transform: scale(1); }
 .sgx-home.workspace-page .project-card-delete:hover { border-color: #f5a08a99; background: #30312f; color: #f5a08a; }
-.sgx-home.workspace-page .project-card-delete:disabled { cursor: wait; opacity: .5; }
+.sgx-home.workspace-page .project-card-delete:disabled { cursor: not-allowed; opacity: .5; }
 .sgx-home.workspace-page .project-action-message { margin: -18px 0 20px; }
 .sgx-home.workspace-page .project-empty-state { display: grid; min-height: 260px; place-items: center; align-content: center; gap: 11px; padding: 38px 24px; border: 1px dashed #ffffff24; border-radius: 6px; background: radial-gradient(circle at 50% 0%, #f5a08a0c, transparent 48%), #292a29; text-align: center; }
 .sgx-home.workspace-page .project-empty-mark { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #f5a08a88; border-radius: 50%; color: #f5a08a; font-size: 25px; font-weight: 300; line-height: 1; }
@@ -362,7 +362,7 @@
 .sgx-home.workspace-page .chat-flow-option:hover:not(:disabled) { border-color: #f5a08a88; background: #f5a08a12; color: #f5f5ef; transform: translateY(-1px); }
 .sgx-home.workspace-page .chat-flow-option.primary { border-color: #f5a08a99; background: #f5a08a; color: #242524; }
 .sgx-home.workspace-page .chat-flow-option.primary:hover:not(:disabled) { border-color: #ffc0ad; background: #ffc0ad; color: #242524; }
-.sgx-home.workspace-page .chat-flow-option:disabled { cursor: wait; opacity: .45; }
+.sgx-home.workspace-page .chat-flow-option:disabled { cursor: not-allowed; opacity: .45; }
 .sgx-home.workspace-page .chat-plan-button { display: inline-flex; align-items: center; justify-content: space-between; width: min(100%, 360px); gap: 12px; padding: 9px 11px; border: 1px solid #f5a08a55; border-radius: 6px; background: #f5a08a0d; color: #f5a08a; cursor: pointer; font: 600 10px/1.25 "Avenir Next", "Segoe UI", system-ui, sans-serif; letter-spacing: .02em; text-align: left; transition: background .16s ease, border-color .16s ease, transform .16s ease; }
 .sgx-home.workspace-page .chat-plan-button:hover { border-color: #f5a08a99; background: #f5a08a18; transform: translateY(-1px); }
 .sgx-home.workspace-page .chat-plan-button span:last-child { font-size: 13px; font-weight: 400; }

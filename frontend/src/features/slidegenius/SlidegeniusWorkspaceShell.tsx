@@ -26,6 +26,7 @@ const shellCopy = {
     collapse: "Collapse sidebar",
     expand: "Expand sidebar",
     openSettings: "Open settings",
+    yourPlan: "Your plan",
     upgrade: "Upgrade",
     currentPlan: "CURRENT PLAN",
     help: "Need a hand?",
@@ -36,6 +37,7 @@ const shellCopy = {
     collapse: "Thu gọn thanh bên",
     expand: "Mở rộng thanh bên",
     openSettings: "Mở cài đặt",
+    yourPlan: "Gói của bạn",
     upgrade: "Nâng cấp",
     currentPlan: "GÓI HIỆN TẠI",
     help: "Cần trợ giúp?",
@@ -114,6 +116,7 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
   const userName = user?.full_name || user?.username || user?.email || "Slidegen user";
   const initials = useMemo(() => userName.slice(0, 2).toUpperCase(), [userName]);
   const currentPlan = workspacePlanLabel(subscriptionTier, language);
+  const isUltraPlan = subscriptionTier.toLowerCase() === "ultra";
 
   useEffect(() => {
     if (!user) return;
@@ -181,7 +184,9 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
                   <span className="workspace-plan-label">{text.currentPlan}</span>
                   <strong>{currentPlan}</strong>
                 </div>
-                <button type="button" onClick={() => goToTab("subscription")}>{text.upgrade} <span>↗</span></button>
+                {!isUltraPlan && (
+                  <button type="button" onClick={() => goToTab("subscription")}>{text.upgrade} <span>↗</span></button>
+                )}
               </div>
               <button className="workspace-help" type="button" onClick={() => goToTab("guide")}>?</button>
               <span>{text.help}</span>
@@ -209,6 +214,7 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
             </button>
             {userMenuOpen && (
               <div className="workspace-user-menu" onClick={(event) => event.stopPropagation()}>
+                <button type="button" onClick={() => { setUserMenuOpen(false); goToTab("subscription"); }}>{text.yourPlan}<span>↗</span></button>
                 <button type="button" onClick={() => { setUserMenuOpen(false); goToTab("settings"); }}>{text.tabs.settings}<span>↗</span></button>
                 <button type="button" onClick={() => { setUserMenuOpen(false); logout(); navigate("/"); }}>{text.logout}<span>↗</span></button>
               </div>

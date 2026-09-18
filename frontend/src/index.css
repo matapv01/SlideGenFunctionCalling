@@ -229,7 +229,7 @@
 .sg-confirm-dialog-confirm { border: 1px solid #f5a08a !important; background: #f5a08a !important; color: #242524 !important; }
 .sg-confirm-dialog-confirm:hover { background: #ffc0ad !important; }
 .sg-confirm-dialog-confirm.is-destructive { border-color: #f5a08a !important; background: #f5a08a !important; }
-.sg-confirm-dialog-confirm:disabled,.sg-confirm-dialog-cancel:disabled { cursor: wait; opacity: .55; }
+.sg-confirm-dialog-confirm:disabled,.sg-confirm-dialog-cancel:disabled { cursor: not-allowed; opacity: .55; }
 
 .sg-alert-dialog-overlay { background: #090909bb !important; backdrop-filter: blur(3px); }
 

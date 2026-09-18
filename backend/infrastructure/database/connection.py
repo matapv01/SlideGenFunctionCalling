@@ -381,9 +381,12 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
-                ("free", 2, 3, 50, 10, 50),
-                ("plus", 10, 10, 50, 10, 50),
-                ("ultra", -1, -1, -1, 10, 50),
+                # Keep first-install defaults aligned with the policy currently
+                # managed from the Admin page. INSERT OR IGNORE above ensures
+                # existing administrator-edited values remain authoritative.
+                ("free", 20, 3, 30, 10, 50),
+                ("plus", 50, 10, 50, 10, 50),
+                ("ultra", 100, 20, 50, 10, 50),
             ),
         )
 

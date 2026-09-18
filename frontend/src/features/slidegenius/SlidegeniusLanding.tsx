@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { publicAssetUrl } from "@/lib/publicAssetUrl";
 import "./slidegenius.css";
@@ -15,12 +15,14 @@ const categories = [
 const typingPrompts = { en: ["What do you want to create?", "A bold pitch deck for tomorrow", "A story your audience remembers"], vi: ["Bạn muốn tạo ra điều gì?", "Một bài gọi vốn ấn tượng cho ngày mai", "Một câu chuyện khán giả sẽ nhớ mãi"] };
 
 export default function SlidegeniusLanding() {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [language, setLanguage] = useState<"en" | "vi">("en");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const closeTimer = useRef<number | null>(null);
   const [promptIndex, setPromptIndex] = useState(0);
   const [typedPrompt, setTypedPrompt] = useState("");
+  const [prompt, setPrompt] = useState("");
   const isVietnamese = language === "vi";
 
   useEffect(() => {
@@ -48,6 +50,10 @@ export default function SlidegeniusLanding() {
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
     closeTimer.current = window.setTimeout(() => setOpenMenu(null), 180);
   };
+  const handlePromptSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    navigate("/login");
+  };
 
   return (
     <main className="sgl-landing slidegen-page">
@@ -62,7 +68,7 @@ export default function SlidegeniusLanding() {
         </nav>
         <div className="header-actions"><button className="language-switcher" type="button" aria-label="Switch language" onClick={() => setLanguage((current) => current === "en" ? "vi" : "en")}><span className={!isVietnamese ? "is-active" : ""}>EN</span><span>/</span><span className={isVietnamese ? "is-active" : ""}>VI</span></button>{isAuthenticated ? <Link to="/home">Workspace</Link> : <Link to="/login">Sign In</Link>} {!isAuthenticated && <Link className="start-button" to="/register">{isVietnamese ? "Bắt đầu miễn phí" : "Start for Free"}</Link>}</div>
       </header>
-      <section id="top" className="hero" style={{ backgroundImage: `url("${publicAssetUrl("bgslidegen-poster.png")}")` }}><video className="hero-background-video" autoPlay muted loop playsInline preload="auto" poster={publicAssetUrl("bgslidegen-poster.png")} aria-label="Slidegen animated background"><source src={publicAssetUrl("bgslidegen.mp4")} type="video/mp4" /></video><div className="hero-video-overlay" /><p className="hero-topline">{isVietnamese ? "BIẾN ĐIỀU KHÓ THÀNH HIỆN HỮU" : "MAKE THE IMPOSSIBLE VISIBLE"}</p><div className="dot-grid" /><div className="hero-copy">{isVietnamese ? <>Trợ lý AI cho đội ngũ sáng tạo.<br />Tạo hình ảnh, video và câu chuyện cùng Slidegen.</> : <>AI agents for creative teams.<br />Create images, video, and stories with Slidegen.</>}</div><div className="prompt-wrap"><div className="prompt-field"><span className="chat-placeholder">{typedPrompt}<span className="typing-caret" /></span></div><a className="signup" href="#create">{isVietnamese ? "Tạo ngay" : "Create"}<span>↗</span></a></div></section>
+      <section id="top" className="hero" style={{ backgroundImage: `url("${publicAssetUrl("bgslidegen-poster.png")}")` }}><video className="hero-background-video" autoPlay muted loop playsInline preload="auto" poster={publicAssetUrl("bgslidegen-poster.png")} aria-label="Slidegen animated background"><source src={publicAssetUrl("bgslidegen.mp4")} type="video/mp4" /></video><div className="hero-video-overlay" /><p className="hero-topline">{isVietnamese ? "BIẾN ĐIỀU KHÓ THÀNH HIỆN HỮU" : "MAKE THE IMPOSSIBLE VISIBLE"}</p><div className="dot-grid" /><div className="hero-copy">{isVietnamese ? <>Trợ lý AI cho đội ngũ sáng tạo.<br />Tạo hình ảnh, video và câu chuyện cùng Slidegen.</> : <>AI agents for creative teams.<br />Create images, video, and stories with Slidegen.</>}</div><form className="prompt-wrap" onSubmit={handlePromptSubmit}><div className="prompt-field"><input className="landing-prompt-input" type="text" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder={typedPrompt} aria-label={isVietnamese ? "Bạn muốn tạo gì?" : "What do you want to create?"} /></div><button className="signup" type="submit">{isVietnamese ? "Tạo ngay" : "Create"}<span>↗</span></button></form></section>
       <section id="templates" className="showcase-section"><div className="section-intro"><p>{isVietnamese ? "MỘT STUDIO. MỌI CÂU CHUYỆN." : "ONE STUDIO. EVERY STORY."}</p><h2>{isVietnamese ? "Ý tưởng chuyển động." : "Ideas, in motion."}</h2><span>{isVietnamese ? "Một hệ thống sáng tạo linh hoạt cho mọi cách đội ngũ của bạn muốn truyền đạt." : "One flexible creative system for every way your team needs to communicate."}</span></div><div className="feature-list">{categories.map((category, index) => { const value = isVietnamese ? 1 : 0; return <article className={`feature-stage tone-${category.tone}`} key={category.label[value]}><div className="feature-copy"><p>{category.eyebrow[value]}</p><h3 className="title-unified">{category.title[value]}</h3><span>{category.copy[value]}</span><a href="#create">{isVietnamese ? "Khám phá Slidegen" : "Explore Slidegen"}<b>↗</b></a></div><div className="feature-canvas"><div className="canvas-grid" /><div className="canvas-label">SLIDEGEN / 0{index + 1}</div><div className="canvas-title">{category.label[value]}</div><div className="canvas-subtitle">{category.title[value]}</div><div className="canvas-shape shape-a" /><div className="canvas-shape shape-b" /><div className="canvas-node node-one" /><div className="canvas-node node-two" /><div className="canvas-line line-one" /><div className="canvas-line line-two" /></div></article>; })}</div></section>
       <section id="create" className="create-section"><div><p>SLIDEGEN FOR CREATIVE TEAMS</p><h2 className="title-unified">{isVietnamese ? <>Khiến ý tưởng<br /><em>không thể bị bỏ qua.</em></> : <>Make the idea<br /><em>impossible to ignore.</em></>}</h2><a href="#top">{isVietnamese ? "Bắt đầu sáng tạo" : "Start creating"}<span>↗</span></a></div><div className="newsletter"><p>{isVietnamese ? "ĐỪNG BỎ LỠ" : "STAY IN THE LOOP"}</p><strong>{isVietnamese ? "Tư duy sáng tạo, gửi đến bạn." : "Creative thinking, delivered."}</strong><form onSubmit={(event) => event.preventDefault()}><input aria-label="Email address" placeholder={isVietnamese ? "Địa chỉ email của bạn" : "Your email address"} type="email" /><button type="submit">{isVietnamese ? "Tham gia" : "Join"}<span>↗</span></button></form></div></section>
       <footer className="site-footer"><div className="footer-brand"><a className="brand" href="#top"><span className="brand-word"><span>slide</span><b>gen</b></span></a><span>{isVietnamese ? "Cùng nhau tạo nên công việc tốt hơn." : "Make better work, together."}</span></div><div className="footer-links"><div><b>Product</b><a href="#templates">Presentations</a><a href="#templates">Pitch decks</a><a href="#templates">Reports</a></div><div><b>Company</b><a href="#top">About</a><a href="#top">Careers</a><a href="#top">Contact</a></div><div><b>Social</b><a href="#top">Instagram</a><a href="#top">LinkedIn</a><a href="#top">X / Twitter</a></div></div><div className="footer-bottom"><span>© 2026 Slidegen</span><span>All systems go</span><span>Privacy · Terms</span></div></footer>

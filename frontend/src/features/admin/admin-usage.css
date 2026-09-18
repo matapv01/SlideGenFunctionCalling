@@ -14,7 +14,7 @@
 .admin-usage-window strong { color: #f5a08a; font-weight: 500; }
 .admin-usage-reset { padding: 10px 13px; border: 1px solid #e9786190; border-radius: 3px; background: #f5a08a12; color: #f5a08a; font: 600 11px "Avenir Next", "Segoe UI", system-ui, sans-serif; cursor: pointer; }
 .admin-usage-reset:hover { background: #f5a08a22; }
-.admin-usage-reset:disabled { cursor: wait; opacity: .5; }
+.admin-usage-reset:disabled { cursor: not-allowed; opacity: .5; }
 .admin-usage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .admin-usage-card { padding: 22px; border: 1px solid #ffffff18; border-radius: 6px; background: #292a29; }
 .admin-usage-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding-bottom: 17px; border-bottom: 1px solid #ffffff14; }
@@ -49,7 +49,7 @@
 .admin-usage-footer p span { display: block; color: #666961; }
 .admin-usage-footer .panel-primary { position: relative; min-width: 138px; padding-right: 34px; }
 .admin-usage-footer .panel-primary span { position: absolute; right: 14px; }
-.admin-usage-footer .panel-primary:disabled { cursor: wait; opacity: .5; }
+.admin-usage-footer .panel-primary:disabled { cursor: not-allowed; opacity: .5; }
 .admin-usage-message,.admin-usage-error { width: fit-content; max-width: 100%; margin: 14px 0 0; padding: 8px 11px; border: 1px solid #ffffff18; border-radius: 4px; background: #ffffff08; font-size: 11px; line-height: 1.45; }
 .admin-usage-message { border-color: #b9c8ae42; background: #b9c8ae0d; color: #b9c8ae; }
 .admin-usage-error { border-color: #f5a08a55; background: #f5a08a0d; color: #f5a08a; }
@@ -85,7 +85,7 @@
 .admin-users-actions button { padding: 7px 9px; border: 1px solid #ffffff24; border-radius: 3px; background: #242524; color: #d9dad4; font: 500 10px "Avenir Next", "Segoe UI", system-ui, sans-serif; cursor: pointer; }
 .admin-users-actions button:first-child { border-color: #f5a08a66; color: #f5a08a; }
 .admin-users-actions button:hover { background: #f5a08a18; }
-.admin-users-actions button:disabled { cursor: wait; opacity: .45; }
+.admin-users-actions button:disabled { cursor: not-allowed; opacity: .45; }
 @media (max-width: 760px) {
   .sgx-home.workspace-page .admin-usage-panel { padding-bottom: 28px; }
   .admin-usage-header { display: grid; align-items: start; gap: 20px; }

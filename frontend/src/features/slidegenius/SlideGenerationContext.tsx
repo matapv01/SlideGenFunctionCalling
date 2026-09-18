@@ -11,6 +11,12 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+import {
+  NOTIFICATIONS_CHANGED_EVENT,
+  playSlideGenerationCompleteSound,
+  unlockNotificationSound,
+} from "@/lib/notificationSound";
 import {
   loadActiveChatSlideGeneration,
   loadChatSlideContent,
@@ -169,8 +175,46 @@ export function SlideGenerationProvider({ children }: { children: ReactNode }) {
   const { token, isLoading: authLoading } = useAuth();
   const [generation, setGeneration] = useState<SlideGenerationState>(initialState);
   const [openRequest, setOpenRequest] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const generationRef = useRef(initialState);
   const controllerRef = useRef<AbortController | null>(null);
+  const previousGenerationPhaseRef = useRef<SlideGenerationPhase>(initialState.phase);
+  const notificationArmedRef = useRef(false);
+
+  useEffect(() => {
+    const handleNotificationsChanged = (event: Event) => {
+      const enabled = (event as CustomEvent<{ enabled?: unknown }>).detail?.enabled;
+      if (typeof enabled === "boolean") setNotificationsEnabled(enabled);
+    };
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, handleNotificationsChanged);
+    return () => window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, handleNotificationsChanged);
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !token) return;
+    let active = true;
+    api.getSettings().then((settings) => {
+      if (!active || typeof settings?.notifications_enabled !== "boolean") return;
+      setNotificationsEnabled(settings.notifications_enabled);
+    }).catch(() => {
+      // Keep the cached preference when settings are temporarily unavailable.
+    });
+    return () => { active = false; };
+  }, [authLoading, token]);
+
+  useEffect(() => {
+    const previousPhase = previousGenerationPhaseRef.current;
+    if (
+      previousPhase === "running"
+      && generation.phase === "completed"
+      && notificationArmedRef.current
+      && notificationsEnabled
+    ) {
+      playSlideGenerationCompleteSound();
+    }
+    previousGenerationPhaseRef.current = generation.phase;
+    if (generation.phase === "idle") notificationArmedRef.current = false;
+  }, [generation.phase, notificationsEnabled]);
 
   const commit = useCallback((update: (previous: SlideGenerationState) => SlideGenerationState) => {
     setGeneration((previous) => {
@@ -311,6 +355,7 @@ export function SlideGenerationProvider({ children }: { children: ReactNode }) {
       if (!snapshot || generationRef.current.phase !== "idle") return;
 
       const restored = stateFromSlideGenerationSnapshot(snapshot);
+      notificationArmedRef.current = restored.phase === "running";
       generationRef.current = restored;
       setGeneration(restored);
       setOpenRequest((previous) => previous + 1);
@@ -343,6 +388,8 @@ export function SlideGenerationProvider({ children }: { children: ReactNode }) {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
+    notificationArmedRef.current = true;
+    unlockNotificationSound();
     const firstStatus: ChatSlideStreamStatus = language === "vi"
       ? { stage: "starting", title: "Đang bắt đầu tạo slide", description: "Đang chuẩn bị yêu cầu đã xác nhận...", message: "Đang bắt đầu" }
       : { stage: "starting", title: "Starting slide generation", description: "Preparing the confirmed request...", message: "Starting" };
