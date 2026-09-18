@@ -2,11 +2,9 @@
 from __future__ import annotations
 import asyncio
 import logging
-import re
 import threading
-import unicodedata
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Literal, Protocol
 
 from backend.application.services.language_service import (
@@ -72,6 +70,7 @@ class SlideGenerationPort(Protocol):
         model_name: str | None,
         effort: str | None,
         target_slide_count: int,
+        document_images: list[dict[str, Any]] | None = None,
         callback: Callable[[str, dict[str, Any]], None] | None = None,
     ): ...
 
@@ -83,6 +82,15 @@ class SlideGenerationInProgressError(RuntimeError):
         super().__init__(
             "Một deck đang được tạo. Bạn vẫn có thể trò chuyện, "
             "nhưng hãy đợi deck hiện tại hoàn tất trước khi tạo deck khác."
+        )
+
+
+class ChatMessageInProgressError(RuntimeError):
+    """Raised when a second ordinary chat turn is started for the user."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Một câu trả lời đang được tạo. Vui lòng đợi câu trả lời hiện tại hoàn tất."
         )
 
 
@@ -123,6 +131,29 @@ class SlideGenerationJob:
     finished: bool = False
 
 
+@dataclass
+class ChatMessageJob:
+    """Process-owned ordinary chat job that survives an SSE disconnect."""
+
+    id: str
+    user_id: int
+    session_id: str
+    query: str
+    model_name: str | None
+    effort: str | None
+    slide_count: int | None
+    loop: asyncio.AbstractEventLoop
+    document_ids: list[str] = field(default_factory=list)
+    attachments: list[dict[str, Any]] = field(default_factory=list)
+    state: dict[str, Any] = field(default_factory=dict)
+    events: list[tuple[int, str, dict[str, Any]]] = field(default_factory=list)
+    subscribers: set[asyncio.Queue[tuple[int, str, dict[str, Any]]]] = field(
+        default_factory=set
+    )
+    task: asyncio.Task[None] | None = None
+    finished: bool = False
+
+
 class ChatbotService:
     """Application boundary for Slidegenius conversations.
 
@@ -135,7 +166,9 @@ class ChatbotService:
         "You are Slidegenius, a precise and helpful creative assistant. "
         "Answer entirely in the user's language and never switch languages "
         "without being asked. Keep the answer useful and direct. "
-        "Do not invent facts or claim that you performed an action you did not perform."
+        "Do not invent facts or claim that you performed an action you did not perform. "
+        "Do not replace a request to create a slide deck with a generic copied outline; "
+        "the slide workflow handles that request separately."
     )
     _CONTEXTUALIZE_PROMPT = (
         "Rewrite the latest user message as one standalone question using the "
@@ -177,6 +210,8 @@ class ChatbotService:
         self._active_slide_generations_lock = threading.Lock()
         self._slide_generation_jobs: dict[str, SlideGenerationJob] = {}
         self._active_slide_generation_jobs: dict[int, str] = {}
+        self._chat_message_jobs: dict[str, ChatMessageJob] = {}
+        self._active_chat_message_jobs: dict[int, str] = {}
 
     def create_session(
         self,
@@ -193,7 +228,31 @@ class ChatbotService:
         )
 
     def list_sessions(self, user_id: int) -> list[ChatSession]:
-        return self.repository.list_sessions(user_id)
+        sessions = self.repository.list_sessions(user_id)
+        # A detached job may not have persisted its first turn yet. Keep that
+        # session addressable while it is running, without making every empty
+        # draft look like a saved conversation in the normal history list.
+        active_session_ids: set[str] = set()
+        with self._active_slide_generations_lock:
+            for job_id in (
+                self._active_chat_message_jobs.get(user_id),
+                self._active_slide_generation_jobs.get(user_id),
+            ):
+                if not job_id:
+                    continue
+                job = (
+                    self._chat_message_jobs.get(job_id)
+                    or self._slide_generation_jobs.get(job_id)
+                )
+                if job is not None:
+                    active_session_ids.add(job.session_id)
+
+        known_ids = {session.id for session in sessions}
+        for session_id in active_session_ids - known_ids:
+            session = self.repository.get_session(session_id, user_id)
+            if session is not None and not session.archived:
+                sessions.append(session)
+        return sorted(sessions, key=lambda session: session.updated_at, reverse=True)
 
     def get_session(self, session_id: str, user_id: int) -> ChatSession | None:
         return self.repository.get_session(session_id, user_id)
@@ -225,10 +284,25 @@ class ChatbotService:
             raise ValueError("Message is too long")
 
         generation_config = resolve_chatbot_generation_config(model_name, effort)
+        if self.subscription_service is not None:
+            generation_config["usage_cost"] = self.subscription_service.get_chat_usage_cost(
+                str(generation_config["model"]),
+                str(generation_config["effort"]),
+            )
 
         session = self.repository.get_session(session_id, user_id)
         if session is None or session.archived:
             raise LookupError("Chat session not found")
+
+        # Every user-authored chatbot turn consumes one chat unit. The
+        # subscription service owns the rolling five-hour quota so ordinary
+        # chat and slide-generation confirmations use the same counter.
+        if self.subscription_service is not None:
+            self.subscription_service.consume_feature(
+                user_id,
+                "chat_message",
+                usage_cost=float(generation_config.get("usage_cost", 1.0)),
+            )
 
         normalized_document_ids = self._normalize_document_ids(document_ids)
         await self._ensure_documents_ready(session, normalized_document_ids)
@@ -263,76 +337,11 @@ class ChatbotService:
             if active_generation_session == session.id and not owns_active_job
             else self._latest_slide_flow(history)
         )
-        if active_slide_flow and document_attached:
-            # Older sessions may still contain the pre-document-aware source
-            # question. The newly attached document is already the selected
-            # source, so resume that flow at confirmation instead of asking the
-            # user to upload it a second time.
-            active_slide_flow = self._use_attached_document_flow(active_slide_flow)
         if active_slide_flow and active_slide_flow.get("state") in {
             "clarifying",
             "awaiting_confirmation",
             "limit_reached",
         }:
-            if (
-                active_slide_flow.get("state") == "awaiting_confirmation"
-                and self._is_slide_confirmation(clean_query)
-            ):
-                slide_prompt = str(
-                    active_slide_flow.get("brief") or clean_query
-                ).strip()
-                target_slide_count = slide_count or self._flow_slide_count(active_slide_flow)
-                if target_slide_count is None:
-                    # Older conversations may have reached confirmation before
-                    # slide-count metadata was introduced. Re-enter the
-                    # mandatory count step instead of using an implicit number.
-                    decision = self.slide_intent_service.request_slide_count(
-                        slide_prompt,
-                        max_slide_count=self._max_slide_count(user_id),
-                    )
-                    metadata = self._generation_metadata(generation_config)
-                    metadata["slide_flow"] = self._slide_flow_metadata(
-                        decision,
-                        original_prompt=str(
-                            active_slide_flow.get("original_prompt") or slide_prompt
-                        ).strip(),
-                        answers=[
-                            item
-                            for item in active_slide_flow.get("answers", [])
-                            if isinstance(item, dict)
-                        ],
-                    )
-                    return await self._record_turn(
-                        session=session,
-                        user_id=user_id,
-                        query=clean_query,
-                        standalone_query=slide_prompt,
-                        answer=decision.message,
-                        model_name=str(generation_config["model"]),
-                        effort=str(generation_config["effort"]),
-                        generation_config=generation_config,
-                        metadata=metadata,
-                        citations=[],
-                        attachments=message_attachments,
-                    )
-                self._validate_slide_count(user_id, target_slide_count)
-                return await self._run_slide_generation(
-                    session=session,
-                    user_id=user_id,
-                    query=clean_query,
-                    slide_prompt=slide_prompt,
-                    standalone_query=slide_prompt,
-                    model_name=model_name,
-                    effort=effort,
-                    generation_config=generation_config,
-                    target_slide_count=target_slide_count,
-                    history=history,
-                    document_attached=document_attached,
-                    slide_callback=slide_callback,
-                    slide_job_id=slide_job_id,
-                    attachments=message_attachments,
-                )
-
             standalone_query = clean_query
             decision = await self.slide_intent_service.continue_flow(
                 active_slide_flow,
@@ -343,6 +352,35 @@ class ChatbotService:
                 requested_slide_count=slide_count,
                 document_attached=document_attached,
             )
+            if decision.start_generation:
+                slide_prompt = str(
+                    decision.brief
+                    or active_slide_flow.get("brief")
+                    or clean_query
+                ).strip()
+                target_slide_count = (
+                    slide_count
+                    or decision.target_slide_count
+                    or self._flow_slide_count(active_slide_flow)
+                )
+                if target_slide_count is not None:
+                    self._validate_slide_count(user_id, target_slide_count)
+                    return await self._run_slide_generation(
+                        session=session,
+                        user_id=user_id,
+                        query=clean_query,
+                        slide_prompt=slide_prompt,
+                        standalone_query=slide_prompt,
+                        model_name=model_name,
+                        effort=effort,
+                        generation_config=generation_config,
+                        target_slide_count=target_slide_count,
+                        history=history,
+                        document_attached=document_attached,
+                        slide_callback=slide_callback,
+                        slide_job_id=slide_job_id,
+                        attachments=message_attachments,
+                    )
             answers = self._flow_answers_with_latest_input(
                 active_slide_flow,
                 clean_query,
@@ -369,11 +407,20 @@ class ChatbotService:
                 attachments=message_attachments,
             )
 
-        standalone_query = await self._contextualize(
-            clean_query, session.history_summary, history, generation_config
-        )
+        if canvas_enabled or slide_count is not None:
+            slide_intent = "slide_creation"
+        else:
+            slide_intent = (
+                await self.slide_intent_service.classify(
+                    clean_query,
+                    history,
+                    generation_config,
+                    history_summary=session.history_summary,
+                )
+            ).intent
 
-        if canvas_enabled or self._looks_like_slide_request(clean_query):
+        if slide_intent == "slide_creation":
+            standalone_query = clean_query
             max_slide_count = self._max_slide_count(user_id)
             decision = await self.slide_intent_service.start(
                 clean_query,
@@ -402,6 +449,10 @@ class ChatbotService:
                 citations=[],
                 attachments=message_attachments,
             )
+
+        standalone_query = await self._contextualize(
+            clean_query, session.history_summary, history, generation_config
+        )
 
         retrieved, rag_plan = await self._retrieve_with_plan(
             session=session,
@@ -526,6 +577,7 @@ class ChatbotService:
             "model_name": model_name,
             "effort": effort,
             "target_slide_count": target_slide_count,
+            "document_images": self._session_document_images(session),
         }
         if slide_callback is not None:
             generation_kwargs["callback"] = slide_callback
@@ -776,6 +828,22 @@ class ChatbotService:
             )
         return attachments
 
+    def _session_document_images(self, session: ChatSession) -> list[dict[str, Any]]:
+        """Return private image assets from ready documents in this session."""
+        if self.context_provider is None:
+            return []
+        list_documents = getattr(self.context_provider, "list_session_documents", None)
+        if not callable(list_documents):
+            return []
+        images: list[dict[str, Any]] = []
+        for document in list_documents(session.id, session.user_id):
+            if str(getattr(document, "status", "")).lower() != "ready":
+                continue
+            for image in getattr(document, "images", []) or []:
+                if isinstance(image, dict):
+                    images.append(dict(image))
+        return images
+
     @staticmethod
     def _generation_metadata(
         generation_config: dict[str, str | float | int],
@@ -824,6 +892,249 @@ class ChatbotService:
             "max_slide_count": self._max_slide_count(user_id),
         }
 
+    def start_chat_message(
+        self,
+        session_id: str,
+        user_id: int,
+        query: str,
+        *,
+        model_name: str | None = None,
+        effort: str | None = None,
+        slide_count: int | None = None,
+        document_ids: list[str] | None = None,
+    ) -> ChatMessageJob:
+        """Start an ordinary chat turn independently of the HTTP connection.
+
+        The request that opens the SSE stream only creates/subscribes to this
+        job.  The actual LLM/RAG work continues in the service task when the
+        browser changes route, refreshes, or loses its network connection.
+        """
+        clean_query = query.strip()
+        if not clean_query:
+            raise ValueError("Message cannot be empty")
+        if len(clean_query) > 12_000:
+            raise ValueError("Message is too long")
+
+        session = self.repository.get_session(session_id, user_id)
+        if session is None or session.archived:
+            raise LookupError("Chat session not found")
+
+        normalized_document_ids = self._normalize_document_ids(document_ids)
+        attachments = self._resolve_document_attachments(
+            session, normalized_document_ids
+        )
+        generation_config = resolve_chatbot_generation_config(model_name, effort)
+        if self.subscription_service is not None:
+            generation_config["usage_cost"] = self.subscription_service.get_chat_usage_cost(
+                str(generation_config["model"]),
+                str(generation_config["effort"]),
+            )
+
+        loop = asyncio.get_running_loop()
+        with self._active_slide_generations_lock:
+            active_job_id = self._active_chat_message_jobs.get(user_id)
+            if active_job_id is not None:
+                active_job = self._chat_message_jobs.get(active_job_id)
+                if (
+                    active_job is not None
+                    and active_job.session_id == session_id
+                    and active_job.query == clean_query
+                    and active_job.model_name == model_name
+                    and active_job.effort == effort
+                    and active_job.document_ids == normalized_document_ids
+                ):
+                    return active_job
+                raise ChatMessageInProgressError()
+
+            if self.subscription_service is not None:
+                # Preflight before scheduling so the stream gets a useful
+                # HTTP error and the usage is consumed exactly once by the
+                # detached task after it starts successfully.
+                self.subscription_service.check_feature_access_for_user(
+                    user_id,
+                    "chat_message",
+                    usage_cost=float(generation_config.get("usage_cost", 1.0)),
+                )
+
+            job = ChatMessageJob(
+                id=str(uuid.uuid4()),
+                user_id=user_id,
+                session_id=session_id,
+                query=clean_query,
+                model_name=model_name,
+                effort=effort,
+                slide_count=slide_count,
+                loop=loop,
+                document_ids=normalized_document_ids,
+                attachments=attachments,
+                state={
+                    "phase": "running",
+                    "status": {
+                        "stage": "thinking",
+                        "title": "Thinking",
+                        "description": "Đang chuẩn bị câu trả lời...",
+                        "message": "Thinking",
+                    },
+                    "error": "",
+                },
+            )
+            self._chat_message_jobs[job.id] = job
+            self._active_chat_message_jobs[user_id] = job.id
+
+        self._publish_chat_message_event(job, "status", job.state["status"])
+        job.task = asyncio.create_task(
+            self._run_chat_message_job(job),
+            name=f"chat-message-{job.id}",
+        )
+        return job
+
+    def get_active_chat_message(self, user_id: int) -> dict[str, Any] | None:
+        with self._active_slide_generations_lock:
+            job_id = self._active_chat_message_jobs.get(user_id)
+            job = self._chat_message_jobs.get(job_id) if job_id else None
+            return self._chat_message_snapshot(job) if job else None
+
+    def subscribe_chat_message(
+        self,
+        job_id: str,
+        user_id: int,
+    ) -> tuple[ChatMessageJob, asyncio.Queue[tuple[int, str, dict[str, Any]]]]:
+        """Subscribe to all known events and future events for a chat job."""
+        with self._active_slide_generations_lock:
+            job = self._chat_message_jobs.get(job_id)
+            if job is None or job.user_id != user_id:
+                raise LookupError("Chat message job not found")
+            queue: asyncio.Queue[tuple[int, str, dict[str, Any]]] = asyncio.Queue()
+            for event in job.events:
+                queue.put_nowait(event)
+            if not job.finished:
+                job.subscribers.add(queue)
+            return job, queue
+
+    def unsubscribe_chat_message(
+        self,
+        job: ChatMessageJob,
+        queue: asyncio.Queue[tuple[int, str, dict[str, Any]]],
+    ) -> None:
+        with self._active_slide_generations_lock:
+            job.subscribers.discard(queue)
+
+    def _publish_chat_message_event(
+        self,
+        job: ChatMessageJob,
+        event_type: str,
+        data: dict[str, Any] | None,
+    ) -> None:
+        payload = dict(data or {})
+        with self._active_slide_generations_lock:
+            sequence = len(job.events) + 1
+            event = (sequence, str(event_type), payload)
+            job.events.append(event)
+            self._apply_chat_message_event(job, event[1], payload)
+            if event[1] in {"complete", "error_event"}:
+                job.finished = True
+            subscribers = list(job.subscribers)
+
+        for queue in subscribers:
+            if job.loop.is_closed():
+                continue
+            job.loop.call_soon_threadsafe(queue.put_nowait, event)
+
+    @staticmethod
+    def _apply_chat_message_event(
+        job: ChatMessageJob,
+        event_type: str,
+        data: dict[str, Any],
+    ) -> None:
+        if event_type == "status":
+            job.state["status"] = {
+                "stage": str(data.get("stage") or "thinking"),
+                "title": str(data.get("title") or "Thinking"),
+                "description": str(data.get("description") or ""),
+                "message": str(data.get("message") or ""),
+            }
+            return
+        if event_type == "complete":
+            job.state["phase"] = "completed"
+            job.state["status"] = {
+                "stage": "completed",
+                "title": "Completed",
+                "description": "Câu trả lời đã được lưu vào cuộc trò chuyện.",
+                "message": "Completed",
+            }
+            job.state["result"] = data.get("result")
+            return
+        if event_type == "error_event":
+            message = str(data.get("message") or "Không thể nhận phản hồi lúc này.")
+            job.state["phase"] = "error"
+            job.state["error"] = message
+            job.state["status"] = {
+                "stage": "error",
+                "title": "Chat failed",
+                "description": message,
+                "message": "Something went wrong",
+            }
+
+    @staticmethod
+    def _chat_message_snapshot(job: ChatMessageJob | None) -> dict[str, Any] | None:
+        if job is None:
+            return None
+        return {
+            "id": job.id,
+            "session_id": job.session_id,
+            "phase": job.state.get("phase", "running"),
+            "status": dict(job.state.get("status") or {}),
+            "query": job.query,
+            "model": job.model_name,
+            "effort": job.effort,
+            "slide_count": job.slide_count,
+            "document_ids": list(job.document_ids),
+            "attachments": [dict(item) for item in job.attachments],
+            "error": str(job.state.get("error") or ""),
+        }
+
+    async def _run_chat_message_job(self, job: ChatMessageJob) -> None:
+        try:
+            result = await self.send_message(
+                job.session_id,
+                job.user_id,
+                job.query,
+                model_name=job.model_name,
+                effort=job.effort,
+                canvas_enabled=False,
+                slide_count=job.slide_count,
+                document_ids=job.document_ids,
+            )
+            self._publish_chat_message_event(
+                job,
+                "complete",
+                {"result": asdict(result)},
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.exception("Detached chat message failed for job %s", job.id)
+            detail = getattr(exc, "detail", None)
+            if isinstance(detail, dict):
+                message = str(detail.get("message") or detail.get("detail") or exc)
+            else:
+                message = str(detail or exc).strip()
+            self._publish_chat_message_event(
+                job,
+                "error_event",
+                {
+                    "message": message or "Không thể nhận phản hồi lúc này.",
+                    "code": "chat_failed",
+                },
+            )
+        finally:
+            self._end_chat_message_job(job.user_id, job.id)
+
+    def _end_chat_message_job(self, user_id: int, job_id: str) -> None:
+        with self._active_slide_generations_lock:
+            if self._active_chat_message_jobs.get(user_id) == job_id:
+                self._active_chat_message_jobs.pop(user_id, None)
+
     def start_slide_generation(
         self,
         session_id: str,
@@ -849,6 +1160,12 @@ class ChatbotService:
             raise LookupError("Chat session not found")
         normalized_document_ids = self._normalize_document_ids(document_ids)
         self._resolve_document_attachments(session, normalized_document_ids)
+        generation_config = resolve_chatbot_generation_config(model_name, effort)
+        if self.subscription_service is not None:
+            generation_config["usage_cost"] = self.subscription_service.get_chat_usage_cost(
+                str(generation_config["model"]),
+                str(generation_config["effort"]),
+            )
 
         loop = asyncio.get_running_loop()
         with self._active_slide_generations_lock:
@@ -860,6 +1177,15 @@ class ChatbotService:
                 raise SlideGenerationInProgressError()
             if user_id in self._active_slide_generations:
                 raise SlideGenerationInProgressError()
+
+            if self.subscription_service is not None:
+                # Preflight the quota synchronously so a stream request gets a
+                # useful HTTP 429 instead of starting a job that fails later.
+                self.subscription_service.check_feature_access_for_user(
+                    user_id,
+                    "chat_message",
+                    usage_cost=float(generation_config.get("usage_cost", 1.0)),
+                )
 
             job = SlideGenerationJob(
                 id=str(uuid.uuid4()),
@@ -1205,13 +1531,13 @@ class ChatbotService:
 
     def _max_slide_count(self, user_id: int) -> int:
         if self.user_repository is None:
-            return 50
+            return -1
         user = self.user_repository.get_by_id(user_id)
         if user is None:
             raise LookupError("User not found")
         if self.subscription_service is not None:
             return self.subscription_service.get_max_slide_count(user)
-        return int(user.get_daily_limits().get("max_docx_slides", 0))
+        return int(user.get_usage_limits().get("max_docx_slides", -1))
 
     def _validate_slide_count(self, user_id: int, slide_count: int) -> int:
         if self.user_repository is None:
@@ -1222,7 +1548,7 @@ class ChatbotService:
         if self.subscription_service is not None:
             return self.subscription_service.validate_slide_count(user, slide_count)
         requested = int(slide_count)
-        maximum = int(user.get_daily_limits().get("max_docx_slides", 0))
+        maximum = int(user.get_usage_limits().get("max_docx_slides", -1))
         if maximum != -1 and requested > maximum:
             raise SlideCountLimitError(requested, maximum, user.subscription_tier)
         return requested
@@ -1290,81 +1616,6 @@ class ChatbotService:
         if not callable(preparer):
             return
         await preparer(session=session, document_ids=document_ids)
-
-    @staticmethod
-    def _use_attached_document_flow(flow: dict[str, Any]) -> dict[str, Any]:
-        question = str(flow.get("question") or "").strip()
-        if not SlideIntentService.is_document_source_flow(flow):
-            return flow
-        language = detect_language(
-            str(flow.get("original_prompt") or question).strip()
-        )
-        return {
-            **flow,
-            "state": "awaiting_confirmation",
-            "question": None,
-            "options": [
-                option.as_dict()
-                for option in SlideIntentService._confirmation_options(language)
-            ],
-            "question_kind": None,
-        }
-
-    @staticmethod
-    def _is_slide_confirmation(query: str) -> bool:
-        normalized = unicodedata.normalize("NFKD", query.casefold())
-        normalized = "".join(
-            char for char in normalized if not unicodedata.combining(char)
-        )
-        normalized = normalized.replace("đ", "d")
-        normalized = " ".join(normalized.replace("?", " ").split())
-        if re.search(r"\b(?:khong|chua|not yet|no|cancel)\b", normalized):
-            return False
-        return any(
-            re.search(rf"\b{re.escape(phrase)}\b", normalized) is not None
-            for phrase in (
-                "bat dau tao slide",
-                "bat dau tao deck",
-                "xac nhan",
-                "dong y",
-                "start creating",
-                "start the slides",
-                "create the slides",
-                "yes",
-            )
-        )
-
-    @staticmethod
-    def _looks_like_slide_request(query: str) -> bool:
-        normalized = query.lower()
-        return any(
-            phrase in normalized
-            for phrase in (
-                "tạo slide",
-                "tao slide",
-                "làm slide",
-                "lam slide",
-                "tạo deck",
-                "tao deck",
-                "gen slide",
-                "gen deck",
-                "bài thuyết trình",
-                "bai thuyet trinh",
-                "tạo bài thuyết trình",
-                "tao bai thuyet trinh",
-                "làm bài thuyết trình",
-                "lam bai thuyet trinh",
-                "presentation",
-                "slide deck",
-                "create slides",
-                "create a deck",
-                "generate slides",
-                "generate a deck",
-                "make slides",
-                "make a deck",
-                "build a deck",
-            )
-        )
 
     async def _contextualize(
         self,

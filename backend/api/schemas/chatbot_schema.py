@@ -60,6 +60,7 @@ class ChatDocumentOut(BaseModel):
     title: str | None = None
     status: str
     content_hash: str
+    size_bytes: int = 0
     error_message: str | None = None
     created_at: str
     updated_at: str
@@ -69,12 +70,14 @@ class ChatbotModelConfigOut(BaseModel):
     id: str
     temperature: float
     top_p: float
+    usage_multiplier: float
 
 
 class ChatbotEffortConfigOut(BaseModel):
     id: str
     max_tokens: int
     temperature_delta: float
+    usage_multiplier: float
 
 
 class ChatbotConfigOut(BaseModel):
@@ -83,6 +86,8 @@ class ChatbotConfigOut(BaseModel):
     models: list[ChatbotModelConfigOut]
     efforts: list[ChatbotEffortConfigOut]
     max_slide_count: int
+    max_upload_bytes: int
+    max_total_upload_bytes: int
 
 
 class ChatSlideGenerationOut(BaseModel):
@@ -98,4 +103,20 @@ class ChatSlideGenerationOut(BaseModel):
     target_slide_count: int | None = None
     project_id: int | None = None
     project_name: str = ""
+    error: str = ""
+
+
+class ChatMessageJobOut(BaseModel):
+    """Reconnectable state for an ordinary chatbot response."""
+
+    id: str
+    session_id: str
+    phase: str
+    status: dict = Field(default_factory=dict)
+    query: str
+    model: str | None = None
+    effort: str | None = None
+    slide_count: int | None = None
+    document_ids: list[str] = Field(default_factory=list)
+    attachments: list[dict] = Field(default_factory=list)
     error: str = ""

@@ -62,6 +62,8 @@ ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+COPY scripts/manage_admin.py ./scripts/manage_admin.py
+
 # Copy chỉ package.json để cache layer; node_modules sẽ được preserve bởi
 # named volume trong docker-compose.dev.yml
 # ── Frontend Node.js deps (cached) ───────────────────────────────────────────

@@ -25,3 +25,6 @@ class State(TypedDict, total=False):
     slide_chunks: List[Dict[str, Any]]
     slide_positions: List[Any]
     slide_context_maps: List[str]
+    # Private embedded DOCX image metadata produced by the canonical
+    # preprocessor when a chatbot document id/output directory is supplied.
+    document_images: List[Dict[str, Any]]

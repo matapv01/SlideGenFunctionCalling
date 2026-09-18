@@ -57,9 +57,9 @@ def split_content(state: State, config: RunnableConfig) -> State:
 
     # The no-heading branch has already organized the entire document in
     # auto_structure. It is a completed tree, not an oversized heading leaf.
-    if state.get("document_structure_origin") == "llm":
+    if state.get("document_structure_origin") in {"llm", "fallback"}:
         state["document_preamble"] = ""
-        print("Skipping mixed split: whole document was already auto-structured")
+        print("Skipping mixed split: whole document already has a canonical structure")
         return state
 
     prompt = ChatPromptTemplate.from_messages(

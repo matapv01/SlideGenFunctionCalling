@@ -21,7 +21,7 @@ class GeminiLLMProvider(LLMProvider):
 
     def generate_completion(
         self,
-        messages: List[Dict[str, str]],
+        messages: List[Dict[str, Any]],
         tools: List[Dict[str, Any]] | None = None,
         model: str | None = None,
         max_tokens: int = 2000,

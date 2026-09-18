@@ -1,13 +1,16 @@
 import asyncio
 
 from backend.application.services.slide_intent_service import SlideIntentService
-from backend.application.services.chatbot_service import ChatbotService
 from backend.application.services.language_service import detect_language
+from backend.domain.entities.chat import ChatMessage
 
 
 class DummyLLMProvider:
+    def __init__(self, response="{}"):
+        self.response = response
+
     def generate_completion(self, messages, **kwargs):
-        return "{}"
+        return self.response
 
 
 def test_clarification_options_always_end_with_custom_option():
@@ -35,7 +38,7 @@ def test_clarification_options_always_end_with_custom_option():
     assert decision.options[-1].is_other is True
 
 
-def test_invalid_clarification_falls_back_to_four_options():
+def test_invalid_clarification_fails_closed_without_biased_options():
     service = SlideIntentService(DummyLLMProvider())
 
     decision = service._normalise_decision(
@@ -50,20 +53,34 @@ def test_invalid_clarification_falls_back_to_four_options():
     )
 
     assert decision.state == "clarifying"
-    assert len(decision.options) == 4
-    assert decision.options[-1].is_other is True
+    assert decision.options == ()
 
 
-def test_confirmation_requires_an_explicit_confirmation_phrase():
-    assert ChatbotService._is_slide_confirmation("Bắt đầu tạo slide") is True
-    assert ChatbotService._is_slide_confirmation("Xác nhận") is True
-    assert ChatbotService._is_slide_confirmation("Tôi muốn bổ sung") is False
-    assert ChatbotService._is_slide_confirmation("Không, để tôi sửa thêm") is False
+def test_llm_router_uses_conversation_meaning_instead_of_phrase_rules():
+    history = [
+        ChatMessage(
+            id=1,
+            session_id="session-1",
+            role="user",
+            content="Mình muốn làm một bài thuyết trình về Messi",
+            standalone_query=None,
+            model=None,
+            effort=None,
+            metadata={},
+            created_at="2026-01-01T00:00:00",
+        ),
+    ]
 
+    slide_service = SlideIntentService(
+        DummyLLMProvider('{"intent":"slide_creation","reason":"The user is continuing the deck request."}')
+    )
+    chat_service = SlideIntentService(
+        DummyLLMProvider('{"intent":"chat","reason":"The user is asking a general question."}')
+    )
+    config = {"provider_model": "test-model", "max_tokens": 4096, "temperature": 0.4, "top_p": 1.0}
 
-def test_common_gen_slide_wording_enters_slide_flow():
-    assert ChatbotService._looks_like_slide_request("gen slide về bác Hồ") is True
-    assert ChatbotService._looks_like_slide_request("generate a deck about history") is True
+    assert asyncio.run(slide_service.classify("Tạo đi", history, config)).intent == "slide_creation"
+    assert asyncio.run(chat_service.classify("Bạn khỏe không?", history, config)).intent == "chat"
 
 
 def test_vietnamese_detection_handles_tones_and_unaccented_input():
@@ -88,7 +105,7 @@ def test_slide_planner_rejects_wrong_language_user_facing_output():
     )
 
     assert decision.message == fallback.message
-    assert decision.options[-1].label == "Khác"
+    assert decision.options == ()
 
 
 def test_slide_planner_does_not_replace_a_vietnamese_brief_with_english():
@@ -110,6 +127,25 @@ def test_slide_planner_does_not_replace_a_vietnamese_brief_with_english():
 
     assert decision.brief == current_brief
     assert decision.message == "Mình đã đủ thông tin. Bắt đầu tạo slide nhé?"
+
+
+def test_slide_planner_returns_llm_confirmation_as_generation_action():
+    service = SlideIntentService(DummyLLMProvider())
+    decision = service._normalise_decision(
+        {
+            "type": "start",
+            "action": "start_generation",
+            "brief": "Tạo bộ slide về Messi",
+        },
+        current_brief="Tạo bộ slide về Messi",
+        fallback=service._fallback_confirmation("Tạo bộ slide về Messi", [], "vi"),
+        language="vi",
+        target_slide_count=6,
+        max_slide_count=50,
+    )
+
+    assert decision.start_generation is True
+    assert decision.options == ()
 
 
 def test_slide_flow_always_asks_for_count_before_llm_preflight():
@@ -136,6 +172,33 @@ def test_slide_flow_always_asks_for_count_before_llm_preflight():
     assert decision.options[-1].action == "other"
 
 
+def test_slide_flow_with_count_reaches_llm_preflight():
+    service = SlideIntentService(
+        DummyLLMProvider(
+            '{"type":"confirmation","message":"Mình đã đủ thông tin. '
+            'Bắt đầu tạo slide nhé?","brief":"Một bộ slide về AI"}'
+        )
+    )
+
+    decision = asyncio.run(
+        service.start(
+            "Tạo slide về AI",
+            [],
+            {
+                "provider_model": "qwen",
+                "max_tokens": 2048,
+                "temperature": 0.4,
+                "top_p": 1.0,
+            },
+            max_slide_count=50,
+            requested_slide_count=6,
+        )
+    )
+
+    assert decision.state == "awaiting_confirmation"
+    assert decision.target_slide_count == 6
+
+
 def test_slide_flow_returns_upgrade_choice_when_count_exceeds_plan():
     service = SlideIntentService(DummyLLMProvider())
 
@@ -158,17 +221,8 @@ def test_slide_flow_returns_upgrade_choice_when_count_exceeds_plan():
     assert decision.options[-1].action == "upgrade"
 
 
-def test_attached_document_cannot_trigger_a_second_source_question():
+def test_attached_document_question_is_not_rewritten_by_a_phrase_rule():
     service = SlideIntentService(DummyLLMProvider())
-    assert service.is_document_source_flow(
-        {
-            "question": "Bạn muốn nội dung slide dựa trên tài liệu nào?",
-            "options": [
-                {"label": "Tải lên file tài liệu", "value": "upload"},
-                {"label": "Dán nội dung văn bản", "value": "paste"},
-            ],
-        }
-    ) is True
     fallback = service._fallback_confirmation(
         "gen slide theo tài liệu",
         [],
@@ -196,6 +250,5 @@ def test_attached_document_cannot_trigger_a_second_source_question():
         document_attached=True,
     )
 
-    assert decision.state == "awaiting_confirmation"
-    assert decision.message == fallback.message
-    assert decision.options[0].label == "Bắt đầu tạo slide"
+    assert decision.state == "clarifying"
+    assert decision.message == "Bạn muốn nội dung slide dựa trên tài liệu nào?"

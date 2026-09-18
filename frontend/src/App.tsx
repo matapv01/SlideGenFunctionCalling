@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import { SlideGenerationProvider } from "./features/slidegenius/SlideGenerationContext";
 
 import StructureEditor from "./pages/StructureEditor";
@@ -14,6 +15,7 @@ import XmlRenderPreview from "./pages/XmlRenderPreview";
 import NotFound from "./pages/NotFound";
 import SlidegeniusAuth from "./features/slidegenius/SlidegeniusAuth";
 import { SlidegeniusHome, SlidegeniusLanding, SlidegeniusProjectView } from "./features/slidegenius";
+import AdminUsagePage from "./features/admin/AdminUsagePage";
 
 // Context Providers Wrapper
 const ProvidersLayout = () => {
@@ -52,6 +54,7 @@ const router = createBrowserRouter([
       { path: "projects/:projectId", element: <ProtectedRoute><SlidegeniusProjectView /></ProtectedRoute> },
       { path: "settings", element: <ProtectedRoute><SlidegeniusHome initialTab="settings" /></ProtectedRoute> },
       { path: "subscription", element: <ProtectedRoute><SlidegeniusHome initialTab="subscription" /></ProtectedRoute> },
+      { path: "admin", element: <AdminRoute><AdminUsagePage /></AdminRoute> },
       { path: "editor", element: <ProtectedRoute><XmlSlideEditor /></ProtectedRoute> },
       { path: "render/xml-preview", element: <XmlRenderPreview /> },
       { path: "*", element: <NotFound /> },

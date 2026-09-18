@@ -20,7 +20,7 @@
   box-shadow: 0 18px 38px #00000050 !important;
 }
 
-.sg-manual-toast.destructive {
+.sg-manual-toast.is-destructive {
   border-color: #e4867266 !important;
   background: #332826 !important;
   color: #f5d1c8 !important;

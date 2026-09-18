@@ -86,9 +86,13 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
         toast({ title: language === "en" ? "Signed in" : "Đăng nhập thành công" });
         navigate(from, { replace: true });
       }
-    } catch {
-      setError(isSignup ? t.signUpError : t.signInError);
-      toast({ title: isSignup ? t.signUpError : t.signInError, variant: "destructive" });
+    } catch (submitError) {
+      const fallback = isSignup ? t.signUpError : t.signInError;
+      const reason = submitError instanceof Error && submitError.message.trim()
+        ? submitError.message.trim()
+        : fallback;
+      setError(reason);
+      toast({ title: reason, variant: "destructive" });
     } finally {
       setLoading(false);
     }

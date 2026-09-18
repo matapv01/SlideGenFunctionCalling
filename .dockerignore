@@ -40,4 +40,8 @@ logs/
 
 # Temp / scratch
 tmp_db_check.py
-scripts/
+# Keep the repository scripts out of the image except for the one-time admin
+# bootstrap command copied explicitly by the Dockerfiles.
+!scripts/
+scripts/*
+!scripts/manage_admin.py

@@ -124,6 +124,140 @@
   }
 }
 
+/* Shared feedback surfaces. Keep browser-native-looking white toasts and
+   alerts out of the dark Slidegen workspace. */
+.sg-toast {
+  width: min(380px, calc(100vw - 32px)) !important;
+  min-height: 58px;
+  gap: 11px;
+  border: 1px solid #ffffff1c !important;
+  border-radius: 7px !important;
+  background: #292a29 !important;
+  color: #ecece6 !important;
+  box-shadow: 0 18px 44px #0000005c, inset 0 1px #ffffff08 !important;
+}
+
+.sg-toast.is-destructive {
+  border-color: #f5a08a66 !important;
+  background: #332624 !important;
+}
+
+.sg-toast.is-success {
+  border-color: #b9c8ae55 !important;
+  background: #29302b !important;
+}
+
+.sg-toast.is-warning {
+  border-color: #d5b47a66 !important;
+  background: #332e25 !important;
+}
+
+.sg-toast.is-info {
+  border-color: #8ea9b866 !important;
+  background: #272e32 !important;
+}
+
+.sg-toast-icon {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  place-items: center;
+  margin-top: 1px;
+  border: 1px solid #f5a08a55;
+  border-radius: 50%;
+  color: #f5a08a;
+}
+
+.sg-toast-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.8;
+}
+
+.sg-toast.is-success .sg-toast-icon { border-color: #b9c8ae55; color: #b9c8ae; }
+.sg-toast.is-warning .sg-toast-icon { border-color: #d5b47a66; color: #e1bd78; }
+.sg-toast.is-info .sg-toast-icon { border-color: #8ea9b866; color: #a9c3d5; }
+.sg-toast.is-destructive .sg-toast-icon { border-color: #f5a08a77; color: #ffb09b; }
+.sg-toast .text-sm { color: inherit !important; }
+.sg-toast [data-radix-toast-title] { color: #f2f2ed; font: 600 12px/1.35 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+.sg-toast [data-radix-toast-description] { color: #aeb1a9; font: 400 11px/1.45 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+.sg-toast.is-destructive [data-radix-toast-description] { color: #e6bbb0; }
+
+.sg-confirm-dialog {
+  width: min(420px, calc(100vw - 32px)) !important;
+  max-width: 420px !important;
+  gap: 20px !important;
+  padding: 23px !important;
+  border: 1px solid #ffffff20 !important;
+  border-radius: 10px !important;
+  background: #292a29 !important;
+  color: #f2f2ed !important;
+  box-shadow: 0 28px 80px #00000070, inset 0 1px #ffffff08 !important;
+}
+
+.sg-confirm-dialog-header {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 13px !important;
+  align-items: start;
+}
+
+.sg-confirm-dialog-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #f5a08a66;
+  border-radius: 50%;
+  background: #f5a08a12;
+  color: #f5a08a;
+}
+
+.sg-confirm-dialog-icon.is-destructive {
+  border-color: #f5a08a88;
+  background: #f5a08a18;
+}
+
+.sg-confirm-dialog-icon svg { width: 16px; height: 16px; stroke-width: 1.8; }
+.sg-confirm-dialog-title { color: #f2f2ed !important; font: 500 18px/1.15 "Avenir Next", "Segoe UI", system-ui, sans-serif !important; }
+.sg-confirm-dialog-description { margin-top: 8px; color: #9da098 !important; font: 400 12px/1.55 "Avenir Next", "Segoe UI", system-ui, sans-serif !important; }
+.sg-confirm-dialog-footer { display: flex !important; flex-direction: row !important; justify-content: flex-end; gap: 8px; }
+.sg-confirm-dialog-footer button { min-width: 92px; margin: 0 !important; border-radius: 4px !important; font: 600 11px "Avenir Next", "Segoe UI", system-ui, sans-serif !important; }
+.sg-confirm-dialog-cancel { border: 1px solid #ffffff24 !important; background: #ffffff08 !important; color: #c9cbc4 !important; }
+.sg-confirm-dialog-cancel:hover { background: #ffffff12 !important; color: #f2f2ed !important; }
+.sg-confirm-dialog-confirm { border: 1px solid #f5a08a !important; background: #f5a08a !important; color: #242524 !important; }
+.sg-confirm-dialog-confirm:hover { background: #ffc0ad !important; }
+.sg-confirm-dialog-confirm.is-destructive { border-color: #f5a08a !important; background: #f5a08a !important; }
+.sg-confirm-dialog-confirm:disabled,.sg-confirm-dialog-cancel:disabled { cursor: wait; opacity: .55; }
+
+.sg-alert-dialog-overlay { background: #090909bb !important; backdrop-filter: blur(3px); }
+
+/* Any alert dialog that does not opt into a feature-specific skin still
+   follows the Slidegen surface. Manual editor dialogs keep their own skin. */
+.sg-alert-dialog-content:not(.sg-manual-dialog):not(.sg-confirm-dialog) {
+  border-color: #ffffff20 !important;
+  border-radius: 9px !important;
+  background: #292a29 !important;
+  color: #f2f2ed !important;
+  box-shadow: 0 28px 80px #00000070, inset 0 1px #ffffff08 !important;
+}
+
+.sg-alert-dialog-content:not(.sg-manual-dialog):not(.sg-confirm-dialog) [data-radix-alert-dialog-title] {
+  color: #f2f2ed;
+  font: 500 17px/1.2 "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.sg-alert-dialog-content:not(.sg-manual-dialog):not(.sg-confirm-dialog) [data-radix-alert-dialog-description] {
+  color: #9da098;
+  font: 400 12px/1.55 "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+@media (max-width: 520px) {
+  .sg-confirm-dialog-footer { flex-direction: column-reverse !important; }
+  .sg-confirm-dialog-footer button { width: 100%; }
+}
+
 @layer utilities {
   .gradient-primary {
     background: linear-gradient(135deg,

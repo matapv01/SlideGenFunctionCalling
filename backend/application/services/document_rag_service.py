@@ -5,6 +5,7 @@ import hashlib
 import logging
 import math
 import re
+import threading
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,17 +21,23 @@ from backend.config import (
     CHATBOT_RAG_MIN_SIMILARITY,
     CHATBOT_RAG_OVERVIEW_SECTION_LIMIT,
     CHATBOT_RAG_TOP_K,
-    CHATBOT_UPLOAD_MAX_BYTES,
 )
 from backend.application.services.document_preprocessing_service import (
     DocumentPreprocessingService,
 )
+from backend.application.services.document_image_extractor import DocumentImageExtractor
 from backend.domain.entities.chat import ChatSession
 from backend.domain.entities.chat_document import ChatDocumentChunk, RetrievedContext
 from backend.domain.ports.chat_document_repository import ChatDocumentRepository
 from backend.domain.ports.embedding_provider import EmbeddingProvider
 
 logger = logging.getLogger(__name__)
+
+_SENTENCE_END_RE = re.compile(r'''[.!?。！？](?:["'”’»)\]}]*)?(?=\s|$)''')
+
+
+class DocumentUploadLimitError(ValueError):
+    """Raised when a DOCX exceeds an individual or conversation-wide cap."""
 
 
 @dataclass(frozen=True)
@@ -94,9 +101,42 @@ class DocumentRagService:
         self.preprocessing_service = preprocessing_service
         self._legacy_reindex_lock = asyncio.Lock()
         self._legacy_reindex_attempted: set[tuple[int, str]] = set()
+        self._document_upload_lock = threading.Lock()
 
     def list_session_documents(self, session_id: str, user_id: int):
         return self.repository.list_session_documents(session_id, user_id)
+
+    @staticmethod
+    def _sentence_bounded_excerpt(content: str, limit: int = 1600) -> str:
+        """Keep citation previews readable without cutting through a sentence.
+
+        Retrieval chunks can be longer than the amount we want to expose in a
+        citation. Prefer the last complete sentence before the limit, then
+        briefly look ahead so a sentence that crosses the limit can still be
+        shown in full. Only fall back to a word boundary when the source has
+        no usable sentence punctuation.
+        """
+        text = str(content or "").strip()
+        safe_limit = max(1, int(limit))
+        if len(text) <= safe_limit:
+            return text
+
+        prefix = text[:safe_limit]
+        matches = list(_SENTENCE_END_RE.finditer(prefix))
+        if matches:
+            return text[:matches[-1].end()].rstrip() + " …"
+
+        lookahead = _SENTENCE_END_RE.search(
+            text,
+            safe_limit,
+            min(len(text), safe_limit + 400),
+        )
+        if lookahead:
+            return text[:lookahead.end()].rstrip() + " …"
+
+        word_boundary = prefix.rfind(" ")
+        cutoff = word_boundary if word_boundary >= safe_limit // 2 else safe_limit
+        return text[:cutoff].rstrip(" ,;:-") + " …"
 
     def has_ready_documents(self, session: ChatSession) -> bool:
         """Return whether this conversation has an indexed document available.
@@ -142,6 +182,7 @@ class DocumentRagService:
                 resolved.unlink(missing_ok=True)
             except OSError:
                 logger.warning("Unable to remove chatbot document file %s", path)
+        DocumentImageExtractor.remove_assets(getattr(document, "images", []) or [])
 
     async def create_pending_docx(
         self,
@@ -149,6 +190,8 @@ class DocumentRagService:
         session: ChatSession,
         original_filename: str,
         content: bytes,
+        max_file_bytes: int,
+        max_total_bytes: int,
     ):
         """Persist an uploaded DOCX without starting document analysis.
 
@@ -161,25 +204,49 @@ class DocumentRagService:
             raise ValueError("Chỉ hỗ trợ tài liệu DOCX ở phiên bản này")
         if not content:
             raise ValueError("Tệp DOCX rỗng")
-        if len(content) > CHATBOT_UPLOAD_MAX_BYTES:
-            raise ValueError("Tệp DOCX vượt quá giới hạn 25 MB")
+        if len(content) > max_file_bytes:
+            raise DocumentUploadLimitError(
+                "Tệp DOCX vượt quá giới hạn "
+                f"{max_file_bytes // (1024 * 1024)} MB"
+            )
 
-        document_id = str(uuid.uuid4())
-        content_hash = hashlib.sha1(content).hexdigest()
-        source_path = CHATBOT_DOCUMENTS_DIR / f"{document_id}.docx"
-        source_path.write_bytes(content)
-        safe_filename = Path(original_filename).name or "document.docx"
-        document = self.repository.create_document(
-            document_id=document_id,
-            user_id=session.user_id,
-            project_id=session.project_id,
-            original_filename=safe_filename,
-            content_hash=content_hash,
-        )
-        self.repository.link_document_to_session(
-            session.id, document.id, session.user_id
-        )
-        return document
+        # Serialize the aggregate check and insert inside this process so two
+        # concurrent uploads cannot both pass against the same old total.
+        with self._document_upload_lock:
+            current_bytes = sum(
+                max(0, int(getattr(document, "size_bytes", 0) or 0))
+                for document in self.repository.list_session_documents(
+                    session.id, session.user_id
+                )
+            )
+            requested_total = current_bytes + len(content)
+            if requested_total > max_total_bytes:
+                limit_mb = max_total_bytes / (1024 * 1024)
+                current_mb = current_bytes / (1024 * 1024)
+                file_mb = len(content) / (1024 * 1024)
+                raise DocumentUploadLimitError(
+                    "Tổng dung lượng DOCX trong cuộc trò chuyện không được vượt quá "
+                    f"{limit_mb:g} MB. Hiện đã dùng {current_mb:.1f} MB, "
+                    f"tệp này {file_mb:.1f} MB."
+                )
+
+            document_id = str(uuid.uuid4())
+            content_hash = hashlib.sha1(content).hexdigest()
+            source_path = CHATBOT_DOCUMENTS_DIR / f"{document_id}.docx"
+            source_path.write_bytes(content)
+            safe_filename = Path(original_filename).name or "document.docx"
+            document = self.repository.create_document(
+                document_id=document_id,
+                user_id=session.user_id,
+                project_id=session.project_id,
+                original_filename=safe_filename,
+                content_hash=content_hash,
+                size_bytes=len(content),
+            )
+            self.repository.link_document_to_session(
+                session.id, document.id, session.user_id
+            )
+            return document
 
     async def ensure_documents_ready(
         self,
@@ -217,7 +284,12 @@ class DocumentRagService:
             status = str(document.status).lower()
             if status == "ready":
                 continue
-            if status != "processing":
+            # A previous attempt may have failed while preprocessing an old
+            # document with the unbounded JSON-structure prompt. Keep the
+            # source file and allow the next explicit send to retry it with
+            # the current canonical workflow instead of surfacing the stale
+            # failure forever.
+            if status not in {"processing", "failed"}:
                 raise ValueError(
                     f"Không thể xử lý tài liệu {document.original_filename}"
                 )
@@ -227,18 +299,23 @@ class DocumentRagService:
         """Run canonical preprocessing and indexing for one stored DOCX."""
         source_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.docx"
         markdown_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.md"
+        extracted_images: list[dict[str, Any]] = []
 
         try:
             state = await self.preprocessing_service.preprocess_for_chatbot(
                 docx_file=str(source_path),
+                document_id=document.id,
+                image_output_root=str(CHATBOT_DOCUMENTS_DIR),
             )
             markdown = str(state.get("plain_text") or "").strip()
             structure = state.get("document_structure") or []
             title = str(
-                state.get("document_title") or Path(original_filename).stem
+                state.get("document_title") or Path(document.original_filename).stem
             ).strip()
             if not markdown:
                 raise ValueError("Không đọc được nội dung DOCX")
+
+            extracted_images = list(state.get("document_images") or [])
 
             markdown_path.write_text(markdown, encoding="utf-8")
             logical_chunks = self._build_chunks(
@@ -263,8 +340,10 @@ class DocumentRagService:
                 markdown_path=str(markdown_path),
                 structure=structure,
                 chunks=chunks,
+                images=extracted_images,
             )
         except Exception as exc:
+            DocumentImageExtractor.remove_assets(extracted_images)
             self.repository.set_document_failed(
                 document.id, user_id, str(exc)
             )
@@ -278,12 +357,16 @@ class DocumentRagService:
         session: ChatSession,
         original_filename: str,
         content: bytes,
+        max_file_bytes: int,
+        max_total_bytes: int,
     ):
         """Compatibility path for callers that still need eager ingestion."""
         document = await self.create_pending_docx(
             session=session,
             original_filename=original_filename,
             content=content,
+            max_file_bytes=max_file_bytes,
+            max_total_bytes=max_total_bytes,
         )
         return await self._process_document(document=document, user_id=session.user_id)
 
@@ -1158,7 +1241,7 @@ class DocumentRagService:
                     # Keep a bounded provenance excerpt with the persisted
                     # citation so the client can show the evidence without
                     # re-running retrieval or exposing the whole document.
-                    "excerpt": content[:1600],
+                    "excerpt": DocumentRagService._sentence_bounded_excerpt(content),
                     "level": chunk.level,
                     "node_key": selection.ref.node_key,
                     "parent_node_key": selection.ref.parent_node_key,

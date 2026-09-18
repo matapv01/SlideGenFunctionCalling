@@ -16,11 +16,13 @@ from backend.workflows.slidegen_workflow.nodes.section_batch_orchestrator import
     run_section_batch,
 )
 from backend.workflows.slidegen_workflow.nodes.slide_planner import planning_slide
+from backend.workflows.slidegen_workflow.nodes.image_verifier import verify_document_images
 
 
 def build_parallel_workflow() -> StateGraph:
     workflow = StateGraph(State)
     workflow.add_node("create_deck_style", create_deck_style)
+    workflow.add_node("verify_document_images", verify_document_images)
     workflow.add_node("plan_and_generate_pipeline", plan_and_generate_pipeline)
     # Keep the old nodes registered for compatibility with integrations that
     # inspect the graph. The active path below uses the pipeline node instead.
@@ -32,7 +34,8 @@ def build_parallel_workflow() -> StateGraph:
     workflow.add_node("emit_final_slides", emit_final_slides)
 
     workflow.set_entry_point("create_deck_style")
-    workflow.add_edge("create_deck_style", "plan_and_generate_pipeline")
+    workflow.add_edge("create_deck_style", "verify_document_images")
+    workflow.add_edge("verify_document_images", "plan_and_generate_pipeline")
     workflow.add_edge("plan_and_generate_pipeline", "emit_final_slides")
     workflow.add_edge("emit_final_slides", END)
     return workflow

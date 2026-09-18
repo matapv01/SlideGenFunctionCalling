@@ -42,9 +42,9 @@ state or conversation retrieval.
 ### Application boundaries
 
 - `DocumentPreprocessingService` owns DOCX conversion, automatic heading
-  detection, mixed-region structure inference, and the canonical Markdown/JSON
-  artifact. Chatbot RAG calls only `preprocess_for_chatbot`; it does not choose
-  a document mode.
+  detection, mixed-region structure inference, the canonical Markdown/JSON
+  artifact, and private embedded-image extraction. Chatbot RAG calls only
+  `preprocess_for_chatbot`; it does not choose a document mode.
 - `SlideGenerationService` owns the chatbot request-to-script step. It passes
   canonical chunks to `SlideGenWorkflowService`, which is only the XML
   renderer.
@@ -54,6 +54,9 @@ state or conversation retrieval.
 
 ### Renderer paths
 - **Chat path**: request → optional DOCX preprocessing/RAG → Markdown script → canonical chunks → shared XML renderer.
+- **Image path**: extracted DOCX assets → `image_verifier` node → Qwen-VL
+  relevance/slide assignment → planner batches → deterministic asset injection.
+  DDGS candidates use the same verifier at the executor boundary.
 - **Manual path**: Structure Editor → approved canonical chunks → shared XML renderer.
 - **Legacy API paths**: old Doc/Idea endpoints remain compatibility adapters;
   they are not exposed by the new workspace UI.

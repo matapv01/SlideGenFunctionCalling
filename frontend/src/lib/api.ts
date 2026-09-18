@@ -23,9 +23,18 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (!res.ok) {
     // First try to get error message from backend
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    const backendErrorMsg = typeof err.detail === 'string'
+    const backendErrorMsg = typeof err.detail === "string"
       ? err.detail
-      : (err.detail ? JSON.stringify(err.detail) : (err.message || null));
+      : Array.isArray(err.detail)
+        ? err.detail
+          .map((item: unknown) => {
+            if (!item || typeof item !== "object") return String(item);
+            const detail = item as { msg?: unknown };
+            return typeof detail.msg === "string" ? detail.msg : JSON.stringify(item);
+          })
+          .filter(Boolean)
+          .join("; ")
+        : (err.detail ? JSON.stringify(err.detail) : (err.message || null));
 
     // Handle 401 Unauthorized
     if (res.status === 401) {
@@ -77,6 +86,7 @@ interface UserResponse {
   username: string;
   created_at: string;
   is_active: boolean;
+  is_admin?: boolean;
 }
 
 interface ProjectsResponse {
@@ -159,6 +169,7 @@ export interface ChatDocumentResponse {
   title?: string | null;
   status: "processing" | "ready" | "failed";
   content_hash: string;
+  size_bytes?: number;
   error_message?: string | null;
   created_at: string;
   updated_at: string;
@@ -167,9 +178,11 @@ export interface ChatDocumentResponse {
 export interface ChatbotConfigResponse {
   default_model: string;
   default_effort: "low" | "medium" | "high";
-  models: Array<{ id: string; temperature: number; top_p: number }>;
-  efforts: Array<{ id: "low" | "medium" | "high"; max_tokens: number; temperature_delta: number }>;
+  models: Array<{ id: string; temperature: number; top_p: number; usage_multiplier: number }>;
+  efforts: Array<{ id: "low" | "medium" | "high"; max_tokens: number; temperature_delta: number; usage_multiplier: number }>;
   max_slide_count: number;
+  max_upload_bytes: number;
+  max_total_upload_bytes: number;
 }
 
 export interface ChatSlideGenerationResponse {
@@ -194,6 +207,85 @@ export interface ChatSlideGenerationResponse {
   project_id?: number | null;
   project_name: string;
   error: string;
+}
+
+export interface ChatMessageJobResponse {
+  id: string;
+  session_id: string;
+  phase: "running" | "completed" | "error";
+  status: {
+    stage?: string;
+    title?: string;
+    description?: string;
+    message?: string;
+  };
+  query: string;
+  model?: string | null;
+  effort?: string | null;
+  slide_count?: number | null;
+  document_ids: string[];
+  attachments: Array<{ id: string; name: string; original_filename?: string }>;
+  error: string;
+}
+
+export interface SubscriptionInfoResponse {
+  tier: string;
+  is_active: boolean;
+  expires_at?: string;
+  cancel_at_period_end: boolean;
+  usage_limits: {
+    chat_messages: number;
+    docx_upload: number;
+    max_docx_slides: number;
+  };
+  current_usage: {
+    chat_messages?: number;
+    chat_message_count?: number;
+    idea_generation?: number;
+    docx_upload: number;
+  };
+  usage_window_hours: number;
+  usage_window_started_at: string;
+  usage_reset_at: string;
+  daily_limits?: Record<string, number>;
+  usage_reset_date?: string;
+}
+
+export interface AdminUsageWeight {
+  id: string;
+  percentage: number;
+  multiplier: number;
+}
+
+export interface AdminPlanLimit {
+  chat_credits: number;
+  docx_upload: number;
+  max_docx_slides: number;
+  max_docx_file_mb: number;
+  max_docx_total_mb: number;
+}
+
+export interface AdminUsageConfigResponse {
+  usage_window_hours: number;
+  model_weights: AdminUsageWeight[];
+  effort_weights: AdminUsageWeight[];
+  plan_limits: Record<string, AdminPlanLimit>;
+}
+
+export interface AdminUser {
+  id: number;
+  email: string;
+  full_name?: string | null;
+  username: string;
+  subscription_tier: string;
+  is_active: boolean;
+  is_admin: boolean;
+  created_at: string;
+  chat_usage: number;
+  chat_message_count: number;
+  docx_usage: number;
+  usage_window_started_at: string;
+  usage_reset_at: string;
 }
 export interface ImageSearchResult {
   url: string;
@@ -248,6 +340,35 @@ export const api = {
 
   getActiveChatSlideGeneration: () =>
     request<ChatSlideGenerationResponse | null>("/chat/slide-generations/active"),
+
+  getActiveChatMessageJob: () =>
+    request<ChatMessageJobResponse | null>("/chat/message-jobs/active"),
+
+  streamChatMessage: (
+    sessionId: string,
+    data: { content: string; model?: string; effort?: string; slide_count?: number; document_ids?: string[] },
+    signal?: AbortSignal,
+  ) => {
+    const token = localStorage.getItem("token");
+    return fetch(`${API_BASE_URL}/chat/sessions/${encodeURIComponent(sessionId)}/message-stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+      signal,
+    });
+  },
+
+  reconnectChatMessageJob: (jobId: string, signal?: AbortSignal) => {
+    const token = localStorage.getItem("token");
+    return fetch(`${API_BASE_URL}/chat/message-jobs/${encodeURIComponent(jobId)}/stream`, {
+      method: "GET",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal,
+    });
+  },
 
   // The slide stream is consumed as SSE by the new chatbot workspace, so it
   // intentionally returns the raw response instead of passing through the
@@ -609,22 +730,7 @@ export const api = {
   },
 
   // Subscription endpoints - /api/subscription/*
-  getSubscriptionInfo: () => request<{
-    tier: string;
-    is_active: boolean;
-    expires_at?: string;
-    cancel_at_period_end: boolean;
-    daily_limits: {
-      idea_generation: number;
-      docx_upload: number;
-      max_docx_slides: number;
-    };
-    current_usage: {
-      idea_generation: number;
-      docx_upload: number;
-    };
-    usage_reset_date: string;
-  }>("/subscription/info"),
+  getSubscriptionInfo: () => request<SubscriptionInfoResponse>("/subscription/info"),
 
   redeemCode: (code: string) => request<{
     success: boolean;
@@ -646,6 +752,41 @@ export const api = {
       features: Record<string, any>;
     }>;
   }>("/subscription/pricing"),
+
+  getAdminUsageConfig: () => request<AdminUsageConfigResponse>("/admin/usage/config"),
+
+  updateAdminUsageConfig: (data: {
+    model_percentages: Record<string, number>;
+    effort_percentages: Record<string, number>;
+    plan_limits: Record<string, AdminPlanLimit>;
+  }) =>
+    request<AdminUsageConfigResponse>("/admin/usage/config", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  resetAllUsage: () => request<{ reset_users: number; usage_window_hours: number }>("/admin/usage/reset", {
+    method: "POST",
+  }),
+
+  getAdminUsers: () => request<AdminUser[]>("/admin/users"),
+
+  updateAdminRole: (userId: number, isAdmin: boolean) =>
+    request<AdminUser>(`/admin/users/${userId}/admin`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_admin: isAdmin }),
+    }),
+
+  resetAdminUserPassword: (userId: number, password: string) =>
+    request<{ user_id: number; message: string }>(`/admin/users/${userId}/password-reset`, {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
+
+  resetAdminUserUsage: (userId: number) =>
+    request<AdminUser>(`/admin/users/${userId}/usage-reset`, {
+      method: "POST",
+    }),
 
   upgradeSubscription: (tier: string) => request<{ message: string }>("/subscription/upgrade", {
     method: "POST",

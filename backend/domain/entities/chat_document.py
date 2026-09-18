@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -29,6 +29,13 @@ class ChatDocument:
     # The active derived chunk generation. Older documents remain at zero
     # until the RAG service backfills their tree index.
     chunk_index_version: int = 0
+    # Size of the original uploaded DOCX. New rows persist this value so the
+    # conversation-wide upload cap does not depend on a file still on disk.
+    size_bytes: int = 0
+    # Embedded DOCX images are kept as private, server-side metadata.  The
+    # application uses this tree context when deciding whether an image belongs
+    # in a generated slide; it is intentionally not exposed by the chat API.
+    images: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

@@ -65,6 +65,13 @@ class ChatLLM:
         return "Đây là câu trả lời bình thường."
 
 
+class SlideRouteLLM(ChatLLM):
+    def generate_completion(self, messages, **kwargs):
+        if "intent router for Slidegenius" in messages[0].get("content", ""):
+            return '{"intent":"slide_creation","reason":"The user wants a deck."}'
+        return super().generate_completion(messages, **kwargs)
+
+
 def _service_with_active_generation() -> ChatbotService:
     service = ChatbotService(ChatRepository(), ChatLLM())
     service._active_slide_generations = {7: "session-1"}
@@ -80,6 +87,17 @@ def test_normal_chat_remains_available_during_slide_generation():
     )
 
     assert result.assistant_message.content == "Đây là câu trả lời bình thường."
+
+
+def test_llm_slide_intent_enters_preflight_instead_of_generic_outline_chat():
+    service = ChatbotService(ChatRepository(), SlideRouteLLM())
+
+    result = asyncio.run(
+        service.send_message("session-1", 7, "Bạn tạo nội dung cho tôi được không")
+    )
+
+    assert "bao nhiêu slide" in result.assistant_message.content.lower()
+    assert result.assistant_message.metadata["slide_flow"]["state"] == "clarifying"
 
 
 def test_second_explicit_slide_stream_is_rejected_during_generation():

@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
 
 from backend.application.services.base_workflow_service import BaseWorkflowService
+from backend.application.services.document_image_extractor import DocumentImageExtractor
 from backend.config import WORKFLOW_RECURSION_LIMIT
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.workflows.doc_workflow.main import run_doc_workflow
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentPreprocessingService(BaseWorkflowService):
@@ -19,7 +23,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
 
     Chatbot ingestion uses :meth:`preprocess_for_chatbot`, which deliberately
     has no user-selectable workflow mode and stops after the canonical
-    Markdown/JSON document artifact is ready. The old DOCX endpoint is kept
+    Markdown/JSON artifact plus private embedded-image assets are ready. The old DOCX endpoint is kept
     behind :meth:`preprocess_for_slide_generation` while it is being migrated
     to the same canonical chunk renderer.
     """
@@ -27,6 +31,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
     def __init__(self, project_dir: str, llm_provider: LLMProvider):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
+        self.image_extractor = DocumentImageExtractor()
 
     async def preprocess_document(
         self,
@@ -36,6 +41,8 @@ class DocumentPreprocessingService(BaseWorkflowService):
         slide_options: Optional[Dict[str, Any]] = None,
         callback=None,
         include_slide_chunks: bool = False,
+        document_id: str | None = None,
+        image_output_root: str | None = None,
     ) -> Dict[str, Any]:
         """Run the canonical DOCX analysis graph.
 
@@ -61,10 +68,26 @@ class DocumentPreprocessingService(BaseWorkflowService):
         if not doc_state or not doc_state.get("plain_text"):
             raise ValueError("Document preprocessing produced no canonical text")
 
+        if document_id and image_output_root:
+            try:
+                doc_state["document_images"] = self.image_extractor.extract(
+                    docx_path=docx_file,
+                    document_id=document_id,
+                    output_root=image_output_root,
+                )
+            except Exception:
+                # Image extraction is an enrichment step. A malformed drawing
+                # relationship must not make otherwise valid DOCX text
+                # unavailable to RAG.
+                logger.exception("Unable to extract embedded DOCX images")
+                doc_state["document_images"] = []
+
         return doc_state
     async def preprocess_for_chatbot(
         self,
         docx_file: str,
+        document_id: str | None = None,
+        image_output_root: str | None = None,
         callback=None,
     ) -> Dict[str, Any]:
         """Create the canonical document artifact used by chatbot RAG."""
@@ -72,6 +95,8 @@ class DocumentPreprocessingService(BaseWorkflowService):
             docx_file=docx_file,
             callback=callback,
             include_slide_chunks=False,
+            document_id=document_id,
+            image_output_root=image_output_root,
         )
 
     async def preprocess_for_slide_generation(

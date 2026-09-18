@@ -4,6 +4,7 @@ from backend.config import (
     CAPTURES_DIR, PROJECT_DIR, STATIC_DIR,
     LLM_API_KEY,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
+    VLM_MODEL,
     CHATBOT_MAX_HISTORY_TURNS,
     FAISS_INDEX_PATH,
 )
@@ -28,6 +29,7 @@ from backend.infrastructure.parser.markitdown_parser import MarkItDownParser
 from backend.infrastructure.rag.gemini_provider import LocalEmbeddingToolRetrieveProvider
 from backend.infrastructure.database.repositories.sqlite_chat_repo import SqliteChatRepository
 from backend.infrastructure.database.repositories.sqlite_chat_document_repo import SqliteChatDocumentRepository
+from backend.infrastructure.database.repositories.sqlite_usage_config_repo import SqliteUsageConfigRepository
 
 # --- 3. Imports Services (Application) ---
 from backend.application.services.auth_service import AuthService
@@ -50,6 +52,7 @@ from backend.application.services.chatbot_service import ChatbotService
 from backend.application.services.document_rag_service import DocumentRagService
 from backend.application.services.rag_query_planner import RagQueryPlanner
 from backend.application.services.slide_generation_service import SlideGenerationService
+from backend.application.services.image_relevance_service import ImageRelevanceService
 
 from backend.api.schemas.auth_schema import UserResponse
 
@@ -74,6 +77,10 @@ _retriever_infra = LocalEmbeddingToolRetrieveProvider(
     tools_dict=TOOLS_DICT,
     index_path=str(FAISS_INDEX_PATH),
 )
+_image_relevance_service = ImageRelevanceService(
+    _slidegen_llm,
+    model=VLM_MODEL,
+)
 
 # ===== SINGLETON SERVICES =====
 _structure_service = StructureService()
@@ -95,6 +102,7 @@ _slidegen_workflow_service = SlideGenWorkflowService(
     capture_provider=_capture_infra,
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
+    image_relevance_verifier=_image_relevance_service,
 )
 
 # The old DOCX endpoints are adapters. They preprocess the file and then call
@@ -115,7 +123,11 @@ _document_rag_service = DocumentRagService(
 )
 _chat_project_service = ProjectService(SqliteProjectRepository())
 _chatbot_user_repository = SqliteUserRepository()
-_chatbot_subscription_service = SubscriptionService(_chatbot_user_repository)
+_chatbot_usage_config_repository = SqliteUsageConfigRepository()
+_chatbot_subscription_service = SubscriptionService(
+    _chatbot_user_repository,
+    _chatbot_usage_config_repository,
+)
 _slide_generation_service = SlideGenerationService(
     llm_provider=_slidegen_llm,
     slide_workflow=_slidegen_workflow_service,
@@ -236,6 +248,7 @@ async def get_current_user(
     return UserResponse(
         id=user.id, email=user.email,
         created_at=user.created_at, is_active=bool(user.is_active),
+        is_admin=bool(user.is_admin),
         full_name=full_name, avatar_url=avatar_url, username=username
     )
 
@@ -271,12 +284,21 @@ async def get_current_user_from_token_param(
 
     return UserResponse(
         id=user.id, email=user.email,
-        created_at=user.created_at, is_active=bool(user.is_active)
+        created_at=user.created_at, is_active=bool(user.is_active),
+        is_admin=bool(user.is_admin),
     )
 
 
 def get_subscription_service() -> SubscriptionService:
-    return SubscriptionService(SqliteUserRepository())
+    return SubscriptionService(SqliteUserRepository(), SqliteUsageConfigRepository())
+
+
+async def get_current_admin_user(
+    current_user: UserResponse = Depends(get_current_active_user),
+) -> UserResponse:
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
 
 
 def get_collaboration_service(

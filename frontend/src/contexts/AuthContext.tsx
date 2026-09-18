@@ -7,6 +7,7 @@ interface User {
   email: string;
   avatar_url?: string;
   full_name?: string;
+  is_admin?: boolean;
 }
 
 interface AuthContextType {
@@ -54,12 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           setUser(JSON.parse(stored));
 
-          // Validate token by fetching profile
+          // Refresh the complete auth payload so admin access is not based on
+          // stale localStorage data after a deployment.
           try {
-            const profile = await api.getProfile();
+            const remoteUser = await api.me();
             setUser(prev => {
-              if (!prev) return prev;
-              const updated = { ...prev, full_name: profile.full_name, avatar_url: profile.avatar_url };
+              if (!prev) return remoteUser;
+              const updated = { ...prev, ...remoteUser };
               localStorage.setItem("user", JSON.stringify(updated));
               return updated;
             });

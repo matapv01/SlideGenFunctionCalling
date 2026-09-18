@@ -540,10 +540,26 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
             state["current_tool_call"] = tool_call
             state["current_tool_plan"] = tool_plan
         try:
+            slide_options = state.get("slide_options") or {}
+            current_index = int(state.get("current_slide_index", -1))
+            preferred_images = [
+                image
+                for image in slide_options.get("document_image_assignments", []) or []
+                if isinstance(image, dict)
+                and int(image.get("slide_index", -1)) == current_index
+            ]
             slide_content, final_tool_call, search_history = active_execute_tool_plan(
                 tool_plan,
                 tool_lookup=tool_lookup,
                 source_content=state.get("current_slide_text", ""),
+                image_verifier=configurable.get("image_relevance_verifier"),
+                verification_context={
+                    "slide_content": state.get("current_slide_text", ""),
+                    "slide_topic": (state.get("current_slide_plan") or {}).get("slide_topic", ""),
+                    "presentation_instruction": slide_options.get("presentation_instruction", ""),
+                },
+                preferred_images=preferred_images,
+                asset_dir=configurable.get("output_folder"),
             )
             if not slide_content:
                 raise ValueError(f"Tool '{tool_name}' returned empty XML content.")

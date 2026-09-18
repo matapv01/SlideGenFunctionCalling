@@ -4,6 +4,7 @@ import {
   ChatMessageResponse,
   ChatSessionResponse,
   ChatDocumentResponse,
+  ChatMessageJobResponse,
   ChatSlideGenerationResponse,
 } from "@/lib/api";
 
@@ -25,6 +26,7 @@ export type ChatMessage = ChatMessageResponse;
 export type ChatbotConfig = ChatbotConfigResponse;
 export type ChatDocument = ChatDocumentResponse;
 export type ChatSlideGeneration = ChatSlideGenerationResponse;
+export type ChatMessageJob = ChatMessageJobResponse;
 
 /**
  * Boundary between the new Slidegenius UI and the existing backend client.
@@ -57,6 +59,10 @@ export function loadChatbotConfig() {
 
 export function loadActiveChatSlideGeneration() {
   return api.getActiveChatSlideGeneration();
+}
+
+export function loadActiveChatMessageJob() {
+  return api.getActiveChatMessageJob();
 }
 
 export function loadChatSessions() {
@@ -188,6 +194,41 @@ export async function streamChatSlideGenerationJob(
   signal?: AbortSignal,
 ) {
   const response = await api.reconnectChatSlideGeneration(generationId, signal);
+  return consumeChatSlideGenerationStream(response, onEvent);
+}
+
+/** Start an ordinary reconnectable chat response. */
+export async function streamChatMessage(
+  sessionId: string,
+  content: string,
+  model: string,
+  effort: string,
+  slideCount: number | undefined,
+  onEvent: ChatSlideStreamEventHandler,
+  signal?: AbortSignal,
+  documentIds: string[] = [],
+) {
+  const response = await api.streamChatMessage(
+    sessionId,
+    {
+      content,
+      model,
+      effort,
+      ...(slideCount ? { slide_count: slideCount } : {}),
+      ...(documentIds.length ? { document_ids: documentIds } : {}),
+    },
+    signal,
+  );
+  return consumeChatSlideGenerationStream(response, onEvent);
+}
+
+/** Reconnect to an ordinary chat response after a route change or reload. */
+export async function streamChatMessageJob(
+  jobId: string,
+  onEvent: ChatSlideStreamEventHandler,
+  signal?: AbortSignal,
+) {
+  const response = await api.reconnectChatMessageJob(jobId, signal);
   return consumeChatSlideGenerationStream(response, onEvent);
 }
 

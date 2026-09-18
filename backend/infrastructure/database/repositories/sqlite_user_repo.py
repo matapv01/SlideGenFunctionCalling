@@ -4,11 +4,54 @@ from typing import Optional, List, Dict
 import json
 from datetime import datetime, date, timedelta
 from backend.domain.entities.user import User, UserProfile, UserSettings, SubscriptionCode, CodeRedemption
+from backend.domain.entities.user import USAGE_WINDOW_HOURS
 from backend.domain.ports.user_repository import UserRepository
 from backend.infrastructure.database.connection import get_db_connection
 
 
 class SqliteUserRepository(UserRepository):
+    @staticmethod
+    def _load_plan_limits(tier: str) -> Optional[Dict[str, float | int]]:
+        """Hydrate the user entity from the admin-managed policy table."""
+        try:
+            with get_db_connection() as conn:
+                row = conn.execute(
+                    """
+                    SELECT chat_credits, docx_upload, max_docx_slides
+                    FROM subscription_plan_limits
+                    WHERE tier = ?
+                    """,
+                    (tier,),
+                ).fetchone()
+        except Exception:
+            # Keep auth/user reads compatible with databases during migration;
+            # SubscriptionService remains the authoritative policy boundary.
+            return None
+        if row is None:
+            return None
+        return {
+            "chat_messages": float(row["chat_credits"]),
+            "docx_upload": int(row["docx_upload"]),
+            "max_docx_slides": int(row["max_docx_slides"]),
+        }
+
+    @staticmethod
+    def _parse_usage_window_start(value) -> Optional[datetime]:
+        if not value:
+            return None
+        try:
+            return (
+                datetime.fromisoformat(value.replace("Z", ""))
+                if isinstance(value, str)
+                else value
+            )
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _now_for_window(window_start: Optional[datetime]) -> datetime:
+        return datetime.now(tz=window_start.tzinfo) if window_start and window_start.tzinfo else datetime.now()
+
     def _map_user(self, row) -> Optional[User]:
         if not row: return None
 
@@ -49,14 +92,52 @@ class SqliteUserRepository(UserRepository):
         docx_usage_today = 0
         try:
             docx_usage_today = row['docx_usage_today'] or 0
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, IndexError):
             docx_usage_today = 0
+
+        try:
+            raw_window_start = row['usage_window_started_at']
+        except (KeyError, TypeError, IndexError):
+            raw_window_start = None
+        usage_window_started_at = self._parse_usage_window_start(raw_window_start) or datetime.now()
+
+        legacy_chat_usage = int(idea_usage_today)
+        try:
+            legacy_chat_usage = int(row['chat_usage_5h'] or 0)
+        except (KeyError, TypeError, IndexError):
+            pass
+
+        chat_message_count = legacy_chat_usage
+        try:
+            chat_message_count = int(row['chat_messages_5h'] or legacy_chat_usage)
+        except (KeyError, TypeError, IndexError):
+            pass
+
+        chat_usage = float(legacy_chat_usage)
+        try:
+            raw_chat_credits = row['chat_usage_credits_5h']
+            if raw_chat_credits is not None:
+                chat_usage = float(raw_chat_credits)
+        except (KeyError, TypeError, IndexError, ValueError):
+            pass
+
+        docx_usage = 0
+        try:
+            docx_usage = int(row['docx_usage_5h'] or 0)
+        except (KeyError, TypeError, IndexError):
+            docx_usage = int(docx_usage_today)
 
         cancel_at_period_end = False
         try:
             cancel_at_period_end = bool(row['cancel_at_period_end'])
         except (KeyError, TypeError):
             cancel_at_period_end = False
+
+        is_admin = False
+        try:
+            is_admin = bool(row['is_admin'])
+        except (KeyError, TypeError, IndexError):
+            is_admin = False
 
         return User(
             id=row['id'],
@@ -67,7 +148,13 @@ class SqliteUserRepository(UserRepository):
             daily_usage_reset_date=reset_date,
             idea_usage_today=idea_usage_today,
             docx_usage_today=docx_usage_today,
+            usage_window_started_at=usage_window_started_at,
+            plan_limits=self._load_plan_limits(subscription_tier),
+            chat_usage=chat_usage,
+            chat_message_count=chat_message_count,
+            docx_usage=docx_usage,
             is_active=bool(row['is_active']),
+            is_admin=is_admin,
             cancel_at_period_end=cancel_at_period_end,
             created_at=row['created_at'] # Giả sử DB trả về datetime hoặc string parse được
         )
@@ -112,17 +199,66 @@ class SqliteUserRepository(UserRepository):
             return self._map_user(cursor.fetchone())
 
 
+    def list_admin_users(self) -> List[dict]:
+        """Return the non-sensitive user fields needed by the admin console."""
+        with get_db_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                    u.id,
+                    u.email,
+                    u.subscription_tier,
+                    u.is_active,
+                    u.is_admin,
+                    u.created_at,
+                    u.usage_window_started_at,
+                    COALESCE(u.chat_usage_credits_5h, 0) AS chat_usage,
+                    COALESCE(u.chat_messages_5h, 0) AS chat_message_count,
+                    COALESCE(u.docx_usage_5h, 0) AS docx_usage,
+                    p.full_name
+                FROM users AS u
+                LEFT JOIN user_profiles AS p ON p.user_id = u.id
+                ORDER BY u.id ASC
+                """
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+
+    def count_admin_users(self) -> int:
+        with get_db_connection() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) AS count FROM users WHERE is_admin = 1 AND is_active = 1"
+            ).fetchone()
+        return int(row["count"] if row else 0)
+
+
+    def set_admin_status(self, user_id: int, is_admin: bool) -> bool:
+        with get_db_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE users SET is_admin = ? WHERE id = ?",
+                (1 if is_admin else 0, user_id),
+            )
+            conn.commit()
+        return cursor.rowcount > 0
+
+
     def create(self, user: User) -> User:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO users (
                     email, hashed_password, subscription_tier,
-                    daily_usage_reset_date, idea_usage_today, docx_usage_today, is_active
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    daily_usage_reset_date, idea_usage_today, docx_usage_today,
+                    usage_window_started_at, chat_usage_5h,
+                    chat_usage_credits_5h, chat_messages_5h, docx_usage_5h,
+                    is_active, is_admin
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 user.email, user.hashed_password, user.subscription_tier,
-                user.daily_usage_reset_date, user.idea_usage_today, user.docx_usage_today, user.is_active
+                user.daily_usage_reset_date, user.idea_usage_today, user.docx_usage_today,
+                user.usage_window_started_at, user.chat_message_count,
+                user.chat_usage, user.chat_message_count, user.docx_usage,
+                user.is_active, user.is_admin
             ))
             conn.commit()
             user_id = cursor.lastrowid
@@ -218,35 +354,127 @@ class SqliteUserRepository(UserRepository):
 
     # === SUBSCRIPTION MANAGEMENT ===
 
-    def update_usage_count(self, user_id: int, feature_type: str, increment: int = 1) -> None:
-        """Update daily usage count for a specific feature"""
+    def reset_usage_window(self, user_id: int) -> None:
+        """Reset the user's rolling five-hour window when it has expired."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
+            row = cursor.execute(
+                "SELECT usage_window_started_at FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            if not row:
+                return
+            window_start = self._parse_usage_window_start(row['usage_window_started_at'])
+            now = self._now_for_window(window_start)
+            if window_start is not None and now < window_start + timedelta(hours=USAGE_WINDOW_HOURS):
+                return
 
-            # Reset daily usage if needed
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE users SET
-                    daily_usage_reset_date = CURRENT_DATE,
+                    usage_window_started_at = ?,
+                    daily_usage_reset_date = ?,
                     idea_usage_today = 0,
-                    docx_usage_today = 0
-                WHERE id = ? AND daily_usage_reset_date < CURRENT_DATE
-            """, (user_id,))
+                    docx_usage_today = 0,
+                    chat_usage_5h = 0,
+                    chat_usage_credits_5h = 0,
+                    chat_messages_5h = 0,
+                    docx_usage_5h = 0
+                WHERE id = ?
+                """,
+                (now, now.date(), user_id),
+            )
+            conn.commit()
 
-            # Update specific usage counter
-            if feature_type == "idea_generation":
+    def force_reset_usage_window(self, user_id: int) -> bool:
+        """Force a fresh five-hour window for one user right now."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            row = cursor.execute(
+                "SELECT usage_window_started_at FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            if not row:
+                return False
+
+            window_start = self._parse_usage_window_start(row["usage_window_started_at"])
+            now = self._now_for_window(window_start)
+            cursor.execute(
+                """
+                UPDATE users SET
+                    usage_window_started_at = ?,
+                    daily_usage_reset_date = ?,
+                    idea_usage_today = 0,
+                    docx_usage_today = 0,
+                    chat_usage_5h = 0,
+                    chat_usage_credits_5h = 0,
+                    chat_messages_5h = 0,
+                    docx_usage_5h = 0
+                WHERE id = ?
+                """,
+                (now, now.date(), user_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def update_usage_count(
+        self,
+        user_id: int,
+        feature_type: str,
+        increment: int = 1,
+        usage_cost: float = 1.0,
+    ) -> None:
+        """Update usage in the shared rolling five-hour window."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            row = cursor.execute(
+                "SELECT usage_window_started_at FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            if not row:
+                return
+
+            window_start = self._parse_usage_window_start(row['usage_window_started_at'])
+            now = self._now_for_window(window_start)
+            if window_start is None or now >= window_start + timedelta(hours=USAGE_WINDOW_HOURS):
+                cursor.execute(
+                    """
+                    UPDATE users SET
+                        usage_window_started_at = ?,
+                        daily_usage_reset_date = ?,
+                        idea_usage_today = 0,
+                        docx_usage_today = 0,
+                        chat_usage_5h = 0,
+                        chat_usage_credits_5h = 0,
+                        chat_messages_5h = 0,
+                        docx_usage_5h = 0
+                    WHERE id = ?
+                    """,
+                    (now, now.date(), user_id),
+                )
+
+            if feature_type in {"chat_message", "chat_messages", "idea_generation"}:
                 cursor.execute("""
-                    UPDATE users SET idea_usage_today = idea_usage_today + ? WHERE id = ?
-                """, (increment, user_id))
+                    UPDATE users SET
+                        chat_usage_5h = COALESCE(chat_usage_5h, 0) + ?,
+                        chat_usage_credits_5h = COALESCE(chat_usage_credits_5h, 0) + ?,
+                        chat_messages_5h = COALESCE(chat_messages_5h, 0) + ?,
+                        idea_usage_today = COALESCE(idea_usage_today, 0) + ?
+                    WHERE id = ?
+                """, (increment, usage_cost, increment, increment, user_id))
             elif feature_type == "docx_upload":
                 cursor.execute("""
-                    UPDATE users SET docx_usage_today = docx_usage_today + ? WHERE id = ?
-                """, (increment, user_id))
+                    UPDATE users SET
+                        docx_usage_5h = docx_usage_5h + ?,
+                        docx_usage_today = docx_usage_today + ?
+                    WHERE id = ?
+                """, (increment, increment, user_id))
 
-            # Log usage for analytics
-            cursor.execute("""
-                INSERT INTO daily_usage_logs (user_id, feature_type, usage_date)
-                VALUES (?, ?, CURRENT_DATE)
-            """, (user_id, feature_type))
+            if feature_type != "reset":
+                cursor.execute("""
+                    INSERT INTO daily_usage_logs (user_id, feature_type, usage_date)
+                    VALUES (?, ?, CURRENT_DATE)
+                """, (user_id, feature_type))
 
             conn.commit()
 

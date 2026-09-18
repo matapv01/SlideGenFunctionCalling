@@ -33,6 +33,7 @@ def _user(tier: str = "free") -> User:
         hashed_password="hashed",
         subscription_tier=tier,
         daily_usage_reset_date=date.today(),
+        plan_limits={"chat_messages": 2, "docx_upload": 3, "max_docx_slides": 50},
     )
 
 

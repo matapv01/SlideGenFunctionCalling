@@ -12,6 +12,7 @@
 .sgx-home.workspace-page .workspace-icon { width: 15px; height: 15px; flex: 0 0 15px; border: 1px solid currentColor; border-radius: 3px; opacity: .8; }
 .sgx-home.workspace-page .icon-slidegenius { border-radius: 50%; }.sgx-home.workspace-page .icon-slidegenius::after { display: block; width: 5px; height: 5px; margin: 4px; border-radius: 50%; background: currentColor; content: ""; }.sgx-home.workspace-page .icon-projects { border-radius: 2px; box-shadow: 4px 4px 0 -1px #242424, 4px 4px 0 currentColor; }.sgx-home.workspace-page .icon-guide { position: relative; transform: rotate(45deg); border-radius: 50%; }.sgx-home.workspace-page .icon-guide::after { position: absolute; inset: 2px; transform: rotate(-45deg); color: currentColor; content: "?"; font-size: 8px; font-weight: 600; text-align: center; }
 .sgx-home.workspace-page .icon-manual { position: relative; border-radius: 2px; }.sgx-home.workspace-page .icon-manual::after { position: absolute; inset: 1px; color: currentColor; content: "M"; font-size: 8px; font-weight: 700; line-height: 12px; text-align: center; }
+.sgx-home.workspace-page .icon-admin { position: relative; border-radius: 2px; }.sgx-home.workspace-page .icon-admin::after { position: absolute; inset: 1px; color: currentColor; content: "A"; font-size: 8px; font-weight: 700; line-height: 12px; text-align: center; }
 .sgx-home.workspace-page .workspace-sidebar-bottom .workspace-user { width: 100% !important; min-width: 0 !important; }
 .sgx-home.workspace-page .workspace-user-wrap { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: 20px; padding-top: 18px; border-top: 1px solid #ffffff12; }
 .sgx-home.workspace-page .workspace-user-wrap .workspace-user { width: 100% !important; min-width: 0 !important; margin-top: 0; padding-top: 0; border-top: 0; }
@@ -75,17 +76,31 @@
 .sgx-home.workspace-page .chat-composer-attachment-remove:focus-visible { background: #ffffff12; color: #f5a08a; outline: 0; }
 .sgx-home.workspace-page .chat-composer-attachment.is-loading .chat-composer-attachment-remove { width: 20px; max-width: 20px; opacity: 1; }
 .sgx-home.workspace-page .chat-composer-attachment-remove:disabled { cursor: wait; opacity: .55; }
+.sgx-home.workspace-page .composer-usage-inline { display: flex; align-items: center; gap: 7px; margin-right: 10px; }
+.sgx-home.workspace-page .composer-usage-meter { position: relative; display: flex; align-items: center; gap: 3px; padding: 2px; border-radius: 4px; outline: 0; cursor: help; }
+.sgx-home.workspace-page .composer-usage-meter:focus-visible { box-shadow: 0 0 0 2px #f5a08a55; }
+.sgx-home.workspace-page .composer-usage-circle { --usage-color: #b9c8ae; display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: conic-gradient(var(--usage-color) var(--usage-progress), #ffffff16 0); }
+.sgx-home.workspace-page .composer-usage-circle > span { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #292a28; color: var(--usage-color); font: 600 7px/1 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+.sgx-home.workspace-page .composer-usage-meter.is-warning .composer-usage-circle { --usage-color: #e7c477; }
+.sgx-home.workspace-page .composer-usage-meter.is-critical .composer-usage-circle { --usage-color: #f5a08a; }
+.sgx-home.workspace-page .composer-usage-meter.is-unlimited .composer-usage-circle { --usage-color: #9ec7bb; }
+.sgx-home.workspace-page .composer-usage-label { color: #777a73; font-size: 7px; letter-spacing: .07em; }
+.sgx-home.workspace-page .composer-usage-meter::after { position: absolute; right: 0; bottom: 32px; z-index: 12; width: max-content; max-width: 220px; padding: 7px 9px; border: 1px solid #ffffff1c; border-radius: 5px; background: #20211ff5; box-shadow: 0 10px 24px #0008; color: #d9dad4; content: attr(data-tooltip); font-size: 9px; line-height: 1.35; opacity: 0; pointer-events: none; text-align: right; transform: translateY(3px); transition: opacity .14s ease, transform .14s ease; white-space: nowrap; }
+.sgx-home.workspace-page .composer-usage-meter:hover::after,
+.sgx-home.workspace-page .composer-usage-meter:focus-visible::after { opacity: 1; transform: translateY(0); }
 .sgx-home.workspace-page .composer-model { margin-right: 20px; }
 .sgx-home.workspace-page .composer-model-button { white-space: nowrap; }
 .sgx-home.workspace-page .composer-send { flex: 0 0 31px; }
 
 /* The chat no longer needs the large marketing heading, so keep its chrome compact
    and let the composer sit a little closer to the bottom edge. */
-.sgx-home.workspace-page .chat-panel { padding-bottom: 10px; }
+.sgx-home.workspace-page .chat-panel { position: relative; padding-bottom: 10px; }
 .sgx-home.workspace-page .chat-panel-header { padding-bottom: 12px; }
 
 @media (max-width: 760px) {
   .sgx-home.workspace-page .composer-model { margin-right: 12px; }
+  .sgx-home.workspace-page .composer-usage-inline { gap: 4px; margin-right: 6px; }
+  .sgx-home.workspace-page .composer-usage-label { display: none; }
 }
 .sgx-home.workspace-page .chat-composer textarea { max-height: 220px; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: #6b6e67 transparent; }
 .sgx-home.workspace-page .chat-composer textarea::-webkit-scrollbar { width: 6px; }
@@ -120,7 +135,12 @@
 .sgx-home.workspace-page .subscription-overview > div > small { color: #92958e; font-size: 11px; }
 .sgx-home.workspace-page .subscription-usage { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .sgx-home.workspace-page .subscription-usage > span { display: grid; gap: 4px; padding: 9px; border: 1px solid #ffffff14; border-radius: 4px; color: #f5f5ef; font-size: 13px; }
+.sgx-home.workspace-page .subscription-usage > span strong { color: #f5f5ef; font-size: 13px; font-weight: 600; }
 .sgx-home.workspace-page .subscription-usage small { color: #92958e; font-size: 9px; line-height: 1.25; }
+.sgx-home.workspace-page .subscription-reset-note { display: block; margin-top: 8px; color: #777a73; font-size: 9px; }
+.sgx-home.workspace-page .subscription-card-current-usage { display: grid; gap: 4px; margin: 14px 0; padding: 9px; border: 1px solid #f5a08a44; border-radius: 4px; background: #f5a08a0b; }
+.sgx-home.workspace-page .subscription-card-current-usage small { color: #92958e; font-size: 9px; text-transform: uppercase; }
+.sgx-home.workspace-page .subscription-card-current-usage strong { color: #f5a08a; font-size: 11px; font-weight: 500; }
 .sgx-home.workspace-page .subscription-actions { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
 .sgx-home.workspace-page .subscription-actions input { min-width: 0; flex: 1; padding: 11px 13px; border: 1px solid #ffffff24; border-radius: 4px; outline: 0; background: #292a29; color: #f5f5ef; font: 12px "Avenir Next", "Segoe UI", system-ui, sans-serif; }
 .sgx-home.workspace-page .subscription-actions input:focus { border-color: #f5a08a88; }
@@ -168,6 +188,16 @@
 .sgx-home.workspace-page .chat-markdown code { padding: 2px 5px; border: 1px solid #ffffff18; border-radius: 4px; background: #0000002e; color: #f5b09d; font: 0.92em/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .sgx-home.workspace-page .chat-markdown pre { margin: 0 0 14px; padding: 11px 12px; overflow-x: auto; border: 1px solid #ffffff15; border-radius: 7px; background: #171817; }
 .sgx-home.workspace-page .chat-markdown pre code { padding: 0; border: 0; background: transparent; color: #dedfd8; white-space: pre; }
+.sgx-home.workspace-page .chat-markdown .chat-math { color: #f4eee8; }
+.sgx-home.workspace-page .chat-markdown .chat-math-inline { display: inline-flex; max-width: 100%; margin: 0 .14em; align-items: baseline; vertical-align: -.14em; overflow-x: auto; font-size: 1.05em; line-height: 1.2; scrollbar-width: none; }
+.sgx-home.workspace-page .chat-markdown .chat-math-inline::-webkit-scrollbar { display: none; }
+.sgx-home.workspace-page .chat-markdown .chat-math-block { display: flex; width: 100%; min-width: 0; max-width: 100%; min-height: 46px; box-sizing: border-box; margin: 3px 0 17px; align-items: center; justify-content: center; padding: 13px 15px; overflow-x: auto; border: 1px solid #ffffff18; border-radius: 9px; background: #20211f; color: #fff2eb; font-size: 1.1em; line-height: 1.3; scrollbar-color: #5f625b transparent; scrollbar-width: thin; }
+.sgx-home.workspace-page .chat-markdown .chat-math-block::-webkit-scrollbar { height: 6px; }
+.sgx-home.workspace-page .chat-markdown .chat-math-block::-webkit-scrollbar-track { background: transparent; }
+.sgx-home.workspace-page .chat-markdown .chat-math-block::-webkit-scrollbar-thumb { border-radius: 6px; background: #5f625b; }
+.sgx-home.workspace-page .chat-markdown .chat-math-fallback { color: #f5b09d; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.sgx-home.workspace-page .chat-markdown .chat-math-fallback.is-block { display: block; margin: 3px 0 17px; padding: 12px 15px; overflow-x: auto; border: 1px solid #ffffff18; border-radius: 9px; background: #20211f; }
+.sgx-home.workspace-page .chat-markdown .chat-math .ML__latex { color: inherit; }
 .sgx-home.workspace-page .chat-markdown blockquote { margin: 0 0 14px; padding: 2px 0 2px 13px; border-left: 2px solid #f5a08a88; color: #bfc1b9; }
 .sgx-home.workspace-page .chat-markdown hr { margin: 16px 0; border: 0; border-top: 1px solid #ffffff16; }
 .sgx-home.workspace-page .chat-markdown a { color: #f5a08a; text-decoration: underline; text-underline-offset: 2px; }
@@ -186,15 +216,18 @@
 .sgx-home.workspace-page .chat-source-chip.active { border-color: #f5a08a88; background: #f5a08a12; color: #f3f2eb; outline: 0; }
 .sgx-home.workspace-page .chat-source-chip-label { flex: 0 0 auto; color: #f5b09d; }
 .sgx-home.workspace-page .chat-source-chip-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sgx-home.workspace-page .chat-source-detail { display: grid; gap: 7px; padding: 10px 11px; border: 1px solid #f5a08a55; border-radius: 7px; background: #f5a08a0b; color: #c9cbc4; }
-.sgx-home.workspace-page .chat-source-detail-heading { display: flex; min-width: 0; align-items: baseline; gap: 8px; color: #f5b09d; font-size: 10px; }
-.sgx-home.workspace-page .chat-source-detail-heading strong { min-width: 0; overflow: hidden; color: #f2f2ec; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.sgx-home.workspace-page .chat-source-detail p { display: flex; min-width: 0; gap: 8px; margin: 0; color: #aeb1a9; font-size: 10px; line-height: 1.45; }
-.sgx-home.workspace-page .chat-source-detail p span { flex: 0 0 auto; color: #777a73; }
-.sgx-home.workspace-page .chat-source-excerpt-label { margin-top: 2px !important; color: #777a73 !important; text-transform: uppercase; letter-spacing: .08em; }
-.sgx-home.workspace-page .chat-source-excerpt { max-height: 180px; overflow-y: auto; margin: 0; padding: 8px 10px; border-left: 2px solid #f5a08a88; background: #00000018; color: #d9dad4; font-size: 11px; line-height: 1.55; white-space: pre-wrap; scrollbar-color: #5f625b transparent; scrollbar-width: thin; }
-.sgx-home.workspace-page .chat-source-excerpt::-webkit-scrollbar { width: 6px; }
-.sgx-home.workspace-page .chat-source-excerpt::-webkit-scrollbar-thumb { border-radius: 6px; background: #5f625b; }
+.sgx-home.workspace-page .chat-source-panel { grid-column: 3; grid-row: 1; }
+.sgx-home.workspace-page .chat-source-panel-header > div { min-width: 0; }
+.sgx-home.workspace-page .chat-source-panel-header h3 { overflow-wrap: anywhere; }
+.sgx-home.workspace-page .chat-source-panel-body { display: grid; min-height: 0; flex: 1 1 0; align-content: start; gap: 14px; overflow-y: auto; padding-right: 4px; scrollbar-color: #5f625b transparent; scrollbar-width: thin; }
+.sgx-home.workspace-page .chat-source-panel-body::-webkit-scrollbar { width: 6px; }
+.sgx-home.workspace-page .chat-source-panel-body::-webkit-scrollbar-track { background: transparent; }
+.sgx-home.workspace-page .chat-source-panel-body::-webkit-scrollbar-thumb { border-radius: 6px; background: #5f625b; }
+.sgx-home.workspace-page .chat-source-panel-body > p { display: flex; min-width: 0; gap: 8px; margin: 0; color: #c9cbc4; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+.sgx-home.workspace-page .chat-source-panel-body > p span { flex: 0 0 auto; color: #777a73; }
+.sgx-home.workspace-page .chat-source-panel-excerpt { display: grid; gap: 6px; min-width: 0; }
+.sgx-home.workspace-page .chat-source-panel-excerpt > span { color: #777a73; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.sgx-home.workspace-page .chat-source-panel-excerpt blockquote { max-height: none; margin: 0; padding: 10px 11px; border-left: 2px solid #f5a08a88; border-radius: 0 6px 6px 0; background: #0000001c; color: #d9dad4; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sgx-home.workspace-page .chat-user-message { display: grid; align-self: flex-end; justify-items: end; max-width: min(78%, 620px); gap: 7px; }
 .sgx-home.workspace-page .chat-user-bubble { padding: 11px 15px; border: 1px solid #ffffff10; border-radius: 17px 17px 5px 17px; background: #3b3c39; box-shadow: 0 7px 18px #00000018; }
 .sgx-home.workspace-page .chat-user-bubble p { margin: 0; color: #f2f2ec; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -209,7 +242,21 @@
 .sgx-home.workspace-page .chat-thinking-step { display: inline-flex; align-items: center; gap: 6px; color: #777a73; font-size: 10px; line-height: 1.35; }
 .sgx-home.workspace-page .chat-thinking-step-dot { width: 4px; height: 4px; flex: 0 0 4px; border-radius: 50%; background: #f5a08a; box-shadow: 0 0 0 3px #f5a08a18; }
 .sgx-home.workspace-page .chat-pending-loader { width: 13px; height: 13px; flex: 0 0 13px; border: 1.5px solid #ffffff25; border-top-color: #f5a08a; border-radius: 50%; animation: sgx-chat-spin .8s linear infinite; }
-.sgx-home.workspace-page .chat-error { margin: 7px 0 0; color: #f5a08a; font-size: 11px; text-align: center; }
+.sgx-home.workspace-page .chat-error,
+.sgx-home.workspace-page .project-action-message,
+.sgx-home.workspace-page .subscription-message {
+  width: fit-content;
+  max-width: min(100%, 620px);
+  margin: 9px 0 0;
+  padding: 8px 11px;
+  border: 1px solid #f5a08a42;
+  border-radius: 5px;
+  background: #f5a08a0d;
+  color: #f2b2a1;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.sgx-home.workspace-page .chat-error { margin-inline: auto; text-align: center; }
 .sgx-home.workspace-page .chat-message-meta { display: flex; align-items: center; gap: 9px; padding-right: 3px; color: #777a73; opacity: 0; pointer-events: none; transform: translateY(2px); transition: opacity .16s ease, transform .16s ease; }
 .sgx-home.workspace-page .chat-assistant-message .chat-message-meta { grid-column: 2; justify-content: flex-start; }
 .sgx-home.workspace-page .chat-user-message .chat-message-meta { justify-content: flex-end; }
@@ -223,8 +270,11 @@
 .sgx-home.workspace-page .chat-slide-generation-copy strong { overflow: hidden; color: #e8e8e2; font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .sgx-home.workspace-page .chat-slide-generation-copy span { color: #858980; font-size: 10px; }
 .sgx-home.workspace-page .chat-slide-generation-deleted { max-width: 180px; color: #858980; font-size: 10px; line-height: 1.35; text-align: right; }
-.sgx-home.workspace-page .chat-slide-generation-log > button { flex: 0 0 auto; padding: 7px 9px; border: 1px solid #f5a08a66; border-radius: 4px; background: transparent; color: #f5a08a; cursor: pointer; font: 600 10px "Avenir Next", "Segoe UI", system-ui, sans-serif; }
-.sgx-home.workspace-page .chat-slide-generation-log > button:hover { background: #f5a08a18; }
+.sgx-home.workspace-page .chat-slide-generation-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.sgx-home.workspace-page .chat-slide-generation-actions button { padding: 7px 9px; border: 1px solid #f5a08a66; border-radius: 4px; background: transparent; color: #f5a08a; cursor: pointer; font: 600 10px/1.15 "Avenir Next", "Segoe UI", system-ui, sans-serif; white-space: nowrap; }
+.sgx-home.workspace-page .chat-slide-generation-actions button:hover { background: #f5a08a18; }
+.sgx-home.workspace-page .chat-slide-generation-actions button.primary { background: #f5a08a; color: #242524; }
+.sgx-home.workspace-page .chat-slide-generation-actions button.primary:hover { background: #ffb09a; }
 .sgx-home.workspace-page .chat-slide-generation-card { display: grid; width: min(92%, 760px); min-width: 0; align-self: flex-start; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px 10px; margin-left: 28px; padding: 11px; border: 1px solid #f5a08a55; border-radius: 9px; background: #f5a08a0b; box-shadow: 0 9px 22px #00000012; }
 .sgx-home.workspace-page .chat-slide-generation-card-icon { display: grid; width: 27px; height: 27px; flex: 0 0 27px; place-items: center; border-radius: 50%; background: #f5a08a; color: #242524; font-size: 14px; font-weight: 700; }
 .sgx-home.workspace-page .chat-slide-generation-card-icon.error { background: #e48672; }
@@ -235,11 +285,15 @@
 .sgx-home.workspace-page .chat-slide-generation-card-copy small { overflow: hidden; color: #858980; font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .sgx-home.workspace-page .chat-slide-generation-card-progress { grid-column: 2 / -1; height: 3px; overflow: hidden; border-radius: 4px; background: #ffffff12; }
 .sgx-home.workspace-page .chat-slide-generation-card-progress span { display: block; height: 100%; border-radius: inherit; background: #f5a08a; transition: width .25s ease; }
+.sgx-home.workspace-page .chat-slide-generation-card-actions { display: flex; grid-column: 3; grid-row: 1; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .sgx-home.workspace-page .chat-slide-generation-card-action,
-.sgx-home.workspace-page .chat-slide-generation-card-project { grid-row: 1; padding: 7px 9px; border: 1px solid #f5a08a66; border-radius: 5px; background: transparent; color: #f5a08a; cursor: pointer; font: 600 10px/1.15 "Avenir Next", "Segoe UI", system-ui, sans-serif; white-space: nowrap; }
+.sgx-home.workspace-page .chat-slide-generation-card-project,
+.sgx-home.workspace-page .chat-slide-generation-card-edit { padding: 7px 9px; border: 1px solid #f5a08a66; border-radius: 5px; background: transparent; color: #f5a08a; cursor: pointer; font: 600 10px/1.15 "Avenir Next", "Segoe UI", system-ui, sans-serif; white-space: nowrap; }
 .sgx-home.workspace-page .chat-slide-generation-card-action:hover,
-.sgx-home.workspace-page .chat-slide-generation-card-project:hover { background: #f5a08a18; }
-.sgx-home.workspace-page .chat-slide-generation-card-project { grid-column: 3; }
+.sgx-home.workspace-page .chat-slide-generation-card-project:hover,
+.sgx-home.workspace-page .chat-slide-generation-card-edit:hover { background: #f5a08a18; }
+.sgx-home.workspace-page .chat-slide-generation-card-edit { background: #f5a08a; color: #242524; }
+.sgx-home.workspace-page .chat-slide-generation-card-edit:hover { background: #ffb09a; }
 .sgx-home.workspace-page .chat-slide-generation-card.error .chat-slide-generation-card-copy small { color: #e48672; }
 .sgx-global-slide-generation-indicator { position: fixed; right: 20px; bottom: 20px; z-index: 70; width: min(330px, calc(100vw - 32px)); }
 .sgx-global-slide-generation-indicator button { display: flex; width: 100%; min-width: 0; align-items: center; gap: 10px; padding: 10px 11px; border: 1px solid #f5a08a66; border-radius: 9px; background: #292a28f2; color: #e8e8e2; box-shadow: 0 14px 34px #00000055; cursor: pointer; text-align: left; }
@@ -293,7 +347,14 @@
 .sgx-home.workspace-page .project-card:focus-within .project-card-delete { opacity: 1; pointer-events: auto; transform: scale(1); }
 .sgx-home.workspace-page .project-card-delete:hover { border-color: #f5a08a99; background: #30312f; color: #f5a08a; }
 .sgx-home.workspace-page .project-card-delete:disabled { cursor: wait; opacity: .5; }
-.sgx-home.workspace-page .project-action-message { margin: -18px 0 20px; color: #f5a08a; font-size: 11px; }
+.sgx-home.workspace-page .project-action-message { margin: -18px 0 20px; }
+.sgx-home.workspace-page .project-empty-state { display: grid; min-height: 260px; place-items: center; align-content: center; gap: 11px; padding: 38px 24px; border: 1px dashed #ffffff24; border-radius: 6px; background: radial-gradient(circle at 50% 0%, #f5a08a0c, transparent 48%), #292a29; text-align: center; }
+.sgx-home.workspace-page .project-empty-mark { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #f5a08a88; border-radius: 50%; color: #f5a08a; font-size: 25px; font-weight: 300; line-height: 1; }
+.sgx-home.workspace-page .project-empty-state h3 { margin: 4px 0 0; color: #f2f2ed; font: 500 28px/1 "Slidegen Dancing", cursive; }
+.sgx-home.workspace-page .project-empty-state p { max-width: 390px; margin: 0; color: #92958e; font-size: 12px; line-height: 1.55; }
+.sgx-home.workspace-page .project-empty-action { display: inline-flex; align-items: center; gap: 10px; margin-top: 6px; padding: 10px 13px; border: 1px solid #f5a08a88; border-radius: 4px; background: #f5a08a; color: #202020; cursor: pointer; font: 600 11px "Avenir Next", "Segoe UI", system-ui, sans-serif; transition: background .16s ease, transform .16s ease; }
+.sgx-home.workspace-page .project-empty-action:hover { background: #ffc0ad; transform: translateY(-1px); }
+.sgx-home.workspace-page .project-empty-action span { font-size: 15px; line-height: 1; }
 
 .sgx-home.workspace-page .chat-slide-flow { display: grid; grid-column: 2; gap: 9px; max-width: min(100%, 760px); margin-top: 2px; }
 .sgx-home.workspace-page .chat-flow-options { display: flex; flex-wrap: wrap; gap: 7px; }
@@ -339,8 +400,7 @@
   .sgx-home.workspace-page .chat-slide-flow { max-width: 100%; }
   .sgx-home.workspace-page .chat-slide-generation-card { width: 100%; margin-left: 0; grid-template-columns: auto minmax(0, 1fr); }
   .sgx-home.workspace-page .chat-slide-generation-card-progress { grid-column: 2; }
-  .sgx-home.workspace-page .chat-slide-generation-card-action,
-  .sgx-home.workspace-page .chat-slide-generation-card-project { grid-column: 2; grid-row: auto; justify-self: start; }
+  .sgx-home.workspace-page .chat-slide-generation-card-actions { grid-column: 2; grid-row: auto; justify-content: flex-start; }
   .sgx-home.workspace-page .chat-flow-options { flex-direction: column; align-items: stretch; }
   .sgx-home.workspace-page .chat-flow-other { width: 100%; }
 }

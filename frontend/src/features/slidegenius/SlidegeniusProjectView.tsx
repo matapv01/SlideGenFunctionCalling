@@ -5,6 +5,7 @@ import { resolveSlideBackground } from "@/lib/slideBackground";
 import { ProjectSlidePreview } from "@/components/ProjectSlidePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 import "./slidegenius-project-view.css";
+import { truncateProjectName } from "./projectName";
 
 interface PreviewSlide {
   id: string | number;
@@ -99,7 +100,7 @@ export default function SlidegeniusProjectView() {
       </header>
 
       <section className="sgv-shell">
-        <div className="sgv-heading"><div><p>{t.project} / {String(projectId || "").padStart(2, "0")}</p><h1>{projectName || t.loading}</h1><span>{slides.length} {t.slides}</span></div><div className="sgv-heading-actions"><span className="sgv-status">{projectStatus || t.draft}</span>{projectId && <Link className="sgv-edit-button" to={`/editor?project=${encodeURIComponent(projectId)}`}>{t.edit} ↗</Link>}</div></div>
+        <div className="sgv-heading"><div><p>{t.project} / {String(projectId || "").padStart(2, "0")}</p><h1 title={projectName}>{projectName ? truncateProjectName(projectName) : t.loading}</h1><span>{slides.length} {t.slides}</span></div><div className="sgv-heading-actions"><span className="sgv-status">{projectStatus || t.draft}</span>{projectId && <Link className="sgv-edit-button" to={`/editor?project=${encodeURIComponent(projectId)}`}>{t.edit} ↗</Link>}</div></div>
 
         {loading ? <div className="sgv-state">{t.loading}</div> : loadError ? <div className="sgv-state"><p>{t.error}</p><button type="button" onClick={() => void loadProject()}>{t.retry}</button></div> : slides.length === 0 ? <div className="sgv-state"><p>{t.empty}</p></div> : <div className="sgv-grid">{slides.map((slide, index) => <article className="sgv-card" key={slide.id || index} onClick={() => setActiveSlide(index)} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setActiveSlide(index); } }}><div className="sgv-card-preview">{slideContent(slide) ? <ProjectSlidePreview slideId={`project-${projectId}-slide-${slide.id || index}`} content={slideContent(slide)} backgroundColor={slide.backgroundColor} backgroundImage={slide.backgroundImage} className="absolute inset-0" /> : <span>{t.empty}</span>}</div><div className="sgv-card-meta"><span>0{index + 1}</span><strong>{slide.title || `${t.open} ${index + 1}`}</strong><button type="button" onClick={(event) => { event.stopPropagation(); setActiveSlide(index); }}>{t.open} ↗</button></div></article>)}</div>}
       </section>
@@ -109,7 +110,7 @@ export default function SlidegeniusProjectView() {
         <div className="sgv-viewer-canvas">{slideContent(slides[activeSlide]) ? <ProjectSlidePreview slideId={`project-viewer-${projectId}-${slides[activeSlide].id || activeSlide}`} content={slideContent(slides[activeSlide])} backgroundColor={slides[activeSlide].backgroundColor} backgroundImage={slides[activeSlide].backgroundImage} className="absolute inset-0" /> : <span>{t.empty}</span>}</div>
         <button className="sgv-viewer-arrow left" type="button" onClick={() => setActiveSlide((index) => Math.max(0, (index ?? 0) - 1))} disabled={activeSlide === 0} aria-label={t.previous}>←</button>
         <button className="sgv-viewer-arrow right" type="button" onClick={() => setActiveSlide((index) => Math.min(slides.length - 1, (index ?? 0) + 1))} disabled={activeSlide === slides.length - 1} aria-label={t.next}>→</button>
-        <div className="sgv-viewer-bottom"><span>{projectName}</span><small>← → · Space · Esc</small></div>
+        <div className="sgv-viewer-bottom"><span title={projectName}>{truncateProjectName(projectName)}</span><small>← → · Space · Esc</small></div>
       </div>}
     </main>
   );

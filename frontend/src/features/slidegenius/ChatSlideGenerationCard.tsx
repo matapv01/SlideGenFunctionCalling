@@ -1,4 +1,5 @@
 import type { ChatSlideStreamSlide } from "./ChatSlideStreamPanel";
+import { truncateProjectName } from "./projectName";
 
 interface ChatSlideGenerationCardProps {
   phase: "running" | "completed" | "error";
@@ -14,9 +15,11 @@ interface ChatSlideGenerationCardProps {
   completedLabel: string;
   openStreamLabel: string;
   openProjectLabel: string;
+  openEditorLabel: string;
   slideLabel: string;
   onOpenStream: () => void;
   onOpenProject: (projectId: number) => void;
+  onOpenEditor: (projectId: number) => void;
 }
 
 export function ChatSlideGenerationCard({
@@ -33,9 +36,11 @@ export function ChatSlideGenerationCard({
   completedLabel,
   openStreamLabel,
   openProjectLabel,
+  openEditorLabel,
   slideLabel,
   onOpenStream,
   onOpenProject,
+  onOpenEditor,
 }: ChatSlideGenerationCardProps) {
   const isRunning = phase === "running";
   const isError = phase === "error";
@@ -51,14 +56,19 @@ export function ChatSlideGenerationCard({
       </span>
       <div className="chat-slide-generation-card-copy">
         <span className="chat-slide-generation-card-eyebrow">SLIDE DECK</span>
-        <strong>{projectName || title}</strong>
+        <strong title={projectName || title}>{truncateProjectName(projectName || title)}</strong>
         <small>{isError ? error : isRunning ? `${generatingLabel} · ${progressLabel}` : `${completedLabel} · ${progressLabel}`}</small>
       </div>
       {isRunning && <div className="chat-slide-generation-card-progress" aria-hidden="true"><span style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} /></div>}
-      <button className="chat-slide-generation-card-action" type="button" onClick={onOpenStream}>{openStreamLabel} ↗</button>
-      {!isRunning && projectId !== null && (
-        <button className="chat-slide-generation-card-project" type="button" onClick={() => onOpenProject(projectId)}>{openProjectLabel} ↗</button>
-      )}
+      <div className="chat-slide-generation-card-actions">
+        <button className="chat-slide-generation-card-action" type="button" onClick={onOpenStream}>{openStreamLabel} ↗</button>
+        {!isRunning && projectId !== null && (
+          <>
+            <button className="chat-slide-generation-card-project" type="button" onClick={() => onOpenProject(projectId)}>{openProjectLabel} ↗</button>
+            <button className="chat-slide-generation-card-edit" type="button" onClick={() => onOpenEditor(projectId)}>{openEditorLabel} ↗</button>
+          </>
+        )}
+      </div>
     </article>
   );
 }

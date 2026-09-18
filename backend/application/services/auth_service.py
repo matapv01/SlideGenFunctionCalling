@@ -93,3 +93,12 @@ class AuthService:
             
         new_hashed = self.get_password_hash(new_password)
         self.user_repo.update_password(user_id, new_hashed)
+
+    def reset_password(self, user_id: int, new_password: str) -> None:
+        """Set a new password after an administrator has authorized the action."""
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu mới phải có ít nhất 6 ký tự")
+        if self.user_repo.get_by_id(user_id) is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+
+        self.user_repo.update_password(user_id, self.get_password_hash(new_password))

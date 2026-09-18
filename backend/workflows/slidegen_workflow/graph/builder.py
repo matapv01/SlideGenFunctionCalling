@@ -8,6 +8,7 @@ from backend.workflows.slidegen_workflow.nodes.deck_style_planner import create_
 from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_slide
 from backend.workflows.slidegen_workflow.nodes.next_slide_provider import provide_next_slide
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
+from backend.workflows.slidegen_workflow.nodes.image_verifier import verify_document_images
 from backend.workflows.slidegen_workflow.nodes.slide_planner import planning_slide
 from backend.workflows.slidegen_workflow.nodes.text_overflow_resolver import resolve_text_overflow
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
@@ -49,6 +50,7 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     """Build the XML generation graph. ``router_flags`` is kept for API compatibility."""
     workflow = StateGraph(State)
     workflow.add_node("create_deck_style", create_deck_style)
+    workflow.add_node("verify_document_images", verify_document_images)
     workflow.add_node("planning_slide", planning_slide)
     workflow.add_node("provide_next_slide", provide_next_slide)
     workflow.add_node("generate_slide", generate_slide)
@@ -58,7 +60,8 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     workflow.add_node("finalizer", finalize_slide)
 
     workflow.set_entry_point("create_deck_style")
-    workflow.add_edge("create_deck_style", "planning_slide")
+    workflow.add_edge("create_deck_style", "verify_document_images")
+    workflow.add_edge("verify_document_images", "planning_slide")
     workflow.add_edge("planning_slide", "provide_next_slide")
     workflow.add_conditional_edges(
         "provide_next_slide",

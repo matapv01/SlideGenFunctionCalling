@@ -1,29 +1,38 @@
-import { ChangeEvent, FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   ChatMessage,
   ChatDocument,
+  ChatMessageJob,
   ChatSession,
   archiveChatSession,
   createChatSession,
   deleteChatDocument,
   loadChatbotConfig,
+  loadActiveChatMessageJob,
   loadChatMessages,
   loadChatDocuments,
   loadChatSessions,
   loadWorkspaceProject,
-  sendChatMessage,
+  streamChatMessage,
+  streamChatMessageJob,
   uploadChatDocument,
 } from "./data/workspaceApi";
 import { ChatSlideStreamPanel } from "./ChatSlideStreamPanel";
 import { ChatSlidePlanPanel } from "./ChatSlidePlanPanel";
 import { ChatSlideGenerationCard } from "./ChatSlideGenerationCard";
+import { truncateProjectName } from "./projectName";
 import { useSlideGeneration } from "./SlideGenerationContext";
 import ChatMarkdown from "./ChatMarkdown";
+import { api, type ChatTurnResponse, type SubscriptionInfoResponse } from "@/lib/api";
+import SlidegenConfirmDialog from "@/components/SlidegenConfirmDialog";
 
 const defaultModels = ["genius-1", "genius-2", "genius-3"];
 const defaultEfforts = ["low", "medium", "high"] as const;
+const sourceSentenceEnd = /[.!?。！？](?:["'”’»)\]}]*)(?=\s|$)/g;
 
 interface SlideFlowOption {
   label: string;
@@ -52,6 +61,9 @@ interface SlideFlow {
 interface SendMessageOptions {
   streamSlides?: boolean;
   slideCount?: number;
+  documentIds?: string[];
+  messageAttachments?: MessageAttachment[];
+  preserveUploadedDocuments?: boolean;
 }
 
 interface SlideGenerationLog {
@@ -74,6 +86,26 @@ interface ChatSource {
   excerpt: string;
   role: string;
   similarity: number | null;
+}
+
+function sentenceBoundedSourceExcerpt(value: string, limit = 1600) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (text.endsWith("…")) return text;
+
+  const likelyTruncated = text.length > limit || (text.length >= limit - 8 && !/[.!?。！？]$/.test(text));
+  if (!likelyTruncated) return text;
+
+  const prefix = text.slice(0, limit);
+  const matches = Array.from(prefix.matchAll(sourceSentenceEnd));
+  const lastMatch = matches.at(-1);
+  if (lastMatch?.index !== undefined) {
+    return prefix.slice(0, lastMatch.index + lastMatch[0].length).trimEnd() + " …";
+  }
+
+  const wordBoundary = prefix.lastIndexOf(" ");
+  const cutoff = wordBoundary >= limit / 2 ? wordBoundary : limit;
+  return prefix.slice(0, cutoff).trimEnd() + " …";
 }
 
 function getMessageSources(message: ChatMessage): ChatSource[] {
@@ -101,13 +133,14 @@ function getMessageSources(message: ChatMessage): ChatSource[] {
         ? raw.section_path.trim()
         : "";
     const title = typeof raw.title === "string" ? raw.title.trim() : "";
-    const excerpt = typeof raw.excerpt === "string"
+    const excerptValue = typeof raw.excerpt === "string"
       ? raw.excerpt.trim()
       : typeof raw.snippet === "string"
         ? raw.snippet.trim()
         : typeof raw.content === "string"
           ? raw.content.trim()
           : "";
+    const excerpt = sentenceBoundedSourceExcerpt(excerptValue);
     const similarityValue = Number(raw.similarity);
     const similarity = Number.isFinite(similarityValue) ? similarityValue : null;
     const sourceId = documentId || chunkId || `source-${index + 1}`;
@@ -173,6 +206,29 @@ function isMissingProjectError(value: unknown) {
   return status === 404 || status === 403;
 }
 
+function storedAuthUserId() {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    const id = Number((JSON.parse(raw) as { id?: unknown }).id);
+    return Number.isInteger(id) && id > 0 ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+function chatTurnFromStreamEvent(data: Record<string, unknown>): ChatTurnResponse {
+  const result = data.result;
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    throw new Error("Phản hồi streaming của chatbot không hợp lệ.");
+  }
+  const turn = result as ChatTurnResponse;
+  if (!turn.user_message || !turn.assistant_message || !turn.session) {
+    throw new Error("Phản hồi streaming của chatbot không đầy đủ.");
+  }
+  return turn;
+}
+
 function getSlideFlow(message: ChatMessage): SlideFlow | null {
   const candidate = message.metadata?.slide_flow;
   if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
@@ -223,55 +279,6 @@ function getSlideFlow(message: ChatMessage): SlideFlow | null {
   };
 }
 
-function normalizeDocumentQuestion(value: string) {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/đ/g, "d")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function isDocumentSourceFlow(flow: SlideFlow) {
-  const question = normalizeDocumentQuestion(flow.question || "");
-  const sourcePhrases = [
-    "tai lieu nao",
-    "nguon nao",
-    "chon nguon",
-    "tai len",
-    "dan noi dung",
-    "document",
-    "source",
-    "material",
-    "upload",
-    "paste",
-  ];
-  if (sourcePhrases.some((phrase) => question.includes(phrase))) return true;
-  const options = normalizeDocumentQuestion(flow.options.map((option) => `${option.label} ${option.value}`).join(" "));
-  return sourcePhrases.filter((phrase) => options.includes(phrase)).length >= 2;
-}
-
-function getVisibleDocumentFlow(flow: SlideFlow, language: "vi" | "en"): SlideFlow {
-  if (!isDocumentSourceFlow(flow)) return flow;
-  const confirmationOptions: SlideFlowOption[] = language === "vi"
-    ? [
-        { label: "Bắt đầu tạo slide", value: "Bắt đầu tạo slide", is_other: false, action: "answer" },
-        { label: "Tôi muốn bổ sung", value: "Tôi muốn bổ sung thêm yêu cầu", is_other: false, action: "answer" },
-      ]
-    : [
-        { label: "Start creating slides", value: "Start creating slides", is_other: false, action: "answer" },
-        { label: "I want to add more", value: "I want to add more requirements", is_other: false, action: "answer" },
-      ];
-  return {
-    ...flow,
-    state: "awaiting_confirmation",
-    question: null,
-    options: confirmationOptions,
-    questionKind: null,
-  };
-}
-
 function extractSlideCount(value: string, allowBareNumber = false): number | null {
   const text = String(value || "");
   if (/(?<!\d)\d{1,3}\s*-\s*\d{1,3}\s*(?:slides?|trang|pages?)\b/i.test(text)) {
@@ -308,7 +315,55 @@ function messageTime(value: string, language: "vi" | "en") {
   }).format(date);
 }
 
-export default function SlidegeniusChat() {
+function formatUsageCountdown(value: string | undefined, now: number, language: "vi" | "en") {
+  if (!value) return "—";
+  const remaining = Math.max(0, new Date(value).getTime() - now);
+  if (!Number.isFinite(remaining) || remaining <= 0) return language === "vi" ? "đang cập nhật" : "refreshing";
+  const totalMinutes = Math.ceil(remaining / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (language === "vi") return `${hours}g ${String(minutes).padStart(2, "0")}p`;
+  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+}
+
+function formatUsageAmount(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(0, Math.round(bytes / 1024))} KB`;
+}
+
+function usageTone(percent: number | null) {
+  if (percent === null) return "unlimited";
+  if (percent >= 90) return "critical";
+  if (percent >= 70) return "warning";
+  return "healthy";
+}
+
+function UsageMeter({ label, percent, detail }: { label: string; percent: number | null; detail: string }) {
+  const progress = percent === null ? 100 : Math.max(0, Math.min(100, percent));
+  const circleStyle = { "--usage-progress": `${progress}%` } as CSSProperties;
+
+  return (
+    <div
+      className={`composer-usage-meter is-${usageTone(percent)}`}
+      data-tooltip={detail}
+      tabIndex={0}
+      role="img"
+      aria-label={detail}
+    >
+      <span className="composer-usage-circle" style={circleStyle}>
+        <span>{percent === null ? "∞" : percent}</span>
+      </span>
+      <span className="composer-usage-label">{label}</span>
+    </div>
+  );
+}
+
+export default function SlidegeniusChat({ isActive = true }: { isActive?: boolean }) {
+  const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const {
@@ -325,8 +380,11 @@ export default function SlidegeniusChat() {
   const [models, setModels] = useState(defaultModels);
   const [efforts, setEfforts] = useState<readonly string[]>(defaultEfforts);
   const [maxSlideCount, setMaxSlideCount] = useState(50);
+  const [maxUploadBytes, setMaxUploadBytes] = useState(0);
+  const [maxTotalUploadBytes, setMaxTotalUploadBytes] = useState(0);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeChatJob, setActiveChatJob] = useState<ChatMessageJob | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -343,6 +401,7 @@ export default function SlidegeniusChat() {
   const [uploadedDocuments, setUploadedDocuments] = useState<ChatDocument[]>([]);
   const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [pendingDeleteSession, setPendingDeleteSession] = useState<ChatSession | null>(null);
   const [deletedProjectIds, setDeletedProjectIds] = useState<Set<number>>(() => new Set());
   const [clarificationOtherOpen, setClarificationOtherOpen] = useState(false);
   const [clarificationOther, setClarificationOther] = useState("");
@@ -350,13 +409,109 @@ export default function SlidegeniusChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAbortControllerRef = useRef<AbortController | null>(null);
   const uploadRequestIdRef = useRef(0);
+  // Invalidate responses from a previous conversation after every switch.
+  // Otherwise a slower document request can populate the new conversation.
+  const sessionViewRequestRef = useRef(0);
+  const chatMessageJobRef = useRef<string | null>(null);
   const clarificationInputRef = useRef<HTMLInputElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const lastOpenRequestRef = useRef(0);
+  const initialChatMountRef = useRef(true);
   const [showScrollToLatest, setShowScrollToLatest] = useState(false);
+  const [subscriptionUsage, setSubscriptionUsage] = useState<SubscriptionInfoResponse | null>(null);
+  const [usageNow, setUsageNow] = useState(() => Date.now());
+
+  const chatStorageUserId = user?.id ?? storedAuthUserId();
+  const activeChatSessionStorageKey = chatStorageUserId
+    ? `slidegen.active-chat-session.${chatStorageUserId}`
+    : null;
+  const chatResumeStorageKey = chatStorageUserId
+    ? `slidegen.resume-chat-session.${chatStorageUserId}`
+    : null;
+  const chatStorageKeysRef = useRef({
+    active: activeChatSessionStorageKey,
+    resume: chatResumeStorageKey,
+  });
+  chatStorageKeysRef.current = {
+    active: activeChatSessionStorageKey,
+    resume: chatResumeStorageKey,
+  };
+
+  // Keep the latest lifecycle state available to the unmount cleanup. The
+  // workspace routes are separate React trees, so changing from Chat to
+  // Projects/Manual unmounts this component instead of toggling isActive.
+  const chatLifecycleRef = useRef({
+    sessionId: null as string | null,
+    messageCount: 0,
+    loading: true,
+    sending: false,
+    uploading: false,
+    activeJob: false,
+    generating: false,
+  });
+  const handledDraftSessionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    chatLifecycleRef.current = {
+      sessionId: activeSessionId,
+      messageCount: messages.length,
+      loading,
+      sending,
+      uploading,
+      activeJob: Boolean(activeChatJob),
+      generating: isGenerating && generation.sessionId === activeSessionId,
+    };
+  });
+
+  const preserveRunningChatOrDiscardBlankDraft = useCallback(() => {
+    const current = chatLifecycleRef.current;
+    const { active: activeStorageKey, resume: resumeStorageKey } = chatStorageKeysRef.current;
+    if (!current.sessionId) return;
+
+    const isRunning = current.sending || current.activeJob || current.generating;
+    if (isRunning) {
+      if (resumeStorageKey) {
+        sessionStorage.setItem(resumeStorageKey, current.sessionId);
+      }
+      return;
+    }
+
+    if (
+      handledDraftSessionRef.current === current.sessionId
+      || current.loading
+      || current.messageCount > 0
+      || current.uploading
+    ) return;
+
+    handledDraftSessionRef.current = current.sessionId;
+    if (resumeStorageKey) sessionStorage.removeItem(resumeStorageKey);
+    if (
+      activeStorageKey
+      && localStorage.getItem(activeStorageKey) === current.sessionId
+    ) {
+      localStorage.removeItem(activeStorageKey);
+    }
+    // Archiving is the existing soft-delete boundary for chat sessions. The
+    // repository also excludes message-less sessions, so a blank draft is
+    // neither shown in history nor restored by a later Chat visit.
+    void archiveChatSession(current.sessionId).catch(() => undefined);
+  }, []);
+
+  useEffect(() => () => {
+    preserveRunningChatOrDiscardBlankDraft();
+  }, [preserveRunningChatOrDiscardBlankDraft]);
 
   const isActiveGeneration = generation.sessionId !== null && generation.sessionId === activeSessionId;
   const showSlideStream = isActiveGeneration && generation.panelOpen;
+
+  useEffect(() => {
+    setSelectedSourceKey(null);
+  }, [activeSessionId]);
+
+  useEffect(() => {
+    if (!activeChatSessionStorageKey || !activeSessionId) return;
+    localStorage.setItem(activeChatSessionStorageKey, activeSessionId);
+  }, [activeChatSessionStorageKey, activeSessionId]);
 
   const text = language === "vi"
     ? {
@@ -390,6 +545,7 @@ export default function SlidegeniusChat() {
         deleteConversationConfirm: "Bạn có chắc muốn xóa cuộc trò chuyện này không?",
         slideStreamClose: "Ẩn luồng tạo slide",
         slideStreamOpenProject: "Mở project",
+        slideStreamEditProject: "Chỉnh sửa slide",
         slideStreamSlide: "SLIDE",
         slideStreamCompleted: "Đã hoàn thành",
         slideStreamWaiting: "Đang chờ slide đầu tiên...",
@@ -418,10 +574,16 @@ export default function SlidegeniusChat() {
         modelLabel: "Model",
         effortLabel: "Effort",
         sources: "Nguồn tham khảo",
+        sourceClose: "Đóng nguồn",
         sourceDocument: "Tài liệu",
         sourceSection: "Mục",
         sourceExcerpt: "Đoạn trích",
         sourceNoExcerpt: "Nguồn này chưa có đoạn trích hiển thị.",
+        chatUsage: "Chat credit",
+        documentUsage: "Tài liệu DOCX",
+        chatUsageShort: "CHAT",
+        documentUsageShort: "DOCX",
+        usageReset: "Reset sau",
       }
     : {
         helper: "Ask Slidegenius to shape an idea, plan a project, or make something impossible feel obvious.",
@@ -454,6 +616,7 @@ export default function SlidegeniusChat() {
         deleteConversationConfirm: "Are you sure you want to delete this conversation?",
         slideStreamClose: "Hide slide stream",
         slideStreamOpenProject: "Open project",
+        slideStreamEditProject: "Edit slides",
         slideStreamSlide: "SLIDE",
         slideStreamCompleted: "Completed",
         slideStreamWaiting: "Waiting for the first slide...",
@@ -482,10 +645,16 @@ export default function SlidegeniusChat() {
         modelLabel: "Model",
         effortLabel: "Effort",
         sources: "Sources",
+        sourceClose: "Close source",
         sourceDocument: "Document",
         sourceSection: "Section",
         sourceExcerpt: "Excerpt",
         sourceNoExcerpt: "This source has no excerpt available.",
+        chatUsage: "Chat credits",
+        documentUsage: "DOCX files",
+        chatUsageShort: "CHAT",
+        documentUsageShort: "DOCX",
+        usageReset: "Resets in",
       };
 
   const hasUploadedDocuments = uploadedDocuments.length > 0;
@@ -493,10 +662,91 @@ export default function SlidegeniusChat() {
     .map((document) => document.title || document.original_filename)
     .filter(Boolean);
   const sessionDocumentLabel = sessionDocumentNames.join(", ");
-  const sessionDocumentSummary = sessionDocumentNames.length > 2
-    ? sessionDocumentNames.slice(0, 2).join(", ") + " +" + (sessionDocumentNames.length - 2)
-    : sessionDocumentLabel;
-  const hasSessionDocuments = sessionDocuments.length > 0;
+  const usageLimits = subscriptionUsage?.usage_limits || {
+    chat_messages: 0,
+    docx_upload: 0,
+    max_docx_slides: 0,
+  };
+  const chatUsage = subscriptionUsage?.current_usage.chat_messages
+    ?? subscriptionUsage?.current_usage.idea_generation
+    ?? 0;
+  const chatMessageCount = subscriptionUsage?.current_usage.chat_message_count ?? 0;
+  const documentUsage = subscriptionUsage?.current_usage.docx_upload ?? 0;
+  const chatUsagePercent = usageLimits.chat_messages === -1
+    ? null
+    : Math.min(100, Math.round((chatUsage / Math.max(1, usageLimits.chat_messages)) * 100));
+  const chatUsageDetail = !subscriptionUsage ? "—" : usageLimits.chat_messages === -1
+    ? `${formatUsageAmount(chatUsage)} / ∞ · ${chatMessageCount} ${language === "vi" ? "tin nhắn" : "messages"}`
+    : `${formatUsageAmount(chatUsage)} / ${usageLimits.chat_messages} · ${chatMessageCount} ${language === "vi" ? "tin nhắn" : "messages"}`;
+  const documentUsagePercent = usageLimits.docx_upload === -1
+    ? null
+    : Math.min(100, Math.round((documentUsage / Math.max(1, usageLimits.docx_upload)) * 100));
+  const documentUsageDetail = !subscriptionUsage ? "—" : usageLimits.docx_upload === -1
+    ? `${documentUsage} / ∞`
+    : `${documentUsage} / ${usageLimits.docx_upload}`;
+  const usageResetText = `${text.usageReset} ${formatUsageCountdown(subscriptionUsage?.usage_reset_at, usageNow, language)}`;
+  const chatUsageTooltip = `${text.chatUsage}: ${chatUsageDetail} · ${usageResetText}`;
+  const documentUsageTooltip = `${text.documentUsage}: ${documentUsageDetail} · ${usageResetText}`;
+
+  const loadSubscriptionUsage = useCallback(async () => {
+    try {
+      setSubscriptionUsage(await api.getSubscriptionInfo());
+    } catch {
+      // Usage is supplemental UI; the backend remains the source of truth.
+    }
+  }, []);
+
+  const applyChatTurnResult = (optimisticId: number, result: ChatTurnResponse) => {
+    const assistantMessage = getMessageSources(result.assistant_message).length || !result.citations.length
+      ? result.assistant_message
+      : {
+          ...result.assistant_message,
+          metadata: {
+            ...(result.assistant_message.metadata || {}),
+            retrieval: { enabled: true, citations: result.citations },
+          },
+        };
+    setMessages((current) => [
+      ...current.filter((item) => (
+        item.id !== optimisticId
+        && item.id !== result.user_message.id
+        && item.id !== result.assistant_message.id
+      )),
+      result.user_message,
+      assistantMessage,
+    ]);
+    setSessions((current) => {
+      const exists = current.some((session) => session.id === result.session.id);
+      if (!exists) return [result.session, ...current];
+      return current.map((session) => (
+        session.id === result.session.id ? result.session : session
+      ));
+    });
+  };
+
+  const handleChatStreamEvent = (optimisticId: number, event: { type: string; data: Record<string, unknown> }) => {
+    if (event.type === "complete") {
+      applyChatTurnResult(optimisticId, chatTurnFromStreamEvent(event.data));
+      setActiveChatJob(null);
+      void loadSubscriptionUsage();
+      return;
+    }
+    if (event.type === "error_event") {
+      const messageValue = event.data.message;
+      throw new Error(typeof messageValue === "string" && messageValue.trim()
+        ? messageValue
+        : text.unavailable);
+    }
+  };
+
+  useEffect(() => {
+    void loadSubscriptionUsage();
+    const timer = window.setInterval(() => {
+      setUsageNow(Date.now());
+      void loadSubscriptionUsage();
+    }, 60_000);
+    return () => window.clearInterval(timer);
+  }, [loadSubscriptionUsage]);
 
   useEffect(() => {
     if (!sending || thinkingMode !== "document") return;
@@ -507,8 +757,21 @@ export default function SlidegeniusChat() {
   }, [sending, thinkingMode]);
 
   useEffect(() => {
+    if (!isActive) {
+      preserveRunningChatOrDiscardBlankDraft();
+      initialChatMountRef.current = false;
+      return undefined;
+    }
+
+    const restoreOnReload = initialChatMountRef.current && (() => {
+      const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+      return navigation?.type === "reload";
+    })();
+    initialChatMountRef.current = false;
+
     let active = true;
     const initialize = async () => {
+      const viewRequestId = ++sessionViewRequestRef.current;
       setLoading(true);
       setError("");
       try {
@@ -516,24 +779,65 @@ export default function SlidegeniusChat() {
           loadChatbotConfig(),
           loadChatSessions(),
         ]);
-        if (!active) return;
+        // This endpoint is deliberately best-effort so an older API can
+        // still load the conversation list while the deployment rolls out.
+        let reconnectableJob: ChatMessageJob | null = null;
+        try {
+          reconnectableJob = await loadActiveChatMessageJob();
+        } catch {
+          reconnectableJob = null;
+        }
+        if (!active || viewRequestId !== sessionViewRequestRef.current) return;
         setModels(config.models.map((item) => item.id));
         setEfforts(config.efforts.map((item) => item.id));
         setMaxSlideCount(Number.isFinite(config.max_slide_count) ? config.max_slide_count : 50);
+        setMaxUploadBytes(Number.isFinite(config.max_upload_bytes) ? config.max_upload_bytes : 0);
+        setMaxTotalUploadBytes(Number.isFinite(config.max_total_upload_bytes) ? config.max_total_upload_bytes : 0);
         setModel(config.default_model);
         setEffort(config.default_effort);
 
         const generationSession = generation.sessionId
           ? existingSessions.find((session) => session.id === generation.sessionId)
           : undefined;
-        const nextSession = generationSession || existingSessions[0] || await createChatSession();
-        if (!active) return;
-        setSessions(existingSessions.length ? existingSessions : [nextSession]);
+        const reconnectSession = reconnectableJob
+          ? existingSessions.find((session) => session.id === reconnectableJob?.session_id)
+          : undefined;
+        let storedSessionId: string | null = null;
+        if (activeChatSessionStorageKey) {
+          storedSessionId = localStorage.getItem(activeChatSessionStorageKey);
+        }
+        const resumeSessionId = chatResumeStorageKey
+          ? sessionStorage.getItem(chatResumeStorageKey)
+          : null;
+        const resumeSession = resumeSessionId
+          ? existingSessions.find((session) => session.id === resumeSessionId)
+          : undefined;
+        const storedSession = restoreOnReload && storedSessionId
+          ? existingSessions.find((session) => session.id === storedSessionId)
+          : undefined;
+        const nextSession = generationSession
+          || reconnectSession
+          || resumeSession
+          || storedSession
+          || await createChatSession();
+        if (!active || viewRequestId !== sessionViewRequestRef.current) return;
+        setSessions(
+          existingSessions.some((session) => session.id === nextSession.id)
+            ? existingSessions
+            : [nextSession, ...existingSessions],
+        );
         setActiveSessionId(nextSession.id);
+        setActiveChatJob(
+          reconnectableJob?.session_id === nextSession.id ? reconnectableJob : null,
+        );
+        if (resumeSessionId && chatResumeStorageKey) {
+          sessionStorage.removeItem(chatResumeStorageKey);
+        }
         const [sessionMessages, sessionDocuments] = await Promise.all([
           loadChatMessages(nextSession.id),
           loadChatDocuments(nextSession.id),
         ]);
+        if (!active || viewRequestId !== sessionViewRequestRef.current) return;
         const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
         const sentDocumentIds = getSentDocumentIds(sessionMessages);
         setMessages(sessionMessages);
@@ -541,26 +845,103 @@ export default function SlidegeniusChat() {
         setSessionDocuments(attachableDocuments);
         setUploadedDocuments(attachableDocuments.filter((item) => !sentDocumentIds.has(item.id)));
       } catch {
-        if (active) setError(text.unavailable);
+        if (active && viewRequestId === sessionViewRequestRef.current) setError(text.unavailable);
       } finally {
-        if (active) setLoading(false);
+        if (active && viewRequestId === sessionViewRequestRef.current) setLoading(false);
       }
     };
     void initialize();
     return () => { active = false; };
-  }, []);
+  }, [isActive, preserveRunningChatOrDiscardBlankDraft]);
+
+  useEffect(() => {
+    if (
+      !activeChatJob
+      || loading
+      || !activeSessionId
+      || activeChatJob.session_id !== activeSessionId
+      || sending
+    ) return;
+
+    const job = activeChatJob;
+    const optimisticId = -Date.now();
+    const pendingDocuments = sessionDocuments.filter((document) => (
+      job.document_ids.includes(document.id)
+    ));
+    const alreadyVisible = messages.some((item) => (
+      item.role === "user"
+      && item.content === job.query
+      && item.metadata?.optimistic === true
+    ));
+
+    setActiveChatJob(null);
+    if (!alreadyVisible) {
+      setMessages((current) => [
+        ...current,
+        {
+          id: optimisticId,
+          session_id: job.session_id,
+          role: "user",
+          content: job.query,
+          model: job.model,
+          effort: job.effort,
+          metadata: {
+            optimistic: true,
+            ...(job.attachments.length ? { attachments: job.attachments } : {}),
+          },
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    }
+    setUploadedDocuments([]);
+    setSending(true);
+    setThinkingMode(job.document_ids.length || sessionDocuments.length ? "document" : "conversation");
+    setDocumentThinkingStep(0);
+    chatMessageJobRef.current = job.id;
+
+    void streamChatMessageJob(
+      job.id,
+      (event) => handleChatStreamEvent(optimisticId, event),
+    )
+      .catch((requestError) => {
+        setMessages((current) => current.filter((item) => item.id !== optimisticId));
+        setMessage(job.query);
+        setUploadedDocuments(pendingDocuments);
+        setError(requestError instanceof Error ? requestError.message : text.unavailable);
+      })
+      .finally(() => {
+        if (chatMessageJobRef.current === job.id) chatMessageJobRef.current = null;
+        setSending(false);
+        setThinkingMode(null);
+        setDocumentThinkingStep(0);
+      });
+  }, [activeChatJob, activeSessionId, loading, sending]);
 
   const loadSessionData = async (sessionId: string) => {
+    const viewRequestId = ++sessionViewRequestRef.current;
     const [sessionMessages, sessionDocuments] = await Promise.all([
       loadChatMessages(sessionId),
       loadChatDocuments(sessionId),
     ]);
+    if (viewRequestId !== sessionViewRequestRef.current) return;
     const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
     const sentDocumentIds = getSentDocumentIds(sessionMessages);
     setMessages(sessionMessages);
     setUploadingDocument(null);
     setSessionDocuments(attachableDocuments);
     setUploadedDocuments(attachableDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+  };
+
+  const invalidatePendingUpload = () => {
+    uploadRequestIdRef.current += 1;
+    uploadAbortControllerRef.current?.abort();
+    uploadAbortControllerRef.current = null;
+    setUploading(false);
+    setUploadingDocument(null);
+  };
+
+  const invalidateSessionView = () => {
+    sessionViewRequestRef.current += 1;
   };
 
   useEffect(() => {
@@ -595,11 +976,11 @@ export default function SlidegeniusChat() {
     return () => { active = false; };
   }, [messages]);
 
-  const openGeneratedProject = async (projectId: number) => {
+  const openGeneratedDestination = async (projectId: number, destination: string) => {
     if (deletedProjectIds.has(projectId)) return;
     try {
       await loadWorkspaceProject(projectId);
-      navigate(`/projects/${projectId}`);
+      navigate(destination);
     } catch (requestError) {
       if (isMissingProjectError(requestError)) {
         setDeletedProjectIds((current) => {
@@ -614,6 +995,9 @@ export default function SlidegeniusChat() {
     }
   };
 
+  const openGeneratedProject = (projectId: number) => openGeneratedDestination(projectId, `/projects/${projectId}`);
+  const openGeneratedEditor = (projectId: number) => openGeneratedDestination(projectId, `/editor?project=${encodeURIComponent(projectId)}`);
+
   useEffect(() => {
     if (!openRequest || openRequest === lastOpenRequestRef.current || !generation.sessionId) return;
     const targetSession = sessions.find((session) => session.id === generation.sessionId);
@@ -622,12 +1006,21 @@ export default function SlidegeniusChat() {
     lastOpenRequestRef.current = openRequest;
     if (targetSession.id === activeSessionId) return;
 
+    invalidateSessionView();
     setError("");
     setActiveSessionId(targetSession.id);
+    invalidatePendingUpload();
+    setMessages([]);
+    setSessionDocuments([]);
+    if (!options.preserveUploadedDocuments) setUploadedDocuments([]);
     setSlidePlanOpen(false);
     setClarificationOtherOpen(false);
     setClarificationOther("");
-    void loadSessionData(targetSession.id).catch(() => setError(text.unavailable));
+    const loadPromise = loadSessionData(targetSession.id);
+    const viewRequestId = sessionViewRequestRef.current;
+    void loadPromise.catch(() => {
+      if (viewRequestId === sessionViewRequestRef.current) setError(text.unavailable);
+    });
   }, [activeSessionId, deletingSessionId, generation.sessionId, openRequest, sending, sessions]);
 
   useEffect(() => {
@@ -635,13 +1028,14 @@ export default function SlidegeniusChat() {
     if (generation.phase !== "completed" && generation.phase !== "error") return;
 
     let active = true;
+    const viewRequestId = sessionViewRequestRef.current;
     void Promise.all([
       loadChatMessages(activeSessionId),
       loadChatSessions(),
       loadChatDocuments(activeSessionId),
     ])
       .then(([sessionMessages, freshSessions, sessionDocuments]) => {
-        if (!active) return;
+        if (!active || viewRequestId !== sessionViewRequestRef.current) return;
         const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
         const sentDocumentIds = getSentDocumentIds(sessionMessages);
         setMessages(sessionMessages);
@@ -651,31 +1045,62 @@ export default function SlidegeniusChat() {
         if (generation.phase === "error" && generation.error) setError(generation.error);
       })
       .catch(() => {
-        if (active) setError(text.unavailable);
+        if (active && viewRequestId === sessionViewRequestRef.current) setError(text.unavailable);
       });
     return () => { active = false; };
   }, [activeSessionId, generation.error, generation.phase, generation.sessionId]);
 
   const selectSession = async (session: ChatSession) => {
     if (session.id === activeSessionId || sending || deletingSessionId || removingDocumentId) return;
+    const isEmptyDraft = Boolean(
+      activeSessionId
+      && messages.length === 0
+      && !activeChatJob,
+    );
+    const draftSessionId = activeSessionId;
+    invalidatePendingUpload();
+    invalidateSessionView();
     setError("");
+    if (isEmptyDraft && draftSessionId) {
+      void archiveChatSession(draftSessionId).catch(() => undefined);
+      setSessions((current) => current.filter((item) => item.id !== draftSessionId));
+    }
     setActiveSessionId(session.id);
+    setMessages([]);
+    setSessionDocuments([]);
+    setUploadedDocuments([]);
     setSlidePlanOpen(false);
     setClarificationOtherOpen(false);
     setClarificationOther("");
+    const loadPromise = loadSessionData(session.id);
+    const viewRequestId = sessionViewRequestRef.current;
     try {
-      await loadSessionData(session.id);
+      await loadPromise;
     } catch {
-      setError(text.unavailable);
+      if (viewRequestId === sessionViewRequestRef.current) setError(text.unavailable);
     }
   };
 
   const startNewConversation = async () => {
     if (sending || deletingSessionId || removingDocumentId) return;
+    const isEmptyDraft = Boolean(
+      activeSessionId
+      && messages.length === 0
+      && !activeChatJob,
+    );
+    const draftSessionId = activeSessionId;
+    invalidatePendingUpload();
+    invalidateSessionView();
     setError("");
     try {
+      if (isEmptyDraft && draftSessionId) {
+        await archiveChatSession(draftSessionId).catch(() => undefined);
+      }
       const session = await createChatSession();
-      setSessions((current) => [session, ...current]);
+      setSessions((current) => [
+        session,
+        ...current.filter((item) => item.id !== draftSessionId),
+      ]);
       setActiveSessionId(session.id);
       setMessages([]);
       setUploadingDocument(null);
@@ -689,15 +1114,24 @@ export default function SlidegeniusChat() {
     }
   };
 
-  const deleteSession = async (event: MouseEvent<HTMLButtonElement>, session: ChatSession) => {
+  const deleteSession = (event: MouseEvent<HTMLButtonElement>, session: ChatSession) => {
     event.stopPropagation();
     if (sending || deletingSessionId || removingDocumentId) return;
     if (isGenerating && generation.sessionId === session.id) {
       setError(text.slideGenerationBusy);
       return;
     }
-    if (!window.confirm(text.deleteConversationConfirm)) return;
+    setPendingDeleteSession(session);
+  };
 
+  const confirmDeleteSession = async () => {
+    const session = pendingDeleteSession;
+    setPendingDeleteSession(null);
+    if (!session) return;
+    if (session.id === activeSessionId) {
+      invalidatePendingUpload();
+      invalidateSessionView();
+    }
     setDeletingSessionId(session.id);
     setError("");
     try {
@@ -769,12 +1203,14 @@ export default function SlidegeniusChat() {
       return;
     }
     const sessionId = activeSessionId;
-    const pendingDocuments = [...uploadedDocuments];
-    const documentIds = pendingDocuments.map((document) => document.id);
-    const messageAttachments: MessageAttachment[] = pendingDocuments.map((document) => ({
-      id: document.id,
-      name: document.title || document.original_filename,
-    }));
+    const pendingDocuments = options.documentIds ? [] : [...uploadedDocuments];
+    const documentIds = options.documentIds ?? pendingDocuments.map((document) => document.id);
+    const messageAttachments: MessageAttachment[] = options.messageAttachments
+      ? [...options.messageAttachments]
+      : pendingDocuments.map((document) => ({
+          id: document.id,
+          name: document.title || document.original_filename,
+        }));
 
     const optimisticMessage: ChatMessage = {
       id: -Date.now(),
@@ -814,6 +1250,8 @@ export default function SlidegeniusChat() {
         setMessage(cleanMessage);
         setUploadedDocuments(pendingDocuments);
         setError(text.slideGenerationBusy);
+      } else {
+        window.setTimeout(() => void loadSubscriptionUsage(), 500);
       }
       return;
     }
@@ -821,32 +1259,19 @@ export default function SlidegeniusChat() {
     setSending(true);
     setThinkingMode(pendingDocuments.length > 0 || sessionDocuments.length > 0 ? "document" : "conversation");
     setDocumentThinkingStep(0);
+    setActiveChatJob(null);
+    chatMessageJobRef.current = String(optimisticMessage.id);
     try {
-      const result = await sendChatMessage(
+      await streamChatMessage(
         sessionId,
         cleanMessage,
         model,
         effort,
         options.slideCount,
+        (event) => handleChatStreamEvent(optimisticMessage.id, event),
+        undefined,
         documentIds,
       );
-      const assistantMessage = getMessageSources(result.assistant_message).length || !result.citations.length
-        ? result.assistant_message
-        : {
-            ...result.assistant_message,
-            metadata: {
-              ...(result.assistant_message.metadata || {}),
-              retrieval: { enabled: true, citations: result.citations },
-            },
-          };
-      setMessages((current) => [
-        ...current.filter((item) => item.id !== optimisticMessage.id),
-        result.user_message,
-        assistantMessage,
-      ]);
-      setSessions((current) => current.map((session) => (
-        session.id === result.session.id ? result.session : session
-      )));
     } catch (requestError) {
       setMessages((current) => current.filter((item) => item.id !== optimisticMessage.id));
       setMessage(cleanMessage);
@@ -856,6 +1281,9 @@ export default function SlidegeniusChat() {
       setSending(false);
       setThinkingMode(null);
       setDocumentThinkingStep(0);
+      if (chatMessageJobRef.current === String(optimisticMessage.id)) {
+        chatMessageJobRef.current = null;
+      }
     }
   };
 
@@ -884,9 +1312,7 @@ export default function SlidegeniusChat() {
       .reverse()
       .map((item) => item.role === "assistant" ? getSlideFlow(item) : null)
       .find((item): item is SlideFlow => Boolean(item));
-    const visibleFlow = latestFlow && hasSessionDocuments
-      ? getVisibleDocumentFlow(latestFlow, language)
-      : latestFlow;
+    const visibleFlow = latestFlow;
     const selectedSlideCount = extractSlideCount(option.value || option.label)
       ?? visibleFlow?.targetSlideCount
       ?? undefined;
@@ -933,7 +1359,28 @@ export default function SlidegeniusChat() {
       setError(language === "vi" ? "Chỉ hỗ trợ file DOCX." : "Only DOCX files are supported.");
       return;
     }
+    if (maxUploadBytes <= 0 || maxTotalUploadBytes <= 0) {
+      setError(text.unavailable);
+      return;
+    }
+    if (file.size > maxUploadBytes) {
+      setError(language === "vi"
+        ? `Mỗi file DOCX tối đa ${formatFileSize(maxUploadBytes)}.`
+        : `Each DOCX file can be at most ${formatFileSize(maxUploadBytes)}.`);
+      return;
+    }
+    const currentUploadBytes = sessionDocuments.reduce(
+      (total, document) => total + Math.max(0, Number(document.size_bytes) || 0),
+      0,
+    );
+    if (currentUploadBytes + file.size > maxTotalUploadBytes) {
+      setError(language === "vi"
+        ? `Tổng dung lượng DOCX trong cuộc trò chuyện tối đa ${formatFileSize(maxTotalUploadBytes)}. Đã dùng ${formatFileSize(currentUploadBytes)}.`
+        : `DOCX files in this conversation can total ${formatFileSize(maxTotalUploadBytes)}. ${formatFileSize(currentUploadBytes)} is already attached.`);
+      return;
+    }
     const sessionId = activeSessionId;
+    const sessionViewRequestId = sessionViewRequestRef.current;
     const controller = new AbortController();
     const requestId = uploadRequestIdRef.current + 1;
     uploadRequestIdRef.current = requestId;
@@ -943,7 +1390,11 @@ export default function SlidegeniusChat() {
     setError("");
     try {
       const document = await uploadChatDocument(sessionId, file, controller.signal);
-      if (requestId !== uploadRequestIdRef.current || controller.signal.aborted) {
+      if (
+        requestId !== uploadRequestIdRef.current
+        || controller.signal.aborted
+        || sessionViewRequestId !== sessionViewRequestRef.current
+      ) {
         await deleteChatDocument(sessionId, document.id).catch(() => undefined);
         return;
       }
@@ -955,10 +1406,12 @@ export default function SlidegeniusChat() {
         ...current.filter((item) => item.id !== document.id),
         document,
       ]);
+      void loadSubscriptionUsage();
     } catch (requestError) {
       if (
         requestId !== uploadRequestIdRef.current
         || controller.signal.aborted
+        || sessionViewRequestId !== sessionViewRequestRef.current
         || (requestError instanceof Error && requestError.name === "AbortError")
       ) return;
       setUploadingDocument(null);
@@ -975,11 +1428,7 @@ export default function SlidegeniusChat() {
   const cancelDocumentUpload = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (!uploading) return;
-    uploadRequestIdRef.current += 1;
-    uploadAbortControllerRef.current?.abort();
-    uploadAbortControllerRef.current = null;
-    setUploading(false);
-    setUploadingDocument(null);
+    invalidatePendingUpload();
     setError("");
   };
 
@@ -990,10 +1439,12 @@ export default function SlidegeniusChat() {
     event.stopPropagation();
     if (!activeSessionId || removingDocumentId || uploading) return;
     const sessionId = activeSessionId;
+    const sessionViewRequestId = sessionViewRequestRef.current;
     setRemovingDocumentId(document.id);
     setError("");
     try {
       await deleteChatDocument(sessionId, document.id);
+      if (sessionViewRequestId !== sessionViewRequestRef.current) return;
       setSessionDocuments((current) => current.filter((item) => item.id !== document.id));
       setUploadedDocuments((current) => current.filter((item) => item.id !== document.id));
     } catch (requestError) {
@@ -1007,6 +1458,45 @@ export default function SlidegeniusChat() {
   const latestAssistantMessageId = [...displayedMessages]
     .reverse()
     .find((item) => item.role === "assistant")?.id;
+
+  const selectedSourceEntry = selectedSourceKey
+    ? displayedMessages.reduce<ChatSource | null>((found, item) => {
+        if (found || item.role !== "assistant") return found;
+        const source = getMessageSources(item).find((candidate) => sourceKey(item.id, candidate) === selectedSourceKey);
+        return source ?? null;
+      }, null)
+    : null;
+  const selectedSource = selectedSourceEntry;
+  const selectedSourceDocument = selectedSource
+    ? sessionDocuments.find((document) => document.id === selectedSource.documentId)
+    : undefined;
+  const selectedSourceDocumentName = selectedSourceDocument?.title || selectedSourceDocument?.original_filename || "";
+
+  const regenerateAssistantMessage = (assistantMessage: ChatMessage) => {
+    if (
+      assistantMessage.id !== latestAssistantMessageId
+      || sending
+      || uploading
+      || !activeSessionId
+    ) return;
+
+    const assistantIndex = displayedMessages.findIndex((item) => item.id === assistantMessage.id);
+    if (assistantIndex < 0) return;
+    const previousUserMessage = [...displayedMessages.slice(0, assistantIndex)]
+      .reverse()
+      .find((item) => item.role === "user");
+    if (!previousUserMessage || !previousUserMessage.content.trim()) {
+      setError(text.unavailable);
+      return;
+    }
+
+    const attachments = getMessageAttachments(previousUserMessage);
+    void sendMessageContent(previousUserMessage.content.trim(), {
+      documentIds: attachments.map((attachment) => attachment.id),
+      messageAttachments: attachments,
+      preserveUploadedDocuments: true,
+    });
+  };
   const latestSlideFlowMessage = [...displayedMessages]
     .reverse()
     .find((item) => item.role === "assistant" && item.metadata && Object.prototype.hasOwnProperty.call(item.metadata, "slide_flow"));
@@ -1024,7 +1514,7 @@ export default function SlidegeniusChat() {
   const hasActiveGeneration = isActiveGeneration && generation.phase !== "idle" && !hasPersistedGeneration;
 
   return (
-    <section className={`chat-layout ${showSlideStream || slidePlanOpen ? "chat-layout-streaming" : ""}`} onClick={() => { setToolsOpen(false); setModelOpen(false); }}>
+    <section className={`chat-layout ${showSlideStream || slidePlanOpen || Boolean(selectedSource) ? "chat-layout-streaming" : ""}`} onClick={() => { setToolsOpen(false); setModelOpen(false); }}>
       <aside className="chat-history">
         <div className="chat-history-top">
           <span>{text.conversations}</span>
@@ -1066,19 +1556,13 @@ export default function SlidegeniusChat() {
             <div className="chat-thread" ref={threadRef} onScroll={handleThreadScroll} aria-live="polite">
               {displayedMessages.map((item) => {
                 const rawFlow = item.role === "assistant" ? getSlideFlow(item) : null;
-                const flow = rawFlow && hasSessionDocuments
-                  ? getVisibleDocumentFlow(rawFlow, language)
-                  : rawFlow;
+                const flow = rawFlow;
                 const generation = item.role === "assistant" ? getSlideGenerationLog(item) : null;
                 const sources = item.role === "assistant" ? getMessageSources(item) : [];
                 const activeSource = sources.find((source) => sourceKey(item.id, source) === selectedSourceKey);
                 const attachments = item.role === "user" ? getMessageAttachments(item) : [];
                 const showFlow = item.id === latestInteractiveAssistantId;
-                const visibleContent = flow && rawFlow && flow !== rawFlow
-                  ? language === "vi"
-                    ? "Mình đã nhận tài liệu" + (sessionDocumentSummary ? " “" + sessionDocumentSummary + "”" : "") + ". Bắt đầu tạo slide với tài liệu này nhé?"
-                    : "I’ve received the" + (sessionDocumentSummary ? " “" + sessionDocumentSummary + "”" : "") + " document. Shall I start creating the slides with it?"
-                  : item.content;
+                const visibleContent = item.content;
                 return item.role === "assistant" ? (
                   <article className="chat-assistant-message" key={item.id} tabIndex={0}>
                     <span className="chat-assistant-mark" aria-hidden="true">✦</span>
@@ -1118,33 +1602,24 @@ export default function SlidegeniusChat() {
                             );
                           })}
                         </div>
-                        {activeSource && (
-                          <div className="chat-source-detail">
-                            <div className="chat-source-detail-heading">
-                              <span>Source {activeSource.index}</span>
-                              <strong>{activeSource.title}</strong>
-                            </div>
-                            {(() => {
-                              const document = sessionDocuments.find((candidate) => candidate.id === activeSource.documentId);
-                              const documentName = document?.title || document?.original_filename || "";
-                              return (
-                                <>
-                                  {documentName && <p><span>{text.sourceDocument}</span>{documentName}</p>}
-                                  {activeSource.section && <p><span>{text.sourceSection}</span>{activeSource.section}</p>}
-                                </>
-                              );
-                            })()}
-                            <p className="chat-source-excerpt-label">{text.sourceExcerpt}</p>
-                            <blockquote className="chat-source-excerpt">
-                              {activeSource.excerpt || text.sourceNoExcerpt}
-                            </blockquote>
-                          </div>
-                        )}
                       </div>
                     )}
                     <div className="chat-message-meta">
                       <time>{messageTime(item.created_at, language) || text.justNow}</time>
-                      {item.id === latestAssistantMessageId && <button type="button" aria-label={text.regenerate} title={text.regenerate}>↻</button>}
+                      {item.id === latestAssistantMessageId && (
+                        <button
+                          type="button"
+                          aria-label={text.regenerate}
+                          title={text.regenerate}
+                          disabled={sending || uploading}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            regenerateAssistantMessage(item);
+                          }}
+                        >
+                          ↻
+                        </button>
+                      )}
                       <button type="button" aria-label={text.copyMessage} title={text.copyMessage} onClick={() => void navigator.clipboard?.writeText(visibleContent)}>▣</button>
                     </div>
                     {generation && (
@@ -1152,14 +1627,17 @@ export default function SlidegeniusChat() {
                         <span className="chat-slide-generation-mark" aria-hidden="true">✓</span>
                         <div className="chat-slide-generation-copy">
                           <p>{text.slideGenerated}</p>
-                          <strong>{generation.projectName || text.slideGeneratedProject}</strong>
+                          <strong title={generation.projectName || text.slideGeneratedProject}>{truncateProjectName(generation.projectName || text.slideGeneratedProject)}</strong>
                           {generation.slideCount !== null && <span>{generation.slideCount} {text.slideStreamSlide.toLowerCase()}</span>}
                         </div>
                         {generation.projectId !== null && (
                           deletedProjectIds.has(generation.projectId) ? (
                             <span className="chat-slide-generation-deleted">{text.projectDeleted}</span>
                           ) : (
-                            <button type="button" onClick={() => void openGeneratedProject(generation.projectId!)}>{text.slideStreamOpenProject} ↗</button>
+                            <div className="chat-slide-generation-actions">
+                              <button className="secondary" type="button" onClick={() => void openGeneratedProject(generation.projectId!)}>{text.slideStreamOpenProject} ↗</button>
+                              <button className="primary" type="button" onClick={() => void openGeneratedEditor(generation.projectId!)}>{text.slideStreamEditProject} ↗</button>
+                            </div>
                           )
                         )}
                       </div>
@@ -1228,7 +1706,6 @@ export default function SlidegeniusChat() {
                     )}
                     <div className="chat-message-meta">
                       <time>{messageTime(item.created_at, language) || text.justNow}</time>
-                      <button type="button" aria-label={text.regenerate} title={text.regenerate}>↻</button>
                       <button type="button" aria-label={text.editMessage} title={text.editMessage} onClick={() => setMessage(item.content)}>✎</button>
                       <button type="button" aria-label={text.copyMessage} title={text.copyMessage} onClick={() => void navigator.clipboard?.writeText(item.content)}>▣</button>
                     </div>
@@ -1249,10 +1726,12 @@ export default function SlidegeniusChat() {
                   completedLabel={text.slideStreamCompleted}
                   openStreamLabel={text.slideGenerationOpen}
                   openProjectLabel={text.slideStreamOpenProject}
+                  openEditorLabel={text.slideStreamEditProject}
                   slideLabel={text.slideStreamSlide}
                   onOpenStream={openSlideStream}
                   projectId={generation.projectId !== null && !deletedProjectIds.has(generation.projectId) ? generation.projectId : null}
                   onOpenProject={(projectId) => void openGeneratedProject(projectId)}
+                  onOpenEditor={(projectId) => void openGeneratedEditor(projectId)}
                 />
               )}
               {sending && (
@@ -1399,13 +1878,44 @@ export default function SlidegeniusChat() {
               <button type="button" className="composer-model-button" aria-expanded={modelOpen} onClick={() => { setModelOpen(!modelOpen); setToolsOpen(false); }}>Genius {model.slice(-1)} <span>{effort[0].toUpperCase() + effort.slice(1)}</span></button>
               {modelOpen && <div className="composer-model-menu"><p className="composer-model-menu-label">Model</p>{models.map((item) => <button type="button" key={item} className={model === item ? "selected" : ""} onClick={() => { setModel(item); setModelOpen(false); }}>Genius {item.slice(-1)}{model === item && <i>✓</i>}</button>)}<div className="composer-model-divider" /><p className="composer-model-menu-label">Effort</p>{efforts.map((item) => <button type="button" key={item} className={effort === item ? "selected" : ""} onClick={() => { if (item === "low" || item === "medium" || item === "high") setEffort(item); setModelOpen(false); }}>{item[0].toUpperCase() + item.slice(1)}{effort === item && <i>✓</i>}</button>)}</div>}
             </div>
+            <div className="composer-usage-inline" role="status" aria-live="polite">
+              <UsageMeter label={text.chatUsageShort} percent={chatUsagePercent} detail={chatUsageTooltip} />
+              <UsageMeter label={text.documentUsageShort} percent={documentUsagePercent} detail={documentUsageTooltip} />
+            </div>
             <button className="composer-send" type="submit" aria-label="Send message" disabled={sending || uploading || !message.trim()}>↗</button>
           </div>
         </form>
         <p className="chat-disclaimer">Slidegenius can make mistakes. Review important work before sharing.</p>
       </div>
 
-      {showSlideStream && (
+      {selectedSource && (
+        <aside className="chat-slide-stream-panel chat-source-panel" aria-label={text.sources}>
+          <div className="chat-slide-stream-header chat-source-panel-header">
+            <div>
+              <p className="chat-slide-stream-eyebrow">{text.sources} · SOURCE {selectedSource.index}</p>
+              <h3>{selectedSource.title}</h3>
+            </div>
+            <button
+              type="button"
+              aria-label={text.sourceClose}
+              title={text.sourceClose}
+              onClick={() => setSelectedSourceKey(null)}
+            >
+              ×
+            </button>
+          </div>
+          <div className="chat-source-panel-body">
+            {selectedSourceDocumentName && <p><span>{text.sourceDocument}</span>{selectedSourceDocumentName}</p>}
+            {selectedSource.section && <p><span>{text.sourceSection}</span>{selectedSource.section}</p>}
+            <div className="chat-source-panel-excerpt">
+              <span>{text.sourceExcerpt}</span>
+              <blockquote>{selectedSource.excerpt || text.sourceNoExcerpt}</blockquote>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {showSlideStream && !selectedSource && (
         <ChatSlideStreamPanel
           status={generation.status}
           progress={generation.progress}
@@ -1423,7 +1933,7 @@ export default function SlidegeniusChat() {
           onOpenProject={(projectId) => navigate(`/projects/${projectId}`)}
         />
       )}
-      {slidePlanOpen && !showSlideStream && latestSlideFlow && (
+      {slidePlanOpen && !showSlideStream && !selectedSource && latestSlideFlow && (
         <ChatSlidePlanPanel
           originalPrompt={latestSlideFlow.originalPrompt}
           brief={latestSlideFlow.brief}
@@ -1451,6 +1961,19 @@ export default function SlidegeniusChat() {
           onClose={() => setSlidePlanOpen(false)}
         />
       )}
+      <SlidegenConfirmDialog
+        open={Boolean(pendingDeleteSession)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteSession(null);
+        }}
+        title={language === "vi" ? "Xóa cuộc trò chuyện?" : "Delete this conversation?"}
+        description={text.deleteConversationConfirm}
+        confirmLabel={language === "vi" ? "Xóa cuộc trò chuyện" : "Delete conversation"}
+        cancelLabel={language === "vi" ? "Hủy" : "Cancel"}
+        onConfirm={() => void confirmDeleteSession()}
+        destructive
+        busy={Boolean(deletingSessionId)}
+      />
     </section>
   );
 }

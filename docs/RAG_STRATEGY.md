@@ -61,9 +61,40 @@ Khi upload DOCX, hệ thống chạy một luồng tự động:
    DOCX hoặc gọi LLM lần nữa.
 6. Từ cây chuẩn tạo các node RAG rồi batch-embed.
 
+Với tài liệu không có heading, LLM chỉ trả về outline nhỏ gồm `title`,
+`children` và các `block_ids`. Backend giữ nguyên source block rồi tự gắn vào
+cây; LLM không phải sao chép toàn bộ văn bản vào JSON. Nếu outline không hợp lệ
+sau các lần retry, canonical Markdown vẫn được index dưới một root node phẳng,
+không làm mất tài liệu hoặc làm hỏng luồng hỏi đáp.
+
 RAG không được tự phân tích lại Markdown để đoán heading lần thứ hai. Nếu một
 đoạn đã được workflow tiền xử lý xác định là một node, mọi lần retrieval sau
 đó phải dùng đúng node và quan hệ cha/con của nó.
+
+### 3.1 Ảnh trong DOCX và kiểm chứng bằng Qwen-VL
+
+Ảnh không được đưa thẳng vào deck chỉ vì nó tồn tại trong DOCX. Trong lúc tạo
+canonical artifact, `DocumentImageExtractor` đọc relationship của DOCX, lưu
+asset private và gắn mỗi occurrence với `section_path`, heading gần nhất,
+đoạn văn lân cận và thứ tự xuất hiện. Metadata này được lưu cùng
+`chatbot_documents.images_json`; không tạo vector database hay service ảnh
+riêng.
+
+Trước planner, node `image_verifier` gửi ảnh cùng toàn bộ slide chunks hiện
+tại cho `ImageRelevanceService`. Qwen-VL chỉ trả về quyết định có dùng hay
+không, slide chính, confidence, vai trò và lý do. Các assignment được ghi vào
+state để mọi planner batch thấy cùng một kết quả. Khi layout được chọn, executor
+inject đúng asset đã duyệt vào image slot tương ứng và copy asset vào project.
+
+Ảnh từ DDGS dùng cùng verifier nhưng theo candidate set: search lấy nhiều ứng
+viên, Qwen so sánh ứng viên với nội dung slide và role của slot, sau đó executor
+mới chọn URL được duyệt. Nếu endpoint đang chạy text-only hoặc verifier lỗi,
+đây là enrichment tùy chọn: hệ thống giữ luồng ảnh hiện tại và không làm hỏng
+việc tạo slide.
+
+Nguyên tắc này tránh cả hai lỗi: lấy ảnh “cùng chủ đề” nhưng sai đối tượng, và
+ép mọi ảnh trong tài liệu vào deck. Qwen được cung cấp context thực tế thay vì
+rule theo tên tài liệu hay từ khóa cố định.
 
 ## 4. Mô hình index phân cấp
 

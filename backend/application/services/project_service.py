@@ -6,6 +6,7 @@ from typing import List, Union
 from pathlib import Path
 from fastapi import HTTPException
 from backend.domain.entities.project import Project, Slide
+from backend.domain.project_name import normalize_project_name
 from backend.domain.ports.project_repository import ProjectRepository
 from backend.api.schemas.project_schema import ProjectCreate, ProjectUpdate, SlideCreate, SlideUpdate
 import logging
@@ -42,7 +43,7 @@ class ProjectService:
 
         return self.repo.create_project(
             user_id=user_id,
-            title=data_dict.get("title", "Untitled Project"),
+            title=normalize_project_name(data_dict.get("title")),
             description=data_dict.get("description"),
             source_type=data_dict.get("source_type", "manual"),
             source_data=data_dict.get("source_data")
@@ -85,6 +86,9 @@ class ProjectService:
             update_data = data.model_dump(exclude_unset=True)
         else:
             update_data = data
+
+        if update_data.get("title") is not None:
+            update_data = {**update_data, "title": normalize_project_name(update_data["title"])}
             
         self.repo.update_project(project_id, **update_data)
 
@@ -195,6 +199,7 @@ class ProjectService:
         Lưu các XML slide vào DB.
         """
         try:
+            project_name = normalize_project_name(project_name)
             # Workflow adapters may return either a ``Path`` or its serialized
             # string form. Normalize at this application boundary so every
             # caller uses the same filesystem contract below.

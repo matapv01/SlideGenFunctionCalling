@@ -410,11 +410,31 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     presentation_instruction = str(
         (state.get("slide_options") or {}).get("presentation_instruction") or ""
     ).strip()
+    document_image_assignments = [
+        image
+        for image in (state.get("slide_options") or {}).get(
+            "document_image_assignments", []
+        ) or []
+        if isinstance(image, dict)
+        and int(image.get("slide_index", -1)) == int(idx)
+    ]
     
     if isinstance(current_text, (dict, list)):
         current_text = _format_content_as_str(current_text)
     if not current_text:
         current_text = "Default slide content"
+
+    if document_image_assignments:
+        verified_image_context = "\n".join(
+            f"Verified source image available for this slide: "
+            f"{image.get('image_id', '')}; role={image.get('role', 'illustration')}; "
+            f"document section={str(image.get('section_path') or '')[:240]}. "
+            "Use it when this layout has a compatible image slot."
+            for image in document_image_assignments
+        )
+        current_context_map = (
+            f"{current_context_map or ''}\n{verified_image_context}"
+        ).strip()
         
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '')

@@ -14,6 +14,7 @@ class ChatDocumentRepository(Protocol):
         project_id: int | None,
         original_filename: str,
         content_hash: str,
+        size_bytes: int = 0,
     ) -> ChatDocument: ...
 
     def get_document(self, document_id: str, user_id: int) -> ChatDocument | None: ...
@@ -39,6 +40,7 @@ class ChatDocumentRepository(Protocol):
         markdown_path: str,
         structure: list[dict],
         chunks: list[dict],
+        images: list[dict] | None = None,
     ) -> ChatDocument: ...
 
     def replace_document_chunks(

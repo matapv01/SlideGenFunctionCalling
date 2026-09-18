@@ -4,7 +4,6 @@ import asyncio
 import json
 import logging
 import re
-import unicodedata
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
@@ -132,42 +131,6 @@ Rules:
 - If no document is attached, always return needs_rag=false and queries=[].
 """.strip()
 
-    _DOCUMENT_SIGNALS = (
-        "tai lieu",
-        "tai lieu nay",
-        "file",
-        "docx",
-        "document",
-        "uploaded",
-        "attached",
-        "source",
-        "trong file",
-        "theo file",
-        "theo doc",
-        "from doc",
-        "tu doc",
-        "doc nay",
-        "theo tai lieu",
-        "dua vao tai lieu",
-        "dựa vào tài liệu",
-    )
-    _CONTENT_REQUEST_SIGNALS = (
-        "tom tat",
-        "giai thich",
-        "phan tich",
-        "so sanh",
-        "trich",
-        "liet ke",
-        "noi dung",
-        "ket luan",
-        "summary",
-        "explain",
-        "analyse",
-        "analyze",
-        "compare",
-        "extract",
-    )
-
     def __init__(self, llm_provider: LLMProvider) -> None:
         self.llm_provider = llm_provider
 
@@ -192,9 +155,8 @@ Rules:
             )
 
         fallback = self._fallback_plan(
-            query,
             slide_request=slide_request,
-            brief=brief,
+            query=brief or query,
         )
         raw = await self._ask_llm(
             self._build_messages(
@@ -253,81 +215,34 @@ Rules:
             },
         ]
 
-    @classmethod
-    def _fallback_plan(
-        cls,
-        query: str,
-        *,
-        slide_request: bool,
-        brief: str | None,
-    ) -> RagQueryPlan:
-        normalized = cls._normalize(query)
-        document_reference = any(signal in normalized for signal in cls._DOCUMENT_SIGNALS)
-        content_request = any(
-            signal in normalized for signal in cls._CONTENT_REQUEST_SIGNALS
-        )
-        overview_request = any(
-            signal in normalized
-            for signal in (
-                "noi ve gi",
-                "noi ve cai gi",
-                "tong quan",
-                "tom tat",
-                "y chinh",
-                "overview",
-                "summarise",
-                "summarize",
-            )
-        )
-        comparison_request = any(
-            signal in normalized for signal in ("so sanh", "compare", "doi chieu")
-        )
+    @staticmethod
+    def _fallback_plan(*, slide_request: bool, query: str) -> RagQueryPlan:
+        """Use only explicit workflow state when the planner output is invalid."""
         if slide_request:
-            mode: RagMode = (
-                "deck_from_document" if document_reference else "topic_grounded"
+            fallback_query = " ".join(query.split())[:320]
+            return RagQueryPlan(
+                needs_rag=True,
+                queries=(fallback_query,) if fallback_query else (),
+                reason="The slide workflow requires the attached document as context.",
+                source="fallback",
+                mode="deck_from_document",
+                source_policy="document_only",
+                include_root=True,
+                include_ancestors=True,
+                include_siblings=False,
+                max_detail_nodes=8,
             )
-            needs_rag = True
-            include_root = True
-            include_ancestors = True
-            include_siblings = comparison_request
-            max_detail_nodes = 8
-        elif overview_request:
-            mode = "document_overview"
-            needs_rag = True
-            include_root = True
-            include_ancestors = False
-            include_siblings = False
-            max_detail_nodes = 2
-        elif comparison_request:
-            mode = "multi_facet"
-            needs_rag = document_reference or content_request
-            include_root = True
-            include_ancestors = True
-            include_siblings = True
-            max_detail_nodes = 8
-        else:
-            mode = "targeted_section"
-            needs_rag = document_reference or content_request
-            include_root = False
-            include_ancestors = True
-            include_siblings = False
-            max_detail_nodes = 6
-        fallback_query = " ".join((brief or query).split())[:320]
         return RagQueryPlan(
-            needs_rag=needs_rag,
-            queries=(fallback_query,) if needs_rag and fallback_query else (),
-            reason=(
-                "The request refers to document-grounded content."
-                if needs_rag
-                else "The request does not clearly require document content."
-            ),
+            needs_rag=False,
+            queries=(),
+            reason="The retrieval planner did not return a valid decision.",
             source="fallback",
-            mode=mode if needs_rag else "none",
-            source_policy="document_preferred" if needs_rag else "none",
-            include_root=include_root if needs_rag else False,
-            include_ancestors=include_ancestors,
-            include_siblings=include_siblings if needs_rag else False,
-            max_detail_nodes=max_detail_nodes if needs_rag else 0,
+            mode="none",
+            source_policy="none",
+            include_root=False,
+            include_ancestors=False,
+            include_siblings=False,
+            max_detail_nodes=0,
         )
 
     @classmethod
@@ -496,11 +411,3 @@ Rules:
             for message in history[-6:]
             if message.role in {"user", "assistant"}
         ) or "(none)"
-
-    @staticmethod
-    def _normalize(value: str) -> str:
-        normalized = unicodedata.normalize("NFKD", value.casefold())
-        normalized = "".join(
-            char for char in normalized if not unicodedata.combining(char)
-        )
-        return " ".join(normalized.replace("đ", "d").split())

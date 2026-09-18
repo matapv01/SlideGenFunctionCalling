@@ -27,6 +27,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         capture_provider: CaptureProvider,
         parser_provider: ParserProvider,
         tool_retriever: ToolRetrieveProvider,
+        image_relevance_verifier: Any | None = None,
     ):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
@@ -34,6 +35,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         self.capture_provider = capture_provider
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
+        self.image_relevance_verifier = image_relevance_verifier
 
     def _get_providers(self) -> Dict[str, Any]:
         """Gói các providers cần thiết để inject vào workflow"""
@@ -42,7 +44,8 @@ class SlideGenWorkflowService(BaseWorkflowService):
             "planner_llm_provider": self.planner_llm_provider,
             "capture_provider": self.capture_provider,
             "parser_provider": self.parser_provider,
-            "tool_retriever": self.tool_retriever
+            "tool_retriever": self.tool_retriever,
+            "image_relevance_verifier": self.image_relevance_verifier,
         }
 
     async def generate_from_chunks(self, slide_chunks: list, title: str, output_folder: str = None, **kwargs) -> Optional[str]:

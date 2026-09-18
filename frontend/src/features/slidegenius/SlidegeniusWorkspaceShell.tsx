@@ -8,7 +8,7 @@ import { useSlideGeneration } from "./SlideGenerationContext";
 import "./slidegenius.css";
 import "./slidegenius-sidebar.css";
 
-export type WorkspaceShellTab = "slidegenius" | "projects" | "manual" | "guide" | "settings" | "subscription";
+export type WorkspaceShellTab = "slidegenius" | "projects" | "manual" | "guide" | "settings" | "subscription" | "admin";
 
 const tabRoutes: Record<WorkspaceShellTab, string> = {
   slidegenius: "/home",
@@ -17,11 +17,12 @@ const tabRoutes: Record<WorkspaceShellTab, string> = {
   guide: "/guide",
   settings: "/settings",
   subscription: "/subscription",
+  admin: "/admin",
 };
 
 const shellCopy = {
   en: {
-    tabs: { slidegenius: "Slidegenius", projects: "Project Manager", manual: "Manual", guide: "Guide", settings: "Settings" },
+    tabs: { slidegenius: "Slidegenius", projects: "Project Manager", manual: "Manual", guide: "Guide", settings: "Settings", admin: "Admin" },
     collapse: "Collapse sidebar",
     expand: "Expand sidebar",
     openSettings: "Open settings",
@@ -31,7 +32,7 @@ const shellCopy = {
     logout: "Log out",
   },
   vi: {
-    tabs: { slidegenius: "Slidegenius", projects: "Quản lý dự án", manual: "Manual", guide: "Hướng dẫn", settings: "Cài đặt" },
+    tabs: { slidegenius: "Slidegenius", projects: "Quản lý dự án", manual: "Manual", guide: "Hướng dẫn", settings: "Cài đặt", admin: "Admin" },
     collapse: "Thu gọn thanh bên",
     expand: "Mở rộng thanh bên",
     openSettings: "Mở cài đặt",
@@ -159,6 +160,17 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
               <span className="workspace-nav-label">{text.tabs[item]}</span>
             </button>
           ))}
+          {user?.is_admin && (
+            <button
+              className={activeTab === "admin" ? "active" : ""}
+              onClick={() => goToTab("admin")}
+              title={text.tabs.admin}
+              aria-label={text.tabs.admin}
+            >
+              <span className="workspace-icon icon-admin" aria-hidden="true" />
+              <span className="workspace-nav-label">{text.tabs.admin}</span>
+            </button>
+          )}
         </nav>
 
         <div className="workspace-sidebar-bottom">

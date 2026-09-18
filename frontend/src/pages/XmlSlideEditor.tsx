@@ -78,6 +78,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { api, type ImageSearchResult, type ProjectCollaborator, type ProjectComment, type ProjectVersion, type ProjectRole } from "@/lib/api";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
+import SlidegenConfirmDialog from "@/components/SlidegenConfirmDialog";
 import { XmlSlideCanvas } from "@/components/XmlSlideCanvas";
 import "../features/slidegenius/slidegenius-editor.css";
 import {
@@ -891,6 +893,7 @@ XmlSlideThumbnail.displayName = "XmlSlideThumbnail";
 const XmlSlideEditor = () => {
   const [searchParams] = useSearchParams();
   const { language } = useLanguage();
+  const { toast } = useToast();
   const projectId = searchParams.get("project");
   const slideParam = searchParams.get("slide");
   const editorCopy = language === "vi"
@@ -954,6 +957,8 @@ const XmlSlideEditor = () => {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [historyVersion, setHistoryVersion] = useState(0);
   const [versions, setVersions] = useState<ProjectVersion[]>([]);
+  const [pendingVersionRestore, setPendingVersionRestore] = useState<ProjectVersion | null>(null);
+  const [pendingDraftRestore, setPendingDraftRestore] = useState<XmlSlideDocument | null>(null);
   const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
   const [comments, setComments] = useState<ProjectComment[]>([]);
   const [activeOverlay, setActiveOverlay] = useState<"history" | "share" | "comments" | null>(null);
@@ -1107,6 +1112,20 @@ const XmlSlideEditor = () => {
     setActiveSlideIndex(0);
     setSelectedId(null);
   }, []);
+
+  const restoreLocalDraft = useCallback(() => {
+    const draft = pendingDraftRestore;
+    setPendingDraftRestore(null);
+    if (!draft) return;
+    resetDocument(draft);
+    draft.slides.forEach((slide) => dirtySlideIdsRef.current.add(slide.id));
+    setHasUnsavedChanges(true);
+  }, [pendingDraftRestore, resetDocument]);
+
+  const dismissLocalDraft = useCallback(() => {
+    setPendingDraftRestore(null);
+    if (projectId) localStorage.removeItem(`slidegen:draft:${projectId}`);
+  }, [projectId]);
 
   const saveXmlDocument = useCallback(async (documentToSave: XmlSlideDocument) => {
     if (!projectId || documentToSave.slides.length === 0) return;
@@ -1295,12 +1314,7 @@ const XmlSlideEditor = () => {
               const serverUpdatedAt = project?.updated_at ? Date.parse(String(project.updated_at)) : 0;
               if (!serverUpdatedAt || draftUpdatedAt > serverUpdatedAt) {
                 const draftDocument = parseXmlSlide(draft.xml);
-                const shouldRestore = window.confirm(
-                  "A newer local draft was found for this project. Restore it?",
-                );
-                if (shouldRestore) {
-                  documentToLoad = buildDocumentFromXmlSources([serializeXmlSlide(draftDocument)]);
-                }
+                setPendingDraftRestore(draftDocument);
               } else {
                 localStorage.removeItem(draftKey);
               }
@@ -1436,12 +1450,15 @@ const XmlSlideEditor = () => {
     setComments(commentResponse.comments || []);
   };
 
-  const restoreVersion = async (version: ProjectVersion) => {
+  const restoreVersion = (version: ProjectVersion) => {
     if (!projectId || !canEdit) return;
-    const confirmed = window.confirm(language === "vi"
-      ? "Khôi phục phiên bản này? Thay đổi hiện tại sẽ được thay thế."
-      : "Restore this version? Current changes will be replaced.");
-    if (!confirmed) return;
+    setPendingVersionRestore(version);
+  };
+
+  const confirmRestoreVersion = async () => {
+    const version = pendingVersionRestore;
+    setPendingVersionRestore(null);
+    if (!projectId || !canEdit || !version) return;
     setVersionLoading(true);
     setCollaborationError("");
     try {
@@ -1534,8 +1551,12 @@ const XmlSlideEditor = () => {
     try {
       await flushXmlSave();
       window.history.back();
-    } catch {
-      window.alert("Could not save the latest changes. Please try again.");
+    } catch (error) {
+      toast({
+        title: language === "vi" ? "Không thể lưu thay đổi" : "Could not save changes",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     }
   };
 
@@ -1869,7 +1890,11 @@ const XmlSlideEditor = () => {
       anchor.download = result.filename;
       anchor.click();
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "PowerPoint export failed");
+      toast({
+        title: language === "vi" ? "Xuất PowerPoint thất bại" : "PowerPoint export failed",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setIsExportingPptx(false);
     }
@@ -1917,7 +1942,11 @@ const XmlSlideEditor = () => {
         anchor.click();
       } catch (error) {
         if (!cancelled) {
-          window.alert(error instanceof Error ? error.message : "PDF export failed");
+          toast({
+            title: language === "vi" ? "Xuất PDF thất bại" : "PDF export failed",
+            description: error instanceof Error ? error.message : undefined,
+            variant: "destructive",
+          });
         }
       } finally {
         if (!cancelled) setIsExportingPdf(false);
@@ -1928,7 +1957,7 @@ const XmlSlideEditor = () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [isExportingPdf, xmlDocument.height, xmlDocument.slides.length, xmlDocument.width]);
+  }, [isExportingPdf, xmlDocument.height, xmlDocument.slides.length, xmlDocument.width, language, toast]);
 
   const fitZoom = useCallback(() => {
     const el = canvasShellRef.current;
@@ -3976,6 +4005,34 @@ const XmlSlideEditor = () => {
           })}
         </div>
       )}
+      <SlidegenConfirmDialog
+        open={Boolean(pendingDraftRestore)}
+        onOpenChange={(open) => {
+          if (!open) dismissLocalDraft();
+        }}
+        title={language === "vi" ? "Khôi phục bản nháp local?" : "Restore local draft?"}
+        description={language === "vi"
+          ? "Đã tìm thấy bản nháp mới hơn trên thiết bị. Khôi phục bản nháp sẽ thay thế nội dung hiện tại trong trình chỉnh sửa."
+          : "A newer local draft was found on this device. Restoring it will replace the current editor content."}
+        confirmLabel={language === "vi" ? "Khôi phục bản nháp" : "Restore draft"}
+        cancelLabel={language === "vi" ? "Bỏ qua" : "Keep current version"}
+        onConfirm={restoreLocalDraft}
+      />
+      <SlidegenConfirmDialog
+        open={Boolean(pendingVersionRestore)}
+        onOpenChange={(open) => {
+          if (!open) setPendingVersionRestore(null);
+        }}
+        title={language === "vi" ? "Khôi phục phiên bản?" : "Restore this version?"}
+        description={language === "vi"
+          ? "Thay đổi hiện tại sẽ được thay thế bằng phiên bản đã chọn."
+          : "Your current changes will be replaced by the selected version."}
+        confirmLabel={language === "vi" ? "Khôi phục" : "Restore"}
+        cancelLabel={language === "vi" ? "Hủy" : "Cancel"}
+        onConfirm={() => void confirmRestoreVersion()}
+        destructive
+        busy={versionLoading}
+      />
     </TooltipProvider>
   );
 };

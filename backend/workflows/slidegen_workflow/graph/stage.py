@@ -122,6 +122,9 @@ class State(TypedDict, total=False):
     slide_context_maps: List[str]
     slide_plans: List[Dict]  # Contains 'action' field from planner (INTRO_TOOLS, etc.)
     deck_style_plan: Dict[str, Any]
+    document_images: List[Dict[str, Any]]
+    document_image_assignments: List[Dict[str, Any]]
+    user_request: str
 
     # Parallel section orchestration. ``batch_results`` uses a reducer because
     # multiple LangGraph Send workers write to it concurrently.
@@ -153,6 +156,7 @@ class State(TypedDict, total=False):
     current_slide_context_map: str
     current_slide_position: Any
     current_slide_type: str
+    current_document_images: List[Dict[str, Any]]
     current_tool_plan: List[Dict]
     current_search_history: List[Dict]
     current_tool_call: Dict

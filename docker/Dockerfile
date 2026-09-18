@@ -77,6 +77,7 @@ RUN playwright install chromium --with-deps \
 # ── Application source ────────────────────────────────────────────────────────
 COPY backend/ ./backend/
 COPY migrate_db.py .
+COPY scripts/manage_admin.py ./scripts/manage_admin.py
 
 # ── Frontend (pre-built static files) ────────────────────────────────────────
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist/

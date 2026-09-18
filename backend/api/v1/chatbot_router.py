@@ -11,13 +11,13 @@ from backend.config import (
     CHATBOT_DEFAULT_MODEL,
     CHATBOT_EFFORT_CONFIGS,
     CHATBOT_MODEL_CONFIGS,
-    CHATBOT_UPLOAD_MAX_BYTES,
 )
 from backend.api.dependencies import (
     get_current_active_user,
     get_project_service,
     get_chatbot_service,
     get_document_rag_service,
+    get_subscription_service,
 )
 from backend.api.schemas.auth_schema import UserResponse
 from backend.api.schemas.chatbot_schema import (
@@ -30,15 +30,20 @@ from backend.api.schemas.chatbot_schema import (
     ChatSessionOut,
     ChatTurnOut,
     ChatDocumentOut,
+    ChatMessageJobOut,
     ChatSlideGenerationOut,
 )
 from backend.application.services.chatbot_service import (
     ChatbotService,
+    ChatMessageInProgressError,
     SlideGenerationInProgressError,
 )
 from backend.application.services.project_service import ProjectService
-from backend.application.services.document_rag_service import DocumentRagService
-from backend.application.services.subscription_service import SlideCountLimitError
+from backend.application.services.document_rag_service import (
+    DocumentRagService,
+    DocumentUploadLimitError,
+)
+from backend.application.services.subscription_service import SlideCountLimitError, SubscriptionService
 from backend.domain.entities.chat import ChatMessage, ChatSession
 
 router = APIRouter(prefix="/chat", tags=["CHATBOT"])
@@ -56,8 +61,13 @@ def _sse_event(event_type: str, payload: dict) -> str:
 async def get_chatbot_config(
     current_user: UserResponse = Depends(get_current_active_user),
     chatbot: ChatbotService = Depends(get_chatbot_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service),
 ) -> ChatbotConfigOut:
     limits = chatbot.get_slide_generation_limits(current_user.id)
+    usage_config = subscription_service.get_admin_usage_config()
+    upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
+    model_weights = {item["id"]: item["multiplier"] for item in usage_config["model_weights"]}
+    effort_weights = {item["id"]: item["multiplier"] for item in usage_config["effort_weights"]}
     return ChatbotConfigOut(
         default_model=CHATBOT_DEFAULT_MODEL,
         default_effort=CHATBOT_DEFAULT_EFFORT,
@@ -66,6 +76,7 @@ async def get_chatbot_config(
                 id=model_id,
                 temperature=float(config["temperature"]),
                 top_p=float(config["top_p"]),
+                usage_multiplier=float(model_weights.get(model_id, 1.0)),
             )
             for model_id, config in CHATBOT_MODEL_CONFIGS.items()
         ],
@@ -74,10 +85,13 @@ async def get_chatbot_config(
                 id=effort_id,
                 max_tokens=int(config["max_tokens"]),
                 temperature_delta=float(config["temperature_delta"]),
+                usage_multiplier=float(effort_weights.get(effort_id, 1.0)),
             )
             for effort_id, config in CHATBOT_EFFORT_CONFIGS.items()
         ],
         max_slide_count=limits["max_slide_count"],
+        max_upload_bytes=upload_limits["max_file_bytes"],
+        max_total_upload_bytes=upload_limits["max_total_bytes"],
     )
 
 
@@ -115,6 +129,7 @@ def _document_out(document) -> ChatDocumentOut:
         title=document.title,
         status=document.status,
         content_hash=document.content_hash,
+        size_bytes=document.size_bytes,
         error_message=document.error_message,
         created_at=document.created_at,
         updated_at=document.updated_at,
@@ -170,16 +185,27 @@ async def upload_chat_document(
     current_user: UserResponse = Depends(get_current_active_user),
     chatbot: ChatbotService = Depends(get_chatbot_service),
     rag: DocumentRagService = Depends(get_document_rag_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service),
 ) -> ChatDocumentOut:
     session = chatbot.get_session(session_id, current_user.id)
     if session is None or session.archived:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên chat")
+    upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
+    content = await file.read(upload_limits["max_file_bytes"] + 1)
+    # Uploading only stores the source document; it still consumes one
+    # document unit in the shared five-hour window.
+    subscription_service.check_feature_access_for_user(current_user.id, "docx_upload")
     try:
         document = await rag.create_pending_docx(
             session=session,
             original_filename=file.filename or "document.docx",
-            content=await file.read(CHATBOT_UPLOAD_MAX_BYTES + 1),
+            content=content,
+            max_file_bytes=upload_limits["max_file_bytes"],
+            max_total_bytes=upload_limits["max_total_bytes"],
         )
+        subscription_service.increment_usage(current_user.id, "docx_upload")
+    except DocumentUploadLimitError as exc:
+        raise HTTPException(status_code=413, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception:
@@ -275,6 +301,86 @@ async def send_chat_message(
         citations=result.citations,
         project_id=result.project_id,
     )
+
+
+def _chat_message_stream(
+    chatbot: ChatbotService,
+    job_id: str,
+    user_id: int,
+) -> StreamingResponse:
+    try:
+        job, events = chatbot.subscribe_chat_message(job_id, user_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tiến trình chat")
+
+    async def event_stream():
+        try:
+            while True:
+                _, event_type, payload = await events.get()
+                yield _sse_event(event_type, payload)
+                if event_type in {"complete", "error_event"}:
+                    break
+        finally:
+            # The detached task keeps working after the browser disconnects.
+            chatbot.unsubscribe_chat_message(job, events)
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.get(
+    "/message-jobs/active",
+    response_model=ChatMessageJobOut | None,
+)
+async def get_active_chat_message_job(
+    current_user: UserResponse = Depends(get_current_active_user),
+    chatbot: ChatbotService = Depends(get_chatbot_service),
+) -> dict | None:
+    """Return an ordinary chat job that a new tab can reconnect to."""
+    return chatbot.get_active_chat_message(current_user.id)
+
+
+@router.get("/message-jobs/{job_id}/stream")
+async def reconnect_chat_message_job(
+    job_id: str,
+    current_user: UserResponse = Depends(get_current_active_user),
+    chatbot: ChatbotService = Depends(get_chatbot_service),
+) -> StreamingResponse:
+    return _chat_message_stream(chatbot, job_id, current_user.id)
+
+
+@router.post("/sessions/{session_id}/message-stream")
+async def stream_chat_message(
+    session_id: str,
+    body: ChatMessageCreate,
+    current_user: UserResponse = Depends(get_current_active_user),
+    chatbot: ChatbotService = Depends(get_chatbot_service),
+) -> StreamingResponse:
+    """Start a reconnectable ordinary chat response and subscribe to it."""
+    try:
+        job = chatbot.start_chat_message(
+            session_id,
+            current_user.id,
+            body.content,
+            model_name=body.model,
+            effort=body.effort,
+            slide_count=body.slide_count,
+            document_ids=body.document_ids,
+        )
+    except ChatMessageInProgressError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Không tìm thấy phiên chat")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return _chat_message_stream(chatbot, job.id, current_user.id)
 
 
 def _slide_generation_stream(

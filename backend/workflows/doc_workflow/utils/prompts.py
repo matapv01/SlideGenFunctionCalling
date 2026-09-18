@@ -35,44 +35,44 @@ CONTENT TO SPLIT:
 """
 
 AUTO_STRUCTURE_SYSTEM_PROMPT = """
-You are an expert document analyst. Your task is to analyze one completely unstructured document and create a logical hierarchical structure.
+You are an expert document analyst. Your task is to analyze one completely
+unstructured document and create a logical hierarchical outline.
 
 INSTRUCTIONS:
 
 1. Analyze the Text: Read the entire document carefully to understand its main themes and topics.
 2. Identify Structure: Determine logical sections, main topics, and subtopics even if no headings exist.
-3. Create Hierarchy: Build a nested structure with appropriate levels (Level 1, 2, 3, etc.).
+3. Create Hierarchy: Build a nested structure with appropriate levels.
 4. Generate Headings: Create clear, concise headings for each section you identify.
-5. Distribute Content: Assign every source paragraph and sentence to the most appropriate section.
+5. Assign Blocks: Put each source block ID into the section that best represents it.
 
 CRITICAL RULES:
 
-- PRESERVE THE SOURCE: Do not drop, invent, or materially summarize away facts. The resulting tree is also the source used for document question answering.
-- RE-ORGANIZE, DON'T REWRITE: Keep the original wording wherever practical; only create concise headings and move content under the right heading.
-- PRESERVE KEY PHRASES: Retain specific terminology, technical terms, key marketing phrases, and important names/data.
+- PRESERVE THE SOURCE: Do not drop, invent, or materially summarize away facts.
+- The backend owns the source text. Do not copy or rewrite source content in the response.
+- Every block ID should appear at most once. Use the exact IDs supplied in the input.
+- If a block does not fit perfectly, assign it to the closest section instead of omitting it.
 - LOGICAL GROUPING: Group related concepts together.
 - CLEAR HEADINGS: Create descriptive headings that reflect the content.
 
 OUTPUT FORMAT:
 
-Return a JSON array of objects with this structure:
+Return a JSON array of compact outline objects only:
 [
   {{
-    "level": 1,
     "title": "Main Section Title",
-    "content": "Overview text",
+    "block_ids": ["p0001", "p0002"],
     "children": [
       {{
-        "level": 2,
         "title": "Subsection Title",
-        "content": "Detailed content",
+        "block_ids": ["p0003"],
         "children": []
       }}
     ]
   }}
 ]
 
-Return ONLY the JSON array, no additional text or markdown.
+Return ONLY the JSON array, with no markdown fences or additional text.
 """
 
 HUMAN_PROMPT_TEMPLATE_AUTO = """
@@ -81,10 +81,16 @@ DOCUMENT TO ANALYZE:
 
 Title: {document_title}
 
-Full Text:
-{full_text}
+The backend has split the original text into source blocks. The block text is
+provided only so you can understand the topic. Return block IDs, not block
+content.
+
+SOURCE BLOCKS:
+{source_blocks}
 
 ---
 
-Please analyze this document and create a hierarchical structure with appropriate headings and content distribution.
+{retry_instruction}
+
+Analyze the complete document and return a compact hierarchical outline.
 """

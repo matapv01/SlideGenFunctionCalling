@@ -1259,6 +1259,10 @@ def execute_tool_plan(
     tool_calls: list,
     tool_lookup: dict = None,
     source_content: str | None = None,
+    image_verifier=None,
+    verification_context: dict | None = None,
+    preferred_images: list[dict] | None = None,
+    asset_dir: str | None = None,
 ) -> tuple:
     """
     Execute one generator response: XML slide tool FIRST, then Search 1..N.
@@ -1287,6 +1291,10 @@ def execute_tool_plan(
         final_tool_call, search_history = execute_image_search_plan(
             tool_calls=normalized_tool_calls,
             tool_lookup=tool_lookup,
+            image_verifier=image_verifier,
+            verification_context=verification_context,
+            preferred_images=preferred_images,
+            asset_dir=asset_dir,
         )
     except ToolPlanError as error:
         # ToolPlanError means the model generated a structurally invalid plan

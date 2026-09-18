@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
+from backend.config import CHATBOT_DOCUMENTS_DIR
 from backend.domain.entities.chat_document import ChatDocument, ChatDocumentChunk
 from backend.domain.ports.chat_document_repository import ChatDocumentRepository
 from backend.infrastructure.database.connection import get_db_connection
@@ -19,6 +20,18 @@ def _document_from_row(row) -> ChatDocument:
         structure = json.loads(row["structure_json"] or "[]")
     except (TypeError, ValueError):
         structure = []
+    try:
+        images = json.loads(row["images_json"] or "[]")
+    except (TypeError, ValueError, KeyError):
+        images = []
+    size_bytes = int(row["size_bytes"] or 0)
+    if size_bytes <= 0:
+        # Backfill the effective size for documents created before the column
+        # existed. New rows always persist the value explicitly.
+        try:
+            size_bytes = (CHATBOT_DOCUMENTS_DIR / f"{row['id']}.docx").stat().st_size
+        except OSError:
+            size_bytes = 0
     return ChatDocument(
         id=str(row["id"]),
         user_id=int(row["user_id"]),
@@ -33,6 +46,8 @@ def _document_from_row(row) -> ChatDocument:
         created_at=str(row["created_at"]),
         updated_at=str(row["updated_at"]),
         chunk_index_version=int(row["chunk_index_version"] or 0),
+        size_bytes=size_bytes,
+        images=images if isinstance(images, list) else [],
     )
 
 
@@ -105,6 +120,7 @@ class SqliteChatDocumentRepository(ChatDocumentRepository):
         project_id: int | None,
         original_filename: str,
         content_hash: str,
+        size_bytes: int = 0,
     ) -> ChatDocument:
         now = _now()
         with get_db_connection() as conn:
@@ -112,8 +128,8 @@ class SqliteChatDocumentRepository(ChatDocumentRepository):
                 """
                 INSERT INTO chatbot_documents
                     (id, user_id, project_id, original_filename, status,
-                     content_hash, created_at, updated_at)
-                VALUES (?, ?, ?, ?, 'processing', ?, ?, ?)
+                     content_hash, size_bytes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, 'processing', ?, ?, ?, ?)
                 """,
                 (
                     document_id,
@@ -121,6 +137,7 @@ class SqliteChatDocumentRepository(ChatDocumentRepository):
                     project_id,
                     original_filename,
                     content_hash,
+                    max(0, int(size_bytes)),
                     now,
                     now,
                 ),
@@ -244,6 +261,7 @@ class SqliteChatDocumentRepository(ChatDocumentRepository):
         markdown_path: str,
         structure: list[dict],
         chunks: list[dict],
+        images: list[dict] | None = None,
     ) -> ChatDocument:
         now = _now()
         structure_json = json.dumps(structure, ensure_ascii=False)
@@ -270,7 +288,7 @@ class SqliteChatDocumentRepository(ChatDocumentRepository):
                 """
                 UPDATE chatbot_documents
                 SET title = ?, status = 'ready', markdown_path = ?,
-                    structure_json = ?, error_message = NULL,
+                    structure_json = ?, images_json = ?, error_message = NULL,
                     chunk_index_version = ?, updated_at = ?
                 WHERE id = ? AND user_id = ?
                 """,
@@ -278,6 +296,7 @@ class SqliteChatDocumentRepository(ChatDocumentRepository):
                     title,
                     markdown_path,
                     structure_json,
+                    json.dumps(images or [], ensure_ascii=False),
                     index_version,
                     now,
                     document_id,

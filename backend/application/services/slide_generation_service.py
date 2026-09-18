@@ -13,6 +13,7 @@ from backend.application.services.slidegen_workflow_service import SlideGenWorkf
 from backend.application.services.slide_intent_service import MIN_SLIDE_COUNT
 from backend.config import resolve_chatbot_generation_config
 from backend.domain.entities.chat import ChatSession
+from backend.domain.project_name import normalize_project_name
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.workflows.slidegen_workflow.utils.markdown_parser import (
     parse_markdown_to_hierarchical_json,
@@ -65,6 +66,7 @@ class SlideGenerationService:
         model_name: str | None,
         effort: str | None,
         target_slide_count: int,
+        document_images: list[dict[str, Any]] | None = None,
         callback: Callable[[str, dict[str, Any]], None] | None = None,
     ) -> SlideGenerationResult:
         """Generate one deck from the chat request and optional RAG context."""
@@ -136,6 +138,10 @@ class SlideGenerationService:
             "enable_thank_you_slide": True,
             "target_slide_count": target_slide_count,
             "presentation_instruction": presentation_instruction,
+            # The canonical workflow's image_verifier node consumes these
+            # private runtime assets before planner batches are dispatched.
+            "document_images": list(document_images or []),
+            "user_request": prompt,
         }
         self._emit_event(
             callback,
@@ -160,6 +166,14 @@ class SlideGenerationService:
         if not output_folder:
             raise RuntimeError("Slide workflow returned no output")
 
+        # Runtime image paths are private implementation details. The rendered
+        # XML/project assets are already materialized, so do not persist DOCX
+        # source paths or the full verifier payload in project metadata.
+        persisted_slide_options = {
+            key: value
+            for key, value in slide_options.items()
+            if key not in {"document_images", "document_image_assignments", "user_request"}
+        }
         project_id = self.project_service.import_project_from_workflow(
             user_id=session.user_id,
             project_name=project_name,
@@ -170,7 +184,7 @@ class SlideGenerationService:
                 "script": script,
                 "presentation_instruction": presentation_instruction,
             },
-            slide_options=slide_options,
+            slide_options=persisted_slide_options,
             output_folder=output_folder,
         )
         if not project_id:
@@ -386,4 +400,4 @@ under 180 words.
         name = " ".join(value.split()).strip()
         for character in '<>:"/\\|?*':
             name = name.replace(character, "-")
-        return (name[:120] or "Chatbot presentation").strip()
+        return normalize_project_name(name, fallback="Chatbot presentation")

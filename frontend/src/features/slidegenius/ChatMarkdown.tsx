@@ -1,4 +1,6 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useMemo, type ReactNode } from "react";
+import { convertLatexToMarkup } from "mathlive";
+import "mathlive/static.css";
 
 type MarkdownBlock =
   | { type: "paragraph"; lines: string[] }
@@ -7,6 +9,7 @@ type MarkdownBlock =
   | { type: "ordered-list"; items: string[] }
   | { type: "quote"; lines: string[] }
   | { type: "code"; language: string; lines: string[] }
+  | { type: "math"; value: string }
   | { type: "rule" };
 
 const blockStart = (line: string) => {
@@ -16,6 +19,7 @@ const blockStart = (line: string) => {
     || /^\s{0,3}\d+[.)]\s+/.test(line)
     || /^\s{0,3}>\s?/.test(line)
     || /^\s*```/.test(line)
+    || /^\s*(?:\$\$|\\\[|\\begin\{(?:equation\*?|align\*?|gather\*?)\})\s*$/.test(line)
     || /^\s*(?:---+|___+|\*\s*\*\s*\*+)\s*$/.test(line)
   );
 };
@@ -42,6 +46,34 @@ function parseBlocks(value: string): MarkdownBlock[] {
       }
       if (index < lines.length) index += 1;
       blocks.push({ type: "code", language: codeStart[1] || "", lines: codeLines });
+      continue;
+    }
+
+    const displayMathStart = line.match(/^\s*(\$\$|\\\[)\s*$/);
+    if (displayMathStart) {
+      const closingToken = displayMathStart[1] === "$$" ? "$$" : "\\]";
+      const mathLines: string[] = [];
+      index += 1;
+      while (index < lines.length && lines[index].trim() !== closingToken) {
+        mathLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push({ type: "math", value: mathLines.join("\n").trim() });
+      continue;
+    }
+
+    const equationStart = line.match(/^\s*\\begin\{(equation\*?|align\*?|gather\*?)\}\s*$/);
+    if (equationStart) {
+      const closingToken = `\\end{${equationStart[1]}}`;
+      const mathLines: string[] = [];
+      index += 1;
+      while (index < lines.length && lines[index].trim() !== closingToken) {
+        mathLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push({ type: "math", value: mathLines.join("\n").trim() });
       continue;
     }
 
@@ -128,9 +160,41 @@ function parseBlocks(value: string): MarkdownBlock[] {
   return blocks;
 }
 
-const inlineToken = /(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|~~[^~\n]+~~|\[[^\]\n]+\]\(https?:\/\/[^\s)]+\)|\[(?:Source|Nguồn)\s+\d+\]|\*[^*\n]+\*|_[^_\n]+_)/g;
+const inlineToken = /(`[^`\n]+`|\$\$[^$\n]+\$\$|\$[^$\n]+\$|\\\([^\n]+?\\\)|\*\*[^*\n]+\*\*|__[^_\n]+__|~~[^~\n]+~~|\[[^\]\n]+\]\(https?:\/\/[^\s)]+\)|\[(?:Source|Nguồn)\s+\d+\]|\*[^*\n]+\*|_[^_\n]+_)/g;
 
 type CitationClickHandler = (sourceIndex: number) => void;
+
+function LatexMath({ value, display = false }: { value: string; display?: boolean }) {
+  const latex = value.trim();
+  const markup = useMemo(() => {
+    if (!latex) return "";
+    try {
+      return convertLatexToMarkup(latex);
+    } catch {
+      return "";
+    }
+  }, [latex]);
+
+  if (!markup) {
+    return <code className={display ? "chat-math-fallback is-block" : "chat-math-fallback"}>{latex}</code>;
+  }
+
+  return (
+    <span
+      className={display ? "chat-math chat-math-block" : "chat-math chat-math-inline"}
+      role="math"
+      aria-label={latex}
+      dangerouslySetInnerHTML={{ __html: markup }}
+    />
+  );
+}
+
+function mathTokenValue(token: string) {
+  if (token.startsWith("$$") && token.endsWith("$$")) return token.slice(2, -2);
+  if (token.startsWith("$") && token.endsWith("$")) return token.slice(1, -1);
+  if (token.startsWith("\\(") && token.endsWith("\\)")) return token.slice(2, -2);
+  return token;
+}
 
 function renderInline(value: string, onCitationClick?: CitationClickHandler): ReactNode[] {
   const result: ReactNode[] = [];
@@ -146,8 +210,13 @@ function renderInline(value: string, onCitationClick?: CitationClickHandler): Re
 
     if (token.startsWith("`") && token.endsWith("`")) {
       result.push(<code key={`code-${tokenIndex++}`}>{token.slice(1, -1)}</code>);
+    } else if (
+      (token.startsWith("$") && token.endsWith("$"))
+      || (token.startsWith("\\(") && token.endsWith("\\)"))
+    ) {
+      result.push(<LatexMath key={`math-${tokenIndex++}`} value={mathTokenValue(token)} />);
     } else if ((token.startsWith("**") && token.endsWith("**")) || (token.startsWith("__") && token.endsWith("__"))) {
-      result.push(<strong key={`strong-${tokenIndex++}`}>{token.slice(2, -2)}</strong>);
+      result.push(<strong key={`strong-${tokenIndex++}`}>{renderInline(token.slice(2, -2), onCitationClick)}</strong>);
     } else if (token.startsWith("~~") && token.endsWith("~~")) {
       result.push(<del key={`del-${tokenIndex++}`}>{token.slice(2, -2)}</del>);
     } else if (token.startsWith("[") && token.includes("](") && token.endsWith(")")) {
@@ -181,7 +250,7 @@ function renderInline(value: string, onCitationClick?: CitationClickHandler): Re
         ),
       );
     } else if (token.startsWith("*") || token.startsWith("_")) {
-      result.push(<em key={`em-${tokenIndex++}`}>{token.slice(1, -1)}</em>);
+      result.push(<em key={`em-${tokenIndex++}`}>{renderInline(token.slice(1, -1), onCitationClick)}</em>);
     } else {
       result.push(<Fragment key={`token-${tokenIndex++}`}>{token}</Fragment>);
     }
@@ -226,6 +295,7 @@ export default function ChatMarkdown({
         }
         if (block.type === "quote") return <blockquote key={key}>{renderTextLines(block.lines, onCitationClick)}</blockquote>;
         if (block.type === "code") return <pre key={key}><code>{block.lines.join("\n")}</code></pre>;
+        if (block.type === "math") return <LatexMath key={key} value={block.value} display />;
         if (block.type === "rule") return <hr key={key} />;
         return <p key={key}>{renderInline(block.lines.join(" "), onCitationClick)}</p>;
       })}

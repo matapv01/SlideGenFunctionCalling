@@ -163,6 +163,9 @@ def _build_graph_config(
             "slide_generation_semaphore": asyncio.Semaphore(
                 max(1, int(SLIDE_MAX_CONCURRENCY))
             ),
+            "image_relevance_verifier": infra_providers.get(
+                "image_relevance_verifier"
+            ),
         },
         "recursion_limit": WORKFLOW_RECURSION_LIMIT,
         "max_concurrency": SLIDE_MAX_CONCURRENCY,
@@ -244,6 +247,8 @@ async def run_canonical_slide_workflow(
             "vlm_decision": "accept",
             "slide_options": options,
             "output_format": output_format,
+            "document_images": list(options.get("document_images") or []),
+            "user_request": str(options.get("user_request") or ""),
         }
 
         print(

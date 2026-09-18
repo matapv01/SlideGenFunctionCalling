@@ -43,6 +43,7 @@ class UserResponse(UserBase):
     """
     id: int
     is_active: bool
+    is_admin: bool = False
     created_at: datetime
     username: Optional[str] = None
     full_name: Optional[str] = None

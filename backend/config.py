@@ -12,8 +12,8 @@ FRONTEND_DIR = PROJECT_DIR / "frontend"
 FRONTEND_DIST_DIR = PROJECT_DIR / "frontend" / "dist"
 RUNNING_IN_DOCKER = Path("/.dockerenv").exists()
 
-# `.env` is intentionally limited to credentials/secrets. Load it once before
-# reading those values; application behavior is configured below in this file.
+# `.env` contains credentials and deployment secrets. Load it once before
+# reading them; application behavior stays centralized in this config module.
 load_dotenv(PROJECT_DIR / ".env")
 
 # Upload and output directories
@@ -84,6 +84,13 @@ LLM_TEMPERATURE = 0.5
 LLM_MAX_TOKENS = 20000
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
 LLM_TOP_P = 1.0
+
+# --- VLM Configuration ---
+# Image relevance verification currently uses the same multimodal Qwen
+# endpoint as the rest of the application. Keep this as a config constant so
+# changing the model later is a deliberate code/config change, not a hidden
+# .env override that can make Docker and local behave differently.
+VLM_MODEL = LLM_MODEL
 # Short-term conversation memory configuration.
 CHATBOT_MAX_HISTORY_TURNS = 5
 CHATBOT_DEFAULT_MODEL = "genius-3"
@@ -133,7 +140,6 @@ CHATBOT_RAG_MAX_ANCESTOR_DEPTH = 4
 CHATBOT_RAG_MAX_SIBLINGS = 3
 CHATBOT_RAG_OVERVIEW_SECTION_LIMIT = 24
 CHATBOT_RAG_DETAIL_NODE_LIMIT = 8
-CHATBOT_UPLOAD_MAX_BYTES = 25 * 1024 * 1024
 
 
 def resolve_chatbot_generation_config(
@@ -161,6 +167,10 @@ def resolve_chatbot_generation_config(
         "temperature": temperature,
         "max_tokens": effort_config["max_tokens"],
         "top_p": model_config["top_p"],
+        # Usage cost is loaded from the administrator-managed SQLite policy by
+        # SubscriptionService. Keep a neutral compatibility value here for
+        # callers that only need generation parameters.
+        "usage_cost": 1.0,
     }
 
 # Số lần retry tối đa khi gọi LLM thất bại (network error, timeout, v.v.)
@@ -173,10 +183,6 @@ SLIDE_CHAR_LIMIT = 600
 CONTENT_CHAR_LIMIT_FOR_SPLIT = 800
 # Giới hạn ký tự cho 1 chunk content (cũng dùng để ước lượng số slide)
 THRESHOLD_CHAR_LIMIT = 800
-# Maximum number of slides allowed for Free and Plus DOCX generation.
-# Ultra remains unlimited. Keep this in config so plan limits are not hidden
-# inside routers or workflow nodes.
-DOCX_MAX_SLIDES = 50
 # Hard input limit checked before document preprocessing/planning.
 # 40,000 characters is equivalent to the current 50-slide estimate at
 # THRESHOLD_CHAR_LIMIT characters per slide.

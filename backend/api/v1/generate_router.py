@@ -36,6 +36,7 @@ from backend.api.constants import EventTypes
 
 # Services
 from backend.application.services.project_service import ProjectService
+from backend.domain.project_name import normalize_project_name
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
@@ -245,8 +246,8 @@ async def generate_from_docx_normal(
 
     # 1. Setup paths
     original_filename = Path(file.filename).name
-    project_name = os.path.splitext(original_filename)[0]
-    output_folder = prepare_output_folder(project_name)
+    project_name = normalize_project_name(os.path.splitext(original_filename)[0])
+    output_folder = prepare_output_folder(os.path.splitext(original_filename)[0])
 
     temp_path = _new_temp_docx_path(original_filename)
     with open(temp_path, "wb") as f:
@@ -272,7 +273,7 @@ async def generate_from_docx_normal(
 
         slide_options = {
             "output_format": normalized_output_format,
-            "max_docx_slides": user.get_daily_limits()["max_docx_slides"],
+            "max_docx_slides": subscription_service.get_plan_limits_for_user(user)["max_docx_slides"],
         }
         output_folder_path = await docx_generation_service.generate_from_docx(
             docx_path=str(temp_path),
@@ -365,7 +366,7 @@ async def prepare_docx_stream(
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
         "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on'),
         "output_format": normalized_output_format,
-        "max_docx_slides": user.get_daily_limits()["max_docx_slides"],
+        "max_docx_slides": subscription_service.get_plan_limits_for_user(user)["max_docx_slides"],
         "original_filename": original_filename,
     }
     stored_filename = temp_path.name
@@ -452,8 +453,8 @@ async def stream_docx_generation(
         with open(options_path, "r") as f: slide_options = json.load(f)
 
     original_filename = Path(slide_options.get("original_filename", filename)).name
-    project_name = os.path.splitext(original_filename)[0]
-    output_folder = prepare_output_folder(project_name)
+    project_name = normalize_project_name(os.path.splitext(original_filename)[0])
+    output_folder = prepare_output_folder(os.path.splitext(original_filename)[0])
 
     async def event_generator():
         queue = asyncio.Queue()
@@ -616,6 +617,7 @@ async def stream_manual_generation(
     with open(file_path, 'r', encoding='utf-8') as f: data = json.load(f)
     
     title = data.get('document_title', 'Untitled')
+    project_name = normalize_project_name(title)
     output_folder = prepare_output_folder(title)
 
     async def event_generator():
@@ -651,7 +653,7 @@ async def stream_manual_generation(
 
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
-                project_name=title,
+                project_name=project_name,
                 source_type='manual_structure',
                 source_data={'session_id': session_id, 'title': title},
                 slide_options={**slide_options, 'manual_mode': True},
@@ -675,7 +677,7 @@ async def stream_manual_generation(
 
             await queue.put((EventTypes.COMPLETE, {
                 'project_id': pid,
-                'project_name': title,
+                'project_name': project_name,
                 'total_slides': actual_slide_count,
                 'temp_dir': workflow_temp_dir
             }))

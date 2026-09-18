@@ -37,8 +37,14 @@ def init_db():
                 daily_usage_reset_date DATE DEFAULT CURRENT_DATE,
                 idea_usage_today INTEGER DEFAULT 0,
                 docx_usage_today INTEGER DEFAULT 0,
+                usage_window_started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                chat_usage_5h INTEGER DEFAULT 0,
+                chat_usage_credits_5h REAL DEFAULT 0,
+                chat_messages_5h INTEGER DEFAULT 0,
+                docx_usage_5h INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_active BOOLEAN DEFAULT 1
+                is_active BOOLEAN DEFAULT 1,
+                is_admin BOOLEAN NOT NULL DEFAULT 0
             )
         """)
 
@@ -217,8 +223,10 @@ def init_db():
                 status TEXT NOT NULL DEFAULT 'processing'
                     CHECK (status IN ('processing', 'ready', 'failed')),
                 content_hash TEXT NOT NULL,
+                size_bytes INTEGER NOT NULL DEFAULT 0,
                 markdown_path TEXT,
                 structure_json TEXT,
+                images_json TEXT,
                 error_message TEXT,
                 chunk_index_version INTEGER NOT NULL DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -315,6 +323,70 @@ def init_db():
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_usage_weights (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL,
+                name TEXT NOT NULL,
+                multiplier REAL NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(kind, name)
+            )
+        """)
+
+        # Runtime subscription policy is administrator-managed. These rows are
+        # only inserted when a database is first created; INSERT OR IGNORE
+        # preserves every value changed later from the admin console.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS subscription_plan_limits (
+                tier TEXT PRIMARY KEY,
+                chat_credits REAL NOT NULL,
+                docx_upload INTEGER NOT NULL,
+                max_docx_slides INTEGER NOT NULL,
+                max_docx_file_mb INTEGER NOT NULL DEFAULT 10,
+                max_docx_total_mb INTEGER NOT NULL DEFAULT 50,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # Existing databases may have the original four-column policy table;
+        # migrate it before the INSERT below uses the new byte-limit fields.
+        for statement in (
+            "ALTER TABLE subscription_plan_limits ADD COLUMN max_docx_file_mb INTEGER NOT NULL DEFAULT 10",
+            "ALTER TABLE subscription_plan_limits ADD COLUMN max_docx_total_mb INTEGER NOT NULL DEFAULT 50",
+        ):
+            try:
+                cursor.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
+        cursor.executemany(
+            """
+            INSERT OR IGNORE INTO chatbot_usage_weights (kind, name, multiplier)
+            VALUES (?, ?, ?)
+            """,
+            (
+                ("model", "genius-1", 0.75),
+                ("model", "genius-2", 0.875),
+                ("model", "genius-3", 1.0),
+                ("effort", "low", 0.75),
+                ("effort", "medium", 1.0),
+                ("effort", "high", 1.5),
+            ),
+        )
+        cursor.executemany(
+            """
+            INSERT OR IGNORE INTO subscription_plan_limits
+                (tier, chat_credits, docx_upload, max_docx_slides,
+                 max_docx_file_mb, max_docx_total_mb)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                ("free", 2, 3, 50, 10, 50),
+                ("plus", 10, 10, 50, 10, 50),
+                ("ultra", -1, -1, -1, 10, 50),
+            ),
+        )
+
         # Create indexes for better performance
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_slides_project_id ON slides(project_id)")
@@ -339,7 +411,9 @@ def init_db():
         for statement in (
             "ALTER TABLE chatbot_messages ADD COLUMN model TEXT",
             "ALTER TABLE chatbot_messages ADD COLUMN effort TEXT",
+            "ALTER TABLE chatbot_documents ADD COLUMN size_bytes INTEGER NOT NULL DEFAULT 0",
             "ALTER TABLE chatbot_documents ADD COLUMN chunk_index_version INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE chatbot_documents ADD COLUMN images_json TEXT",
             "ALTER TABLE chatbot_document_chunks ADD COLUMN node_key TEXT NOT NULL DEFAULT ''",
             "ALTER TABLE chatbot_document_chunks ADD COLUMN parent_node_key TEXT",
             "ALTER TABLE chatbot_document_chunks ADD COLUMN node_kind TEXT NOT NULL DEFAULT 'content'",
@@ -381,6 +455,53 @@ def init_db():
             cursor.execute("ALTER TABLE users ADD COLUMN cancel_at_period_end BOOLEAN DEFAULT 0")
         except Exception:
             pass  # Column already exists
+
+        # Authorization is persisted per account. Existing databases receive
+        # a non-admin default and can then be managed from the admin console
+        # after the one-time CLI bootstrap.
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0")
+        except Exception:
+            pass  # Column already exists
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_admin ON users(is_admin)")
+
+        # Migrate usage from the old daily counters to the canonical rolling
+        # five-hour window. Existing counters are preserved for the first
+        # window, while new writes keep them synchronized for old clients.
+        for statement in (
+            "ALTER TABLE users ADD COLUMN usage_window_started_at TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN chat_usage_5h INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN chat_usage_credits_5h REAL DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN chat_messages_5h INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN docx_usage_5h INTEGER DEFAULT 0",
+        ):
+            try:
+                cursor.execute(statement)
+            except Exception:
+                pass  # Column already exists
+
+        cursor.execute("""
+            UPDATE users SET
+                usage_window_started_at = COALESCE(usage_window_started_at, datetime('now')),
+                chat_usage_5h = CASE
+                    WHEN COALESCE(chat_usage_5h, 0) = 0 THEN COALESCE(idea_usage_today, 0)
+                    ELSE chat_usage_5h
+                END,
+                chat_usage_credits_5h = CASE
+                    WHEN COALESCE(chat_usage_credits_5h, 0) = 0
+                        THEN COALESCE(NULLIF(chat_usage_5h, 0), idea_usage_today, 0)
+                    ELSE chat_usage_credits_5h
+                END,
+                chat_messages_5h = CASE
+                    WHEN COALESCE(chat_messages_5h, 0) = 0
+                        THEN COALESCE(NULLIF(chat_usage_5h, 0), idea_usage_today, 0)
+                    ELSE chat_messages_5h
+                END,
+                docx_usage_5h = CASE
+                    WHEN COALESCE(docx_usage_5h, 0) = 0 THEN COALESCE(docx_usage_today, 0)
+                    ELSE docx_usage_5h
+                END
+        """)
 
         # Migrate existing paid users with NULL expires_at → set 30-day expiry from now
         cursor.execute("""

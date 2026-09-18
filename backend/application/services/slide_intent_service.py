@@ -13,7 +13,6 @@ from backend.application.services.language_service import (
     detect_language,
     is_language_compatible,
     language_instruction,
-    normalize_language_text,
 )
 from backend.domain.entities.chat import ChatMessage
 from backend.domain.ports.llm_provider import LLMProvider
@@ -50,6 +49,13 @@ class SlideFlowDecision:
     target_slide_count: int | None = None
     max_slide_count: int | None = None
     question_kind: Literal["slide_count", "content"] | None = None
+    start_generation: bool = False
+
+
+@dataclass(frozen=True)
+class ChatIntentDecision:
+    intent: Literal["chat", "slide_creation"]
+    source: Literal["llm", "fallback"]
 
 
 class SlideIntentService:
@@ -67,7 +73,8 @@ Return exactly one valid JSON object and no Markdown.
 
 The JSON must have this shape:
 {
-  "type": "clarification" or "confirmation",
+  "type": "clarification", "confirmation", or "start",
+  "action": "ask_clarification", "ask_confirmation", or "start_generation",
   "question": "one short question when type is clarification",
   "message": "one short confirmation message when type is confirmation",
   "options": [{"label": "short user-facing label", "value": "meaningful answer value"}],
@@ -86,26 +93,72 @@ Rules:
 - Return type "confirmation" when the brief is specific enough to begin.
 - A confirmation must ask whether to start creating the slides. Its options
   should be a clear affirmative action and a clear way to add more details.
+- When the latest answer clearly accepts the confirmation, return action
+  "start_generation". When it asks for more detail, return
+  "ask_clarification" or "ask_confirmation" as appropriate.
 - Never choose or change the slide count silently. Preserve the requested count
   supplied by the application.
 - Never generate slide content, JSON slide structures, or explanations here.
 """.strip()
 
-    _FALLBACK_VIETNAMESE_OPTIONS = (
-        SlideFlowOption("Giới thiệu / ra mắt", "Tập trung giới thiệu hoặc ra mắt sản phẩm, dịch vụ."),
-        SlideFlowOption("Phân tích / đề xuất", "Tập trung phân tích vấn đề và đưa ra đề xuất."),
-        SlideFlowOption("Đào tạo / hướng dẫn", "Tập trung giải thích quy trình hoặc hướng dẫn người xem."),
-        SlideFlowOption("Khác", "Người dùng sẽ bổ sung yêu cầu riêng.", is_other=True),
-    )
-    _FALLBACK_ENGLISH_OPTIONS = (
-        SlideFlowOption("Introduction / launch", "Focus on introducing or launching a product or service."),
-        SlideFlowOption("Analysis / recommendation", "Focus on analyzing a problem and presenting recommendations."),
-        SlideFlowOption("Training / how-to", "Focus on explaining a process or teaching the audience."),
-        SlideFlowOption("Other", "The user will provide a custom direction.", is_other=True),
-    )
+    _ROUTER_PROMPT = """
+You are the intent router for Slidegenius.
+Determine what the latest user message means in the full conversation. Do not
+answer the user and do not infer facts that are not present.
+
+Return exactly one JSON object and no Markdown:
+{"intent":"chat" or "slide_creation", "reason":"short explanation"}
+
+Choose slide_creation when the user wants to create, plan, generate, or
+continue a presentation/deck/slide content, including a short follow-up whose
+meaning is clear from the conversation. Choose chat for ordinary questions,
+greetings, document Q&A, or requests unrelated to creating a slide deck.
+Use meaning and context, not a fixed keyword list. A request to create content
+is slide_creation only when the conversation makes the presentation goal clear.
+""".strip()
 
     def __init__(self, llm_provider: LLMProvider) -> None:
         self.llm_provider = llm_provider
+
+    async def classify(
+        self,
+        query: str,
+        history: list[ChatMessage],
+        generation_config: dict[str, str | float | int],
+        *,
+        history_summary: str | None = None,
+    ) -> ChatIntentDecision:
+        """Route a turn without hard-coded phrase matching."""
+        language = self._language_for(query)
+        raw = await self._ask_llm(
+            [
+                {
+                    "role": "system",
+                    "content": f"{self._ROUTER_PROMPT}\n\n{language_instruction(language)}",
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Conversation summary:\n{history_summary or '(none)'}\n\n"
+                        f"Recent conversation:\n{self._format_history(history)}\n\n"
+                        f"Latest user message:\n{query}\n\n"
+                        "Return the routing decision now."
+                    ),
+                },
+            ],
+            generation_config,
+            max_tokens=240,
+        )
+        intent = str((raw or {}).get("intent") or "").strip().lower()
+        if intent in {
+            "slide_creation",
+            "slide_request",
+            "presentation",
+            "deck",
+            "slides",
+        }:
+            return ChatIntentDecision("slide_creation", "llm")
+        return ChatIntentDecision("chat", "llm" if isinstance(raw, dict) else "fallback")
 
     async def start(
         self,
@@ -239,6 +292,7 @@ Rules:
                 language,
                 target_slide_count,
                 document_attached,
+                str(flow.get("state") or ""),
             ),
             generation_config,
         )
@@ -264,6 +318,7 @@ Rules:
                 target_slide_count=decision.target_slide_count,
                 max_slide_count=decision.max_slide_count,
                 question_kind=decision.question_kind,
+                start_generation=decision.start_generation,
             )
         return decision
 
@@ -271,13 +326,15 @@ Rules:
         self,
         messages: list[dict[str, str]],
         generation_config: dict[str, str | float | int],
+        *,
+        max_tokens: int = 1400,
     ) -> dict[str, Any] | None:
         try:
             response = await asyncio.to_thread(
                 self.llm_provider.generate_completion,
                 messages,
                 model=str(generation_config["provider_model"]),
-                max_tokens=min(1400, int(generation_config["max_tokens"])),
+                max_tokens=min(max_tokens, int(generation_config["max_tokens"])),
                 temperature=min(0.45, float(generation_config["temperature"])),
                 top_p=float(generation_config["top_p"]),
             )
@@ -321,6 +378,7 @@ Rules:
         language: Language,
         target_slide_count: int | None,
         document_attached: bool,
+        current_flow_state: str,
     ) -> list[dict[str, str]]:
         answers_text = "\n".join(
             f"- {item.get('question', 'Question')}: {item.get('answer', '')}"
@@ -337,11 +395,14 @@ Rules:
                     f"Original slide request:\n{original_prompt}\n\n"
                     f"Current brief:\n{current_brief}\n\n"
                     f"Requested slide count: {target_slide_count or '(not chosen yet)'}\n\n"
+                    f"Current preflight state: {current_flow_state or '(none)'}\n\n"
                     f"{self._document_context_instruction(document_attached)}\n\n"
                     f"Answers collected:\n{answers_text}\n\n"
                     f"Latest user input:\n{latest_answer}\n\n"
                     f"Recent conversation context:\n{self._format_history(history)}\n\n"
-                    "Either ask the next single clarification question or ask for confirmation to start."
+                    "If the user clearly accepts an existing confirmation, return action "
+                    "start_generation. If the user adds or changes requirements, ask one "
+                    "clarification question. Otherwise ask for confirmation."
                 ),
             },
         ]
@@ -372,6 +433,12 @@ Rules:
             )
 
         kind = str(raw.get("type") or raw.get("state") or "").strip().lower()
+        action = str(raw.get("action") or "").strip().lower()
+        start_generation = bool(raw.get("start_generation")) or action in {
+            "start_generation",
+            "generate",
+            "start",
+        } or kind in {"start", "generate", "confirmed", "confirmation_accepted"}
         brief = str(raw.get("brief") or current_brief).strip() or current_brief
         if not is_language_compatible(brief, language):
             brief = current_brief
@@ -395,7 +462,24 @@ Rules:
                 max_slide_count,
                 language,
             )
-        if kind in {"confirmation", "confirm", "ready"}:
+        if start_generation:
+            if target_slide_count is None:
+                return self._slide_count_clarification(
+                    current_brief,
+                    language,
+                    max_slide_count,
+                )
+            return SlideFlowDecision(
+                state="awaiting_confirmation",
+                message="",
+                options=(),
+                brief=brief,
+                target_slide_count=target_slide_count,
+                max_slide_count=max_slide_count,
+                start_generation=True,
+            )
+
+        if kind in {"confirmation", "confirm", "ready"} or action == "ask_confirmation":
             if target_slide_count is None:
                 return self._slide_count_clarification(
                     current_brief,
@@ -414,7 +498,7 @@ Rules:
                 max_slide_count=max_slide_count,
             )
 
-        if kind not in {"clarification", "question", "clarify"}:
+        if kind not in {"clarification", "question", "clarify"} and action != "ask_clarification":
             return self._fallback_with_metadata(
                 fallback,
                 target_slide_count=target_slide_count,
@@ -424,17 +508,6 @@ Rules:
         question = str(raw.get("question") or raw.get("message") or "").strip()
         options = self._normalise_options(raw.get("options"), language)
         if not question or not is_language_compatible(question, language) or len(options) < 3:
-            return self._fallback_with_metadata(
-                fallback,
-                target_slide_count=target_slide_count,
-                max_slide_count=max_slide_count,
-            )
-        if document_attached and self._is_document_source_question(question, options):
-            # The document is already selected in this session. An LLM may
-            # still return the old "upload/paste/source" question from a stale
-            # prompt or a previous model configuration; replace it at the
-            # preflight boundary so the user never has to upload the same file
-            # twice.
             return self._fallback_with_metadata(
                 fallback,
                 target_slide_count=target_slide_count,
@@ -667,10 +740,10 @@ Rules:
         if language == "vi":
             return SlideFlowDecision(
                 state="clarifying",
-                message="Bạn muốn bộ slide tập trung theo hướng nào?",
-                options=self._FALLBACK_VIETNAMESE_OPTIONS,
+                message="Mình chưa đủ thông tin để định hình bộ slide. Bạn hãy mô tả thêm điều muốn tạo.",
+                options=(),
                 brief=prompt,
-                question="Bạn muốn bộ slide tập trung theo hướng nào?",
+                question="Bạn hãy mô tả thêm điều muốn tạo.",
                 target_slide_count=target_slide_count,
                 max_slide_count=max_slide_count,
                 question_kind=question_kind or (
@@ -679,10 +752,10 @@ Rules:
             )
         return SlideFlowDecision(
             state="clarifying",
-            message="What should the deck focus on most?",
-            options=self._FALLBACK_ENGLISH_OPTIONS,
+            message="I need a little more direction before shaping the deck. Please describe what you want to create.",
+            options=(),
             brief=prompt,
-            question="What should the deck focus on most?",
+            question="Please describe what you want to create.",
             target_slide_count=target_slide_count,
             max_slide_count=max_slide_count,
             question_kind=question_kind or (
@@ -796,62 +869,6 @@ Rules:
         return (
             "No reference document is attached. Do not assume that a document exists; "
             "ask about the most useful content direction when needed."
-        )
-
-    @classmethod
-    def _is_document_source_question(
-        cls,
-        question: str,
-        options: list[SlideFlowOption] | tuple[SlideFlowOption, ...],
-    ) -> bool:
-        normalized_question = normalize_language_text(question)
-        source_question_phrases = (
-            "tai lieu nao",
-            "nguon nao",
-            "chon nguon",
-            "tai len",
-            "dan noi dung",
-            "document",
-            "source",
-            "material",
-            "upload",
-            "paste",
-        )
-        if any(phrase in normalized_question for phrase in source_question_phrases):
-            return True
-
-        option_text = " ".join(
-            normalize_language_text(f"{option.label} {option.value}")
-            for option in options
-        )
-        source_option_phrases = (
-            "tai lieu",
-            "tai len",
-            "dan noi dung",
-            "document",
-            "source",
-            "material",
-            "upload",
-            "paste",
-        )
-        return sum(phrase in option_text for phrase in source_option_phrases) >= 2
-
-    @classmethod
-    def is_document_source_flow(cls, flow: dict[str, Any]) -> bool:
-        """Detect a legacy flow that asks the user to choose a document source."""
-        raw_options = flow.get("options")
-        options: list[SlideFlowOption] = []
-        if isinstance(raw_options, list):
-            for raw_option in raw_options:
-                if not isinstance(raw_option, dict):
-                    continue
-                label = str(raw_option.get("label") or "").strip()
-                value = str(raw_option.get("value") or label).strip()
-                if label:
-                    options.append(SlideFlowOption(label, value))
-        return cls._is_document_source_question(
-            str(flow.get("question") or ""),
-            options,
         )
 
     @staticmethod

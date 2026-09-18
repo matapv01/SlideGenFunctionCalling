@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import Any
 
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import search_ddgs_images
@@ -280,12 +282,62 @@ def _pick_live_url(urls: list, timeout: float = 5.0) -> str | None:
     return first_candidate
 
 
-def _run_one_search(index: int, call: dict, target: dict) -> tuple[int, str, dict]:
+def _materialize_document_image(source_path: str, asset_dir: str | None) -> str | None:
+    """Copy a verified DOCX asset into the generated project's private assets."""
+    source = Path(str(source_path or "").strip())
+    if not source.is_file():
+        return None
+    if not asset_dir:
+        return str(source)
+    destination_root = Path(asset_dir) / "document_images"
+    destination_root.mkdir(parents=True, exist_ok=True)
+    asset_name = f"{source.parent.name}_{source.name}"
+    destination = destination_root / asset_name
+    try:
+        if not destination.exists() or destination.stat().st_size != source.stat().st_size:
+            shutil.copy2(source, destination)
+        return str(destination)
+    except OSError:
+        return str(source)
+
+
+def _run_one_search(
+    index: int,
+    call: dict,
+    target: dict,
+    *,
+    image_verifier=None,
+    verification_context: dict | None = None,
+    preferred_image: dict | None = None,
+    asset_dir: str | None = None,
+) -> tuple[int, str, dict]:
     arguments = call["arguments"]
     query = arguments["query"].strip()
     layout = arguments.get("layout") or _infer_layout(target.get("description", ""))
     size = arguments.get("size") or "Large"
 
+    # The document-image verifier has already approved this source image for
+    # the current slide. Reuse it instead of replacing it with a search result.
+    if isinstance(preferred_image, dict):
+        local_path = _materialize_document_image(
+            str(preferred_image.get("source_path") or ""),
+            asset_dir,
+        )
+        if local_path:
+            return index, local_path, {
+                "name": SEARCH_TOOL_NAME,
+                "arguments": {
+                    "query": query,
+                    "layout": layout,
+                    "size": size,
+                },
+                "target_param": target["path_string"],
+                "result_url": local_path,
+                "source": "verified_document_image",
+                "source_image_id": preferred_image.get("image_id", ""),
+            }
+
+    verification: dict[str, Any] | None = None
     try:
         raw_result = search_ddgs_images(
             query=query,
@@ -295,7 +347,23 @@ def _run_one_search(index: int, call: dict, target: dict) -> tuple[int, str, dic
             target_description=target.get("description", ""),
         )
         urls = json.loads(raw_result)
-        url = _pick_live_url(urls)  # Check từng URL, bỏ qua những cái hỏng
+        if image_verifier is not None:
+            verification = image_verifier.verify_search_candidates(
+                candidates=urls if isinstance(urls, list) else [],
+                query=query,
+                slide_content=str((verification_context or {}).get("slide_content") or ""),
+                target_description=target.get("description", ""),
+                presentation_instruction=str(
+                    (verification_context or {}).get("presentation_instruction") or ""
+                ),
+            )
+        if verification and verification.get("available"):
+            # When Qwen-VL is available, only its approved candidates are
+            # eligible. The generic fallback remains a rendering safeguard for
+            # the rare case where no candidate passes.
+            url = _pick_live_url(list(verification.get("approved") or []))
+        else:
+            url = _pick_live_url(urls)  # Check từng URL, bỏ qua những cái hỏng
     except Exception as exc:
         url = None
         error = str(exc)
@@ -315,15 +383,27 @@ def _run_one_search(index: int, call: dict, target: dict) -> tuple[int, str, dic
     }
     if error:
         history["error"] = error
+    if verification is not None:
+        history["verification"] = {
+            "available": bool(verification.get("available")),
+            "approved_count": len(verification.get("approved") or []),
+            "decisions": verification.get("decisions") or [],
+        }
     return index, final_url, history
 
 
 def execute_image_search_plan(
     tool_calls: list[dict],
     tool_lookup: dict,
+    *,
+    image_verifier=None,
+    verification_context: dict | None = None,
+    preferred_images: list[dict] | None = None,
+    asset_dir: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """
-    Run all LLM-provided searches, inject URLs by rule, and return the XML call.
+    Run all LLM-provided searches, verify eligible candidates when a vision
+    verifier is available, and return the XML call with stable target mapping.
 
     Searches execute concurrently, while their result positions remain stable so
     Search N always maps to image target N.
@@ -340,7 +420,18 @@ def execute_image_search_plan(
     histories: list[dict | None] = [None] * len(search_calls)
     with ThreadPoolExecutor(max_workers=len(search_calls)) as executor:
         futures = {
-            executor.submit(_run_one_search, index, call, image_targets[index]): index
+            executor.submit(
+                _run_one_search,
+                index,
+                call,
+                image_targets[index],
+                image_verifier=image_verifier,
+                verification_context=verification_context,
+                preferred_image=(preferred_images or [])[index]
+                if index < len(preferred_images or [])
+                else None,
+                asset_dir=asset_dir,
+            ): index
             for index, call in enumerate(search_calls)
         }
         for future in as_completed(futures):

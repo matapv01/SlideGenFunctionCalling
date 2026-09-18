@@ -82,7 +82,7 @@ def test_planner_never_calls_llm_without_a_ready_document():
     assert llm.calls == 0
 
 
-def test_planner_falls_back_to_a_safe_query_when_llm_output_is_invalid():
+def test_planner_fails_closed_when_llm_output_is_invalid():
     llm = PlanningLLM("not valid json")
 
     plan = asyncio.run(
@@ -94,8 +94,8 @@ def test_planner_falls_back_to_a_safe_query_when_llm_output_is_invalid():
         )
     )
 
-    assert plan.needs_rag is True
-    assert plan.queries == ("Phân tích tài liệu đã tải lên",)
+    assert plan.needs_rag is False
+    assert plan.queries == ()
     assert plan.source == "fallback"
 
 

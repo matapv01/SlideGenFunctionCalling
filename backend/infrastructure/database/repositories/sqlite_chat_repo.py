@@ -84,11 +84,17 @@ class SqliteChatRepository(ChatRepository):
     def list_sessions(
         self, user_id: int, *, include_archived: bool = False
     ) -> list[ChatSession]:
-        query = "SELECT * FROM chatbot_sessions WHERE user_id = ?"
+        query = (
+            "SELECT s.* FROM chatbot_sessions AS s "
+            "WHERE s.user_id = ? "
+            "AND EXISTS ("
+            "SELECT 1 FROM chatbot_messages AS m WHERE m.session_id = s.id"
+            ")"
+        )
         params: list[object] = [user_id]
         if not include_archived:
-            query += " AND archived = 0"
-        query += " ORDER BY updated_at DESC"
+            query += " AND s.archived = 0"
+        query += " ORDER BY s.updated_at DESC"
         with get_db_connection() as conn:
             rows = conn.execute(query, params).fetchall()
         return [_session_from_row(row) for row in rows]
