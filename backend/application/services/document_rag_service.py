@@ -143,14 +143,20 @@ class DocumentRagService:
             except OSError:
                 logger.warning("Unable to remove chatbot document file %s", path)
 
-    async def ingest_docx(
+    async def create_pending_docx(
         self,
         *,
         session: ChatSession,
         original_filename: str,
         content: bytes,
     ):
-        """Preprocess and index one DOCX for the selected conversation."""
+        """Persist an uploaded DOCX without starting document analysis.
+
+        Uploading is intentionally a lightweight attachment step. The
+        canonical preprocessing and embedding work starts when the user
+        sends a message that includes this document, so the chat can expose
+        that work as a meaningful thinking state.
+        """
         if not original_filename.lower().endswith(".docx"):
             raise ValueError("Chỉ hỗ trợ tài liệu DOCX ở phiên bản này")
         if not content:
@@ -161,18 +167,66 @@ class DocumentRagService:
         document_id = str(uuid.uuid4())
         content_hash = hashlib.sha1(content).hexdigest()
         source_path = CHATBOT_DOCUMENTS_DIR / f"{document_id}.docx"
-        markdown_path = CHATBOT_DOCUMENTS_DIR / f"{document_id}.md"
         source_path.write_bytes(content)
+        safe_filename = Path(original_filename).name or "document.docx"
         document = self.repository.create_document(
             document_id=document_id,
             user_id=session.user_id,
             project_id=session.project_id,
-            original_filename=Path(original_filename).name,
+            original_filename=safe_filename,
             content_hash=content_hash,
         )
         self.repository.link_document_to_session(
             session.id, document.id, session.user_id
         )
+        return document
+
+    async def ensure_documents_ready(
+        self,
+        *,
+        session: ChatSession,
+        document_ids: list[str],
+    ) -> None:
+        """Finish processing the documents explicitly attached to a turn."""
+        normalized_ids: list[str] = []
+        seen_ids: set[str] = set()
+        for raw_id in document_ids:
+            document_id = str(raw_id).strip()
+            if document_id and document_id not in seen_ids:
+                seen_ids.add(document_id)
+                normalized_ids.append(document_id)
+        if not normalized_ids:
+            return
+
+        documents = {
+            str(document.id): document
+            for document in self.repository.list_session_documents(
+                session.id, session.user_id
+            )
+        }
+        missing_ids = [
+            document_id
+            for document_id in normalized_ids
+            if document_id not in documents
+        ]
+        if missing_ids:
+            raise ValueError("Tài liệu không thuộc phiên chat hiện tại")
+
+        for document_id in normalized_ids:
+            document = documents[document_id]
+            status = str(document.status).lower()
+            if status == "ready":
+                continue
+            if status != "processing":
+                raise ValueError(
+                    f"Không thể xử lý tài liệu {document.original_filename}"
+                )
+            await self._process_document(document=document, user_id=session.user_id)
+
+    async def _process_document(self, *, document, user_id: int):
+        """Run canonical preprocessing and indexing for one stored DOCX."""
+        source_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.docx"
+        markdown_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.md"
 
         try:
             state = await self.preprocessing_service.preprocess_for_chatbot(
@@ -204,7 +258,7 @@ class DocumentRagService:
             ]
             return self.repository.set_document_ready(
                 document.id,
-                session.user_id,
+                user_id,
                 title=title,
                 markdown_path=str(markdown_path),
                 structure=structure,
@@ -212,11 +266,26 @@ class DocumentRagService:
             )
         except Exception as exc:
             self.repository.set_document_failed(
-                document.id, session.user_id, str(exc)
+                document.id, user_id, str(exc)
             )
             # Keep the canonical source for a failed document so the error can
             # be diagnosed/reprocessed; it is never exposed without ownership.
             raise
+
+    async def ingest_docx(
+        self,
+        *,
+        session: ChatSession,
+        original_filename: str,
+        content: bytes,
+    ):
+        """Compatibility path for callers that still need eager ingestion."""
+        document = await self.create_pending_docx(
+            session=session,
+            original_filename=original_filename,
+            content=content,
+        )
+        return await self._process_document(document=document, user_id=session.user_id)
 
     async def retrieve(
         self, session: ChatSession, query: str

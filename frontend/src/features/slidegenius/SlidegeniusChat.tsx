@@ -330,6 +330,8 @@ export default function SlidegeniusChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [thinkingMode, setThinkingMode] = useState<"conversation" | "document" | null>(null);
+  const [documentThinkingStep, setDocumentThinkingStep] = useState(0);
   const [slidePlanOpen, setSlidePlanOpen] = useState(false);
   const [error, setError] = useState("");
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -369,8 +371,14 @@ export default function SlidegeniusChat() {
         copyMessage: "Sao chép tin nhắn",
         unavailable: "Không thể tải cuộc trò chuyện.",
         sending: "Đang suy nghĩ...",
+        documentThinkingTitle: "Đang phân tích tài liệu",
+        documentThinkingSteps: [
+          "Đang đọc cấu trúc DOCX",
+          "Đang phân tích nội dung tài liệu",
+          "Đang chuẩn bị ngữ cảnh liên quan",
+        ],
         upload: "Tải tài liệu DOCX",
-        uploading: "Đang xử lý DOCX...",
+        uploading: "Đang tải tệp...",
         uploaded: "Đã gắn tài liệu",
         removeAttachment: "Xóa tài liệu",
         cancelUpload: "Hủy tải tài liệu",
@@ -427,8 +435,14 @@ export default function SlidegeniusChat() {
         copyMessage: "Copy message",
         unavailable: "Unable to load conversations.",
         sending: "Thinking...",
+        documentThinkingTitle: "Analyzing document",
+        documentThinkingSteps: [
+          "Reading the DOCX structure",
+          "Analyzing the document content",
+          "Preparing relevant context",
+        ],
         upload: "Upload DOCX",
-        uploading: "Processing DOCX...",
+        uploading: "Uploading file...",
         uploaded: "Document attached",
         removeAttachment: "Remove document",
         cancelUpload: "Cancel document upload",
@@ -485,6 +499,14 @@ export default function SlidegeniusChat() {
   const hasSessionDocuments = sessionDocuments.length > 0;
 
   useEffect(() => {
+    if (!sending || thinkingMode !== "document") return;
+    const timer = window.setInterval(() => {
+      setDocumentThinkingStep((current) => current + 1);
+    }, 1600);
+    return () => window.clearInterval(timer);
+  }, [sending, thinkingMode]);
+
+  useEffect(() => {
     let active = true;
     const initialize = async () => {
       setLoading(true);
@@ -512,12 +534,12 @@ export default function SlidegeniusChat() {
           loadChatMessages(nextSession.id),
           loadChatDocuments(nextSession.id),
         ]);
-        const readyDocuments = sessionDocuments.filter((item) => item.status === "ready");
+        const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
         const sentDocumentIds = getSentDocumentIds(sessionMessages);
         setMessages(sessionMessages);
         setUploadingDocument(null);
-        setSessionDocuments(readyDocuments);
-        setUploadedDocuments(readyDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+        setSessionDocuments(attachableDocuments);
+        setUploadedDocuments(attachableDocuments.filter((item) => !sentDocumentIds.has(item.id)));
       } catch {
         if (active) setError(text.unavailable);
       } finally {
@@ -533,12 +555,12 @@ export default function SlidegeniusChat() {
       loadChatMessages(sessionId),
       loadChatDocuments(sessionId),
     ]);
-    const readyDocuments = sessionDocuments.filter((item) => item.status === "ready");
+    const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
     const sentDocumentIds = getSentDocumentIds(sessionMessages);
     setMessages(sessionMessages);
     setUploadingDocument(null);
-    setSessionDocuments(readyDocuments);
-    setUploadedDocuments(readyDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+    setSessionDocuments(attachableDocuments);
+    setUploadedDocuments(attachableDocuments.filter((item) => !sentDocumentIds.has(item.id)));
   };
 
   useEffect(() => {
@@ -620,12 +642,12 @@ export default function SlidegeniusChat() {
     ])
       .then(([sessionMessages, freshSessions, sessionDocuments]) => {
         if (!active) return;
-        const readyDocuments = sessionDocuments.filter((item) => item.status === "ready");
+        const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
         const sentDocumentIds = getSentDocumentIds(sessionMessages);
         setMessages(sessionMessages);
         setSessions(freshSessions);
-        setSessionDocuments(readyDocuments);
-        setUploadedDocuments(readyDocuments.filter((item) => !sentDocumentIds.has(item.id)));
+        setSessionDocuments(attachableDocuments);
+        setUploadedDocuments(attachableDocuments.filter((item) => !sentDocumentIds.has(item.id)));
         if (generation.phase === "error" && generation.error) setError(generation.error);
       })
       .catch(() => {
@@ -738,7 +760,7 @@ export default function SlidegeniusChat() {
     options: SendMessageOptions = {},
   ) => {
     const streamSlides = options.streamSlides === true;
-    if (!cleanMessage || !activeSessionId || sending) return;
+    if (!cleanMessage || !activeSessionId || sending || uploading) return;
     // Keep ordinary chat available while a deck is rendering. The explicit
     // slide-stream action is the only operation that must be blocked here.
     if (streamSlides && isGenerating) {
@@ -797,6 +819,8 @@ export default function SlidegeniusChat() {
     }
 
     setSending(true);
+    setThinkingMode(pendingDocuments.length > 0 || sessionDocuments.length > 0 ? "document" : "conversation");
+    setDocumentThinkingStep(0);
     try {
       const result = await sendChatMessage(
         sessionId,
@@ -830,6 +854,8 @@ export default function SlidegeniusChat() {
       setError(requestError instanceof Error ? requestError.message : text.unavailable);
     } finally {
       setSending(false);
+      setThinkingMode(null);
+      setDocumentThinkingStep(0);
     }
   };
 
@@ -1230,11 +1256,19 @@ export default function SlidegeniusChat() {
                 />
               )}
               {sending && (
-                <div className="chat-pending-message" role="status" aria-live="polite">
+                <div className={`chat-pending-message ${thinkingMode === "document" ? "is-document-thinking" : ""}`} role="status" aria-live="polite">
                   <span className="chat-assistant-mark" aria-hidden="true">✦</span>
                   <div className="chat-pending-copy">
-                    <span className="chat-pending-loader" aria-hidden="true" />
-                    <span>{text.sending}</span>
+                    <div className="chat-thinking-summary">
+                      <span className="chat-pending-loader" aria-hidden="true" />
+                      <span>{thinkingMode === "document" ? text.documentThinkingTitle : text.sending}</span>
+                    </div>
+                    {thinkingMode === "document" && (
+                      <div className="chat-thinking-step">
+                        <span className="chat-thinking-step-dot" aria-hidden="true" />
+                        <span>{text.documentThinkingSteps[documentThinkingStep % text.documentThinkingSteps.length]}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1293,7 +1327,7 @@ export default function SlidegeniusChat() {
                     </svg>
                   </span>
                   <strong title={uploadingDocument}>{uploadingDocument}</strong>
-                  <span className="chat-composer-attachment-state is-loading" aria-hidden="true"><span /></span>
+                  <span className="chat-composer-attachment-state is-uploading" aria-hidden="true">↑</span>
                   <button
                     className="chat-composer-attachment-remove"
                     type="button"
@@ -1365,7 +1399,7 @@ export default function SlidegeniusChat() {
               <button type="button" className="composer-model-button" aria-expanded={modelOpen} onClick={() => { setModelOpen(!modelOpen); setToolsOpen(false); }}>Genius {model.slice(-1)} <span>{effort[0].toUpperCase() + effort.slice(1)}</span></button>
               {modelOpen && <div className="composer-model-menu"><p className="composer-model-menu-label">Model</p>{models.map((item) => <button type="button" key={item} className={model === item ? "selected" : ""} onClick={() => { setModel(item); setModelOpen(false); }}>Genius {item.slice(-1)}{model === item && <i>✓</i>}</button>)}<div className="composer-model-divider" /><p className="composer-model-menu-label">Effort</p>{efforts.map((item) => <button type="button" key={item} className={effort === item ? "selected" : ""} onClick={() => { if (item === "low" || item === "medium" || item === "high") setEffort(item); setModelOpen(false); }}>{item[0].toUpperCase() + item.slice(1)}{effort === item && <i>✓</i>}</button>)}</div>}
             </div>
-            <button className="composer-send" type="submit" aria-label="Send message" disabled={sending || !message.trim()}>↗</button>
+            <button className="composer-send" type="submit" aria-label="Send message" disabled={sending || uploading || !message.trim()}>↗</button>
           </div>
         </form>
         <p className="chat-disclaimer">Slidegenius can make mistakes. Review important work before sharing.</p>

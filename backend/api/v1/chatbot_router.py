@@ -175,7 +175,7 @@ async def upload_chat_document(
     if session is None or session.archived:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên chat")
     try:
-        document = await rag.ingest_docx(
+        document = await rag.create_pending_docx(
             session=session,
             original_filename=file.filename or "document.docx",
             content=await file.read(CHATBOT_UPLOAD_MAX_BYTES + 1),
@@ -184,7 +184,7 @@ async def upload_chat_document(
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception:
         logger.exception("Chat document upload failed for session %s", session_id)
-        raise HTTPException(status_code=503, detail="Không thể xử lý tài liệu DOCX")
+        raise HTTPException(status_code=503, detail="Không thể tải tài liệu DOCX")
     return _document_out(document)
 
 

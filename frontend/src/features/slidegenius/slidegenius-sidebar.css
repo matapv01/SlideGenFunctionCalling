@@ -67,7 +67,7 @@
 .sgx-home.workspace-page .chat-composer-attachment-icon svg { width: 13px; height: 13px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
 .sgx-home.workspace-page .chat-composer-attachment strong { min-width: 0; overflow: hidden; color: #e9e9e3; font-size: 10px; font-weight: 500; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .sgx-home.workspace-page .chat-composer-attachment-state { display: grid; width: 14px; height: 14px; flex: 0 0 14px; place-items: center; color: #f5a08a; font-size: 12px; font-weight: 600; line-height: 1; }
-.sgx-home.workspace-page .chat-composer-attachment-state.is-loading span { width: 12px; height: 12px; border: 1.5px solid #ffffff25; border-top-color: #f5a08a; border-radius: 50%; animation: sgx-chat-spin .8s linear infinite; }
+.sgx-home.workspace-page .chat-composer-attachment-state.is-uploading { color: #f5a08a; font-size: 14px; line-height: 1; }
 .sgx-home.workspace-page .chat-composer-attachment-remove { display: grid; width: 0; max-width: 0; height: 20px; margin: 0; padding: 0; place-items: center; overflow: hidden; border: 0; border-radius: 50%; background: transparent; color: #a6a9a0; font: 15px/1 "Avenir Next", "Segoe UI", system-ui, sans-serif; opacity: 0; cursor: pointer; transition: width .16s ease, max-width .16s ease, opacity .16s ease, background .16s ease, color .16s ease; }
 .sgx-home.workspace-page .chat-composer-attachment:hover .chat-composer-attachment-remove,
 .sgx-home.workspace-page .chat-composer-attachment:focus-within .chat-composer-attachment-remove { width: 20px; max-width: 20px; opacity: 1; }
@@ -204,7 +204,10 @@
 .sgx-home.workspace-page .chat-message-attachment-icon svg { width: 13px; height: 13px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
 .sgx-home.workspace-page .chat-message-attachment strong { min-width: 0; overflow: hidden; color: #d9dad4; font-size: 10px; font-weight: 500; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .sgx-home.workspace-page .chat-pending-message { display: grid; grid-template-columns: 18px minmax(0, 760px); gap: 10px; max-width: 92%; align-items: center; color: #999c94; font-size: 12px; line-height: 1.5; }
-.sgx-home.workspace-page .chat-pending-copy { display: inline-flex; min-height: 24px; align-items: center; gap: 9px; }
+.sgx-home.workspace-page .chat-pending-copy { display: grid; min-height: 24px; align-items: center; gap: 3px; }
+.sgx-home.workspace-page .chat-thinking-summary { display: inline-flex; min-height: 20px; align-items: center; gap: 9px; }
+.sgx-home.workspace-page .chat-thinking-step { display: inline-flex; align-items: center; gap: 6px; color: #777a73; font-size: 10px; line-height: 1.35; }
+.sgx-home.workspace-page .chat-thinking-step-dot { width: 4px; height: 4px; flex: 0 0 4px; border-radius: 50%; background: #f5a08a; box-shadow: 0 0 0 3px #f5a08a18; }
 .sgx-home.workspace-page .chat-pending-loader { width: 13px; height: 13px; flex: 0 0 13px; border: 1.5px solid #ffffff25; border-top-color: #f5a08a; border-radius: 50%; animation: sgx-chat-spin .8s linear infinite; }
 .sgx-home.workspace-page .chat-error { margin: 7px 0 0; color: #f5a08a; font-size: 11px; text-align: center; }
 .sgx-home.workspace-page .chat-message-meta { display: flex; align-items: center; gap: 9px; padding-right: 3px; color: #777a73; opacity: 0; pointer-events: none; transform: translateY(2px); transition: opacity .16s ease, transform .16s ease; }

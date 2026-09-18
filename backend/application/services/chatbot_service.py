@@ -55,6 +55,10 @@ class ChatContextProvider(Protocol):
 
     def has_ready_documents(self, session: ChatSession) -> bool: ...
 
+    async def ensure_documents_ready(
+        self, *, session: ChatSession, document_ids: list[str]
+    ) -> None: ...
+
     def list_session_documents(self, session_id: str, user_id: int) -> list[Any]: ...
 
 
@@ -226,9 +230,11 @@ class ChatbotService:
         if session is None or session.archived:
             raise LookupError("Chat session not found")
 
+        normalized_document_ids = self._normalize_document_ids(document_ids)
+        await self._ensure_documents_ready(session, normalized_document_ids)
         document_attached = self._has_ready_documents(session)
         message_attachments = self._resolve_document_attachments(
-            session, document_ids
+            session, normalized_document_ids
         )
         active_generation_session = self._active_slide_session(user_id)
         # A normal chat turn must remain available while the renderer works.
@@ -726,12 +732,11 @@ class ChatbotService:
         session: ChatSession,
         document_ids: list[str] | None,
     ) -> list[dict[str, Any]]:
-        """Resolve only ready documents linked to this session.
+        """Resolve documents linked to this session for the message attachment.
 
-        Uploading/indexing is a separate request because it can take time. The
-        message carries these verified ids so the persisted turn can show the
-        same attachment that the user sent, while retrieval continues to use
-        the session-scoped document repository.
+        ``processing`` is valid here because a confirmed slide-stream job can
+        start before its deferred DOCX analysis finishes; the job's normal
+        chat turn completes that work before retrieval.
         """
         normalized_ids = self._normalize_document_ids(document_ids)
         if not normalized_ids:
@@ -743,22 +748,22 @@ class ChatbotService:
         if not callable(list_documents):
             raise ValueError("Document attachments are not available")
         documents = list_documents(session.id, session.user_id)
-        ready_documents = {
+        attachable_documents = {
             str(document.id): document
             for document in documents
-            if str(document.status).lower() == "ready"
+            if str(document.status).lower() in {"ready", "processing"}
         }
         missing_ids = [
             document_id
             for document_id in normalized_ids
-            if document_id not in ready_documents
+            if document_id not in attachable_documents
         ]
         if missing_ids:
             raise ValueError("Tài liệu chưa sẵn sàng hoặc không thuộc phiên chat")
 
         attachments: list[dict[str, Any]] = []
         for document_id in normalized_ids:
-            document = ready_documents[document_id]
+            document = attachable_documents[document_id]
             display_name = str(
                 document.title or document.original_filename or "Document"
             ).strip()
@@ -1272,6 +1277,19 @@ class ChatbotService:
         except Exception:
             logger.exception("Unable to inspect attached chatbot documents")
             return False
+
+    async def _ensure_documents_ready(
+        self,
+        session: ChatSession,
+        document_ids: list[str],
+    ) -> None:
+        """Complete deferred DOCX analysis before the turn uses its context."""
+        if not document_ids or self.context_provider is None:
+            return
+        preparer = getattr(self.context_provider, "ensure_documents_ready", None)
+        if not callable(preparer):
+            return
+        await preparer(session=session, document_ids=document_ids)
 
     @staticmethod
     def _use_attached_document_flow(flow: dict[str, Any]) -> dict[str, Any]:
