@@ -10,10 +10,17 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
 from backend import config
 
-class LocalSentenceTransformerEmbeddings:
-    """LangChain-compatible adapter around a local SentenceTransformer model."""
+class LocalSentenceTransformerEmbeddings(Embeddings):
+    """LangChain ``Embeddings`` adapter around SentenceTransformer.
+
+    FAISS checks the concrete LangChain embedding interface before deciding
+    whether to call ``embed_query`` or treat the value as a plain callable.
+    Implementing the interface explicitly avoids the deprecated warning and
+    prevents similarity searches from failing with ``object is not callable``.
+    """
 
     def __init__(self):
         self.model = SentenceTransformer(
