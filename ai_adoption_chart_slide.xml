@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <shape type="rectangle" x="0" y="0" width="1600" height="900" fill="#FFFFFF" line_color="none"/>
+    <textbox x="300.0" y="105.0" width="1000.0" height="90.0" font="Arial" size="39" min_font_size="34" color="#2B8FB4" bold="false" italic="false" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">XU HƯỚNG ỨNG DỤNG AI</textbox>
+    <shape type="rectangle" x="95.0" y="255.0" width="1410.0" height="440.0" fill="#F8F8F8" line_color="none"/>
+    <shape type="rectangle" x="485.0" y="280.0" width="18" height="18" fill="#FF7375" line_color="none"/>
+    <textbox x="513.0" y="273.0" width="165" height="32" font="Arial" size="13" min_font_size="11" color="#161616" bold="false" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Machine Learning</textbox>
+    <shape type="rectangle" x="695.0" y="280.0" width="18" height="18" fill="#F3C580" line_color="none"/>
+    <textbox x="723.0" y="273.0" width="165" height="32" font="Arial" size="13" min_font_size="11" color="#161616" bold="false" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Generative AI</textbox>
+    <shape type="rectangle" x="905.0" y="280.0" width="18" height="18" fill="#A6CE91" line_color="none"/>
+    <textbox x="933.0" y="273.0" width="165" height="32" font="Arial" size="13" min_font_size="11" color="#161616" bold="false" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">AI Agent</textbox>
+    <line x1="185.0" y1="625.0" x2="1463.0" y2="625.0" color="#C9C9C9" width="0.8"/>
+    <textbox x="127.0" y="609.0" width="42" height="32" font="Arial" size="14" min_font_size="12" color="#161616" bold="false" align="right" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">0</textbox>
+    <line x1="185.0" y1="545.0" x2="1463.0" y2="545.0" color="#C9C9C9" width="0.8"/>
+    <textbox x="127.0" y="529.0" width="42" height="32" font="Arial" size="14" min_font_size="12" color="#161616" bold="false" align="right" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">25</textbox>
+    <line x1="185.0" y1="465.0" x2="1463.0" y2="465.0" color="#C9C9C9" width="0.8"/>
+    <textbox x="127.0" y="449.0" width="42" height="32" font="Arial" size="14" min_font_size="12" color="#161616" bold="false" align="right" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">50</textbox>
+    <line x1="185.0" y1="385.0" x2="1463.0" y2="385.0" color="#C9C9C9" width="0.8"/>
+    <textbox x="127.0" y="369.0" width="42" height="32" font="Arial" size="14" min_font_size="12" color="#161616" bold="false" align="right" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">75</textbox>
+    <line x1="185.0" y1="305.0" x2="1463.0" y2="305.0" color="#C9C9C9" width="0.8"/>
+    <textbox x="127.0" y="289.0" width="42" height="32" font="Arial" size="14" min_font_size="12" color="#161616" bold="false" align="right" vertical_align="middle" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">100</textbox>
+    <shape type="rectangle" x="221.0" y="567.4" width="45.0" height="57.599999999999994" fill="#FF7375" line_color="none"/>
+    <shape type="rectangle" x="269.0" y="599.4" width="45.0" height="25.6" fill="#F3C580" line_color="none"/>
+    <shape type="rectangle" x="317.0" y="615.4" width="45.0" height="9.6" fill="#A6CE91" line_color="none"/>
+    <textbox x="185.0" y="640.0" width="213.0" height="42" font="Arial" size="15" min_font_size="12" color="#161616" bold="false" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2020</textbox>
+    <shape type="rectangle" x="434.0" y="532.2" width="45.0" height="92.8" fill="#FF7375" line_color="none"/>
+    <shape type="rectangle" x="482.0" y="583.4" width="45.0" height="41.6" fill="#F3C580" line_color="none"/>
+    <shape type="rectangle" x="530.0" y="609.0" width="45.0" height="16.0" fill="#A6CE91" line_color="none"/>
+    <textbox x="398.0" y="640.0" width="213.0" height="42" font="Arial" size="15" min_font_size="12" color="#161616" bold="false" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2021</textbox>
+    <shape type="rectangle" x="647.0" y="493.8" width="45.0" height="131.2" fill="#FF7375" line_color="none"/>
+    <shape type="rectangle" x="695.0" y="548.2" width="45.0" height="76.8" fill="#F3C580" line_color="none"/>
+    <shape type="rectangle" x="743.0" y="596.2" width="45.0" height="28.799999999999997" fill="#A6CE91" line_color="none"/>
+    <textbox x="611.0" y="640.0" width="213.0" height="42" font="Arial" size="15" min_font_size="12" color="#161616" bold="false" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2022</textbox>
+    <shape type="rectangle" x="860.0" y="449.0" width="45.0" height="176.0" fill="#FF7375" line_color="none"/>
+    <shape type="rectangle" x="908.0" y="500.2" width="45.0" height="124.80000000000001" fill="#F3C580" line_color="none"/>
+    <shape type="rectangle" x="956.0" y="567.4" width="45.0" height="57.599999999999994" fill="#A6CE91" line_color="none"/>
+    <textbox x="824.0" y="640.0" width="213.0" height="42" font="Arial" size="15" min_font_size="12" color="#161616" bold="false" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2023</textbox>
+    <shape type="rectangle" x="1073.0" y="404.20000000000005" width="45.0" height="220.79999999999998" fill="#FF7375" line_color="none"/>
+    <shape type="rectangle" x="1121.0" y="439.4" width="45.0" height="185.6" fill="#F3C580" line_color="none"/>
+    <shape type="rectangle" x="1169.0" y="525.8" width="45.0" height="99.2" fill="#A6CE91" line_color="none"/>
+    <textbox x="1037.0" y="640.0" width="213.0" height="42" font="Arial" size="15" min_font_size="12" color="#161616" bold="false" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2024</textbox>
+    <shape type="rectangle" x="1286.0" y="362.6" width="45.0" height="262.4" fill="#FF7375" line_color="none"/>
+    <shape type="rectangle" x="1334.0" y="381.8" width="45.0" height="243.2" fill="#F3C580" line_color="none"/>
+    <shape type="rectangle" x="1382.0" y="468.2" width="45.0" height="156.8" fill="#A6CE91" line_color="none"/>
+    <textbox x="1250.0" y="640.0" width="213.0" height="42" font="Arial" size="15" min_font_size="12" color="#161616" bold="false" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="clip" reflow_on_resize="true" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2025</textbox>
+    <textbox x="230.0" y="745.0" width="1140.0" height="95.0" font="Arial" size="16" min_font_size="14" color="#626262" bold="false" italic="false" align="center" vertical_align="middle" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.05" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Dữ liệu minh họa cho thấy mức độ ứng dụng AI tăng đều, trong đó Generative AI và AI Agent tăng nhanh ở giai đoạn gần đây.</textbox>
+  </slide>
+</presentation>

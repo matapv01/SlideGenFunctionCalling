@@ -694,7 +694,7 @@ class GenerateBestSellingProductChartSlideInput(BaseModel):
     """Input schema for generate_best_selling_product_chart_slide_xml."""
 
     title: str = Field(default="...", description="Main slide title displayed prominently at the top center. Write a concise, presentation-ready phrase describing the subject, category, metric, or comparison shown in the grouped column chart. example: 'BEST SELLING PRODUCT'")
-    chart_data: list[dict[str, object]] = Field(..., description="Ordered data for the grouped column chart. Each item represents one category on the horizontal axis and must contain 'category' as its label and 'series' as a dictionary mapping consistent series names to numeric values. Use the same series names in every category so the grouped bars and legend align correctly. The layout supports up to 6 categories and up to 3 series; provide raw numeric values without percentage signs or formatted numeric strings. example: [{'category': 'January', 'series': {'Sunscreen': 7, 'Moisturizer': 6, 'Serum': 5}}, {'category': 'February', 'series': {'Sunscreen': 8, 'Moisturizer': 8, 'Serum': 4}}, {'category': 'March', 'series': {'Sunscreen': 15, 'Moisturizer': 10, 'Serum': 5}}]")
+    chart_data: list[dict[str, str | dict[str, int | float]]] = Field(..., description="Ordered data for the grouped column chart. Each item represents one category on the horizontal axis and must contain 'category' as its label and 'series' as a dictionary mapping consistent series names to numeric values. Use the same series names in every category so the grouped bars and legend align correctly. The layout supports up to 6 categories and up to 3 series; provide raw numeric values without percentage signs or formatted numeric strings. example: [{'category': 'January', 'series': {'Sunscreen': 7, 'Moisturizer': 6, 'Serum': 5}}, {'category': 'February', 'series': {'Sunscreen': 8, 'Moisturizer': 8, 'Serum': 4}}, {'category': 'March', 'series': {'Sunscreen': 15, 'Moisturizer': 10, 'Serum': 5}}]")
     footer_text: str = Field(default="...", description="Short supporting paragraph displayed below the chart. Summarize the main trend, comparison, reporting period, or key takeaway shown by the bars. Use one concise paragraph and do not repeat every individual value. example: 'Sales increased across the reporting period, with Sunscreen remaining the strongest-performing product in the final month.'")
     background_color: str = Field(default="#FFFFFF", description="Background color of the entire slide.")
     panel_color: str = Field(default="#F8F8F8", description="Very light background color used for the main chart panel containing the legend, grid, axes, and grouped bars.")
@@ -1130,20 +1130,6 @@ def normalize_tool_arguments(tool_name: str, arguments: dict) -> dict:
                 normalized[color_field] = [
                     str(color).strip() for color in as_list(normalized[color_field]) if color
                 ]
-
-    if canonical_name == "generate_implementation_timeline_slide_xml":
-        raw_items = normalized.get("timeline_items")
-        if raw_items is None:
-            raw_items = normalized.get("milestones", normalized.get("steps", normalized.get("items")))
-        if raw_items is not None:
-            normalized["timeline_items"] = [
-                {
-                    "label": text_from(item, "label", "week", "phase", "title", "step")
-                    or f"Phase {index + 1}",
-                    "content": text_from(item, "content", "description", "text", "detail"),
-                }
-                for index, item in enumerate(as_list(raw_items))
-            ]
 
     if canonical_name == "generate_three_ideas_slide_xml":
         raw_ideas = normalized.get("ideas")

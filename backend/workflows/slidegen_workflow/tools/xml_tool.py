@@ -15695,7 +15695,17 @@ def generate_problem_slide_xml(
     # =====================================================
 
     text_block_left = 16.0
-    text_block_top_base = 610.0
+    # The cards are staggered vertically, so a fixed title y-position can
+    # overlap the lower edge of the last card (especially with 4-5 items).
+    # Anchor the text block below the deepest card instead.
+    cards_bottom = max(
+        spec["y"] + spec["height"]
+        for spec in card_specs
+    )
+    text_block_top_base = max(
+        610.0,
+        cards_bottom + 28.0,
+    )
     text_block_bottom = 880.0
     preferred_gap = 20.0
 
@@ -15706,7 +15716,10 @@ def generate_problem_slide_xml(
     description_x = text_block_left
     description_y = title_y
 
-    width_candidates = [760.0, 860.0, 980.0, 1100.0]
+    # Keep enough width for long Vietnamese titles to stay on one line when
+    # possible.  A narrow candidate can force an unnecessary extra title
+    # line, leaving too little room below the cards for the description.
+    width_candidates = [760.0, 860.0, 980.0, 1100.0, 1280.0, 1440.0]
 
     for width in width_candidates:
         candidate_title = fit_text_best_effort(
@@ -15787,7 +15800,10 @@ def generate_problem_slide_xml(
     if overflow > 0:
         shift = min(
             overflow,
-            max(0.0, title_y - 520.0),
+            # Never move the title back into the cards just to make the
+            # description fit.  The gap below the deepest card is a hard
+            # separation between the two layout regions.
+            max(0.0, title_y - text_block_top_base),
         )
         title_y -= shift
         description_y -= shift
@@ -24377,15 +24393,15 @@ def generate_market_share_distribution_slide_xml(
 
     # Title
     title_x = 100.0
-    title_y = 72.0
-    title_w = 620.0
-    title_h = 190.0
+    title_y = 64.0
+    title_w = 640.0
+    title_h = 180.0
 
     # Top-right intro
-    intro_x = 815.0
-    intro_y = 120.0
-    intro_w = 600.0
-    intro_h = 110.0
+    intro_x = 830.0
+    intro_y = 105.0
+    intro_w = 590.0
+    intro_h = 120.0
 
     # Donut
     donut_x = 90.0
@@ -24394,10 +24410,10 @@ def generate_market_share_distribution_slide_xml(
 
     # Right details adapt to the number of items.
     detail_area_x = 770.0
-    detail_area_w = 650.0
-    detail_start_y = 305.0
-    detail_bottom_y = 850.0
-    detail_column_gap = 25.0
+    detail_area_w = 680.0
+    detail_start_y = 300.0
+    detail_bottom_y = 840.0
+    detail_column_gap = 28.0
 
     item_count = len(normalized_items)
     detail_columns = 1 if item_count <= 3 else 2
@@ -24411,60 +24427,63 @@ def generate_market_share_distribution_slide_xml(
     ) / detail_columns
 
     detail_gap = min(
-        215.0,
+        185.0,
         max(
-            125.0,
+            145.0,
             (detail_bottom_y - detail_start_y)
             / max(detail_rows, 1),
         ),
     )
 
+    # Keep a clear visual gap between the colored icon and the text column.
+    # The previous 86px icon plus a 20px offset made long labels look attached
+    # to the icon in PowerPoint/preview rendering.
     detail_icon_size = (
-        86.0
+        68.0
         if detail_columns == 1
-        else 64.0
+        else 56.0
     )
 
     detail_text_offset = (
-        detail_icon_size + 20.0
+        detail_icon_size + 28.0
     )
 
     detail_title_font_size = (
-        28.0
+        25.0
         if detail_columns == 1
         else 18.0
     )
 
     detail_body_font_size = (
-        18.0
+        16.0
         if detail_columns == 1
         else 13.0
     )
 
     detail_body_min_font_size = (
-        15.0
+        13.0
         if detail_columns == 1
         else 10.0
     )
 
     detail_title_h = (
-        50.0
+        44.0
         if detail_columns == 1
         else 36.0
     )
 
     detail_body_offset = (
-        58.0
+        50.0
         if detail_columns == 1
         else 45.0
     )
 
     detail_body_h = max(
         60.0,
-        min(
-            105.0,
-            detail_gap - detail_body_offset - 8.0,
-        ),
+            min(
+                82.0,
+                detail_gap - detail_body_offset - 8.0,
+            ),
     )
 
     # =========================================================
@@ -25279,7 +25298,17 @@ def generate_best_selling_product_chart_slide_xml(
     normalized_rows = []
 
     for index, raw_row in enumerate(rows):
-        row = raw_row if isinstance(raw_row, dict) else {}
+        # StructuredTool may pass nested Pydantic rows after validating the
+        # chart schema. Convert them back to plain dictionaries before the
+        # renderer reads category/series values.
+        if isinstance(raw_row, dict):
+            row = raw_row
+        elif hasattr(raw_row, "model_dump"):
+            row = raw_row.model_dump()
+        elif hasattr(raw_row, "dict"):
+            row = raw_row.dict()
+        else:
+            row = {}
 
         category = str(
             row.get("category")
@@ -25288,6 +25317,10 @@ def generate_best_selling_product_chart_slide_xml(
         ).strip()
 
         series = row.get("series")
+        if hasattr(series, "model_dump"):
+            series = series.model_dump()
+        elif hasattr(series, "dict"):
+            series = series.dict()
         series = series if isinstance(series, dict) else {}
 
         clean_series = {}
