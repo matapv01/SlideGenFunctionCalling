@@ -39,11 +39,10 @@ Tài khoản admin khởi tạo được quy ước là `admin@email.com`, mật
 `123456`. Mật khẩu này đủ 6 ký tự theo policy hiện tại; nên đổi ngay sau lần
 đăng nhập đầu tiên.
 
-Nếu database chưa có admin, bootstrap một tài khoản duy nhất bằng CLI:
+Nếu tài khoản `admin@email.com` đã tồn tại nhưng chưa có quyền admin, chạy lệnh
+sau để cấp quyền trực tiếp:
 
 ```bash
-# Đăng ký admin@email.com trước bằng UI hoặc API với mật khẩu 123456,
-# sau đó cấp quyền admin:
 # Production
 docker compose exec slidegen python scripts/manage_admin.py grant admin@email.com
 
@@ -52,7 +51,7 @@ docker compose -f docker-compose.dev.yml exec slidegen-dev \
   python scripts/manage_admin.py grant admin@email.com
 ```
 
-Sau bước bootstrap, đăng nhập tài khoản đó, mở tab **Admin** → **Quản lý user**
+Sau khi chạy lệnh, đăng nhập tài khoản đó, mở tab **Admin** → **Quản lý user**
 để cấp hoặc gỡ quyền cho các tài khoản khác.
 
 ### 2. REST API
