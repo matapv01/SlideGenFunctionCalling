@@ -214,8 +214,8 @@ export async function loadChatSlideContent(path: string) {
   return response.text();
 }
 
-export function uploadChatDocument(sessionId: string, file: File) {
-  return api.uploadChatDocument(sessionId, file);
+export function uploadChatDocument(sessionId: string, file: File, signal?: AbortSignal) {
+  return api.uploadChatDocument(sessionId, file, signal);
 }
 
 export function loadChatDocuments(sessionId: string) {

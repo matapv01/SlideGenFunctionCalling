@@ -73,6 +73,7 @@
 .sgx-home.workspace-page .chat-composer-attachment:focus-within .chat-composer-attachment-remove { width: 20px; max-width: 20px; opacity: 1; }
 .sgx-home.workspace-page .chat-composer-attachment-remove:hover,
 .sgx-home.workspace-page .chat-composer-attachment-remove:focus-visible { background: #ffffff12; color: #f5a08a; outline: 0; }
+.sgx-home.workspace-page .chat-composer-attachment.is-loading .chat-composer-attachment-remove { width: 20px; max-width: 20px; opacity: 1; }
 .sgx-home.workspace-page .chat-composer-attachment-remove:disabled { cursor: wait; opacity: .55; }
 .sgx-home.workspace-page .composer-model { margin-right: 20px; }
 .sgx-home.workspace-page .composer-model-button { white-space: nowrap; }

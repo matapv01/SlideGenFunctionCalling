@@ -346,6 +346,8 @@ export default function SlidegeniusChat() {
   const [clarificationOther, setClarificationOther] = useState("");
   const [selectedSourceKey, setSelectedSourceKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAbortControllerRef = useRef<AbortController | null>(null);
+  const uploadRequestIdRef = useRef(0);
   const clarificationInputRef = useRef<HTMLInputElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const lastOpenRequestRef = useRef(0);
@@ -371,6 +373,7 @@ export default function SlidegeniusChat() {
         uploading: "Đang xử lý DOCX...",
         uploaded: "Đã gắn tài liệu",
         removeAttachment: "Xóa tài liệu",
+        cancelUpload: "Hủy tải tài liệu",
         scrollToLatest: "Cuộn đến tin nhắn mới nhất",
         otherPlaceholder: "Nhập hướng bạn muốn...",
         slideCountPlaceholder: "Nhập số slide, ví dụ 12 slide...",
@@ -428,6 +431,7 @@ export default function SlidegeniusChat() {
         uploading: "Processing DOCX...",
         uploaded: "Document attached",
         removeAttachment: "Remove document",
+        cancelUpload: "Cancel document upload",
         scrollToLatest: "Scroll to latest message",
         otherPlaceholder: "Add your own direction...",
         slideCountPlaceholder: "Enter a slide count, for example 12 slides...",
@@ -903,11 +907,20 @@ export default function SlidegeniusChat() {
       setError(language === "vi" ? "Chỉ hỗ trợ file DOCX." : "Only DOCX files are supported.");
       return;
     }
+    const sessionId = activeSessionId;
+    const controller = new AbortController();
+    const requestId = uploadRequestIdRef.current + 1;
+    uploadRequestIdRef.current = requestId;
+    uploadAbortControllerRef.current = controller;
     setUploading(true);
     setUploadingDocument(file.name);
     setError("");
     try {
-      const document = await uploadChatDocument(activeSessionId, file);
+      const document = await uploadChatDocument(sessionId, file, controller.signal);
+      if (requestId !== uploadRequestIdRef.current || controller.signal.aborted) {
+        await deleteChatDocument(sessionId, document.id).catch(() => undefined);
+        return;
+      }
       setSessionDocuments((current) => [
         ...current.filter((item) => item.id !== document.id),
         document,
@@ -917,12 +930,31 @@ export default function SlidegeniusChat() {
         document,
       ]);
     } catch (requestError) {
+      if (
+        requestId !== uploadRequestIdRef.current
+        || controller.signal.aborted
+        || (requestError instanceof Error && requestError.name === "AbortError")
+      ) return;
       setUploadingDocument(null);
       setError(requestError instanceof Error ? requestError.message : text.unavailable);
     } finally {
-      setUploading(false);
-      setUploadingDocument(null);
+      if (requestId === uploadRequestIdRef.current) {
+        uploadAbortControllerRef.current = null;
+        setUploading(false);
+        setUploadingDocument(null);
+      }
     }
+  };
+
+  const cancelDocumentUpload = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (!uploading) return;
+    uploadRequestIdRef.current += 1;
+    uploadAbortControllerRef.current?.abort();
+    uploadAbortControllerRef.current = null;
+    setUploading(false);
+    setUploadingDocument(null);
+    setError("");
   };
 
   const removeDocument = async (
@@ -1262,6 +1294,15 @@ export default function SlidegeniusChat() {
                   </span>
                   <strong title={uploadingDocument}>{uploadingDocument}</strong>
                   <span className="chat-composer-attachment-state is-loading" aria-hidden="true"><span /></span>
+                  <button
+                    className="chat-composer-attachment-remove"
+                    type="button"
+                    aria-label={text.cancelUpload + " " + uploadingDocument}
+                    title={text.cancelUpload}
+                    onClick={cancelDocumentUpload}
+                  >
+                    ×
+                  </button>
                 </div>
               )}
               {uploadedDocuments.map((document) => {

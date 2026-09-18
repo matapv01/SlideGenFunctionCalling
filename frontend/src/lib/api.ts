@@ -278,12 +278,12 @@ export const api = {
     });
   },
 
-  uploadChatDocument: (sessionId: string, file: File) => {
+  uploadChatDocument: (sessionId: string, file: File, signal?: AbortSignal) => {
     const body = new FormData();
     body.append("file", file);
     return request<ChatDocumentResponse>(
       `/chat/sessions/${encodeURIComponent(sessionId)}/documents`,
-      { method: "POST", body },
+      { method: "POST", body, signal },
     );
   },
 
