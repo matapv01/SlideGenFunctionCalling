@@ -4,11 +4,13 @@ import logging
 from typing import Any, Dict, List
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.infrastructure.llm.client import LLMClient
+from backend.infrastructure.llm.request_limiter import LLMRequestLimiter
 
 logger = logging.getLogger(__name__)
 
 class GeminiLLMProvider(LLMProvider):
-    def __init__(self, api_keys: str = None, base_url: str = None, model: str = None, temperature: float = None, max_tokens: int = None, top_p: float = None, add_stop_token: List[str] = None):
+    def __init__(self, api_keys: str = None, base_url: str = None, model: str = None, temperature: float = None, max_tokens: int = None, top_p: float = None, add_stop_token: List[str] = None, request_limiter: LLMRequestLimiter | None = None):
+        self.request_limiter = request_limiter
         self.llm_client = LLMClient(
             api_keys=api_keys,
             base_url=base_url,
@@ -39,7 +41,11 @@ class GeminiLLMProvider(LLMProvider):
         llm = self.llm_client.bind(**overrides)
         if tools:
             llm = llm.bind_tools(tools)
-        response = llm.invoke(messages)
+        if self.request_limiter is None:
+            response = llm.invoke(messages)
+        else:
+            with self.request_limiter.slot():
+                response = llm.invoke(messages)
         content = getattr(response, "content", "") or ""
         if isinstance(content, list):
             content = "".join(

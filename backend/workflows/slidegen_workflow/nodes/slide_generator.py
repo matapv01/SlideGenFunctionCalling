@@ -654,11 +654,17 @@ OUTPUT FORMAT: TOOL CALLS ONLY
     raw_llm_response = ""
 
     try:
-        response = llm.bind_tools(
+        request_limiter = configurable.get("llm_request_limiter")
+        bound_llm = llm.bind_tools(
             generator_tools,
             tool_choice="required",
             parallel_tool_calls=True,
-        ).invoke(messages)
+        )
+        if request_limiter is None:
+            response = bound_llm.invoke(messages)
+        else:
+            with request_limiter.slot():
+                response = bound_llm.invoke(messages)
         native_tool_calls = _normalize_native_tool_calls(response)
         content = getattr(response, "content", "") or ""
         if not isinstance(content, str):

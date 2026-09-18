@@ -166,6 +166,7 @@ def _build_graph_config(
             "image_relevance_verifier": infra_providers.get(
                 "image_relevance_verifier"
             ),
+            "llm_request_limiter": infra_providers.get("llm_request_limiter"),
         },
         "recursion_limit": WORKFLOW_RECURSION_LIMIT,
         "max_concurrency": SLIDE_MAX_CONCURRENCY,

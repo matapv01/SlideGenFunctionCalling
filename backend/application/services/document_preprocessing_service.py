@@ -28,9 +28,15 @@ class DocumentPreprocessingService(BaseWorkflowService):
     to the same canonical chunk renderer.
     """
 
-    def __init__(self, project_dir: str, llm_provider: LLMProvider):
+    def __init__(
+        self,
+        project_dir: str,
+        llm_provider: LLMProvider,
+        llm_request_limiter=None,
+    ):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
+        self.llm_request_limiter = llm_request_limiter
         self.image_extractor = DocumentImageExtractor()
 
     async def preprocess_document(
@@ -53,6 +59,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
             "configurable": {
                 "llm": self.llm_provider.llm_client,
                 "stream_callback": callback,
+                "llm_request_limiter": self.llm_request_limiter,
             },
             "recursion_limit": WORKFLOW_RECURSION_LIMIT,
         }

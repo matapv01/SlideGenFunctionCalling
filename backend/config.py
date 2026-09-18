@@ -209,6 +209,10 @@ ENABLE_SECTION_PARALLELISM = ENABLE_SLIDE_PARALLELISM
 # Allow up to five independent slide workers while keeping an explicit cap
 # around the local Qwen endpoint.
 SLIDE_MAX_CONCURRENCY = 5
+# The planner, slide generators, and Qwen-VL share one endpoint. Keep the
+# endpoint-wide request cap at five while allowing the workflow itself to fan
+# out five slide workers.
+LLM_REQUEST_MAX_CONCURRENCY = 5
 # Match the configured planner batch concurrency.
 PLANNER_MAX_CONCURRENCY = 5
 # Backward-compatible alias for integrations that still import the old name.

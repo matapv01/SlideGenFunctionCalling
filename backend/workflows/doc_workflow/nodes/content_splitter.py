@@ -35,6 +35,7 @@ def split_content(state: State, config: RunnableConfig) -> State:
 
     configurable = config["configurable"]
     llm = configurable.get("llm")
+    request_limiter = configurable.get("llm_request_limiter")
 
     stream_callback = configurable.get("stream_callback")
     if stream_callback:
@@ -47,7 +48,6 @@ def split_content(state: State, config: RunnableConfig) -> State:
                 "message": "Processing document structure",
             },
         )
-        time.sleep(2)
 
     if not llm:
         raise ValueError("LLM is not found in config. Cannot proceed with content splitting.")
@@ -121,14 +121,17 @@ def split_content(state: State, config: RunnableConfig) -> State:
         parent_headings: List[str],
         current_heading: str,
     ) -> Optional[List[Dict[str, Any]]]:
-        response = chain.invoke(
-            {
-                "document_title": document_title,
-                "parent_headings": " -> ".join(parent_headings),
-                "current_heading": current_heading,
-                "content_to_split": content_to_split,
-            }
-        )
+        payload = {
+            "document_title": document_title,
+            "parent_headings": " -> ".join(parent_headings),
+            "current_heading": current_heading,
+            "content_to_split": content_to_split,
+        }
+        if request_limiter is None:
+            response = chain.invoke(payload)
+        else:
+            with request_limiter.slot():
+                response = chain.invoke(payload)
         return _parse_llm_nodes(
             response,
             parent_level=parent_level,

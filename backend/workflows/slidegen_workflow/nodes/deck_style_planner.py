@@ -48,6 +48,7 @@ def create_deck_style(state: State, config: RunnableConfig) -> State:
         return state
 
     stream_callback = configurable.get("stream_callback")
+    request_limiter = configurable.get("llm_request_limiter")
     if stream_callback:
         stream_callback(
             "status",
@@ -80,7 +81,11 @@ markdown, or a manually serialized JSON object.
 """
 
     try:
-        result = llm.with_structured_output(DeckStylePlan).invoke(prompt)
+        if request_limiter is None:
+            result = llm.with_structured_output(DeckStylePlan).invoke(prompt)
+        else:
+            with request_limiter.slot():
+                result = llm.with_structured_output(DeckStylePlan).invoke(prompt)
         style = _as_dict(result)
         style["deck_topic"] = str(style.get("deck_topic") or title)
         style["visual_direction"] = str(

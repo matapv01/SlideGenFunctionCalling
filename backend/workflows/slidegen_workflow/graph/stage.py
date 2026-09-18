@@ -74,6 +74,17 @@ class SlidePlan(BaseModel):
     )
 
 
+class SlidePlanBatch(BaseModel):
+    """Structured plans for a small planner batch."""
+
+    plans: List[SlidePlan] = Field(
+        default_factory=list,
+        description=(
+            "One plan for every requested slide, in the same order as the input."
+        ),
+    )
+
+
 class DeckStylePlan(BaseModel):
     """One visual contract shared by every slide in a deck."""
 

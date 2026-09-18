@@ -285,6 +285,7 @@ def _call_slide_rewriter(
     records: list[dict[str, Any]],
     tool_call: dict[str, Any],
     round_number: int,
+    request_limiter=None,
 ) -> dict[str, Any] | None:
     messages = _slide_rewrite_prompt(
         state,
@@ -294,12 +295,23 @@ def _call_slide_rewriter(
     )
     try:
         if hasattr(llm, "generate_completion"):
-            response = llm.generate_completion(
-                messages=messages,
-                temperature=0.2,
-            )
+            if request_limiter is None:
+                response = llm.generate_completion(
+                    messages=messages,
+                    temperature=0.2,
+                )
+            else:
+                with request_limiter.slot():
+                    response = llm.generate_completion(
+                        messages=messages,
+                        temperature=0.2,
+                    )
         elif hasattr(llm, "invoke"):
-            response = llm.invoke(messages)
+            if request_limiter is None:
+                response = llm.invoke(messages)
+            else:
+                with request_limiter.slot():
+                    response = llm.invoke(messages)
         else:
             logger.warning("Whole-slide overflow rewrite skipped: LLM has no invoke method")
             return None
@@ -531,6 +543,7 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             records,
             tool_call,
             round_number,
+            request_limiter=configurable.get("llm_request_limiter"),
         )
         if candidate_arguments is None:
             skipped_unfixable += len(overflowing)

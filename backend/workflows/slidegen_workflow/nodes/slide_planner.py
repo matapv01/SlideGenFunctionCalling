@@ -1,18 +1,128 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_planner.py
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List
 
 from langchain_core.prompts import ChatPromptTemplate
-from backend.workflows.slidegen_workflow.graph.stage import State, SlidePlan
+from backend.workflows.slidegen_workflow.graph.stage import (
+    State,
+    SlidePlan,
+    SlidePlanBatch,
+)
 from langchain_core.runnables import RunnableConfig
 from backend.config import (
     PLANNER_OUTLINE_MAX_CHARS,
     PLANNING_BATCH_SIZE,
-    SLIDE_MAX_CONCURRENCY,
+    PLANNER_MAX_CONCURRENCY,
 )
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
 import time
+
+
+_BATCH_PLANNER_HUMAN_PROMPT = """
+Plan every slide in the following small batch. Return exactly one plan per
+input slide, in the same order. Do not merge slides, omit slides, or add extra
+plans. Each plan must describe only the slide's message, purpose, image policy,
+and tool category; do not generate XML or prose outside the structured result.
+
+BATCH INPUT (JSON):
+{batch_inputs}
+"""
+
+
+def _as_plain_dict(value):
+    if hasattr(value, "model_dump"):
+        return value.model_dump()
+    if hasattr(value, "dict"):
+        return value.dict()
+    return dict(value or {}) if isinstance(value, dict) else {}
+
+
+def _extract_batch_plans(value) -> List[Dict]:
+    """Read both Pydantic and simple fake-model batch responses."""
+    payload = _as_plain_dict(value)
+    raw_plans = payload.get("plans") if payload else value
+    if not isinstance(raw_plans, list):
+        return []
+    return [_as_plain_dict(plan) for plan in raw_plans]
+
+
+def _invoke_planner_batch(
+    batch_chain,
+    legacy_chain,
+    batch_inputs: List[Dict],
+    config: RunnableConfig,
+):
+    """Invoke one real structured batch, retaining a compatibility fallback."""
+    request_limiter = (config or {}).get("configurable", {}).get(
+        "llm_request_limiter"
+    )
+    if batch_chain is not None:
+        first_input = batch_inputs[0] if batch_inputs else {}
+        compact_inputs = [
+            {
+                "slide_number": item.get("slide_number"),
+                "slide_context_map": item.get("slide_context_map", ""),
+                "slide_content": item.get("slide_content", ""),
+            }
+            for item in batch_inputs
+        ]
+        payload = {
+            "batch_inputs": json.dumps(
+                {
+                    "shared": {
+                        "full_outline": first_input.get("full_outline", ""),
+                        "presentation_instruction": first_input.get(
+                            "presentation_instruction", ""
+                        ),
+                        "deck_style_plan": first_input.get(
+                            "deck_style_plan", ""
+                        ),
+                    },
+                    "slides": compact_inputs,
+                },
+                ensure_ascii=False,
+                default=str,
+            )
+        }
+        try:
+            if request_limiter is None:
+                result = batch_chain.invoke(payload)
+            else:
+                with request_limiter.slot():
+                    result = batch_chain.invoke(payload)
+            plans = _extract_batch_plans(result)
+            if len(plans) == len(batch_inputs):
+                return plans
+            raise ValueError(
+                f"Planner returned {len(plans)} plans for {len(batch_inputs)} slides"
+            )
+        except Exception:
+            # A malformed batch response should not silently turn the whole
+            # deck into deterministic fallback plans. Retry only this planner
+            # batch through the older one-slide path.
+            if legacy_chain is None:
+                raise
+
+    # Older integrations and focused tests may only inject the single-slide
+    # chain. Keep that path working until they migrate to the batch chain.
+    if hasattr(legacy_chain, "invoke"):
+        def invoke_one(item):
+            if request_limiter is None:
+                return legacy_chain.invoke(item)
+            with request_limiter.slot():
+                return legacy_chain.invoke(item)
+
+        with ThreadPoolExecutor(
+            max_workers=min(max(1, int(PLANNER_MAX_CONCURRENCY)), len(batch_inputs))
+        ) as executor:
+            return list(executor.map(invoke_one, batch_inputs))
+
+    return legacy_chain.batch(
+        batch_inputs,
+        config={"max_concurrency": max(1, int(PLANNER_MAX_CONCURRENCY))},
+    )
 
 
 def _is_intro_slide(chunk: Dict, index: int, intro_mode: str) -> bool:
@@ -399,6 +509,17 @@ def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
             ("human", SLIDE_PLANNER_HUMAN_PROMPT),
         ]
     )
+    batch_prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                SLIDE_PLANNER_SYSTEM_PROMPT
+                + "\n\nBATCH MODE: The user message contains several slides. "
+                "Return one independent structured plan for every slide, in input order.",
+            ),
+            ("human", _BATCH_PLANNER_HUMAN_PROMPT),
+        ]
+    )
     return {
         "slide_chunks": slide_chunks,
         "slide_context_maps": slide_context_maps,
@@ -407,6 +528,8 @@ def prepare_planner_context(state: State, config: RunnableConfig) -> Dict:
         "all_inputs": all_inputs,
         "presentation_instruction": presentation_instruction,
         "planner_chain": prompt | llm.with_structured_output(SlidePlan),
+        "planner_batch_chain": batch_prompt
+        | llm.with_structured_output(SlidePlanBatch),
         "stream_callback": stream_callback,
     }
 
@@ -424,6 +547,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     slide_context_maps = planner_context["slide_context_maps"]
     all_inputs = planner_context["all_inputs"]
     planner_chain = planner_context["planner_chain"]
+    planner_batch_chain = planner_context.get("planner_batch_chain")
     stream_callback = planner_context["stream_callback"]
 
     if not all_inputs or planner_chain is None:
@@ -444,10 +568,13 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
             print(f"  -> Processing chunk: slides {chunk_start_num}-{chunk_end_num}...")
 
-            # Invoke the chain with the current chunk.
-            batch_results = planner_chain.batch(
+            # One structured request plans the whole small batch. The legacy
+            # single-slide batch remains available for older injected chains.
+            batch_results = _invoke_planner_batch(
+                planner_batch_chain,
+                planner_chain,
                 chunk_inputs,
-                config={"max_concurrency": max(1, int(SLIDE_MAX_CONCURRENCY))},
+                config,
             )
 
             # Add the results from this chunk to the main list.

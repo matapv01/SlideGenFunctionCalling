@@ -8,13 +8,14 @@ from typing import Any, Dict, List
 
 from langchain_core.runnables import RunnableConfig
 
-from backend.config import PLANNING_BATCH_SIZE, PLANNER_MAX_CONCURRENCY
+from backend.config import PLANNING_BATCH_SIZE
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.nodes.section_batch_orchestrator import (
     _invoke_jobs,
     assign_layouts,
 )
 from backend.workflows.slidegen_workflow.nodes.slide_planner import (
+    _invoke_planner_batch,
     fallback_slide_plan,
     normalize_planner_result,
     normalize_image_sequence,
@@ -109,6 +110,7 @@ async def plan_and_generate_pipeline(
     section_ids = planner_context["section_ids"]
     all_inputs = planner_context["all_inputs"]
     planner_chain = planner_context["planner_chain"]
+    planner_batch_chain = planner_context.get("planner_batch_chain")
     stream_callback = planner_context["stream_callback"]
 
     if not all_inputs or planner_chain is None:
@@ -140,14 +142,15 @@ async def plan_and_generate_pipeline(
         batch_inputs = all_inputs[start:end]
 
         try:
-            # ``batch`` is synchronous in the LangChain wrapper. Run it in a
-            # thread so already-started generator tasks keep progressing.
+            # The structured batch call is synchronous in the LangChain
+            # wrapper. Run it in a thread so already-started generator tasks
+            # keep progressing.
             batch_results = await asyncio.to_thread(
-                planner_chain.batch,
+                _invoke_planner_batch,
+                planner_batch_chain,
+                planner_chain,
                 batch_inputs,
-                config={
-                    "max_concurrency": max(1, int(PLANNER_MAX_CONCURRENCY)),
-                },
+                config,
             )
             batch_plans = [
                 normalize_planner_result(

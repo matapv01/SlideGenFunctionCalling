@@ -295,6 +295,7 @@ def generate_structure_from_plaintext(state: State, config: RunnableConfig) -> S
     start_time = time.time()
     configurable = config["configurable"]
     llm = configurable.get("llm")
+    request_limiter = configurable.get("llm_request_limiter")
 
     stream_callback = configurable.get("stream_callback")
     if stream_callback:
@@ -307,7 +308,6 @@ def generate_structure_from_plaintext(state: State, config: RunnableConfig) -> S
                 "message": "Generating a compact document outline...",
             },
         )
-        time.sleep(2)
 
     document_title = str(state.get("document_title") or "Untitled Document")
     plain_text = str(state.get("plain_text") or "").strip()
@@ -339,12 +339,15 @@ def generate_structure_from_plaintext(state: State, config: RunnableConfig) -> S
                 "Every block ID must be copied exactly from the input."
             )
         try:
-            raw_response = chain.invoke(
-                {
-                    **prompt_values,
-                    "retry_instruction": retry_instruction,
-                }
-            )
+            payload = {
+                **prompt_values,
+                "retry_instruction": retry_instruction,
+            }
+            if request_limiter is None:
+                raw_response = chain.invoke(payload)
+            else:
+                with request_limiter.slot():
+                    raw_response = chain.invoke(payload)
             payload = _parse_json_response(str(raw_response or ""))
             outline, assigned = _normalise_outline(
                 payload,

@@ -5,6 +5,7 @@ from backend.config import (
     LLM_API_KEY,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
     VLM_MODEL,
+    LLM_REQUEST_MAX_CONCURRENCY,
     CHATBOT_MAX_HISTORY_TURNS,
     FAISS_INDEX_PATH,
 )
@@ -22,6 +23,7 @@ from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 
 # --- 2. Imports Implementation (Infrastructure) ---
 from backend.infrastructure.llm.gemini_provider import GeminiLLMProvider
+from backend.infrastructure.llm.request_limiter import LLMRequestLimiter
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 from backend.infrastructure.database.repositories.sqlite_project_repo import SqliteProjectRepository
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
@@ -65,6 +67,8 @@ security = HTTPBearer()
 _capture_infra = PlaywrightCaptureProvider()
 _parser_infra = MarkItDownParser()
 
+_llm_request_limiter = LLMRequestLimiter(LLM_REQUEST_MAX_CONCURRENCY)
+
 _slidegen_llm = GeminiLLMProvider(
     api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
     model=LLM_MODEL,
@@ -72,6 +76,7 @@ _slidegen_llm = GeminiLLMProvider(
     temperature=LLM_TEMPERATURE,
     max_tokens=LLM_MAX_TOKENS,
     top_p=LLM_TOP_P,
+    request_limiter=_llm_request_limiter,
 )
 _retriever_infra = LocalEmbeddingToolRetrieveProvider(
     tools_dict=TOOLS_DICT,
@@ -93,6 +98,7 @@ _manual_workflow_service = ManualWorkflowService(
 _document_preprocessing_service = DocumentPreprocessingService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
+    llm_request_limiter=_llm_request_limiter,
 )
 
 _slidegen_workflow_service = SlideGenWorkflowService(
@@ -103,6 +109,7 @@ _slidegen_workflow_service = SlideGenWorkflowService(
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
     image_relevance_verifier=_image_relevance_service,
+    llm_request_limiter=_llm_request_limiter,
 )
 
 # The old DOCX endpoints are adapters. They preprocess the file and then call
