@@ -20,7 +20,10 @@ from backend.domain.ports.llm_provider import LLMProvider
 logger = logging.getLogger(__name__)
 
 MIN_SLIDE_COUNT = 3
-DEFAULT_SLIDE_COUNT_OPTIONS = (6, 10, 15)
+# Keep the quick choices aligned with the canonical renderer's five-slide
+# planning batches. Users can still enter any valid count through "Khác" or
+# state an explicit number in their request.
+DEFAULT_SLIDE_COUNT_OPTIONS = (5, 10, 15)
 
 
 @dataclass(frozen=True)
