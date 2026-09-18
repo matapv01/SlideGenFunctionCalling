@@ -149,7 +149,28 @@
 .sgx-home.workspace-page .chat-thread::-webkit-scrollbar-thumb:hover { background: #858980; background-clip: padding-box; }
 .sgx-home.workspace-page .chat-assistant-message { display: grid; grid-template-columns: 18px minmax(0, 760px); gap: 10px; max-width: 92%; align-items: start; }
 .sgx-home.workspace-page .chat-assistant-mark { display: grid; width: 18px; height: 18px; place-items: center; color: #f5a08a; font-size: 12px; }
-.sgx-home.workspace-page .chat-assistant-message p { margin: 0; color: #d9dad4; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.sgx-home.workspace-page .chat-assistant-message .chat-markdown { grid-column: 2; min-width: 0; color: #d9dad4; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.sgx-home.workspace-page .chat-markdown > :first-child { margin-top: 0; }
+.sgx-home.workspace-page .chat-markdown > :last-child { margin-bottom: 0; }
+.sgx-home.workspace-page .chat-markdown p { margin: 0 0 13px; color: inherit; font-size: inherit; line-height: inherit; white-space: normal; }
+.sgx-home.workspace-page .chat-markdown h1,
+.sgx-home.workspace-page .chat-markdown h2,
+.sgx-home.workspace-page .chat-markdown h3,
+.sgx-home.workspace-page .chat-markdown h4 { margin: 0 0 12px; color: #f2f2ec; font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif; font-size: 15px; font-weight: 600; line-height: 1.35; }
+.sgx-home.workspace-page .chat-markdown h1 { font-size: 18px; }
+.sgx-home.workspace-page .chat-markdown ul,
+.sgx-home.workspace-page .chat-markdown ol { display: grid; gap: 7px; margin: 0 0 14px; padding-left: 22px; }
+.sgx-home.workspace-page .chat-markdown li { padding-left: 3px; color: inherit; }
+.sgx-home.workspace-page .chat-markdown li::marker { color: #f5a08a; }
+.sgx-home.workspace-page .chat-markdown strong { color: #f3f2eb; font-weight: 650; }
+.sgx-home.workspace-page .chat-markdown em { color: #ecebe4; }
+.sgx-home.workspace-page .chat-markdown code { padding: 2px 5px; border: 1px solid #ffffff18; border-radius: 4px; background: #0000002e; color: #f5b09d; font: 0.92em/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.sgx-home.workspace-page .chat-markdown pre { margin: 0 0 14px; padding: 11px 12px; overflow-x: auto; border: 1px solid #ffffff15; border-radius: 7px; background: #171817; }
+.sgx-home.workspace-page .chat-markdown pre code { padding: 0; border: 0; background: transparent; color: #dedfd8; white-space: pre; }
+.sgx-home.workspace-page .chat-markdown blockquote { margin: 0 0 14px; padding: 2px 0 2px 13px; border-left: 2px solid #f5a08a88; color: #bfc1b9; }
+.sgx-home.workspace-page .chat-markdown hr { margin: 16px 0; border: 0; border-top: 1px solid #ffffff16; }
+.sgx-home.workspace-page .chat-markdown a { color: #f5a08a; text-decoration: underline; text-underline-offset: 2px; }
+.sgx-home.workspace-page .chat-markdown .chat-citation { display: inline-block; margin: 0 2px; padding: 1px 5px; border: 1px solid #f5a08a55; border-radius: 4px; background: #f5a08a12; color: #f5b09d; font-size: .82em; line-height: 1.35; white-space: nowrap; }
 .sgx-home.workspace-page .chat-user-message { display: grid; align-self: flex-end; justify-items: end; max-width: min(78%, 620px); gap: 7px; }
 .sgx-home.workspace-page .chat-user-bubble { padding: 11px 15px; border: 1px solid #ffffff10; border-radius: 17px 17px 5px 17px; background: #3b3c39; box-shadow: 0 7px 18px #00000018; }
 .sgx-home.workspace-page .chat-user-bubble p { margin: 0; color: #f2f2ec; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -1,0 +1,209 @@
+import { Fragment, type ReactNode } from "react";
+
+type MarkdownBlock =
+  | { type: "paragraph"; lines: string[] }
+  | { type: "heading"; level: number; text: string }
+  | { type: "unordered-list"; items: string[] }
+  | { type: "ordered-list"; items: string[] }
+  | { type: "quote"; lines: string[] }
+  | { type: "code"; language: string; lines: string[] }
+  | { type: "rule" };
+
+const blockStart = (line: string) => {
+  return (
+    /^\s{0,3}#{1,6}\s+/.test(line)
+    || /^\s{0,3}[-*+]\s+/.test(line)
+    || /^\s{0,3}\d+[.)]\s+/.test(line)
+    || /^\s{0,3}>\s?/.test(line)
+    || /^\s*```/.test(line)
+    || /^\s*(?:---+|___+|\*\s*\*\s*\*+)\s*$/.test(line)
+  );
+};
+
+function parseBlocks(value: string): MarkdownBlock[] {
+  const lines = String(value || "").replace(/\r\n?/g, "\n").split("\n");
+  const blocks: MarkdownBlock[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!line.trim()) {
+      index += 1;
+      continue;
+    }
+
+    const codeStart = line.match(/^\s*```\s*([\w-]*)\s*$/);
+    if (codeStart) {
+      const codeLines: string[] = [];
+      index += 1;
+      while (index < lines.length && !/^\s*```\s*$/.test(lines[index])) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push({ type: "code", language: codeStart[1] || "", lines: codeLines });
+      continue;
+    }
+
+    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (heading) {
+      blocks.push({ type: "heading", level: heading[1].length, text: heading[2] });
+      index += 1;
+      continue;
+    }
+
+    if (/^\s*(?:---+|___+|\*\s*\*\s*\*+)\s*$/.test(line)) {
+      blocks.push({ type: "rule" });
+      index += 1;
+      continue;
+    }
+
+    const unordered = line.match(/^\s{0,3}[-*+]\s+(.+)$/);
+    if (unordered) {
+      const items = [unordered[1]];
+      index += 1;
+      while (index < lines.length) {
+        const next = lines[index].match(/^\s{0,3}[-*+]\s+(.+)$/);
+        if (next) {
+          items.push(next[1]);
+          index += 1;
+          continue;
+        }
+        if (lines[index].trim() && /^\s{2,}\S/.test(lines[index])) {
+          items[items.length - 1] += ` ${lines[index].trim()}`;
+          index += 1;
+          continue;
+        }
+        break;
+      }
+      blocks.push({ type: "unordered-list", items });
+      continue;
+    }
+
+    const ordered = line.match(/^\s{0,3}\d+[.)]\s+(.+)$/);
+    if (ordered) {
+      const items = [ordered[1]];
+      index += 1;
+      while (index < lines.length) {
+        const next = lines[index].match(/^\s{0,3}\d+[.)]\s+(.+)$/);
+        if (next) {
+          items.push(next[1]);
+          index += 1;
+          continue;
+        }
+        if (lines[index].trim() && /^\s{2,}\S/.test(lines[index])) {
+          items[items.length - 1] += ` ${lines[index].trim()}`;
+          index += 1;
+          continue;
+        }
+        break;
+      }
+      blocks.push({ type: "ordered-list", items });
+      continue;
+    }
+
+    const quote = line.match(/^\s{0,3}>\s?(.*)$/);
+    if (quote) {
+      const quoteLines = [quote[1]];
+      index += 1;
+      while (index < lines.length) {
+        const next = lines[index].match(/^\s{0,3}>\s?(.*)$/);
+        if (!next) break;
+        quoteLines.push(next[1]);
+        index += 1;
+      }
+      blocks.push({ type: "quote", lines: quoteLines });
+      continue;
+    }
+
+    const paragraph = [line.trim()];
+    index += 1;
+    while (index < lines.length && lines[index].trim() && !blockStart(lines[index])) {
+      paragraph.push(lines[index].trim());
+      index += 1;
+    }
+    blocks.push({ type: "paragraph", lines: paragraph });
+  }
+
+  return blocks;
+}
+
+const inlineToken = /(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|~~[^~\n]+~~|\[[^\]\n]+\]\(https?:\/\/[^\s)]+\)|\[(?:Source|Nguồn)\s+\d+\]|\*[^*\n]+\*|_[^_\n]+_)/g;
+
+function renderInline(value: string): ReactNode[] {
+  const result: ReactNode[] = [];
+  let lastIndex = 0;
+  let tokenIndex = 0;
+
+  for (const match of value.matchAll(inlineToken)) {
+    const token = match[0];
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      result.push(<Fragment key={`text-${tokenIndex++}`}>{value.slice(lastIndex, index)}</Fragment>);
+    }
+
+    if (token.startsWith("`") && token.endsWith("`")) {
+      result.push(<code key={`code-${tokenIndex++}`}>{token.slice(1, -1)}</code>);
+    } else if ((token.startsWith("**") && token.endsWith("**")) || (token.startsWith("__") && token.endsWith("__"))) {
+      result.push(<strong key={`strong-${tokenIndex++}`}>{token.slice(2, -2)}</strong>);
+    } else if (token.startsWith("~~") && token.endsWith("~~")) {
+      result.push(<del key={`del-${tokenIndex++}`}>{token.slice(2, -2)}</del>);
+    } else if (token.startsWith("[") && token.includes("](") && token.endsWith(")")) {
+      const link = token.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+      if (link) {
+        result.push(
+          <a key={`link-${tokenIndex++}`} href={link[2]} target="_blank" rel="noreferrer">
+            {link[1]}
+          </a>,
+        );
+      } else {
+        result.push(<Fragment key={`token-${tokenIndex++}`}>{token}</Fragment>);
+      }
+    } else if (/^\[(?:Source|Nguồn)\s+\d+\]$/.test(token)) {
+      result.push(<span className="chat-citation" key={`citation-${tokenIndex++}`}>{token.slice(1, -1)}</span>);
+    } else if (token.startsWith("*") || token.startsWith("_")) {
+      result.push(<em key={`em-${tokenIndex++}`}>{token.slice(1, -1)}</em>);
+    } else {
+      result.push(<Fragment key={`token-${tokenIndex++}`}>{token}</Fragment>);
+    }
+    lastIndex = index + token.length;
+  }
+
+  if (lastIndex < value.length) {
+    result.push(<Fragment key={`text-${tokenIndex}`}>{value.slice(lastIndex)}</Fragment>);
+  }
+  return result;
+}
+
+function renderTextLines(lines: string[]) {
+  return lines.map((line, index) => (
+    <Fragment key={`line-${index}`}>
+      {index > 0 && <br />}
+      {renderInline(line)}
+    </Fragment>
+  ));
+}
+
+export default function ChatMarkdown({ content }: { content: string }) {
+  return (
+    <div className="chat-markdown">
+      {parseBlocks(content).map((block, index) => {
+        const key = `block-${index}`;
+        if (block.type === "heading") {
+          const Heading = `h${Math.min(block.level, 4)}` as keyof JSX.IntrinsicElements;
+          return <Heading key={key}>{renderInline(block.text)}</Heading>;
+        }
+        if (block.type === "unordered-list") {
+          return <ul key={key}>{block.items.map((item, itemIndex) => <li key={`${key}-${itemIndex}`}>{renderInline(item)}</li>)}</ul>;
+        }
+        if (block.type === "ordered-list") {
+          return <ol key={key}>{block.items.map((item, itemIndex) => <li key={`${key}-${itemIndex}`}>{renderInline(item)}</li>)}</ol>;
+        }
+        if (block.type === "quote") return <blockquote key={key}>{renderTextLines(block.lines)}</blockquote>;
+        if (block.type === "code") return <pre key={key}><code>{block.lines.join("\n")}</code></pre>;
+        if (block.type === "rule") return <hr key={key} />;
+        return <p key={key}>{renderInline(block.lines.join(" "))}</p>;
+      })}
+    </div>
+  );
+}

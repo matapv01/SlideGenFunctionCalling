@@ -20,6 +20,7 @@ import { ChatSlideStreamPanel } from "./ChatSlideStreamPanel";
 import { ChatSlidePlanPanel } from "./ChatSlidePlanPanel";
 import { ChatSlideGenerationCard } from "./ChatSlideGenerationCard";
 import { useSlideGeneration } from "./SlideGenerationContext";
+import ChatMarkdown from "./ChatMarkdown";
 
 const defaultModels = ["genius-1", "genius-2", "genius-3"];
 const defaultEfforts = ["low", "medium", "high"] as const;
@@ -937,7 +938,7 @@ export default function SlidegeniusChat() {
                 return item.role === "assistant" ? (
                   <article className="chat-assistant-message" key={item.id} tabIndex={0}>
                     <span className="chat-assistant-mark" aria-hidden="true">✦</span>
-                    <p style={{ whiteSpace: "pre-wrap" }}>{visibleContent}</p>
+                    <ChatMarkdown content={visibleContent} />
                     <div className="chat-message-meta">
                       <time>{messageTime(item.created_at, language) || text.justNow}</time>
                       {item.id === latestAssistantMessageId && <button type="button" aria-label={text.regenerate} title={text.regenerate}>↻</button>}
