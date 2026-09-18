@@ -130,7 +130,9 @@ function parseBlocks(value: string): MarkdownBlock[] {
 
 const inlineToken = /(`[^`\n]+`|\*\*[^*\n]+\*\*|__[^_\n]+__|~~[^~\n]+~~|\[[^\]\n]+\]\(https?:\/\/[^\s)]+\)|\[(?:Source|Nguồn)\s+\d+\]|\*[^*\n]+\*|_[^_\n]+_)/g;
 
-function renderInline(value: string): ReactNode[] {
+type CitationClickHandler = (sourceIndex: number) => void;
+
+function renderInline(value: string, onCitationClick?: CitationClickHandler): ReactNode[] {
   const result: ReactNode[] = [];
   let lastIndex = 0;
   let tokenIndex = 0;
@@ -160,7 +162,24 @@ function renderInline(value: string): ReactNode[] {
         result.push(<Fragment key={`token-${tokenIndex++}`}>{token}</Fragment>);
       }
     } else if (/^\[(?:Source|Nguồn)\s+\d+\]$/.test(token)) {
-      result.push(<span className="chat-citation" key={`citation-${tokenIndex++}`}>{token.slice(1, -1)}</span>);
+      const citation = token.match(/^\[(?:Source|Nguồn)\s+(\d+)\]$/);
+      const sourceIndex = citation ? Number(citation[1]) : 0;
+      const label = token.slice(1, -1);
+      result.push(
+        onCitationClick && sourceIndex > 0 ? (
+          <button
+            className="chat-citation"
+            key={`citation-${tokenIndex++}`}
+            type="button"
+            onClick={() => onCitationClick(sourceIndex)}
+            aria-label={`Open ${label}`}
+          >
+            {label}
+          </button>
+        ) : (
+          <span className="chat-citation" key={`citation-${tokenIndex++}`}>{label}</span>
+        ),
+      );
     } else if (token.startsWith("*") || token.startsWith("_")) {
       result.push(<em key={`em-${tokenIndex++}`}>{token.slice(1, -1)}</em>);
     } else {
@@ -175,34 +194,40 @@ function renderInline(value: string): ReactNode[] {
   return result;
 }
 
-function renderTextLines(lines: string[]) {
+function renderTextLines(lines: string[], onCitationClick?: CitationClickHandler) {
   return lines.map((line, index) => (
     <Fragment key={`line-${index}`}>
       {index > 0 && <br />}
-      {renderInline(line)}
+      {renderInline(line, onCitationClick)}
     </Fragment>
   ));
 }
 
-export default function ChatMarkdown({ content }: { content: string }) {
+export default function ChatMarkdown({
+  content,
+  onCitationClick,
+}: {
+  content: string;
+  onCitationClick?: CitationClickHandler;
+}) {
   return (
     <div className="chat-markdown">
       {parseBlocks(content).map((block, index) => {
         const key = `block-${index}`;
         if (block.type === "heading") {
           const Heading = `h${Math.min(block.level, 4)}` as keyof JSX.IntrinsicElements;
-          return <Heading key={key}>{renderInline(block.text)}</Heading>;
+          return <Heading key={key}>{renderInline(block.text, onCitationClick)}</Heading>;
         }
         if (block.type === "unordered-list") {
-          return <ul key={key}>{block.items.map((item, itemIndex) => <li key={`${key}-${itemIndex}`}>{renderInline(item)}</li>)}</ul>;
+          return <ul key={key}>{block.items.map((item, itemIndex) => <li key={`${key}-${itemIndex}`}>{renderInline(item, onCitationClick)}</li>)}</ul>;
         }
         if (block.type === "ordered-list") {
-          return <ol key={key}>{block.items.map((item, itemIndex) => <li key={`${key}-${itemIndex}`}>{renderInline(item)}</li>)}</ol>;
+          return <ol key={key}>{block.items.map((item, itemIndex) => <li key={`${key}-${itemIndex}`}>{renderInline(item, onCitationClick)}</li>)}</ol>;
         }
-        if (block.type === "quote") return <blockquote key={key}>{renderTextLines(block.lines)}</blockquote>;
+        if (block.type === "quote") return <blockquote key={key}>{renderTextLines(block.lines, onCitationClick)}</blockquote>;
         if (block.type === "code") return <pre key={key}><code>{block.lines.join("\n")}</code></pre>;
         if (block.type === "rule") return <hr key={key} />;
-        return <p key={key}>{renderInline(block.lines.join(" "))}</p>;
+        return <p key={key}>{renderInline(block.lines.join(" "), onCitationClick)}</p>;
       })}
     </div>
   );

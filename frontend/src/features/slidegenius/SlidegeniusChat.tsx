@@ -65,6 +65,70 @@ interface MessageAttachment {
   name: string;
 }
 
+interface ChatSource {
+  index: number;
+  id: string;
+  documentId: string;
+  title: string;
+  section: string;
+  excerpt: string;
+  role: string;
+  similarity: number | null;
+}
+
+function getMessageSources(message: ChatMessage): ChatSource[] {
+  const metadata = message.metadata;
+  if (!metadata || typeof metadata !== "object") return [];
+
+  const retrieval = metadata.retrieval;
+  const retrievalCitations = retrieval && typeof retrieval === "object" && !Array.isArray(retrieval)
+    ? (retrieval as Record<string, unknown>).citations
+    : undefined;
+  const candidates = Array.isArray(retrievalCitations)
+    ? retrievalCitations
+    : Array.isArray(metadata.citations)
+      ? metadata.citations
+      : [];
+
+  return candidates.flatMap((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+    const raw = item as Record<string, unknown>;
+    const documentId = typeof raw.document_id === "string" ? raw.document_id.trim() : "";
+    const chunkId = raw.chunk_id !== undefined && raw.chunk_id !== null ? String(raw.chunk_id) : "";
+    const section = typeof raw.section === "string"
+      ? raw.section.trim()
+      : typeof raw.section_path === "string"
+        ? raw.section_path.trim()
+        : "";
+    const title = typeof raw.title === "string" ? raw.title.trim() : "";
+    const excerpt = typeof raw.excerpt === "string"
+      ? raw.excerpt.trim()
+      : typeof raw.snippet === "string"
+        ? raw.snippet.trim()
+        : typeof raw.content === "string"
+          ? raw.content.trim()
+          : "";
+    const similarityValue = Number(raw.similarity);
+    const similarity = Number.isFinite(similarityValue) ? similarityValue : null;
+    const sourceId = documentId || chunkId || `source-${index + 1}`;
+
+    return [{
+      index: index + 1,
+      id: `${sourceId}:${chunkId || index + 1}`,
+      documentId,
+      title: title || section || `Source ${index + 1}`,
+      section,
+      excerpt,
+      role: typeof raw.role === "string" ? raw.role.trim() : "",
+      similarity,
+    }];
+  });
+}
+
+function sourceKey(messageId: number, source: ChatSource) {
+  return `${messageId}:${source.index}:${source.id}`;
+}
+
 function getSlideGenerationLog(message: ChatMessage): SlideGenerationLog | null {
   const candidate = message.metadata?.slide_generation;
   if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
@@ -280,6 +344,7 @@ export default function SlidegeniusChat() {
   const [deletedProjectIds, setDeletedProjectIds] = useState<Set<number>>(() => new Set());
   const [clarificationOtherOpen, setClarificationOtherOpen] = useState(false);
   const [clarificationOther, setClarificationOther] = useState("");
+  const [selectedSourceKey, setSelectedSourceKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clarificationInputRef = useRef<HTMLInputElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
@@ -341,6 +406,11 @@ export default function SlidegeniusChat() {
         slideCountUnlimited: "Không giới hạn",
         modelLabel: "Model",
         effortLabel: "Effort",
+        sources: "Nguồn tham khảo",
+        sourceDocument: "Tài liệu",
+        sourceSection: "Mục",
+        sourceExcerpt: "Đoạn trích",
+        sourceNoExcerpt: "Nguồn này chưa có đoạn trích hiển thị.",
       }
     : {
         helper: "Ask Slidegenius to shape an idea, plan a project, or make something impossible feel obvious.",
@@ -393,6 +463,11 @@ export default function SlidegeniusChat() {
         slideCountUnlimited: "Unlimited",
         modelLabel: "Model",
         effortLabel: "Effort",
+        sources: "Sources",
+        sourceDocument: "Document",
+        sourceSection: "Section",
+        sourceExcerpt: "Excerpt",
+        sourceNoExcerpt: "This source has no excerpt available.",
       };
 
   const hasUploadedDocuments = uploadedDocuments.length > 0;
@@ -727,10 +802,19 @@ export default function SlidegeniusChat() {
         options.slideCount,
         documentIds,
       );
+      const assistantMessage = getMessageSources(result.assistant_message).length || !result.citations.length
+        ? result.assistant_message
+        : {
+            ...result.assistant_message,
+            metadata: {
+              ...(result.assistant_message.metadata || {}),
+              retrieval: { enabled: true, citations: result.citations },
+            },
+          };
       setMessages((current) => [
         ...current.filter((item) => item.id !== optimisticMessage.id),
         result.user_message,
-        result.assistant_message,
+        assistantMessage,
       ]);
       setSessions((current) => current.map((session) => (
         session.id === result.session.id ? result.session : session
@@ -928,6 +1012,8 @@ export default function SlidegeniusChat() {
                   ? getVisibleDocumentFlow(rawFlow, language)
                   : rawFlow;
                 const generation = item.role === "assistant" ? getSlideGenerationLog(item) : null;
+                const sources = item.role === "assistant" ? getMessageSources(item) : [];
+                const activeSource = sources.find((source) => sourceKey(item.id, source) === selectedSourceKey);
                 const attachments = item.role === "user" ? getMessageAttachments(item) : [];
                 const showFlow = item.id === latestInteractiveAssistantId;
                 const visibleContent = flow && rawFlow && flow !== rawFlow
@@ -938,7 +1024,66 @@ export default function SlidegeniusChat() {
                 return item.role === "assistant" ? (
                   <article className="chat-assistant-message" key={item.id} tabIndex={0}>
                     <span className="chat-assistant-mark" aria-hidden="true">✦</span>
-                    <ChatMarkdown content={visibleContent} />
+                    <ChatMarkdown
+                      content={visibleContent}
+                      onCitationClick={sources.length > 0 ? (sourceIndex) => {
+                          const source = sources.find((candidate) => candidate.index === sourceIndex);
+                          if (!source) return;
+                          const nextKey = sourceKey(item.id, source);
+                          setSelectedSourceKey((current) => current === nextKey ? null : nextKey);
+                        } : undefined}
+                    />
+                    {sources.length > 0 && (
+                      <div className="chat-sources">
+                        <div className="chat-sources-heading">
+                          <span>{text.sources}</span>
+                          <span className="chat-sources-count">{sources.length}</span>
+                        </div>
+                        <div className="chat-source-list" role="list" aria-label={text.sources}>
+                          {sources.map((source) => {
+                            const key = sourceKey(item.id, source);
+                            const document = sessionDocuments.find((candidate) => candidate.id === source.documentId);
+                            const documentName = document?.title || document?.original_filename || "";
+                            return (
+                              <div className="chat-source-chip-wrap" key={key} role="listitem">
+                                <button
+                                  className={`chat-source-chip ${activeSource && key === selectedSourceKey ? "active" : ""}`}
+                                  type="button"
+                                  aria-pressed={key === selectedSourceKey}
+                                  title={source.section || source.title}
+                                  onClick={() => setSelectedSourceKey((current) => current === key ? null : key)}
+                                >
+                                  <span className="chat-source-chip-label">Source {source.index}</span>
+                                  <span className="chat-source-chip-title">{documentName ? `${documentName} · ` : ""}{source.title}</span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {activeSource && (
+                          <div className="chat-source-detail">
+                            <div className="chat-source-detail-heading">
+                              <span>Source {activeSource.index}</span>
+                              <strong>{activeSource.title}</strong>
+                            </div>
+                            {(() => {
+                              const document = sessionDocuments.find((candidate) => candidate.id === activeSource.documentId);
+                              const documentName = document?.title || document?.original_filename || "";
+                              return (
+                                <>
+                                  {documentName && <p><span>{text.sourceDocument}</span>{documentName}</p>}
+                                  {activeSource.section && <p><span>{text.sourceSection}</span>{activeSource.section}</p>}
+                                </>
+                              );
+                            })()}
+                            <p className="chat-source-excerpt-label">{text.sourceExcerpt}</p>
+                            <blockquote className="chat-source-excerpt">
+                              {activeSource.excerpt || text.sourceNoExcerpt}
+                            </blockquote>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="chat-message-meta">
                       <time>{messageTime(item.created_at, language) || text.justNow}</time>
                       {item.id === latestAssistantMessageId && <button type="button" aria-label={text.regenerate} title={text.regenerate}>↻</button>}

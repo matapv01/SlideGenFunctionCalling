@@ -1086,6 +1086,10 @@ class DocumentRagService:
                     "document_id": chunk.document_id,
                     "section": chunk.section_path,
                     "title": chunk.title,
+                    # Keep a bounded provenance excerpt with the persisted
+                    # citation so the client can show the evidence without
+                    # re-running retrieval or exposing the whole document.
+                    "excerpt": content[:1600],
                     "level": chunk.level,
                     "node_key": selection.ref.node_key,
                     "parent_node_key": selection.ref.parent_node_key,
