@@ -3,5 +3,4 @@ from backend.infrastructure.llm_providers.base import (
     BaseLLMProvider,
     NvidiaQwenLLMProvider,
     GeminiAPIProvider,
-    RemoteLLMProvider,
 )

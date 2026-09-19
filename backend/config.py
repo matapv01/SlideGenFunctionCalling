@@ -310,10 +310,6 @@ BROWSER_PREVIEW_URL = (
     else "http://127.0.0.1:5173/render/xml-preview"
 )
 
-# --- Optional remote provider configuration ---
-REMOTE_API_URL = "https://mood-forestry-attending-organizations.trycloudflare.com"
-API_TIMEOUT = 600
-
 # --- Local asset/provider configuration ---
 VIT_MODEL_DIR = PROJECT_DIR / "models" / "vit"
 VIT_MODEL_FILENAME = "best_model_multilabel_DX_10_0.77.pt"
