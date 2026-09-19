@@ -94,6 +94,18 @@ html:not(.dark) .sgx-home.workspace-page .workspace-collapse:focus-visible {
   .sgx-home.workspace-page .chat-layout { width: 100%; min-width: 0; flex: 1 1 auto; }
   .sgx-home.workspace-page .chat-history,
   .sgx-home.workspace-page .chat-panel { height: 100%; min-height: 0; }
+  .sgx-home.workspace-page .chat-history-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-color: #5f625b transparent;
+    scrollbar-width: thin;
+  }
+  .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar { width: 6px; }
+  .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-track { background: transparent; }
+  .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-thumb { border-radius: 6px; background: #5f625b; }
+  .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-thumb:hover { background: #8b8f87; }
   /* Collapse only removes the copy. Keep the icon column on the same x/y grid. */
   .sgx-home.workspace-page.sidebar-collapsed .workspace-sidebar { width: 70px; padding: 30px 20px 22px; overflow: visible; }
   .sgx-home.workspace-page.sidebar-collapsed .workspace-main { margin-left: 70px; }
@@ -303,8 +315,8 @@ html:not(.dark) .sgx-home.workspace-page .workspace-collapse:focus-visible {
 .sgx-home.workspace-page .chat-source-panel-excerpt > span { color: #777a73; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
 .sgx-home.workspace-page .chat-source-panel-excerpt blockquote { max-height: none; margin: 0; padding: 10px 11px; border-left: 2px solid #f5a08a88; border-radius: 0 6px 6px 0; background: #0000001c; color: #d9dad4; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sgx-home.workspace-page .chat-user-message { display: grid; align-self: flex-end; justify-items: end; max-width: min(78%, 620px); gap: 7px; }
-.sgx-home.workspace-page .chat-user-bubble { padding: 11px 15px; border: 1px solid #ffffff10; border-radius: 17px 17px 5px 17px; background: #3b3c39; box-shadow: 0 7px 18px #00000018; }
-.sgx-home.workspace-page .chat-user-bubble p { margin: 0; color: #f2f2ec; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sgx-home.workspace-page .chat-user-bubble { padding: 11px 15px; border: 1px solid #61716a; border-radius: 17px 17px 5px 17px; background: #34413c; box-shadow: 0 7px 18px #00000022; }
+.sgx-home.workspace-page .chat-user-bubble p { margin: 0; color: #f4f2ea; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sgx-home.workspace-page .chat-message-attachments { display: flex; max-width: 100%; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
 .sgx-home.workspace-page .chat-message-attachment { display: flex; min-width: 0; max-width: min(260px, 100%); height: 29px; align-items: center; gap: 6px; padding: 3px 8px 3px 5px; border: 1px solid #ffffff18; border-radius: 8px; background: #ffffff0a; }
 .sgx-home.workspace-page .chat-message-attachment-icon { display: grid; width: 21px; height: 22px; flex: 0 0 21px; place-items: center; border: 1px solid #f5a08a66; border-radius: 5px; background: #f5a08a12; color: #f5a08a; }
@@ -680,6 +692,13 @@ html:not(.dark) .sgx-home.workspace-page .chat-source-panel-body > p { color: #4
 html:not(.dark) .sgx-home.workspace-page .chat-source-panel-body > p span,
 html:not(.dark) .sgx-home.workspace-page .chat-source-panel-excerpt > span { color: #707b73; }
 html:not(.dark) .sgx-home.workspace-page .chat-source-panel-excerpt blockquote { background: #f2f0eb; color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .chat-user-bubble {
+  border-color: #efb5a5;
+  background: #fff0ea;
+  box-shadow: 0 7px 18px #8f594218;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-user-bubble p { color: #3f342f; }
+html:not(.dark) .sgx-home.workspace-page .chat-composer-attachment strong { color: #344138; font-weight: 600; }
 html:not(.dark) .sgx-home.workspace-page .chat-message-attachment { border-color: #ddd9d1; background: #f5f3ef; }
 html:not(.dark) .sgx-home.workspace-page .chat-message-attachment strong { color: #465149; }
 html:not(.dark) .sgx-home.workspace-page .chat-pending-message { color: #5f6b62; }
@@ -823,12 +842,12 @@ html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-copy small 
 /* Keep the composer controls readable against the light paper background. */
 html:not(.dark) .sgx-home.workspace-page .composer-model-button {
   color: #344138;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 html:not(.dark) .sgx-home.workspace-page .composer-model-button span {
   color: #5c6a61;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 500;
 }
 html:not(.dark) .sgx-home.workspace-page .composer-model-button:hover,
@@ -854,7 +873,7 @@ html:not(.dark) .sgx-home.workspace-page .composer-usage-meter.is-critical .comp
 html:not(.dark) .sgx-home.workspace-page .composer-usage-meter.is-unlimited .composer-usage-circle { --usage-color: #3f7a6a; }
 html:not(.dark) .sgx-home.workspace-page .composer-usage-label {
   color: #4f5b52;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: .06em;
 }

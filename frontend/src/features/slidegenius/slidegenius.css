@@ -1122,6 +1122,15 @@ html:not(.dark) .sgx-home.workspace-page .chat-history-item.active {
 html:not(.dark) .sgx-home.workspace-page .chat-history-item span {
   color: #8a8b84;
 }
+html:not(.dark) .sgx-home.workspace-page .chat-history-list {
+  scrollbar-color: #b8bbb4 transparent;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-thumb {
+  background: #b8bbb4;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-thumb:hover {
+  background: #8f958d;
+}
 
 /* Give the workspace conversation controls a little more breathing room. */
 .sgx-home.workspace-page .chat-history-top {
