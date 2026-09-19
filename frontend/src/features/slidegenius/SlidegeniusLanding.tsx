@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import SlidegenLogo from "@/components/SlidegenLogo";
 import { publicAssetUrl } from "@/lib/publicAssetUrl";
 import "./slidegenius.css";
 
@@ -86,7 +87,7 @@ export default function SlidegeniusLanding() {
   return (
     <main className="sgl-landing slidegen-page">
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Slidegen home"><span className="brand-word"><span>slide</span><b>gen</b></span></a>
+        <a className="brand" href="#top" aria-label="Slidegen home"><SlidegenLogo /></a>
         <nav className="main-nav" aria-label="Main navigation">
           <div className="nav-menu" onMouseEnter={() => openMenuSmoothly("product")} onMouseLeave={closeMenuSmoothly}><button type="button" aria-expanded={openMenu === "product"} onClick={() => openMenuSmoothly("product")}>{isVietnamese ? "Sản phẩm" : "Product"}<span className="nav-chevron" /></button>{openMenu === "product" && <div className="mega-menu product-menu"><div className="mega-column"><p>{isVietnamese ? "Nền tảng cốt lõi" : "Core platform"}</p><a href="#templates"><i>◉</i><span><b>{isVietnamese ? "Ứng dụng web" : "Web app"}</b><small>{isVietnamese ? "Tạo ngay trên trình duyệt" : "Create in your browser"}</small></span></a><a href="#templates"><i>▣</i><span><b>{isVietnamese ? "Ứng dụng máy tính" : "Desktop app"}</b><small>{isVietnamese ? "Làm việc trên mọi màn hình" : "Work across every screen"}</small></span></a><a href="#templates"><i>API</i><span><b>API / CLI</b><small>{isVietnamese ? "Xây dựng cùng Slidegen" : "Build with Slidegen"}</small></span></a></div><div className="mega-column"><p>{isVietnamese ? "Công cụ sáng tạo" : "Creation tools"}</p><a href="#templates"><i>⌁</i><span><b>{isVietnamese ? "Bảng sáng tạo" : "Canvas"}</b><small>{isVietnamese ? "Định hình ý tưởng bằng hình ảnh" : "Shape ideas visually"}</small></span></a><a href="#templates"><i>▦</i><span><b>{isVietnamese ? "Mẫu thiết kế" : "Templates"}</b><small>{isVietnamese ? "Bắt đầu từ nền tảng vững chắc" : "Start from a strong point"}</small></span></a><a href="#templates"><i>✦</i><span><b>{isVietnamese ? "Không gian thử nghiệm" : "Playground"}</b><small>{isVietnamese ? "Tự do thử nghiệm" : "Experiment freely"}</small></span></a></div><div className="mega-column"><p>{isVietnamese ? "Tích hợp" : "Integrations"}</p><a href="#templates"><i>◉</i><span><b>Figma</b><small>{isVietnamese ? "Đưa hệ thống của bạn vào" : "Bring your systems in"}</small></span></a><a href="#templates"><i>✣</i><span><b>Slack</b><small>{isVietnamese ? "Cộng tác đúng ngữ cảnh" : "Collaborate in context"}</small></span></a><a href="#templates"><i>↗</i><span><b>Notion</b><small>{isVietnamese ? "Biến ghi chú thành bài trình bày" : "Turn notes into decks"}</small></span></a></div><a className="mega-feature" href="#templates"><div className="feature-preview"><span>SLIDEGEN</span><strong>{isVietnamese ? <>Bảng sáng tạo<br />cho mọi câu chuyện.</> : <>Creative canvas<br />for every story.</>}</strong><em>↗</em></div><b>{isVietnamese ? "Ứng dụng web" : "Web app"}</b><small>{isVietnamese ? "Bắt đầu tạo cùng Slidegen chỉ trong vài giây trên trình duyệt" : "Start creating with Slidegen in seconds, right in your browser"}</small></a></div>}</div>
           <a href="#templates">{isVietnamese ? "Mẫu thiết kế" : "Templates"}</a>
@@ -120,7 +121,7 @@ export default function SlidegeniusLanding() {
       <footer className="site-footer">
         <div className="footer-top">
           <div className="footer-brand">
-            <a className="brand" href="#top" aria-label="Slidegen home"><span className="brand-word"><span>slide</span><b>gen</b></span></a>
+            <a className="brand" href="#top" aria-label="Slidegen home"><SlidegenLogo /></a>
             <span>{isVietnamese ? "Cùng nhau tạo nên công việc tốt hơn." : "Make better work, together."}</span>
             <a className="footer-cta" href="#create">{isVietnamese ? "Bắt đầu sáng tạo" : "Start creating"}<span>↗</span></a>
           </div>

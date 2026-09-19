@@ -80,6 +80,7 @@ import { api, type ImageSearchResult, type ProjectCollaborator, type ProjectComm
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import SlidegenConfirmDialog from "@/components/SlidegenConfirmDialog";
+import SlidegenLogo from "@/components/SlidegenLogo";
 import { XmlSlideCanvas } from "@/components/XmlSlideCanvas";
 import "../features/slidegenius/slidegenius-editor.css";
 import {
@@ -2381,7 +2382,7 @@ const XmlSlideEditor = () => {
       <div className="xml-editor-shell sg-editor-shell flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground">
         <div className="sg-editor-toolbar sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-background/95 px-3 shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-2.5">
-            <span className="sg-editor-brand" aria-label="Slidegen"><span>slide</span><b>gen</b></span>
+            <span className="sg-editor-brand" aria-label="Slidegen"><SlidegenLogo /></span>
             <span className="h-5 w-px bg-border/70" aria-hidden="true" />
             <Tip label="Back">
               <Button aria-label={translateEditorLabel("Back to projects", language)} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => void handleExitEditor()}>

@@ -1,0 +1,54 @@
+.slidegen-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.slidegen-logo-image,
+.slidegen-logo-mark-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.slidegen-logo-image {
+  width: 100%;
+}
+
+.slidegen-logo-mark-image {
+  display: none;
+}
+
+.sgx-home.workspace-page .workspace-brand .slidegen-logo {
+  width: 106px;
+  height: 96px;
+}
+
+.sgl-landing .brand .slidegen-logo {
+  width: 52px;
+  height: 50px;
+}
+
+.sg-auth .auth-header .brand .slidegen-logo {
+  width: 55px;
+  height: 56px;
+}
+
+.sgv-brand .slidegen-logo {
+  width: 55px;
+  height: 54px;
+}
+
+.sg-editor-brand .slidegen-logo {
+  width: 48px;
+  height: 45px;
+}
+
+@media (max-width: 900px) {
+  .sg-editor-brand .slidegen-logo {
+    display: none;
+  }
+}

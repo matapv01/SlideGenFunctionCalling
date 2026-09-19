@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { resolveSlideBackground } from "@/lib/slideBackground";
 import { ProjectSlidePreview } from "@/components/ProjectSlidePreview";
+import SlidegenLogo from "@/components/SlidegenLogo";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SlidegenConfirmDialog from "@/components/SlidegenConfirmDialog";
 import "./slidegenius-project-view.css";
@@ -114,7 +115,7 @@ export default function SlidegeniusProjectView() {
   return (
     <main className="sgv-page">
       <header className="sgv-header">
-        <Link className="sgv-brand" to="/home" aria-label="Slidegen home"><span>slide</span><b>gen</b></Link>
+        <Link className="sgv-brand" to="/home" aria-label="Slidegen home"><SlidegenLogo /></Link>
         <div className="sgv-header-actions"><span>{projectStatus ? projectStatus.toUpperCase() : t.draft}</span><button type="button" onClick={() => navigate("/projects")}>← {t.back}</button></div>
       </header>
 

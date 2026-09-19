@@ -88,7 +88,7 @@ LLM_MODEL = "qwen"
 # và host.docker.internal khi backend chạy trong Docker. Cho phép từng môi
 # trường ghi đè rõ ràng, vì Qwen cũng có thể chạy ở container/service riêng.
 _DEFAULT_LLM_BASE_URL = (
-    "http://host.docker.internal:8080/v1"
+    "http://171.226.10.154:8080/v1"
     if RUNNING_IN_DOCKER
     else "http://127.0.0.1:8080/v1"
 )

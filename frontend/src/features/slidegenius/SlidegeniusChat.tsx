@@ -1163,10 +1163,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         discardBlankDraft(session.id);
         return;
       }
-      setSessions((current) => [
-        session,
-        ...current.filter((item) => item.id !== draftSessionId),
-      ]);
+      // Only remove an empty draft above. A saved conversation must stay in
+      // the history when the user starts a new conversation.
+      setSessions((current) => [session, ...current]);
       setActiveSessionId(session.id);
       setMessages([]);
       setUploadingDocument(null);
