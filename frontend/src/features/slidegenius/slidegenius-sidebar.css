@@ -77,7 +77,7 @@
 .sgx-home.workspace-page .chat-composer-attachment.is-loading .chat-composer-attachment-remove { width: 20px; max-width: 20px; opacity: 1; }
 .sgx-home.workspace-page .chat-composer-attachment-remove:disabled { cursor: not-allowed; opacity: .55; }
 .sgx-home.workspace-page .composer-usage-inline { display: flex; align-items: center; gap: 7px; margin-right: 10px; }
-.sgx-home.workspace-page .composer-usage-meter { position: relative; display: flex; align-items: center; gap: 3px; padding: 2px; border-radius: 4px; outline: 0; cursor: help; }
+.sgx-home.workspace-page .composer-usage-meter { position: relative; display: flex; align-items: center; gap: 3px; padding: 2px; border-radius: 4px; outline: 0; cursor: default; }
 .sgx-home.workspace-page .composer-usage-meter:focus-visible { box-shadow: 0 0 0 2px #f5a08a55; }
 .sgx-home.workspace-page .composer-usage-circle { --usage-color: #b9c8ae; display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: conic-gradient(var(--usage-color) var(--usage-progress), #ffffff16 0); }
 .sgx-home.workspace-page .composer-usage-circle > span { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #292a28; color: var(--usage-color); font: 600 7px/1 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
@@ -529,4 +529,65 @@
   .sgx-home.workspace-page .chat-layout.chat-layout-streaming .chat-slide-stream-panel { grid-column: 1; grid-row: auto; }
   .sgx-home.workspace-page .chat-slide-stream-panel { height: 430px; min-height: 360px; max-height: 430px; }
   .sgx-home.workspace-page .workspace-slide-stream-drawer { top: 12px; right: 12px; bottom: 12px; width: min(360px, calc(100vw - 24px)); }
+}
+
+.sgx-home.workspace-page .workspace-brand-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.sgx-home.workspace-page .workspace-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #ffffff24;
+  border-radius: 999px;
+  background: #ffffff08;
+  color: #f5a08a;
+  cursor: pointer;
+  font: 10px "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  transition: border-color .16s ease, background .16s ease, color .16s ease;
+}
+
+.sgx-home.workspace-page .workspace-theme-toggle:hover,
+.sgx-home.workspace-page .workspace-theme-toggle:focus-visible {
+  border-color: #f5a08a88;
+  background: #f5a08a12;
+  outline: 0;
+}
+
+.sgx-home.workspace-page .workspace-theme-toggle > span {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.sgx-home.workspace-page.sidebar-collapsed .workspace-brand-actions {
+  display: none;
+}
+
+/* Theme switching is shared by the app-level control on every route. */
+.sgx-home.workspace-page .workspace-brand-actions {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .sgx-home.workspace-page .workspace-brand-actions {
+    margin-left: auto;
+  }
+}
+
+/* Make chat messages easier to scan without changing the compact layout. */
+.sgx-home.workspace-page .chat-assistant-message .chat-markdown {
+  font-size: 14px;
+  line-height: 1.72;
+}
+
+.sgx-home.workspace-page .chat-user-bubble p {
+  font-size: 14px;
+  line-height: 1.55;
 }

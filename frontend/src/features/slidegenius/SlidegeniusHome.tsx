@@ -401,7 +401,9 @@ export default function SlidegeniusHome({ initialTab = "slidegenius" }: { initia
                 <h2>{t.subscriptionTitle}</h2>
                 <p>{t.subscriptionSub}</p>
               </div>
-              <span className="subscription-current">{subscriptionInfo ? `${t.currentPlan} / ${subscriptionInfo.tier.toUpperCase()}` : t.loadingPlan}</span>
+              {(!subscriptionInfo || subscriptionInfo.tier === "free") && (
+                <span className="subscription-current">{subscriptionInfo ? `${t.currentPlan} / ${subscriptionInfo.tier.toUpperCase()}` : t.loadingPlan}</span>
+              )}
             </div>
             {subscriptionLoading ? <div className="subscription-state">{t.loadingPlan}</div> : subscriptionError || !subscriptionInfo ? (
               <div className="subscription-state">

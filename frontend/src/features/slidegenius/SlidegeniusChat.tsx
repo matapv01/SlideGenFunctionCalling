@@ -450,6 +450,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     generating: false,
   });
   const handledDraftSessionRef = useRef<string | null>(null);
+  const blankChatSessionIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     chatLifecycleRef.current = {
@@ -475,6 +476,11 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
       }
       return;
     }
+
+    // Only sessions created as empty drafts may be cleaned up here. A saved
+    // conversation can briefly have zero loaded messages while its data is
+    // being fetched, so messages.length alone is not a safe signal.
+    if (!blankChatSessionIdsRef.current.has(current.sessionId)) return;
 
     if (
       handledDraftSessionRef.current === current.sessionId
@@ -697,6 +703,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
   }, []);
 
   const applyChatTurnResult = (optimisticId: number, result: ChatTurnResponse) => {
+    blankChatSessionIdsRef.current.delete(result.session.id);
     const assistantMessage = getMessageSources(result.assistant_message).length || !result.citations.length
       ? result.assistant_message
       : {
@@ -815,11 +822,14 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         const storedSession = restoreOnReload && storedSessionId
           ? existingSessions.find((session) => session.id === storedSessionId)
           : undefined;
-        const nextSession = generationSession
+        let nextSession = generationSession
           || reconnectSession
           || resumeSession
-          || storedSession
-          || await createChatSession();
+          || storedSession;
+        if (!nextSession) {
+          nextSession = await createChatSession();
+          blankChatSessionIdsRef.current.add(nextSession.id);
+        }
         if (!active || viewRequestId !== sessionViewRequestRef.current) return;
         setSessions(
           existingSessions.some((session) => session.id === nextSession.id)
@@ -924,6 +934,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
       loadChatDocuments(sessionId),
     ]);
     if (viewRequestId !== sessionViewRequestRef.current) return;
+    if (sessionMessages.length > 0) {
+      blankChatSessionIdsRef.current.delete(sessionId);
+    }
     const attachableDocuments = sessionDocuments.filter((item) => item.status !== "failed");
     const sentDocumentIds = getSentDocumentIds(sessionMessages);
     setMessages(sessionMessages);
@@ -1054,6 +1067,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     if (session.id === activeSessionId || sending || deletingSessionId || removingDocumentId) return;
     const isEmptyDraft = Boolean(
       activeSessionId
+      && blankChatSessionIdsRef.current.has(activeSessionId)
       && messages.length === 0
       && !activeChatJob,
     );
@@ -1062,7 +1076,8 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     invalidateSessionView();
     setError("");
     if (isEmptyDraft && draftSessionId) {
-      void archiveChatSession(draftSessionId).catch(() => undefined);
+      // Do not archive based only on the current message state: it can be
+      // temporarily empty while the selected conversation is loading.
       setSessions((current) => current.filter((item) => item.id !== draftSessionId));
     }
     setActiveSessionId(session.id);
@@ -1085,6 +1100,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     if (sending || deletingSessionId || removingDocumentId) return;
     const isEmptyDraft = Boolean(
       activeSessionId
+      && blankChatSessionIdsRef.current.has(activeSessionId)
       && messages.length === 0
       && !activeChatJob,
     );
@@ -1094,9 +1110,14 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     setError("");
     try {
       if (isEmptyDraft && draftSessionId) {
-        await archiveChatSession(draftSessionId).catch(() => undefined);
+        // A blank composer state can also occur briefly while an existing
+        // conversation is still loading. Do not archive the session here or
+        // a real conversation may disappear from history; the backend already
+        // excludes message-less drafts when the history is reloaded.
+        setSessions((current) => current.filter((item) => item.id !== draftSessionId));
       }
       const session = await createChatSession();
+      blankChatSessionIdsRef.current.add(session.id);
       setSessions((current) => [
         session,
         ...current.filter((item) => item.id !== draftSessionId),
@@ -1128,6 +1149,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     const session = pendingDeleteSession;
     setPendingDeleteSession(null);
     if (!session) return;
+    blankChatSessionIdsRef.current.delete(session.id);
     if (session.id === activeSessionId) {
       invalidatePendingUpload();
       invalidateSessionView();

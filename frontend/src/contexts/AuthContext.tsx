@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { api, setGlobalLogout } from "@/lib/api";
+import { api, setGlobalLogout, type EmailVerificationChallenge } from "@/lib/api";
 
 interface User {
   id: number;
@@ -15,9 +15,11 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<void>;
+  login: (email: string, password: string, remember?: boolean) => Promise<EmailVerificationChallenge>;
   loginWithAccessToken: (accessToken: string) => Promise<void>;
-  register: (fullName: string, email: string, password: string) => Promise<void>;
+  register: (fullName: string, email: string, password: string) => Promise<EmailVerificationChallenge>;
+  verifyEmailCode: (challengeId: string, code: string) => Promise<void>;
+  resendEmailCode: (challengeId: string) => Promise<EmailVerificationChallenge>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
 }
@@ -84,12 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const login = useCallback(async (email: string, password: string, remember = false) => {
-    const res = await api.login(email, password);
-    setToken(res.token);
-    setUser(res.user);
-    localStorage.setItem("token", res.token);
-    localStorage.setItem("user", JSON.stringify(res.user));
+  const login = useCallback(async (email: string, password: string, _remember = false) => {
+    return api.login(email, password);
   }, []);
 
   const loginWithAccessToken = useCallback(async (accessToken: string) => {
@@ -109,11 +107,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const register = useCallback(async (fullName: string, email: string, password: string) => {
-    const res = await api.register(fullName, email, password);
+    return api.register(fullName, email, password);
+  }, []);
+
+  const verifyEmailCode = useCallback(async (challengeId: string, code: string) => {
+    const res = await api.verifyEmailCode(challengeId, code);
     setToken(res.token);
     setUser(res.user);
     localStorage.setItem("token", res.token);
     localStorage.setItem("user", JSON.stringify(res.user));
+  }, []);
+
+  const resendEmailCode = useCallback(async (challengeId: string) => {
+    return api.resendEmailCode(challengeId);
   }, []);
 
   const updateUser = useCallback((data: Partial<User>) => {
@@ -126,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, loginWithAccessToken, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, loginWithAccessToken, register, verifyEmailCode, resendEmailCode, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

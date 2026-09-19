@@ -80,6 +80,13 @@ interface Token {
   token_type: string;
 }
 
+export interface EmailVerificationChallenge {
+  challenge_id: string;
+  email: string;
+  expires_in: number;
+  message: string;
+}
+
 interface UserResponse {
   id: number;
   email: string;
@@ -303,25 +310,35 @@ export type OutputFormat = "xml";
 export const api = {
   // Auth endpoints - match backend /api/auth/*
   login: async (email: string, password: string) => {
-    const tokenResponse = await request<Token>("/auth/login", {
+    return request<EmailVerificationChallenge>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    // Store token and fetch user info
+  },
+
+  register: async (fullName: string, email: string, password: string) => {
+    await request<UserResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, full_name: fullName, password }),
+    });
+    return api.login(email, password);
+  },
+
+  verifyEmailCode: async (challengeId: string, code: string) => {
+    const tokenResponse = await request<Token>("/auth/verify-email-code", {
+      method: "POST",
+      body: JSON.stringify({ challenge_id: challengeId, code }),
+    });
     localStorage.setItem("token", tokenResponse.access_token);
     const user = await request<UserResponse>("/auth/me");
     return { token: tokenResponse.access_token, user };
   },
 
-  register: async (fullName: string, email: string, password: string) => {
-    // Register returns UserResponse (no token), need to login after
-    await request<UserResponse>("/auth/register", {
+  resendEmailCode: (challengeId: string) =>
+    request<EmailVerificationChallenge>("/auth/resend-email-code", {
       method: "POST",
-      body: JSON.stringify({ email, full_name: fullName, password }),
-    });
-    // Auto-login after registration
-    return api.login(email, password);
-  },
+      body: JSON.stringify({ challenge_id: challengeId }),
+    }),
 
   me: () => request<UserResponse>("/auth/me"),
 

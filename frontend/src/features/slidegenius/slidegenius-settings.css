@@ -38,3 +38,123 @@
 .sgx-home.workspace-page .sgx-settings-aside-note > span { color: #f5a08a; }.sgx-home.workspace-page .sgx-settings-aside-note p { margin: 0; }
 @media (max-width: 980px) { .sgx-home.workspace-page .sgx-settings-layout { grid-template-columns: 1fr; }.sgx-home.workspace-page .sgx-settings-aside { position: static; grid-template-columns: minmax(0, 1fr) minmax(220px, .65fr); align-items: start; }.sgx-home.workspace-page .sgx-settings-aside-card { min-height: 0; }.sgx-home.workspace-page .sgx-settings-orbit { margin-top: 32px; } }
 @media (max-width: 760px) { .sgx-home.workspace-page .sgx-settings-panel { margin-left: 0; }.sgx-home.workspace-page .sgx-settings-aside { grid-template-columns: 1fr; }.sgx-home.workspace-page .sgx-settings-aside-card { min-height: 0; } }
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-summary,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-footer {
+  border-color: #20202018;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-summary strong,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-section-heading h3,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-field,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-switch {
+  color: #30312e;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-summary span,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-section-heading p,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-field small,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-switch small,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-footer p,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-note {
+  color: #777872;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-summary small,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-footer p.is-dirty,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-eyebrow,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-note > span {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button {
+  color: #777872;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button:hover,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button.active {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button.active {
+  border-bottom-color: #b65f4c;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-field input,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-field textarea,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-field select,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-choice-grid button,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-password button {
+  border-color: #2020201c;
+  background: #faf9f5;
+  color: #30312e;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-field input[readonly] {
+  color: #92938d;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-choice-grid button:hover,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-choice-grid button.selected {
+  border-color: #d6816e99;
+  background: #f5a08a20;
+  color: #b45f4d;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-note,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-note {
+  border-color: #2020201c;
+  background: #20202005;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-card {
+  border-color: #20202018;
+  background: radial-gradient(circle at 50% 31%, #f5a08a25, transparent 31%), linear-gradient(145deg, #f7f6f1, #e8e7e1 68%);
+  box-shadow: inset 0 1px #ffffffaa, 0 20px 42px #20202014;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-card::after {
+  background-image: linear-gradient(#2020200b 1px, transparent 1px), linear-gradient(90deg, #2020200b 1px, transparent 1px);
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-card h3 {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-description {
+  color: #777872;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-signal-list,
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-signal-list > div {
+  border-color: #20202018;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-signal-list > div {
+  color: #777872;
+}
+
+html:not(.dark) .sgx-home.workspace-page .sgx-settings-signal-list strong {
+  color: #30312e;
+}
+
+/* Keep settings comfortable to read without changing the layout hierarchy. */
+.sgx-home.workspace-page .sgx-settings-summary span,
+.sgx-home.workspace-page .sgx-settings-summary small { font-size: 12px; }
+.sgx-home.workspace-page .sgx-settings-tabs button { font-size: 12px; }
+.sgx-home.workspace-page .sgx-settings-field,
+.sgx-home.workspace-page .sgx-settings-switch { font-size: 13px; }
+.sgx-home.workspace-page .sgx-settings-field small,
+.sgx-home.workspace-page .sgx-settings-switch small { font-size: 11px; }
+.sgx-home.workspace-page .sgx-settings-field input,
+.sgx-home.workspace-page .sgx-settings-field textarea,
+.sgx-home.workspace-page .sgx-settings-field select { font-size: 13px; }
+.sgx-home.workspace-page .sgx-settings-choice-grid button { font-size: 12px; }
+.sgx-home.workspace-page .sgx-settings-note { font-size: 12px; }
+.sgx-home.workspace-page .sgx-settings-footer p { font-size: 11px; }
+.sgx-home.workspace-page .sgx-settings-aside-eyebrow { font-size: 10px; }
+.sgx-home.workspace-page .sgx-settings-aside-description { font-size: 12px; }
+.sgx-home.workspace-page .sgx-settings-signal-list > div { font-size: 10px; }
+.sgx-home.workspace-page .sgx-settings-signal-list strong { font-size: 11px; }
+.sgx-home.workspace-page .sgx-settings-aside-note { font-size: 11px; }

@@ -11,6 +11,7 @@ function calcAutoTheme(): Theme {
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
   autoTheme: boolean;
   setAutoTheme: (v: boolean) => void;
 }
@@ -28,22 +29,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return localStorage.getItem("autoTheme") === "true";
   });
 
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
     if (localStorage.getItem("autoTheme") === "true") return calcAutoTheme();
     const stored = localStorage.getItem("theme") as Theme | null;
-    if (stored) return stored;
+    if (stored === "light" || stored === "dark") return stored;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.dataset.theme = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
 
   // Check every minute when auto mode is on
   useEffect(() => {
     if (!autoTheme) return;
-    const apply = () => setTheme(calcAutoTheme());
+    const apply = () => setThemeState(calcAutoTheme());
     apply();
     const id = setInterval(apply, 60_000);
     return () => clearInterval(id);
@@ -51,17 +53,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleTheme = () => {
     if (autoTheme) return;
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
+    setThemeState((t) => (t === "dark" ? "light" : "dark"));
+  };
+
+  const setTheme = (nextTheme: Theme) => {
+    setAutoThemeState(false);
+    localStorage.setItem("autoTheme", "false");
+    setThemeState(nextTheme);
   };
 
   const setAutoTheme = (v: boolean) => {
     setAutoThemeState(v);
     localStorage.setItem("autoTheme", String(v));
-    if (v) setTheme(calcAutoTheme());
+    if (v) setThemeState(calcAutoTheme());
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, autoTheme, setAutoTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, autoTheme, setAutoTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -1,7 +1,12 @@
 # File: backend/api/v1/authentication_router.py
 
+import asyncio
+import hashlib
+import hmac
 import secrets
 import time
+from dataclasses import dataclass
+from threading import Lock
 from urllib.parse import urlencode, quote
 
 import httpx
@@ -11,13 +16,29 @@ from backend.api.schemas.auth_schema import (
     UserCreate, 
     UserLogin, 
     Token, 
+    EmailVerificationChallenge,
+    EmailVerificationRequest,
+    EmailVerificationResendRequest,
     UserResponse, 
     ChangePasswordRequest  # Import thêm cái này
 )
 from backend.api.dependencies import get_auth_service, get_current_active_user
 from backend.application.services.auth_service import AuthService
-from backend.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_FRONTEND_URL, GOOGLE_REDIRECT_URI
+from backend.config import (
+    AUTH_OTP_EXPIRE_MINUTES,
+    AUTH_OTP_MAX_ATTEMPTS,
+    AUTH_OTP_RESEND_COOLDOWN_SECONDS,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_FRONTEND_URL,
+    GOOGLE_REDIRECT_URI,
+    SECRET_KEY,
+)
 from backend.domain.entities.user import UserProfile
+from backend.application.services.email_verification_service import (
+    EmailDeliveryError,
+    send_verification_code,
+)
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 
 router = APIRouter(prefix="/auth", tags=["AUTHENTICATION"])
@@ -26,26 +47,127 @@ _google_oauth_states: dict[str, float] = {}
 _GOOGLE_STATE_TTL_SECONDS = 600
 
 
-def _frontend_origin(request: Request) -> str:
-    if GOOGLE_FRONTEND_URL:
-        return GOOGLE_FRONTEND_URL
+@dataclass
+class _PendingEmailVerification:
+    email: str
+    code_hash: str
+    created_at: float
+    expires_at: float
+    last_sent_at: float
+    attempts: int = 0
+
+
+_pending_email_verifications: dict[str, _PendingEmailVerification] = {}
+_verification_lock = Lock()
+
+
+def _verification_code_hash(challenge_id: str, code: str) -> str:
+    payload = f"{challenge_id}:{code}".encode("utf-8")
+    return hmac.new(SECRET_KEY.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+
+
+def _cleanup_verifications(now: float) -> None:
+    expired = [
+        challenge_id
+        for challenge_id, challenge in _pending_email_verifications.items()
+        if challenge.expires_at <= now
+    ]
+    for challenge_id in expired:
+        _pending_email_verifications.pop(challenge_id, None)
+
+
+async def _issue_email_verification(email: str) -> EmailVerificationChallenge:
+    now = time.time()
+    challenge_id = secrets.token_urlsafe(32)
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    expires_at = now + AUTH_OTP_EXPIRE_MINUTES * 60
+
+    try:
+        await asyncio.to_thread(send_verification_code, email, code)
+    except EmailDeliveryError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    with _verification_lock:
+        _cleanup_verifications(now)
+        _pending_email_verifications[challenge_id] = _PendingEmailVerification(
+            email=email,
+            code_hash=_verification_code_hash(challenge_id, code),
+            created_at=now,
+            expires_at=expires_at,
+            last_sent_at=now,
+        )
+
+    return EmailVerificationChallenge(
+        challenge_id=challenge_id,
+        email=email,
+        expires_in=AUTH_OTP_EXPIRE_MINUTES * 60,
+    )
+
+
+def _get_pending_verification(challenge_id: str) -> _PendingEmailVerification:
+    now = time.time()
+    with _verification_lock:
+        _cleanup_verifications(now)
+        challenge = _pending_email_verifications.get(challenge_id)
+        if challenge is None:
+            raise HTTPException(status_code=400, detail="Verification code expired or is invalid.")
+        return challenge
+
+
+def _consume_verification(challenge_id: str, code: str) -> str:
+    now = time.time()
+    with _verification_lock:
+        _cleanup_verifications(now)
+        challenge = _pending_email_verifications.get(challenge_id)
+        if challenge is None:
+            raise HTTPException(status_code=400, detail="Verification code expired or is invalid.")
+        if challenge.attempts >= AUTH_OTP_MAX_ATTEMPTS:
+            _pending_email_verifications.pop(challenge_id, None)
+            raise HTTPException(status_code=429, detail="Too many verification attempts. Request a new code.")
+
+        expected_hash = _verification_code_hash(challenge_id, code)
+        if not hmac.compare_digest(challenge.code_hash, expected_hash):
+            challenge.attempts += 1
+            raise HTTPException(status_code=400, detail="The verification code is incorrect.")
+
+        _pending_email_verifications.pop(challenge_id, None)
+        return challenge.email
+
+
+def _server_origin(request: Request) -> str:
     scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0].strip()
     host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc)).split(",")[0].strip()
     return f"{scheme}://{host}"
 
 
+def _frontend_base(request: Request) -> str:
+    return GOOGLE_FRONTEND_URL or f"{_server_origin(request)}/slidegen"
+
+
 def _google_callback_url(request: Request) -> str:
     if GOOGLE_REDIRECT_URI:
         return GOOGLE_REDIRECT_URI
-    return f"{_frontend_origin(request)}{request.url.path}"
+    # The OAuth request starts at /google/login, but Google must redirect to
+    # the sibling /google/callback endpoint after authorization.
+    callback_path = f"{request.url.path.rsplit('/', 1)[0]}/callback"
+    return f"{_server_origin(request)}{callback_path}"
 
 
-def _google_result_redirect(request: Request, *, token: str | None = None, error: str | None = None) -> RedirectResponse:
+def _google_result_redirect(
+    request: Request,
+    *,
+    token: str | None = None,
+    challenge_id: str | None = None,
+    email: str | None = None,
+    error: str | None = None,
+) -> RedirectResponse:
     if token:
         fragment = f"google_token={quote(token)}"
+    elif challenge_id:
+        fragment = f"google_challenge={quote(challenge_id)}&google_email={quote(email or '')}"
     else:
         fragment = f"google_error={quote(error or 'oauth_failed')}"
-    return RedirectResponse(url=f"{_frontend_origin(request)}/login#{fragment}", status_code=303)
+    return RedirectResponse(url=f"{_frontend_base(request)}/login#{fragment}", status_code=303)
 
 
 @router.get("/google/login", name="google_login")
@@ -121,11 +243,23 @@ async def google_callback(request: Request, code: str | None = None, state: str 
             return _google_result_redirect(request, error="account_inactive")
         if user.id is not None:
             user_repo.create_or_update_profile(UserProfile(user_id=user.id, full_name=full_name, avatar_url=avatar_url))
-        access_token = auth_service.create_access_token(data={"sub": user.email})
     except Exception:
         return _google_result_redirect(request, error="account_failed")
 
-    return _google_result_redirect(request, token=access_token)
+    # Google has verified the identity, but Slidegen still requires the same
+    # email OTP step as password sign-in before issuing an access token.
+    try:
+        verification = await _issue_email_verification(email)
+    except HTTPException as exc:
+        if exc.status_code == 503:
+            return _google_result_redirect(request, error="verification_unavailable")
+        return _google_result_redirect(request, error="account_failed")
+
+    return _google_result_redirect(
+        request,
+        challenge_id=verification.challenge_id,
+        email=verification.email,
+    )
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -137,7 +271,7 @@ async def register(
     return UserResponse.model_validate(user)
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=EmailVerificationChallenge)
 async def login(
     user_data: UserLogin,
     auth_service: AuthService = Depends(get_auth_service)
@@ -146,8 +280,53 @@ async def login(
     if not user:
         raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không đúng")
     
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Tài khoản hiện không hoạt động.")
+    return await _issue_email_verification(user.email)
+
+
+@router.post("/verify-email-code", response_model=Token)
+async def verify_email_code(
+    verification_data: EmailVerificationRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    email = _consume_verification(verification_data.challenge_id, verification_data.code)
+    user = auth_service.user_repo.get_by_email(email)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="Tài khoản không còn hoạt động.")
     access_token = auth_service.create_access_token(data={"sub": user.email})
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.post("/resend-email-code", response_model=EmailVerificationChallenge)
+async def resend_email_code(verification_data: EmailVerificationResendRequest):
+    challenge = _get_pending_verification(verification_data.challenge_id)
+    now = time.time()
+    if now - challenge.last_sent_at < AUTH_OTP_RESEND_COOLDOWN_SECONDS:
+        retry_after = max(1, int(AUTH_OTP_RESEND_COOLDOWN_SECONDS - (now - challenge.last_sent_at)))
+        raise HTTPException(
+            status_code=429,
+            detail=f"Please wait {retry_after} seconds before requesting another code.",
+        )
+
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    try:
+        await asyncio.to_thread(send_verification_code, challenge.email, code)
+    except EmailDeliveryError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    now = time.time()
+    with _verification_lock:
+        challenge.code_hash = _verification_code_hash(verification_data.challenge_id, code)
+        challenge.expires_at = now + AUTH_OTP_EXPIRE_MINUTES * 60
+        challenge.last_sent_at = now
+        challenge.attempts = 0
+
+    return EmailVerificationChallenge(
+        challenge_id=verification_data.challenge_id,
+        email=challenge.email,
+        expires_in=AUTH_OTP_EXPIRE_MINUTES * 60,
+    )
 
 
 @router.get("/me", response_model=UserResponse)

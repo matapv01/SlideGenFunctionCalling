@@ -9,3 +9,105 @@
 @media (max-width: 760px) { .sgv-header { height: 62px; padding-inline: 18px; }.sgv-header-actions { gap: 10px; letter-spacing: .08em; }.sgv-header-actions > span { display: none; }.sgv-shell { width: calc(100% - 36px); padding-top: 38px; }.sgv-heading { display: block; margin-bottom: 28px; }.sgv-heading-actions { display: flex; align-items: center; justify-content: flex-start; margin-top: 18px; }.sgv-heading-actions .sgv-status { margin-top: 0; }.sgv-status { display: inline-block; }.sgv-grid { grid-template-columns: 1fr; }.sgv-viewer-canvas { width: 100vw; }.sgv-viewer-arrow { width: 34px; height: 34px; }.sgv-viewer-arrow.left { left: 10px; }.sgv-viewer-arrow.right { right: 10px; }.sgv-viewer-bottom { right: 16px; bottom: 16px; left: 16px; }.sgv-viewer-bottom small { display: none; } }
 .sgv-delete-error { margin: -24px 0 24px; color: #f5a08a; font-size: 11px; }
 .sgv-heading-button-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }.sgv-delete-button { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; padding: 8px 12px; border: 1px solid #e4867266; border-radius: 4px; background: transparent; color: #e48672; font: 600 10px/1 "Avenir Next", "Segoe UI", system-ui, sans-serif; cursor: pointer; transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease; }.sgv-delete-button:hover { border-color: #e48672; background: #e4867212; color: #ffae9c; transform: translateY(-1px); }
+
+/* Project detail follows the same account-wide Light mode as Projects and
+   the editor. The slide viewer intentionally stays dark for presentation
+   contrast when it is opened. */
+html:not(.dark) .sgv-page {
+  background: #f3f3f1;
+  color: #202020;
+}
+
+html:not(.dark) .sgv-header {
+  border-bottom-color: #20202018;
+  background: #f8f7f2f2;
+  box-shadow: 0 8px 24px #20202012;
+}
+
+html:not(.dark) .sgv-brand {
+  color: #202020;
+}
+
+html:not(.dark) .sgv-header-actions {
+  color: #777872;
+}
+
+html:not(.dark) .sgv-brand b,
+html:not(.dark) .sgv-header-actions button,
+html:not(.dark) .sgv-heading p,
+html:not(.dark) .sgv-card-meta > span,
+html:not(.dark) .sgv-card-meta button:hover,
+html:not(.dark) .sgv-delete-error {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgv-heading h1 {
+  color: #202020;
+}
+
+html:not(.dark) .sgv-heading span {
+  color: #777872;
+}
+
+html:not(.dark) .sgv-status {
+  border-color: #2020201c;
+  color: #777872;
+}
+
+html:not(.dark) .sgv-card {
+  border-color: #20202018;
+  background: #faf9f5;
+  box-shadow: 0 12px 28px #2020200b;
+}
+
+html:not(.dark) .sgv-card-preview {
+  background: #e8e7e1;
+}
+
+html:not(.dark) .sgv-card-preview > span {
+  color: #777872;
+}
+
+html:not(.dark) .sgv-card-meta strong {
+  color: #30312e;
+}
+
+html:not(.dark) .sgv-card-meta button {
+  color: #777872;
+}
+
+html:not(.dark) .sgv-state {
+  border-color: #20202024;
+  color: #777872;
+}
+
+html:not(.dark) .sgv-delete-button {
+  border-color: #c46f6066;
+  color: #b45f4d;
+}
+
+html:not(.dark) .sgv-delete-button:hover {
+  border-color: #b45f4d;
+  background: #e4867212;
+  color: #934b3c;
+}
+
+html:not(.dark) .sgv-edit-button,
+html:not(.dark) .sgv-state button {
+  border-color: #c46f6066;
+  background: #e88976;
+}
+
+/* Readable type scale for the project detail page. */
+.sgv-header-actions { font-size: 11px; }
+.sgv-header-actions button { font-size: 12px; }
+.sgv-heading p { font-size: 11px; }
+.sgv-heading span { font-size: 13px; }
+.sgv-status { font-size: 10px; }
+.sgv-card-preview > span { font-size: 12px; }
+.sgv-card-meta > span { font-size: 10px; }
+.sgv-card-meta strong { font-size: 12px; }
+.sgv-card-meta button { font-size: 11px; }
+.sgv-state { font-size: 14px; }
+.sgv-state button,
+.sgv-delete-button { font-size: 12px; }

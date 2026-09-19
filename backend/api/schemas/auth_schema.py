@@ -12,6 +12,24 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class EmailVerificationChallenge(BaseModel):
+    """Short-lived challenge returned before an access token is issued."""
+
+    challenge_id: str
+    email: EmailStr
+    expires_in: int
+    message: str = "A verification code was sent to your email."
+
+
+class EmailVerificationRequest(BaseModel):
+    challenge_id: str = Field(..., min_length=20, max_length=200)
+    code: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class EmailVerificationResendRequest(BaseModel):
+    challenge_id: str = Field(..., min_length=20, max_length=200)
+
+
 class TokenData(BaseModel):
     """Schema dùng để decode token (lấy email từ payload)"""
     email: Optional[str] = None
