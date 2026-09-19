@@ -75,22 +75,27 @@ RAG không được tự phân tích lại Markdown để đoán heading lần t
 
 Ảnh không được đưa thẳng vào deck chỉ vì nó tồn tại trong DOCX. Trong lúc tạo
 canonical artifact, `DocumentImageExtractor` đọc relationship của DOCX, lưu
-asset private và gắn mỗi occurrence với `section_path`, heading gần nhất,
-đoạn văn lân cận và thứ tự xuất hiện. Metadata này được lưu cùng
+asset private và gắn mỗi occurrence trong document body, bảng, header/footer
+hoặc VML/DrawingML với `section_path`, heading gần nhất, đoạn văn lân cận và
+thứ tự xuất hiện. Metadata này được lưu cùng
 `chatbot_documents.images_json`; không tạo vector database hay service ảnh
 riêng.
 
-Trước planner, node `image_verifier` gửi ảnh cùng toàn bộ slide chunks hiện
-tại cho `ImageRelevanceService`. Qwen-VL chỉ trả về quyết định có dùng hay
-không, slide chính, confidence, vai trò và lý do. Các assignment được ghi vào
-state để mọi planner batch thấy cùng một kết quả. Khi layout được chọn, executor
-inject đúng asset đã duyệt vào image slot tương ứng và copy asset vào project.
+Sau khi planner tạo kế hoạch cho toàn bộ deck, node `image_verifier` gửi toàn
+bộ ảnh theo các batch nhỏ cùng `slide_topic`, `slide_purpose`, deck outline,
+section/heading gần nhất và nội dung slide cho `ImageRelevanceService`.
+Qwen-VL chỉ trả về quyết định có dùng hay không, slide chính, confidence, vai
+trò và lý do cho từng ảnh. Không có giới hạn 10 ảnh ở bước này; batch chỉ là
+cách giới hạn kích thước request. Các assignment được ghi vào state trước khi
+slide worker chạy. Khi layout được chọn, executor inject asset đã duyệt vào
+image slot tương ứng và copy asset vào project.
 
 Ảnh từ DDGS dùng cùng verifier nhưng theo candidate set: search lấy nhiều ứng
 viên, Qwen so sánh ứng viên với nội dung slide và role của slot, sau đó executor
-mới chọn URL được duyệt. Nếu endpoint đang chạy text-only hoặc verifier lỗi,
-đây là enrichment tùy chọn: hệ thống giữ luồng ảnh hiện tại và không làm hỏng
-việc tạo slide.
+mới chọn URL được duyệt. Nếu endpoint đang chạy text-only, verifier lỗi hoặc
+không candidate nào đạt ngưỡng, assignment của slide là rỗng và generator
+retry bằng layout không ảnh; tuyệt đối không chèn ảnh stock hay ảnh chưa được
+kiểm chứng.
 
 Nguyên tắc này tránh cả hai lỗi: lấy ảnh “cùng chủ đề” nhưng sai đối tượng, và
 ép mọi ảnh trong tài liệu vào deck. Qwen được cung cấp context thực tế thay vì
@@ -343,7 +348,8 @@ Các tối ưu tiếp theo chỉ cần khi quy mô tài liệu tăng:
 3. khi số chunk rất lớn, thay linear scan bằng vector index được quản lý trong
    infrastructure nhưng vẫn giữ repository/application port hiện tại;
 4. thêm metrics: số chunk đọc, top score, số source sau dedupe, context chars,
-   thời gian embed/retrieve và tỷ lệ planner fallback;
+   thời gian embed/retrieve, thời gian image search/verifier, tỷ lệ planner
+   fallback và tỷ lệ slide phải dùng layout không ảnh;
 5. bổ sung job dọn generation cũ không còn citation sau khi có retention policy
    rõ ràng;
 6. thêm reranker chỉ khi benchmark chứng minh cosine + lexical chưa đủ tốt.

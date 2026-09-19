@@ -126,7 +126,9 @@ def sanitize_to_placeholders(tool_call: dict) -> dict:
         if k in _CONTENT_KEYS:
             sanitized_args[k] = _sanitize_value(v)
         elif k == "image_url":
-            sanitized_args[k] = "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=200"
+            # Style-context sanitization must never inject a stock image. The
+            # active workflow binds only verifier-approved assets later.
+            sanitized_args[k] = ""
         elif k in ("theme_color", "accent_color", "highlight_color",
                    "background_color", "bg_color", "bg_color_left", "bg_color_right",
                    "font_size_multiplier", "card_padding", "border_width"):
@@ -365,14 +367,10 @@ def parse_tool_call_json(text: str) -> Optional[dict]:
     """
     Return the primary slide XML tool call from raw model output.
 
-    If image-search calls are present, prefer the first non-search call so both
-    legacy search-first outputs and the current slide-first plan resolve to the
-    actual slide generator tool.
+    Image discovery is a workflow step before generation, so this parser only
+    resolves the first generated tool call.
     """
     calls = parse_tool_calls_json(text)
-    for call in calls:
-        if call.get("name") != "search_ddgs_images":
-            return call
     return calls[0] if calls else None
 
 

@@ -6,6 +6,20 @@ from pydantic import BaseModel, Field
 
 # Define the allowed tool categories based on your TOOLS_DICT keys
 ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS']
+ImageRole = Literal['evidence', 'illustration', 'chart', 'diagram', 'photo']
+ImageOrientation = Literal['Wide', 'Tall', 'Square']
+
+
+class ImageSearchIntent(BaseModel):
+    """Planner-owned search intent; the backend executes the actual search."""
+
+    query: str = Field(
+        default="",
+        description="Two to five concise factual nouns or noun phrases.",
+    )
+    role: ImageRole = "illustration"
+    layout: ImageOrientation | None = None
+    required: bool = False
 
 
 class Evaluation(BaseModel):
@@ -42,31 +56,28 @@ class SlidePlan(BaseModel):
             "deck style contract; do not invent a separate palette or typography."
         )
     )
-    image_mode: Literal["none", "semantic", "decorative"] = Field(
+    image_mode: Literal["none", "semantic"] = Field(
         default="none",
         description=(
             "Default to none. Choose semantic only when an image is a concrete "
-            "subject to search directly. Choose decorative only when the slide "
-            "genuinely benefits from a supporting visual or is an intentional "
-            "intro/transition/closing composition; never search a person's name, "
-            "book title, or literal slide title."
+            "subject or visual evidence must be searched directly. Never request "
+            "an image merely because a layout happens to contain an image slot."
         ),
     )
-    image_strategy: Literal["semantic", "decorative"] = Field(
-        default="decorative",
+    image_search_intents: List[ImageSearchIntent] = Field(
+        default_factory=list,
         description=(
-            "Legacy compatibility field. Keep aligned with image_mode when the "
-            "mode is semantic or decorative; use decorative for none."
+            "Zero or one concise image-search intent for this slide. Use an intent "
+            "only when a real visual materially improves the slide. Each intent "
+            "contains query, role, and optional layout; the backend always limits "
+            "the search to its configured candidate count."
         ),
     )
-    image_theme: str = Field(
+    visual_layout_request: str = Field(
         default="",
         description=(
-            "A short lower-case English visual motif for image search. For semantic "
-            "imagery use the concrete subject; for decorative imagery use a "
-            "safe conceptual motif such as 'workflow collaboration' or "
-            "'customer support conversation'. Never use a person's name, "
-            "book title, company name, or literal slide heading."
+            "A short, domain-neutral visual direction for the slide. Describe the "
+            "visual role and composition, not a specific image URL or provider."
         ),
     )
     action: ToolCategory = Field(
@@ -83,6 +94,41 @@ class SlidePlanBatch(BaseModel):
             "One plan for every requested slide, in the same order as the input."
         ),
     )
+
+
+class SlideRefinement(BaseModel):
+    """Final slide brief after image verification and visual reconciliation."""
+
+    slide_index: int = Field(default=0, ge=0)
+    final_content: str = Field(
+        default="",
+        description=(
+            "Presentation-ready content that preserves the source facts and "
+            "meaning while incorporating only grounded visual notes."
+        ),
+    )
+    visual_layout_request: str = Field(
+        default="",
+        description=(
+            "A concise layout request. If no approved image exists, describe a "
+            "clear no-image composition; otherwise explain how the approved image "
+            "supports the slide."
+        ),
+    )
+    retrieval_query: str = Field(
+        default="",
+        description=(
+            "A short factual query for the final document retrieval pass. Do not "
+            "include visual filler or unsupported facts."
+        ),
+    )
+    image_mode: Literal["none", "semantic"] = "none"
+
+
+class SlideRefinementBatch(BaseModel):
+    """Structured phase-two planner response for a small slide batch."""
+
+    refinements: List[SlideRefinement] = Field(default_factory=list)
 
 
 class DeckStylePlan(BaseModel):
@@ -137,7 +183,8 @@ class State(TypedDict, total=False):
     plain_text: str  # Plain text content for auto-structure generation
 
     document_outline: List[Dict]
-    slide_chunks: List[str]
+    slide_chunks: List[Any]
+    slide_final_contents: List[str]
     slide_positions: List[Any]
     section_ids: List[str]
     slide_context_maps: List[str]
@@ -145,6 +192,9 @@ class State(TypedDict, total=False):
     deck_style_plan: Dict[str, Any]
     document_images: List[Dict[str, Any]]
     document_image_assignments: List[Dict[str, Any]]
+    image_search_candidates: List[Dict[str, Any]]
+    approved_image_assignments: List[Dict[str, Any]]
+    slide_refinements: List[Dict[str, Any]]
     user_request: str
 
     # Parallel section orchestration. ``batch_results`` uses a reducer because
@@ -178,6 +228,7 @@ class State(TypedDict, total=False):
     current_slide_position: Any
     current_slide_type: str
     current_document_images: List[Dict[str, Any]]
+    current_approved_images: List[Dict[str, Any]]
     force_no_image_layout: bool
     current_tool_plan: List[Dict]
     current_search_history: List[Dict]

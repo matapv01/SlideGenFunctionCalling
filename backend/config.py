@@ -95,7 +95,7 @@ _DEFAULT_LLM_BASE_URL = (
 LLM_BASE_URL = (os.getenv("LLM_BASE_URL") or _DEFAULT_LLM_BASE_URL).strip().rstrip("/")
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
 LLM_TEMPERATURE = 0.5
-# Max tokens trong response (Gemini Flash hỗ trợ lên đến 8k output tokens)
+# Max tokens trong response của provider OpenAI-compatible.
 LLM_MAX_TOKENS = 20000
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
 LLM_TOP_P = 1.0
@@ -226,6 +226,8 @@ SLIDE_MAX_CONCURRENCY = 5
 LLM_REQUEST_MAX_CONCURRENCY = 5
 # Match the configured planner batch concurrency.
 PLANNER_MAX_CONCURRENCY = 5
+IMAGE_SEARCH_MAX_RESULTS = 10
+IMAGE_SEARCH_MAX_CONCURRENCY = 5
 # Backward-compatible alias for integrations that still import the old name.
 SECTION_MAX_CONCURRENCY = SLIDE_MAX_CONCURRENCY
 SECTION_FALLBACK_BATCH_SIZE = 3

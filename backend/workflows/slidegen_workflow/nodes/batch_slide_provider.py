@@ -15,6 +15,7 @@ def provide_next_batch_slide(state: State) -> State:
     state["batch_done"] = False
     state["current_slide_index"] = int(job["index"])
     state["current_slide_text"] = job.get("content", "")
+    state["current_source_content"] = job.get("source_content", job.get("content", ""))
     state["current_slide_context_map"] = job.get("context_map", "")
     state["current_slide_plan"] = job.get("plan") or {
         "thought": "Use a readable content layout.",
@@ -22,6 +23,7 @@ def provide_next_batch_slide(state: State) -> State:
     }
     state["current_slide_position"] = job.get("position")
     state["current_slide_type"] = job.get("slide_type", "content")
+    state["current_approved_images"] = list(job.get("approved_images") or [])
     state["duplicate_excluded_tools"] = list(job.get("excluded_tools") or [])
     state["assigned_tool_candidates"] = list(job.get("assigned_tool_candidates") or [])
     state["preferred_tool_name"] = str(job.get("preferred_tool_name") or "")

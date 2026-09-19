@@ -75,31 +75,37 @@ Chat request (+ optional DOCX)
 [SLIDE SCRIPT]           LLM viết prompt + context thành một kịch bản Markdown
     │
     ▼
-[SLIDE PLANNER]          Gemini -> phân loại từng slide (INTRO/CONTENT/CHART/...)
+[SLIDE PLANNER]          Qwen -> phân loại từng slide và visual intent
     │
     ▼
-[SLIDE PREPARER]         Gemini -> viết design instruction (màu sắc, font, layout)
+[IMAGE SEARCH]            Backend -> lấy tối đa 10 candidate/intent, song song tối đa 5
     │
     ▼
-[SLIDE GENERATOR]        Qwen / Gemini -> gọi layout tool -> XML
+[IMAGE VERIFIER]          Qwen-VL -> chọn ảnh phù hợp với toàn bộ ngữ cảnh deck/slide
     │
     ▼
-[SLIDE EVALUATOR]        VLM -> chấm điểm + feedback (retry tối đa 3 lần)
+[SLIDE REFINER]           Qwen -> chốt nội dung và bố cục sau khi biết asset được duyệt
+    │
+    ▼
+[SLIDE GENERATOR]        Qwen -> gọi đúng một layout tool -> XML
     │
     ▼
 [FINALIZE]               Lưu XML + preview assets vào project
 ```
 
-- Generator dùng Qwen local: minimal system prompt + tool schemas + design instruction từ Gemini Preparer.
+- Generator dùng model OpenAI-compatible được cấu hình trong `backend/config.py`;
+  hiện tại là Qwen, với tool schema XML và design instruction dùng chung toàn deck.
 
 ### Kiểm chứng ảnh bằng Qwen-VL
 
-Workflow chatbot có node `image_verifier` nằm trước planner. Node này nhận các
-ảnh đã tách từ DOCX cùng section/heading gần nhất, gửi ảnh và toàn bộ slide
-chunks cho model vision để chọn slide phù hợp; executor sau đó mới inject ảnh
-đã được duyệt vào asset của project. Ảnh từ DDGS cũng được so sánh với nội
-dung slide trước khi dùng. Nếu endpoint đang chạy model text-only hoặc không
-khả dụng, verifier tự ngắt trong process và giữ nguyên luồng tạo slide hiện có.
+Workflow chatbot chạy planner phase 1 để tạo visual intent, backend search tối
+đa 10 candidate song song, rồi node `image_verifier` so sánh chúng cùng ảnh
+DOCX với topic/purpose và outline toàn deck. Planner phase 2 tiếp nhận các ảnh
+được duyệt cùng visual notes để chốt lại nội dung, brief hình ảnh và bố cục dựa
+trên context đã truy hồi ở application layer; XML generator chỉ nhận asset đã
+duyệt và không tự search ảnh. Nếu endpoint text-only,
+search không có ứng viên hoặc verifier không khả dụng, workflow không chèn ảnh
+stock mặc định và slide chuyển sang layout không ảnh.
 
 Model dùng cho kiểm chứng ảnh được cấu hình tập trung trong
 `backend/config.py` bằng `VLM_MODEL = LLM_MODEL`; hiện tại cả hai cùng là
@@ -108,7 +114,6 @@ riêng, chỉ cần đổi hằng số này và provider tương ứng trong com
 không thêm override rải rác trong `.env`. Ảnh DOCX được lưu private dưới
 `static/chatbot_documents` và được copy vào asset của project khi được chọn;
 không trả đường dẫn nội bộ ra API.
-- Generator dùng Gemini API: system prompt = slide-type rules + tool binding.
 
 ## API Endpoints
 

@@ -11,6 +11,7 @@ import logging
 import mimetypes
 import socket
 import threading
+import time
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,9 @@ logger = logging.getLogger(__name__)
 _MAX_REMOTE_BYTES = 8 * 1024 * 1024
 _MAX_MODEL_IMAGE_BYTES = 2 * 1024 * 1024
 _MAX_IMAGE_EDGE = 1400
-_MAX_SEARCH_CANDIDATES = 5
+_MAX_SEARCH_CANDIDATES = 10
+_DOCUMENT_IMAGE_BATCH_SIZE = 4
+_VISION_RETRY_SECONDS = 60.0
 
 
 def _as_bool(value: Any) -> bool:
@@ -40,8 +43,8 @@ class ImageRelevanceService:
     The service is intentionally domain-neutral.  It does not contain topic
     rules or keyword lists: Qwen receives the actual slide/document context and
     returns a small structured decision.  If the configured endpoint is
-    text-only or unavailable, callers receive ``available=False`` and keep the
-    existing image-generation path.
+    text-only or unavailable, callers receive ``available=False`` and can
+    switch the current slide to a no-image layout without inventing an image.
     """
 
     def __init__(
@@ -55,6 +58,7 @@ class ImageRelevanceService:
         self._cache: dict[str, dict[str, Any]] = {}
         self._cache_lock = threading.Lock()
         self._vision_available: bool | None = None
+        self._vision_retry_at = 0.0
 
     def verify_search_candidates(
         self,
@@ -83,6 +87,14 @@ class ImageRelevanceService:
         ][: _MAX_SEARCH_CANDIDATES]
         if not urls:
             return {"available": False, "approved": [], "decisions": []}
+        # Do not download and normalize every candidate after a recent vision
+        # failure. The executor will immediately retry the slide without an
+        # image, so another multimodal probe would only add latency.
+        if (
+            self._vision_available is False
+            and time.monotonic() < self._vision_retry_at
+        ):
+            return {"available": False, "approved": [], "decisions": []}
 
         parts: list[dict[str, Any]] = [
             {
@@ -99,7 +111,9 @@ class ImageRelevanceService:
                     "amount of text on that slide. The rendered slide arguments "
                     "are the most concrete representation of what will be shown. "
                     "Return JSON only in the form "
-                    '{"candidates":[{"index":0,"use":true,"confidence":0.0,"reason":"..."}]}.'
+                    '{"candidates":[{"index":0,"use":true,"confidence":0.0,'
+                    '"reason":"...","caption_hint":"...",'
+                    '"placement_hint":"..."}]}.'
                     " Candidate indexes are zero-based.\n\n"
                     f"Deck topic: {str(deck_topic or '')[:800]}\n"
                     f"Deck outline: {str(deck_outline or '')[:2200]}\n"
@@ -181,6 +195,8 @@ class ImageRelevanceService:
                     "use": _as_bool(item.get("use")),
                     "confidence": confidence,
                     "reason": str(item.get("reason") or "")[:500],
+                    "caption_hint": str(item.get("caption_hint") or "")[:300],
+                    "placement_hint": str(item.get("placement_hint") or "")[:300],
                 }
             )
         approved = [
@@ -203,112 +219,157 @@ class ImageRelevanceService:
         slide_chunks: list[dict[str, Any]],
         user_request: str,
         model: str | None = None,
+        slide_plans: list[dict[str, Any]] | None = None,
+        deck_topic: str = "",
+        deck_outline: str = "",
+        presentation_instruction: str = "",
     ) -> list[dict[str, Any]]:
-        """Select at most one primary slide for each relevant DOCX image."""
+        """Assign every usable DOCX image to its best supporting slide.
+
+        The complete deck plan is supplied to every small image batch. This
+        keeps the vision request bounded without silently dropping images from
+        larger documents.
+        """
         usable_images = [
             image for image in images or []
             if isinstance(image, dict) and str(image.get("source_path") or "").strip()
-        ][: _MAX_SEARCH_CANDIDATES * 2]
+        ]
         if not usable_images or not slide_chunks:
             return []
 
         slide_lines: list[str] = []
         for index, chunk in enumerate(slide_chunks):
             data = chunk if isinstance(chunk, dict) else {}
+            plan = (
+                slide_plans[index]
+                if slide_plans
+                and index < len(slide_plans)
+                and isinstance(slide_plans[index], dict)
+                else {}
+            )
             title = str(data.get("title") or data.get("heading") or "").strip()
             content = str(data.get("content") or "").strip()
             slide_lines.append(
-                f"Slide {index} | title: {title[:220]} | content: {content[:900]}"
+                f"Slide {index} | title: {title[:220]} | "
+                f"topic: {str(plan.get('slide_topic') or '')[:260]} | "
+                f"purpose: {str(plan.get('slide_purpose') or '')[:420]} | "
+                f"action: {str(plan.get('action') or '')[:80]} | "
+                f"content: {content[:900]}"
             )
-        parts: list[dict[str, Any]] = [
-            {
-                "type": "text",
-                "text": (
-                    "Decide whether each embedded document image materially supports "
-                    "one slide in the proposed deck. Use the image itself, its local "
-                    "heading context, and the slide content together. Do not force an "
-                    "image into a slide when it is unrelated, redundant, or too "
-                    "ambiguous. Choose at most one primary slide per image; slide "
-                    "indexes are zero-based. Return JSON only as "
-                    '{"images":[{"image_id":"...","use":true,"slide_index":0,'
-                    '"confidence":0.0,"role":"evidence|illustration|chart|diagram|photo",'
-                    '"reason":"..."}]}.'
-                    f"\n\nUser presentation request:\n{str(user_request or '')[:1800]}"
-                    f"\n\nCandidate slides:\n{chr(10).join(slide_lines)}"
-                ),
-            }
-        ]
-        loaded: list[tuple[str, dict[str, Any], str]] = []
-        for image in usable_images:
-            image_id = str(image.get("image_id") or image.get("content_hash") or "")
-            data_uri = self._to_data_uri(str(image.get("source_path") or ""))
-            if not image_id or not data_uri:
+        assignments: list[dict[str, Any]] = []
+        for offset in range(0, len(usable_images), _DOCUMENT_IMAGE_BATCH_SIZE):
+            batch_images = usable_images[offset : offset + _DOCUMENT_IMAGE_BATCH_SIZE]
+            batch: list[tuple[str, dict[str, Any], str]] = []
+            for image in batch_images:
+                image_id = str(
+                    image.get("image_id") or image.get("content_hash") or ""
+                )
+                data_uri = self._to_data_uri(str(image.get("source_path") or ""))
+                if image_id and data_uri:
+                    batch.append((image_id, image, data_uri))
+            if not batch:
                 continue
-            parts.append(
+
+            by_id = {image_id: image for image_id, image, _ in batch}
+            parts: list[dict[str, Any]] = [
                 {
                     "type": "text",
                     "text": (
-                        f"Embedded image id: {image_id}\n"
-                        f"Original filename: {str(image.get('filename') or '')[:200]}\n"
-                        f"Heading path: {str(image.get('section_path') or '')[:500]}\n"
-                        f"Nearby document text: {str(image.get('nearby_text') or '')[:1200]}"
+                        "Review every embedded document image in this batch. "
+                        "For each image, decide whether it materially supports one "
+                        "slide in the proposed deck. Use the image itself, its local "
+                        "heading context, the complete deck plan, and target slide "
+                        "content together. Do not force an image into a slide when it "
+                        "is unrelated, redundant, or ambiguous. Each image must appear "
+                        "exactly once in the JSON response, with use=false when it "
+                        "should not be used. Slide indexes are zero-based. Return JSON "
+                        "only as "
+                        '{"images":[{"image_id":"...","use":true,'
+                        '"slide_index":0,"confidence":0.0,'
+                        '"role":"evidence|illustration|chart|diagram|photo",'
+                        '"reason":"...","caption_hint":"...",'
+                        '"placement_hint":"..."}]}.\n\n'
+                        f"User presentation request:\n{str(user_request or '')[:1800]}\n\n"
+                        f"Deck topic:\n{str(deck_topic or '')[:800]}\n\n"
+                        f"Deck outline:\n{str(deck_outline or '')[:2600]}\n\n"
+                        f"Presentation instruction:\n{str(presentation_instruction or '')[:1400]}\n\n"
+                        f"Candidate slides:\n{chr(10).join(slide_lines)}"
                     ),
                 }
+            ]
+            for image_id, image, data_uri in batch:
+                parts.append(
+                    {
+                        "type": "text",
+                        "text": (
+                            f"Embedded image id: {image_id}\n"
+                            f"Original filename: {str(image.get('filename') or '')[:200]}\n"
+                            f"Heading path: {str(image.get('section_path') or '')[:500]}\n"
+                            f"Displayed size: {image.get('width') or '?'}x{image.get('height') or '?'}\n"
+                            f"Alt text: {str(image.get('alt_text') or '')[:500]}\n"
+                            f"Nearby document text: {str(image.get('nearby_text') or '')[:1200]}"
+                        ),
+                    }
+                )
+                parts.append({"type": "image_url", "image_url": {"url": data_uri}})
+
+            cache_key = self._cache_key(
+                "document",
+                [
+                    f"{image_id}:{self._source_hash(data_uri)}"
+                    for image_id, _, data_uri in batch
+                ],
+                user_request,
+                deck_topic,
+                deck_outline,
+                presentation_instruction,
+                "\n".join(slide_lines),
             )
-            parts.append(
-                {"type": "image_url", "image_url": {"url": data_uri}}
-            )
-            loaded.append((image_id, image, data_uri))
-
-        if not loaded:
-            return []
-
-        cache_key = self._cache_key(
-            "document",
-            [f"{image_id}:{self._source_hash(data_uri)}" for image_id, _, data_uri in loaded],
-            user_request,
-            "\n".join(slide_lines),
-        )
-        cached = self._get_cache(cache_key)
-        if cached is not None:
-            return [dict(item) for item in cached.get("assignments", [])]
-
-        raw = self._invoke(parts, model=model, max_tokens=1200)
-        if raw is None:
-            return []
-        parsed = self._parse_json(raw)
-        decisions = parsed.get("images") if isinstance(parsed, dict) else None
-        if not isinstance(decisions, list):
-            return []
-
-        by_id = {image_id: image for image_id, image, _ in loaded}
-        assignments: list[dict[str, Any]] = []
-        for item in decisions:
-            if not isinstance(item, dict) or not _as_bool(item.get("use")):
+            cached = self._get_cache(cache_key)
+            if cached is not None:
+                assignments.extend(dict(item) for item in cached.get("assignments", []))
                 continue
-            image_id = str(item.get("image_id") or "").strip()
-            if image_id not in by_id:
-                continue
-            try:
-                slide_index = int(item.get("slide_index"))
-                confidence = max(0.0, min(1.0, float(item.get("confidence", 0))))
-            except (TypeError, ValueError):
-                continue
-            if slide_index < 0 or slide_index >= len(slide_chunks) or confidence < 0.5:
-                continue
-            source = by_id[image_id]
-            assignments.append(
-                {
-                    **source,
-                    "slide_index": slide_index,
-                    "confidence": confidence,
-                    "role": str(item.get("role") or "illustration")[:40],
-                    "reason": str(item.get("reason") or "")[:500],
-                }
-            )
 
-        result = {"assignments": assignments}
-        self._set_cache(cache_key, result)
+            raw = self._invoke(parts, model=model, max_tokens=1200)
+            if raw is None:
+                # The provider has marked vision as unavailable. Do not make
+                # up assignments for images that were not actually reviewed.
+                break
+            parsed = self._parse_json(raw)
+            decisions = parsed.get("images") if isinstance(parsed, dict) else None
+            if not isinstance(decisions, list):
+                continue
+
+            batch_assignments: list[dict[str, Any]] = []
+            for item in decisions:
+                if not isinstance(item, dict) or not _as_bool(item.get("use")):
+                    continue
+                image_id = str(item.get("image_id") or "").strip()
+                if image_id not in by_id:
+                    continue
+                try:
+                    slide_index = int(item.get("slide_index"))
+                    confidence = max(0.0, min(1.0, float(item.get("confidence", 0))))
+                except (TypeError, ValueError):
+                    continue
+                if slide_index < 0 or slide_index >= len(slide_chunks) or confidence < 0.5:
+                    continue
+                source = by_id[image_id]
+                batch_assignments.append(
+                    {
+                        **source,
+                        "slide_index": slide_index,
+                        "confidence": confidence,
+                        "role": str(item.get("role") or "illustration")[:40],
+                        "reason": str(item.get("reason") or "")[:500],
+                        "caption_hint": str(item.get("caption_hint") or "")[:300],
+                        "placement_hint": str(item.get("placement_hint") or "")[:300],
+                    }
+                )
+
+            self._set_cache(cache_key, {"assignments": batch_assignments})
+            assignments.extend(batch_assignments)
+
         return [dict(item) for item in assignments]
 
     def _invoke(
@@ -318,7 +379,10 @@ class ImageRelevanceService:
         model: str | None = None,
         max_tokens: int,
     ) -> str | None:
-        if self._vision_available is False:
+        if (
+            self._vision_available is False
+            and time.monotonic() < self._vision_retry_at
+        ):
             return None
         try:
             result = str(
@@ -342,9 +406,11 @@ class ImageRelevanceService:
                 )
             ).strip()
             self._vision_available = True
+            self._vision_retry_at = 0.0
             return result
         except Exception as exc:
             self._vision_available = False
+            self._vision_retry_at = time.monotonic() + _VISION_RETRY_SECONDS
             logger.warning("Multimodal image verification unavailable: %s", exc)
             return None
 

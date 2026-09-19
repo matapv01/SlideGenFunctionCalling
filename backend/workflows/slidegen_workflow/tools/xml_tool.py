@@ -71,11 +71,7 @@ def _resolve_font_fallback_path(
 #Slide Intro
 def generate_modern_cover_slide_xml(
     title: str = "THIS IS YOUR PRESENTATION TITLE THIS IS YOUR PRESENTATION TITLE",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#F4F4F4",
     dark_panel_color: str = "#23242B",
     accent_color: str = "#98F033",
@@ -1327,11 +1323,7 @@ def generate_elegant_professional_cover_slide_xml(
     subtitle: str = "Bài thuyết trình về Messi, cầu thủ bóng đá xuất sắc nhất mọi thời đại, với những thành tích và đóng góp đáng kinh ngạc cho đội tuyển quốc gia và câu lạc bộ.",
     presented_by_label: str = "PRESENTED BY",
     presenter_name: str = "NAME SURNAME",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1517048676732-d65bc937f952"
-        "?q=80&w=1200&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#E5E5DB",
     panel_color: str = "#F2F0E7",
     title_color: str = "#64625C",
@@ -2016,11 +2008,7 @@ def generate_elegant_professional_cover_slide_xml(
 def generate_elegant_fancy_font_cover_slide_xml(
     title: str = "Messi cầu thủ vĩ đại nhất thế giới túc cầu hiện tịa",
     subtitle: str = "Beauty Products Pitch Deck Beauty Products Pitch Deck Beauty Products Pitch Deck Beauty Products Pitch Deck",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1612817288484-6f916006741a"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#D7D8C8",
     title_color: str = "#3F3627",
     subtitle_color: str = "#3F3627",
@@ -2327,11 +2315,7 @@ def generate_intro_welcome_slide_xml(
         "This is Just a Demo So Consider Replacing These Texts with Your Own\n"
         "Presentation Content."
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_overlay_color: str = "#FFFFFF",
     background_overlay_opacity: float = 0.10,
     panel_color: str = "#FFFFFF",
@@ -2927,9 +2911,7 @@ def generate_intro_welcome_slide_xml(
 def generate_memorial_cover_slide_xml(
     title: str = "Welcome to Our Presentation on Memorial Day 2024 Celebration and Remembrance",
     subtitle: str = "A clear and engaging introduction to today's topic     with a focus on honoring and remembering those who have served.",
-    image_url: str = (
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=85&w=1600&h=900&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#F3F3F3",
     top_band_color: str = "#DECAC7",
     title_band_color: str = "#DECAC7",
@@ -2953,10 +2935,7 @@ def generate_memorial_cover_slide_xml(
     # produce a usable slide instead of failing during font measurement.
     title = str(title or "").strip()
     subtitle = str(subtitle or "").strip()
-    image_url = str(image_url or "").strip() or (
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
-        "?q=85&w=1600&h=900&auto=format&fit=crop"
-    )
+    image_url = str(image_url or "").strip()
 
     canvas_width = 1600
     canvas_height = 900
@@ -3455,9 +3434,7 @@ def generate_memorial_cover_slide_xml(
 def generate_social_topic_idea_slide_xml(
     title: str = "Write Your Topic or Write Your Topic or Idea On Write Your Topic or Idea On Social Media",
     subtitle: str = "Elaborate on what you want to discuss. Elaborate on what you want to discuss.",
-    image_url: str = (
-        "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=85&w=1200&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#FFFFFF",
     accent_color: str = "#6F8369",
     title_color: str = "#26352A",
@@ -3888,9 +3865,7 @@ def generate_social_topic_idea_slide_xml(
 def generate_roman_empire_history_cover_slide_xml(
     subtitle: str = "History Subject for High School History Subject for High School History Subject for High School",
     title: str = "ROMAN EMPIRE ROMAN EMPIRE ROMAN EMPIRE",
-    image_url: str = (
-        "https://picsum.photos/seed/roman-empire-history/1600/620.jpg"
-    ),
+    image_url: str = "",
     background_color: str = "#D8B98A",
     parchment_overlay_color: str = "#C49A61",
     image_sepia_overlay_color: str = "#B07132",
@@ -3911,9 +3886,7 @@ def generate_roman_empire_history_cover_slide_xml(
     clean_subtitle = str(subtitle or "").strip()
     clean_title = str(title or "").strip()
 
-    clean_image_url = image_url.strip()
-    if not clean_image_url:
-        clean_image_url = "https://picsum.photos/seed/roman-empire-history/1600/620.jpg"
+    clean_image_url = str(image_url or "").strip()
 
     canvas_width = 1600
     canvas_height = 900
@@ -4613,11 +4586,7 @@ def generate_roman_empire_history_cover_slide_xml(
 def generate_transition_headline_slide_xml(
     title: str = "Messi và sự nghiệp của anh ấy",
     subtitle: str = "Let’s start with the first set of slides Let’s start with the first set of slides",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1522202176988-66273c2fd55f"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#FFFFFF",
     dark_panel_color: str = "#292A30",
     accent_color: str = "#98F20F",
@@ -5765,12 +5734,12 @@ def generate_about_us_transition_slide_xml(
 
 def generate_gallery_transition_slide_xml(
     title: str = "Messi vs Ronaldo - The Ultimate Showdown of Football Legends",
-    image_url_1: str = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=85&w=1200&auto=format&fit=crop",
-    image_url_2: str = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=85&w=1200&auto=format&fit=crop",
-    image_url_3: str = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=85&w=1200&auto=format&fit=crop",
-    image_url_4: str = "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=85&w=1200&auto=format&fit=crop",
-    image_url_5: str = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=85&w=1200&auto=format&fit=crop",
-    image_url_6: str = "https://images.unsplash.com/photo-1512316609839-ce289d3eba0a?q=85&w=1200&auto=format&fit=crop",
+    image_url_1: str = "",
+    image_url_2: str = "",
+    image_url_3: str = "",
+    image_url_4: str = "",
+    image_url_5: str = "",
+    image_url_6: str = "",
     background_color: str = "#CDD0C1",
     title_color: str = "#3B3024",
 ) -> str:
@@ -5783,16 +5752,12 @@ def generate_gallery_transition_slide_xml(
     """
 
 
-    gallery_fallback_image = (
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-        "?auto=compress&cs=tinysrgb&w=1600"
-    )
-    image_url_1 = str(image_url_1 or "").strip() or gallery_fallback_image
-    image_url_2 = str(image_url_2 or "").strip() or gallery_fallback_image
-    image_url_3 = str(image_url_3 or "").strip() or gallery_fallback_image
-    image_url_4 = str(image_url_4 or "").strip() or gallery_fallback_image
-    image_url_5 = str(image_url_5 or "").strip() or gallery_fallback_image
-    image_url_6 = str(image_url_6 or "").strip() or gallery_fallback_image
+    image_url_1 = str(image_url_1 or "").strip()
+    image_url_2 = str(image_url_2 or "").strip()
+    image_url_3 = str(image_url_3 or "").strip()
+    image_url_4 = str(image_url_4 or "").strip()
+    image_url_5 = str(image_url_5 or "").strip()
+    image_url_6 = str(image_url_6 or "").strip()
 
     def image_url_by_number(number: int) -> str:
         if number == 1:
@@ -5807,7 +5772,7 @@ def generate_gallery_transition_slide_xml(
             return image_url_5
         if number == 6:
             return image_url_6
-        return gallery_fallback_image
+        return ""
 
     canvas_width = 1600
     canvas_height = 900
@@ -6264,16 +6229,8 @@ def generate_gallery_transition_slide_xml(
 
 def generate_slide_transition_slide_xml(
     title: str = "Social Media Sales Presentation Social Media Sales Presentation",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1519085360753-af0119f7cbe7"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    right_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
+    image_url: str = "",
+    right_image_url: str = "",
     background_color: str = "#FFFFFF",
     right_panel_color: str = "#6D8767",
     arc_color: str = "#819A7B",
@@ -6291,19 +6248,8 @@ def generate_slide_transition_slide_xml(
     # Keep title as one plain string; do not introduce explicit line breaks.
     title = " ".join(title.split()) or "Social Media Sales Presentation"
 
-    if not image_url.strip():
-        image_url = (
-            "https://images.unsplash.com/"
-            "photo-1519085360753-af0119f7cbe7"
-            "?q=85&w=1200&auto=format&fit=crop"
-        )
-
-    if not right_image_url.strip():
-        right_image_url = (
-            "https://images.unsplash.com/"
-            "photo-1497366754035-f200968a6e72"
-            "?q=85&w=1200&auto=format&fit=crop"
-        )
+    image_url = str(image_url or "").strip()
+    right_image_url = str(right_image_url or "").strip()
 
     canvas_width = 1600
     canvas_height = 900
@@ -6770,11 +6716,7 @@ def generate_slide_transition_slide_xml(
 
 def generate_green_social_media_transition_slide_xml(
     title: str = "Write Your Topic or Idea On Social Media",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1516321318423-f06f85e504b3"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#6F8369",
     right_overlay_color: str = "#6F8369",
     right_overlay_opacity: float = 0.58,
@@ -7161,9 +7103,7 @@ def generate_green_social_media_transition_slide_xml(
 
 def generate_section_header_image_slide_xml(
     section_header: str = "Add a Section Header Here and a Subtitle if Needed or Leave Blank",
-    image_url: str = (
-        "https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#FFFFFF",
     header_color: str = "#6F8369",
     title_color: str = "#FFFFFF",
@@ -7589,11 +7529,7 @@ def generate_ai_content_slide_xml(
         "You can replace the image. Just right-click on "
         "it and select “Replace image”"
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1485827404703-89b55fcc595e"
-        "?q=85&w=1400&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#E3EAED",
     title_color: str = "#101010",
     text_color: str = "#1B1B1B",
@@ -9006,11 +8942,7 @@ def generate_three_ideas_slide_xml(
     title: str = "THREE IDEAS",
     idea_titles: list[str] | None = None,
     idea_descriptions: list[str] | None = None,
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1594035910387-fea47794261f"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#181818",
     title_color: str = "#FFFFFF",
     heading_color: str = "#FFFFFF",
@@ -9728,11 +9660,7 @@ def generate_instructions_slide_xml(
         "license. You can keep the Credits slide or mention SlidesCarnival "
         "and other resources used in a slide footer."
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497032628192-86f99bcd76bc"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#F3F4F7",
     dark_panel_color: str = "#34343B",
     accent_color: str = "#98F20F",
@@ -10547,11 +10475,7 @@ def generate_split_content_slide_xml(
     title: str = "YOU CAN ALSO SPLIT YOUR CONTENT  YOUR CONTENT  YOUR CONTENT",
     column_titles: list[str] | None = None,
     column_descriptions: list[str] | None = None,
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1497366754035-f200968a6e72"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#F3F4F7",
     dark_panel_color: str = "#34343B",
     accent_color: str = "#98F20F",
@@ -11303,11 +11227,7 @@ def generate_picture_quote_slide_xml(
         "A complex idea can be conveyed with just a single still image, "
         "namely making it possible to absorb large amounts of data quickly."
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1521737711867-e3b97375f902"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#FFFFFF",
     accent_color: str = "#98F20F",
     title_color: str = "#7CCF1A",
@@ -11888,11 +11808,7 @@ def generate_bullet_content_slide_xml(
         "Your audience will listen to you or read "
         "the content, but won’t do both."
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1499750310107-5fef28a66643"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#FFFFFF",
     dark_panel_color: str = "#2D2E34",
     accent_color: str = "#98F20F",
@@ -12757,16 +12673,8 @@ def generate_client_snapshot_slide_xml(
             "requirements"
         ),
     ],
-    top_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1552664730-d307ca884978"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
-    bottom_image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1556761175-b413da4baf72"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
+    top_image_url: str = "",
+    bottom_image_url: str = "",
     background_color: str = "#1A0B3A",
     title_color: str = "#A678FF",
     subtitle_color: str = "#F7F2FF",
@@ -15220,9 +15128,9 @@ def generate_topics_overview_slide_xml(
             "description": "Briefly elaborate on what you want to discuss.",
         },
     ],
-    image_url_1: str = "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=85&w=1200&auto=format&fit=crop",
-    image_url_2: str = "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=85&w=1200&auto=format&fit=crop",
-    image_url_3: str = "https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=85&w=1200&auto=format&fit=crop",
+    image_url_1: str = "",
+    image_url_2: str = "",
+    image_url_3: str = "",
     background_color: str = "#CDD0C1",
     title_color: str = "#3A3126",
     item_title_color: str = "#3A3126",
@@ -15237,10 +15145,6 @@ def generate_topics_overview_slide_xml(
     image-backed topic items with centered titles and descriptions.
     """
 
-    fallback_image = (
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-        "?auto=compress&cs=tinysrgb&w=1600"
-    )
     raw_topics = topics if isinstance(topics, (list, tuple)) else [topics]
     normalized_topics: list[dict[str, str]] = []
     for raw_topic in raw_topics:
@@ -15257,10 +15161,7 @@ def generate_topics_overview_slide_xml(
             "description": "",
         }
     ]
-    image_urls = [
-        str(image_url or "").strip() or fallback_image
-        for image_url in (image_url_1, image_url_2, image_url_3)
-    ]
+    image_urls = [str(image_url or "").strip() for image_url in (image_url_1, image_url_2, image_url_3)]
 
 
     canvas_width = 1600
@@ -15905,44 +15806,7 @@ def generate_topics_overview_slide_xml(
 
 def generate_timeline_gallery_slide_xml(
     title: str = "TIMELINE Meeting Agenda Slide Template (Editable) | Free Download | SlideModel",
-    timeline_items: list[dict[str, str]] = [
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1517841905240-472988babdf9"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-        {
-            "title": "ADD A MAIN POINT Meeting Agenda Slide Template (Editable) | Free Download | SlideModel",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1496747611176-843222e1e57c"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1512316609839-ce289d3eba0a"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-        {
-            "title": "ADD A MAIN POINT",
-            "description": "Briefly elaborate on what you want to discuss.",
-            "image_url": (
-                "https://images.unsplash.com/"
-                "photo-1524504388940-b1c1722653e1"
-                "?q=85&w=1200&auto=format&fit=crop"
-            ),
-        },
-    ],
+    timeline_items: list[dict[str, str]] | None = None,
     background_color: str = "#CDD0C1",
     title_color: str = "#3B3024",
     text_color: str = "#3B3024",
@@ -15957,10 +15821,6 @@ def generate_timeline_gallery_slide_xml(
     milestones alternating above and below the timeline.
     """
 
-    fallback_image = (
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-        "?auto=compress&cs=tinysrgb&w=1600"
-    )
     raw_timeline_items = (
         timeline_items
         if isinstance(timeline_items, (list, tuple))
@@ -15973,14 +15833,14 @@ def generate_timeline_gallery_slide_xml(
             {
                 "title": str(item.get("title") or "").strip(),
                 "description": str(item.get("description") or "").strip(),
-                "image_url": str(item.get("image_url") or "").strip() or fallback_image,
+                "image_url": str(item.get("image_url") or "").strip(),
             }
         )
     timeline_items = normalized_timeline_items or [
         {
             "title": "",
             "description": "",
-            "image_url": fallback_image,
+            "image_url": "",
         }
     ]
 
@@ -16696,11 +16556,7 @@ def generate_memorial_introduction_slide_xml(
         "solace in music, a universal language that\n"
         "speaks to the heart."
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1544005313-94ddf0286df2"
-        "?q=85&w=1200&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#DDEEF2",
     panel_color: str = "#E5CAC3",
     frame_color: str = "#F1F7F8",
@@ -17307,11 +17163,7 @@ def generate_legacy_of_love_slide_xml(
         "ensuring that their presence continues to\n"
         "illuminate our lives and those of others."
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1500530855697-b586d89ba3ee"
-        "?q=85&w=1600&auto=format&fit=crop&sat=-100"
-    ),
+    image_url: str = "",
     background_color: str = "#F1F1F1",
     panel_color: str = "#E5CAC3",
     border_color: str = "#DDEEF2",
@@ -20131,11 +19983,7 @@ def generate_business_thank_you_slide_xml(
         "and bring your presentation to life, with our creativity."
         
     ),
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1521791136064-7986c2920216"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#111111",
     overlay_color: str = "#000000",
     title_color: str = "#FFFFFF",
@@ -20765,11 +20613,7 @@ def generate_dark_gold_thank_you_slide_xml(
     phone_text: str = "(123) 456-7890",
     email_text: str = "david.langford@email.com",
     website_text: str = "davidlangford.com",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1486406146926-c627a92ad1ab"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#050505",
     panel_color: str = "#000000",
     title_color: str = "#F0B400",
@@ -22136,11 +21980,7 @@ def generate_closing_thank_you_memorial_slide_xml(
     closing_statement: str = "Write your closing statement",
     title: str = "Cảm ơn quí vị đã lắng nghe",
     subtitle: str = "Briefly elaborate on what you want to discuss. Briefly elaborate on what you want to discuss. Briefly elaborate on what you want to discuss.",
-    image_url: str = (
-        "https://images.unsplash.com/"
-        "photo-1500530855697-b586d89ba3ee"
-        "?q=85&w=1600&auto=format&fit=crop"
-    ),
+    image_url: str = "",
     background_color: str = "#DDEEF2",
     top_band_color: str = "#E5CAC3",
     title_band_color: str = "#DDEEF2",

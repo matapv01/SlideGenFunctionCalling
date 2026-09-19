@@ -23,7 +23,7 @@ import time
 _BATCH_PLANNER_HUMAN_PROMPT = """
 Plan every slide in the following small batch. Return exactly one plan per
 input slide, in the same order. Do not merge slides, omit slides, or add extra
-plans. Each plan must describe only the slide's message, purpose, image policy,
+plans. Each plan must describe only the slide's message, purpose, visual intent,
 and tool category; do not generate XML or prose outside the structured result.
 
 BATCH INPUT (JSON):
@@ -192,8 +192,7 @@ VALID_SLIDE_ACTIONS = {
     "THANK_YOU_TOOLS",
     "CHART_TOOLS",
 }
-VALID_IMAGE_MODES = {"none", "semantic", "decorative"}
-VALID_IMAGE_STRATEGIES = {"semantic", "decorative"}
+VALID_IMAGE_MODES = {"none", "semantic"}
 
 
 def build_compact_slide_outline(
@@ -249,51 +248,51 @@ def _normalize_plan_action(plan: Dict, content, index: int) -> str:
     return action if action in VALID_SLIDE_ACTIONS else "CONTENT_TOOLS"
 
 
-def _normalize_image_strategy(plan: Dict, content, index: int) -> str:
-    """Use generic supporting imagery for identity and structural slides."""
-    action = str(plan.get("action", "CONTENT_TOOLS")).upper()
-    strategy = str(plan.get("image_strategy", "decorative")).lower()
-    metadata_action = _metadata_action(content, index)
-    if metadata_action in {
-        "INTRO_TOOLS",
-        "TRANSITION_TOOLS",
-        "TEAM_TOOLS",
-        "THANK_YOU_TOOLS",
-    } or action in {
-        "INTRO_TOOLS",
-        "TRANSITION_TOOLS",
-        "TEAM_TOOLS",
-        "THANK_YOU_TOOLS",
-    }:
-        return "decorative"
-    if strategy not in VALID_IMAGE_STRATEGIES:
-        return "decorative"
-    return strategy
-
-
 def _normalize_image_mode(plan: Dict) -> str:
-    """Normalize the planner's image policy with legacy strategy support."""
+    """Accept only the explicit image mode emitted by the current planner."""
     mode = str(plan.get("image_mode") or "").lower()
     if mode in VALID_IMAGE_MODES:
         return mode
-    legacy = str(plan.get("image_strategy") or "").lower()
-    if legacy in VALID_IMAGE_STRATEGIES:
-        return legacy
-    action = str(plan.get("action") or "CONTENT_TOOLS").upper()
-    if action in {
-        "INTRO_TOOLS",
-        "TRANSITION_TOOLS",
-        "TEAM_TOOLS",
-        "THANK_YOU_TOOLS",
-    }:
-        return "decorative"
     return "none"
 
 
-def _normalize_image_theme(plan: Dict) -> str:
-    """Keep the planner's safe visual motif compact for downstream queries."""
-    theme = " ".join(str(plan.get("image_theme") or "").split())
-    return theme[:160]
+def _normalize_image_search_intents(plan: Dict) -> List[Dict]:
+    """Normalize planner image intents without inventing a search query.
+
+    The active planner emits explicit intents. Missing or empty intents mean
+    that the slide must not trigger image search.
+    """
+    raw_intents = plan.get("image_search_intents")
+    if not isinstance(raw_intents, list):
+        raw_intents = []
+    normalized: List[Dict] = []
+    valid_roles = {"evidence", "illustration", "chart", "diagram", "photo"}
+    valid_layouts = {"Wide", "Tall", "Square"}
+    for item in raw_intents[:1]:
+        if hasattr(item, "model_dump"):
+            item = item.model_dump()
+        elif hasattr(item, "dict"):
+            item = item.dict()
+        if not isinstance(item, dict):
+            continue
+        query = " ".join(str(item.get("query") or "").split())[:240]
+        if not query:
+            continue
+        layout = item.get("layout")
+        layout = layout if layout in valid_layouts else None
+        role = str(item.get("role") or "illustration").lower()
+        if role not in valid_roles:
+            role = "illustration"
+        normalized.append(
+            {
+                "query": query,
+                "role": role,
+                "layout": layout,
+                "required": bool(item.get("required", False)),
+            }
+        )
+
+    return normalized
 
 
 def normalize_planner_result(plan, content, index: int) -> Dict:
@@ -321,18 +320,14 @@ def normalize_planner_result(plan, content, index: int) -> Dict:
             f"from '{plan_dict.get('action')}' to '{normalized_action}'"
         )
         plan_dict["action"] = normalized_action
-    plan_dict["image_strategy"] = _normalize_image_strategy(
-        plan_dict,
-        content,
-        index,
-    )
     plan_dict["image_mode"] = _normalize_image_mode(plan_dict)
-    plan_dict["image_strategy"] = (
-        plan_dict["image_mode"]
-        if plan_dict["image_mode"] in VALID_IMAGE_STRATEGIES
-        else "decorative"
+    plan_dict["image_search_intents"] = _normalize_image_search_intents(plan_dict)
+    plan_dict["image_mode"] = (
+        "semantic" if plan_dict["image_search_intents"] else "none"
     )
-    plan_dict["image_theme"] = _normalize_image_theme(plan_dict)
+    plan_dict["visual_layout_request"] = " ".join(
+        str(plan_dict.get("visual_layout_request") or "").split()
+    )[:320]
     return plan_dict
 
 
@@ -342,48 +337,19 @@ def fallback_slide_plan(content, index: int) -> Dict:
         "slide_topic": _fallback_slide_topic(content, index),
         "slide_purpose": _fallback_slide_purpose(content, index),
         "thought": "Use a readable layout with concise editable text.",
-        "image_strategy": _normalize_image_strategy({}, content, index),
         "image_mode": "none",
-        "image_theme": "",
+        "image_search_intents": [],
+        "visual_layout_request": "Use a clear no-image composition with readable hierarchy.",
         "action": _normalize_plan_action({}, content, index),
     }
 
 
 def normalize_image_sequence(plans: List[Dict]) -> List[Dict]:
-    """Apply conservative image spacing after independent planner responses.
-
-    Planner calls are independent, so they can all choose decorative imagery
-    even when a text-heavy deck would be clearer with visual breathing room.
-    Keep intentional structural/team imagery, but suppress repeated decorative
-    images on ordinary content slides.
-    """
-    previous_plan = None
+    """Normalize one explicit visual intent per slide without inventing one."""
     for plan in plans:
-        action = str(plan.get("action") or "CONTENT_TOOLS").upper()
-        mode = str(plan.get("image_mode") or "none").lower()
-        theme = _normalize_image_theme(plan)
-        plan["image_theme"] = theme
-
-        if action == "CHART_TOOLS":
-            mode = "none"
-        elif action == "CONTENT_TOOLS" and mode == "decorative":
-            previous_mode = str((previous_plan or {}).get("image_mode") or "none").lower()
-            previous_action = str((previous_plan or {}).get("action") or "").upper()
-            if not theme or (
-                previous_mode in {"semantic", "decorative"}
-                and previous_action == "CONTENT_TOOLS"
-            ):
-                mode = "none"
-
-        if mode not in VALID_IMAGE_MODES:
-            mode = "none"
-        plan["image_mode"] = mode
-        plan["image_strategy"] = (
-            mode if mode in VALID_IMAGE_STRATEGIES else "decorative"
-        )
-        if mode == "none":
-            plan["image_theme"] = ""
-        previous_plan = plan
+        intents = _normalize_image_search_intents(plan)
+        plan["image_search_intents"] = intents
+        plan["image_mode"] = "semantic" if intents else "none"
     return plans
 
 

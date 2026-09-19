@@ -1,14 +1,10 @@
-import json
-
 import pytest
 from pydantic import BaseModel, Field
 
-from backend.workflows.slidegen_workflow.executors import tool_plan_executor
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
     NoApprovedImageError,
-    ToolPlanError,
-    execute_image_search_plan,
     get_image_targets_in_order,
+    inject_approved_images,
     tool_has_image_slots,
     tool_matches_image_mode,
 )
@@ -17,22 +13,12 @@ from backend.workflows.slidegen_workflow.tools.ddgs_tool import (
     _rank_image_results,
 )
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import execute_tool_plan
-from backend.workflows.slidegen_workflow.utils.helper import (
-    parse_tool_call_json,
-    parse_tool_calls_json,
-)
 
 
 class TwoImageSlideInput(BaseModel):
     title: str
-    image_url_1: str = Field(
-        default="",
-        description="First image, portrait orientation.",
-    )
-    image_url_2: str = Field(
-        default="",
-        description="Second image, wide landscape orientation.",
-    )
+    image_url_1: str = Field(default="", description="First image, portrait orientation.")
+    image_url_2: str = Field(default="", description="Second image, wide landscape orientation.")
 
 
 class NoImageSlideInput(BaseModel):
@@ -44,64 +30,17 @@ class FakeTool:
         self.args_schema = schema
 
 
-def test_image_mode_matches_layout_schema():
-    assert tool_has_image_slots(FakeTool(TwoImageSlideInput))
-    assert not tool_has_image_slots(FakeTool(NoImageSlideInput))
-    assert tool_matches_image_mode(FakeTool(NoImageSlideInput), "none")
-    assert not tool_matches_image_mode(FakeTool(TwoImageSlideInput), "none")
-    assert tool_matches_image_mode(FakeTool(TwoImageSlideInput), "decorative")
+def test_image_mode_matches_layout_schema_and_asset_count():
+    image_tool = FakeTool(TwoImageSlideInput)
+    text_tool = FakeTool(NoImageSlideInput)
 
-
-def test_parse_repeated_qwen_tool_calls_preserves_order():
-    raw = """
-<tool_call>
-{"name":"search_ddgs_images","arguments":{"query":"medical diagnosis","layout":"Tall"}}
-</tool_call>
-<tool_call>
-{"name":"generate_test_slide","arguments":{"title":"AI in healthcare"}}
-</tool_call>
-"""
-
-    calls = parse_tool_calls_json(raw)
-
-    assert [call["name"] for call in calls] == [
-        "search_ddgs_images",
-        "generate_test_slide",
-    ]
-    assert parse_tool_call_json(raw)["name"] == "generate_test_slide"
-
-
-def test_parse_tool_calls_wrapper():
-    raw = json.dumps(
-        {
-            "tool_calls": [
-                {
-                    "name": "search_ddgs_images",
-                    "arguments": {"query": "medical diagnosis"},
-                },
-                {
-                    "name": "generate_test_slide",
-                    "arguments": {"title": "AI"},
-                },
-            ]
-        }
-    )
-
-    assert len(parse_tool_calls_json(raw)) == 2
-
-
-def test_parse_list_inside_single_tool_call_tag():
-    raw = (
-        "<tool_call>"
-        '[{"name":"search_ddgs_images","arguments":{"query":"hospital"}},'
-        '{"name":"generate_test_slide","arguments":{"title":"AI"}}]'
-        "</tool_call>"
-    )
-
-    assert [call["name"] for call in parse_tool_calls_json(raw)] == [
-        "search_ddgs_images",
-        "generate_test_slide",
-    ]
+    assert tool_has_image_slots(image_tool)
+    assert not tool_has_image_slots(text_tool)
+    assert tool_matches_image_mode(text_tool, "none")
+    assert not tool_matches_image_mode(image_tool, "none")
+    assert tool_matches_image_mode(image_tool, "semantic")
+    assert not tool_matches_image_mode(image_tool, "semantic", approved_image_count=1)
+    assert tool_matches_image_mode(image_tool, "semantic", approved_image_count=2)
 
 
 def test_schema_image_targets_keep_declaration_order():
@@ -120,16 +59,14 @@ def test_nested_runtime_image_targets_are_supported():
     class TeamSlideInput(BaseModel):
         team_members: list[dict[str, str]]
 
-    arguments = {
-        "team_members": [
-            {"name": "A", "image_url": ""},
-            {"name": "B", "image_url": ""},
-        ]
-    }
-
     targets = get_image_targets_in_order(
         FakeTool(TeamSlideInput),
-        arguments,
+        {
+            "team_members": [
+                {"name": "A", "image_url": ""},
+                {"name": "B", "image_url": ""},
+            ]
+        },
     )
 
     assert [target["path_string"] for target in targets] == [
@@ -138,188 +75,80 @@ def test_nested_runtime_image_targets_are_supported():
     ]
 
 
-def test_execute_searches_then_injects_by_search_order(monkeypatch):
-    def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
-        return json.dumps([f"https://example.com/{query.replace(' ', '-')}.jpg"])
-
-    monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
-    monkeypatch.setattr(tool_plan_executor, "_pick_live_url", lambda urls: urls[0])
-
-    plan = [
+def test_inject_approved_images_preserves_schema_order():
+    tool = FakeTool(TwoImageSlideInput)
+    final_call, history = inject_approved_images(
         {
             "name": "generate_test_slide",
-            "arguments": {"title": "AI in healthcare"},
+            "arguments": {"title": "AI"},
         },
-        {
-            "name": "search_ddgs_images",
-            "arguments": {"query": "medical diagnosis", "layout": "Tall"},
-        },
-        {
-            "name": "search_ddgs_images",
-            "arguments": {"query": "surgical robot", "layout": "Wide"},
-        },
-    ]
-
-    final_call, history = execute_image_search_plan(
-        plan,
-        {"generate_test_slide": FakeTool(TwoImageSlideInput)},
+        tool=tool,
+        approved_images=[
+            {"source_type": "search", "source_id": "one", "source_url": "https://example.com/one.jpg"},
+            {"source_type": "search", "source_id": "two", "source_url": "https://example.com/two.jpg"},
+        ],
+        asset_dir=None,
     )
 
-    assert final_call["arguments"]["image_url_1"].endswith(
-        "/medical-diagnosis.jpg"
-    )
-    assert final_call["arguments"]["image_url_2"].endswith(
-        "/surgical-robot.jpg"
-    )
-    assert [item["name"] for item in history] == [
-        "search_ddgs_images",
-        "search_ddgs_images",
-    ]
-    assert [item["arguments"]["query"] for item in history] == [
-        "medical diagnosis",
-        "surgical robot",
-    ]
+    assert final_call["arguments"]["image_url_1"].endswith("/one.jpg")
+    assert final_call["arguments"]["image_url_2"].endswith("/two.jpg")
     assert [item["target_param"] for item in history] == [
         "image_url_1",
         "image_url_2",
     ]
 
 
-def test_rejected_image_candidates_signal_no_image_retry(monkeypatch):
-    def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
-        return json.dumps([f"https://example.com/{index}.jpg" for index in range(5)])
-
-    class RejectingVerifier:
-        def verify_search_candidates(self, **kwargs):
-            return {
-                "available": True,
-                "approved": [],
-                "decisions": [
-                    {"index": index, "use": False, "confidence": 0.1}
-                    for index in range(5)
-                ],
-            }
-
-    monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
-
-    plan = [
-        {
-            "name": "generate_test_slide",
-            "arguments": {"title": "AI in healthcare"},
-        },
-        {
-            "name": "search_ddgs_images",
-            "arguments": {"query": "medical diagnosis", "layout": "Tall"},
-        },
-        {
-            "name": "search_ddgs_images",
-            "arguments": {"query": "hospital equipment", "layout": "Wide"},
-        },
-    ]
-
-    with pytest.raises(NoApprovedImageError, match="IMAGE_VERIFICATION_REJECTED"):
-        execute_image_search_plan(
-            plan,
-            {"generate_test_slide": FakeTool(TwoImageSlideInput)},
-            image_verifier=RejectingVerifier(),
-        )
-
-
-def test_image_verifier_receives_deck_and_rendered_slide_context(monkeypatch):
-    seen = []
-
-    def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
-        return json.dumps([f"https://example.com/{query.replace(' ', '-')}.jpg"])
-
-    class AcceptingVerifier:
-        def verify_search_candidates(self, **kwargs):
-            seen.append(kwargs)
-            return {
-                "available": True,
-                "approved": [kwargs["candidates"][0]],
-                "decisions": [],
-            }
-
-    monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
-    monkeypatch.setattr(tool_plan_executor, "_pick_live_url", lambda urls: urls[0])
-
-    execute_image_search_plan(
-        [
-            {
-                "name": "generate_test_slide",
-                "arguments": {"title": "Hành trình ra đi", "image_url_1": ""},
-            },
-            {
-                "name": "search_ddgs_images",
-                "arguments": {"query": "historical departure", "layout": "Tall"},
-            },
-        ],
-        {"generate_test_slide": FakeTool(TwoImageSlideInput)},
-        image_verifier=AcceptingVerifier(),
-        verification_context={
-            "deck_topic": "Hồ Chí Minh và hành trình cách mạng Việt Nam",
-            "deck_outline": "Slide 1 INTRO\nSlide 2 Hành trình ra đi",
-            "slide_topic": "Hành trình ra đi",
-            "slide_purpose": "Mở đầu hành trình Nguyễn Ái Quốc ra đi tìm đường cứu nước năm 1911.",
-            "slide_content": "1911: Khởi hành",
-        },
-    )
-
-    assert len(seen) == 1
-    assert seen[0]["deck_topic"].startswith("Hồ Chí Minh")
-    assert "Nguyễn Ái Quốc" in seen[0]["slide_purpose"]
-    assert "Hành trình ra đi" in seen[0]["rendered_slide_content"]
-
-
-def test_execute_tool_plan_renders_real_xml_slide_with_injected_image(monkeypatch):
-    def fake_search(query, layout=None, size=None, max_results=3, **kwargs):
-        return json.dumps(["https://example.com/messi.jpg"])
-
-    monkeypatch.setattr(tool_plan_executor, "search_ddgs_images", fake_search)
-    monkeypatch.setattr(tool_plan_executor, "_pick_live_url", lambda urls: urls[0])
-
+def test_execute_tool_plan_accepts_only_approved_images():
     xml, final_call, history = execute_tool_plan(
         [
             {
                 "name": "generate_modern_cover_slide_xml",
-                "arguments": {
-                    "title": "Messi career highlights",
-                    "image_url": "",
-                },
-            },
+                "arguments": {"title": "Messi career highlights"},
+            }
+        ],
+        approved_images=[
             {
-                "name": "search_ddgs_images",
-                "arguments": {
-                    "query": "Lionel Messi football",
-                    "layout": "Tall",
-                    "size": "Large",
-                },
-            },
-        ]
+                "source_type": "search",
+                "source_id": "search:0",
+                "source_url": "https://example.com/messi.jpg",
+            }
+        ],
     )
 
     assert "https://example.com/messi.jpg" in xml
     assert final_call["arguments"]["image_url"] == "https://example.com/messi.jpg"
-    assert history[0]["target_param"] == "image_url"
+    assert history[0]["source"] == "search"
+
+
+def test_execute_tool_plan_rejects_unapproved_image_layout():
+    with pytest.raises(NoApprovedImageError, match="IMAGE_ASSIGNMENT_EMPTY"):
+        execute_tool_plan(
+            [
+                {
+                    "name": "generate_modern_cover_slide_xml",
+                    "arguments": {"title": "No image yet"},
+                }
+            ]
+        )
+
+
+def test_tool_without_images_does_not_require_assets():
+    final_call, history = inject_approved_images(
+        {"name": "generate_text_slide", "arguments": {"title": "Summary"}},
+        tool=FakeTool(NoImageSlideInput),
+        approved_images=[],
+        asset_dir=None,
+    )
+
+    assert final_call["name"] == "generate_text_slide"
+    assert history == []
 
 
 def test_ddgs_ranking_prefers_target_dimensions_and_layout():
     results = [
-        {
-            "image": "https://example.com/wide.jpg",
-            "width": 1920,
-            "height": 1080,
-        },
-        {
-            "image": "https://example.com/square.jpg",
-            "width": 900,
-            "height": 900,
-        },
-        {
-            "image": "https://example.com/portrait.jpg",
-            "width": 960,
-            "height": 1080,
-        },
+        {"image": "https://example.com/wide.jpg", "width": 1920, "height": 1080},
+        {"image": "https://example.com/square.jpg", "width": 900, "height": 900},
+        {"image": "https://example.com/portrait.jpg", "width": 960, "height": 1080},
     ]
 
     ranked = _rank_image_results(
@@ -332,37 +161,5 @@ def test_ddgs_ranking_prefers_target_dimensions_and_layout():
         size="Large",
     )
 
-    assert _parse_target_dimensions("Recommended image size: 960x1080px") == (
-        960,
-        1080,
-    )
+    assert _parse_target_dimensions("Recommended image size: 960x1080px") == (960, 1080)
     assert ranked[0]["image"] == "https://example.com/portrait.jpg"
-
-
-def test_plan_rejects_wrong_search_count():
-    plan = [
-        {
-            "name": "generate_test_slide",
-            "arguments": {"title": "AI"},
-        },
-        {
-            "name": "search_ddgs_images",
-            "arguments": {"query": "medical diagnosis"},
-        },
-    ]
-
-    with pytest.raises(ToolPlanError, match="requires 2 image search"):
-        execute_image_search_plan(
-            plan,
-            {"generate_test_slide": FakeTool(TwoImageSlideInput)},
-        )
-
-
-def test_tool_without_images_accepts_only_html_call():
-    final_call, history = execute_image_search_plan(
-        [{"name": "generate_text_slide", "arguments": {"title": "Summary"}}],
-        {"generate_text_slide": FakeTool(NoImageSlideInput)},
-    )
-
-    assert final_call["name"] == "generate_text_slide"
-    assert history == []

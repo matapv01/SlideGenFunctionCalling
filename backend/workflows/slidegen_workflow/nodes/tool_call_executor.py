@@ -512,30 +512,19 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         try:
             slide_options = state.get("slide_options") or {}
             current_index = int(state.get("current_slide_index", -1))
-            preferred_images = [
-                image
-                for image in slide_options.get("document_image_assignments", []) or []
-                if isinstance(image, dict)
-                and int(image.get("slide_index", -1)) == current_index
-            ]
+            approved_images = list(state.get("current_approved_images") or [])
+            if not approved_images:
+                approved_images = [
+                    image
+                    for image in slide_options.get("approved_image_assignments", []) or []
+                    if isinstance(image, dict)
+                    and int(image.get("slide_index", -1)) == current_index
+                ]
             slide_content, final_tool_call, search_history = active_execute_tool_plan(
                 tool_plan,
                 tool_lookup=tool_lookup,
                 source_content=state.get("current_slide_text", ""),
-                image_verifier=configurable.get("image_relevance_verifier"),
-                verification_context={
-                    "slide_content": state.get("current_slide_text", ""),
-                    "slide_topic": (state.get("current_slide_plan") or {}).get("slide_topic", ""),
-                    "slide_purpose": (state.get("current_slide_plan") or {}).get("slide_purpose", ""),
-                    "presentation_instruction": slide_options.get("presentation_instruction", ""),
-                    "deck_topic": (state.get("deck_style_plan") or {}).get("deck_topic", ""),
-                    "deck_outline": "\n".join(
-                        str(item).strip()
-                        for item in (state.get("slide_context_maps") or [])
-                        if str(item).strip()
-                    )[:3000],
-                },
-                preferred_images=preferred_images,
+                approved_images=approved_images,
                 asset_dir=configurable.get("output_folder"),
             )
             if not slide_content:
@@ -550,7 +539,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
             state["executor_feedback"] = (
                 f"{e}\n"
                 "Regenerate this slide with an XML layout that has no image "
-                "parameters. Do not call search_ddgs_images on this retry. "
+                "parameters. Do not request or invent an image on this retry. "
                 "Preserve the slide's content, hierarchy, and visual intent "
                 "using typography, shapes, tables, or charts instead."
             )
@@ -577,7 +566,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                 "EXECUTOR EXECUTION FAILED:\n"
                 f"- {e}\n\n"
                 "Fix ALL errors above and regenerate a valid tool call matching the parameter schema exactly.\n"
-                "Ensure the slide XML tool is output FIRST with correct parameter types, followed by search_ddgs_images calls if the tool has image slots."
+                "Return exactly one valid slide XML tool. Approved image assets are injected by the executor; do not emit image-search calls."
             )
             state['executor_retry_count'] = retry_count + 1
             state['retry_count'] = int(state.get('retry_count', 0)) + 1

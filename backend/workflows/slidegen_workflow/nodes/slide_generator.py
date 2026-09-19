@@ -1,6 +1,5 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_generator.py
 import json
-import re
 import time
 from langchain_core.runnables import RunnableConfig
 
@@ -12,16 +11,13 @@ from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
 from backend.config import (
     TOOL_RETRIEVER_TOP_K,
 )
-from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
-    get_image_targets_in_order,
     tool_matches_image_mode,
 )
 from backend.workflows.slidegen_workflow.utils.prompts import (
     HUMAN_PROMPT_TEMPLATE,
     XML_CONTENT_PROMPT,
     MATH_EQUATION_RULES,
-    IMAGE_SEARCH_EXECUTION_PLAN_RULES,
     NATIVE_TOOL_CALLING_SYSTEM_PROMPT,
 )
 
@@ -77,287 +73,26 @@ def _normalize_native_tool_calls(response) -> list[dict]:
 
 
 def _resolve_image_mode(plan: dict) -> str:
-    """Resolve none/semantic/decorative with a conservative default."""
-    action = str((plan or {}).get("action") or "CONTENT_TOOLS").upper()
+    """Resolve the explicit planner mode with a conservative default."""
     explicit_mode = str((plan or {}).get("image_mode") or "").lower()
-    if explicit_mode in {"none", "semantic", "decorative"}:
+    if explicit_mode in {"none", "semantic"}:
         return explicit_mode
-    if action in {
-        "INTRO_TOOLS",
-        "TRANSITION_TOOLS",
-        "TEAM_TOOLS",
-        "THANK_YOU_TOOLS",
-    }:
-        return "decorative"
-    legacy = str((plan or {}).get("image_strategy") or "").lower()
-    if legacy in {"semantic", "decorative"}:
-        return legacy
-    if action in {
-        "INTRO_TOOLS",
-        "TRANSITION_TOOLS",
-        "TEAM_TOOLS",
-        "THANK_YOU_TOOLS",
-    }:
-        return "decorative"
     return "none"
 
 
-def _resolve_image_strategy(plan: dict) -> str:
-    """Map the image mode to the legacy semantic/decorative query policy."""
-    mode = _resolve_image_mode(plan)
-    return (
-        "semantic"
-        if mode == "semantic"
-        else "decorative"
-    )
-
-
-def _clean_image_theme(image_theme: str) -> str:
-    """Keep a planner motif searchable without passing literal slide entities."""
-    raw = re.sub(r"https?://\S+", " ", str(image_theme or ""))
-    words = re.findall(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)?", raw)
-    ignored = {
-        "image", "images", "photo", "picture", "illustration", "visual",
-        "presentation", "slide", "conceptual", "decorative", "semantic",
-    }
-    words = [word for word in words if word.lower() not in ignored]
-    if not words:
-        return ""
-
-    normalized = " ".join(words[:5]).strip()
-    lowered = normalized.lower()
-    identity_markers = (
-        "introduction", "profile", "biography", "about me", "speaker",
-        "author", "book title", "company name", "literal title",
-    )
-    if any(marker in lowered for marker in identity_markers):
-        return ""
-
-    # Two title-cased words are usually a person's name. Planner themes are
-    # instructed to be lower-case concepts, so reject this legacy/unsafe form.
-    title_case_words = re.findall(r"\b[A-Z][a-z]+\b", raw)
-    if len(title_case_words) >= 2:
-        return ""
-    return normalized
-
-
-def _filter_tools_by_image_mode(tools: list, image_mode: str) -> list:
+def _filter_tools_by_image_mode(
+    tools: list,
+    image_mode: str,
+    approved_image_count: int | None = None,
+) -> list:
     """Keep retriever candidates compatible with the planner's image mode."""
-    if image_mode not in {"none", "semantic", "decorative"}:
+    if image_mode not in {"none", "semantic"}:
         return list(tools)
-    return [tool for tool in tools if tool_matches_image_mode(tool, image_mode)]
-
-
-def _build_decorative_image_query(
-    target: dict,
-    slide_action: str,
-    image_theme: str = "",
-) -> str:
-    """Build a purpose-led query that does not search literal slide entities."""
-    description = str(target.get("description") or "").lower()
-    action = str(slide_action or "CONTENT_TOOLS").upper()
-    theme = _clean_image_theme(image_theme)
-
-    if action == "TEAM_TOOLS":
-        return f"{theme} professional team illustration" if theme else "diverse professional team collaboration illustration"
-    if action == "INTRO_TOOLS":
-        return (
-            f"{theme} editorial opening visual"
-            if theme
-            else "abstract editorial opening visual"
-        )
-    if any(
-        token in description for token in ("portrait", "avatar", "profile", "person")
-    ):
-        return f"{theme} person illustration" if theme else "friendly person waving hello illustration"
-    if action == "TRANSITION_TOOLS":
-        return f"{theme} abstract section transition illustration" if theme else "abstract geometric section transition illustration"
-    if action == "THANK_YOU_TOOLS":
-        return "warm celebratory thank you illustration"
-    if action == "CHART_TOOLS":
-        return f"{theme} abstract data visualization illustration" if theme else "abstract data visualization analytics illustration"
-
-    if theme:
-        return f"{theme} conceptual illustration"
-    return "conceptual editorial illustration presentation"
-
-
-def _build_fallback_image_query(
-    slide_content: str,
-    target: dict,
-    slide_topic: str = "",
-    slide_purpose: str = "",
-    image_strategy: str = "semantic",
-    slide_action: str = "CONTENT_TOOLS",
-    image_theme: str = "",
-) -> str:
-    """Build a deterministic query when the model omits a search call."""
-    if image_strategy == "decorative":
-        return _build_decorative_image_query(
-            target,
-            slide_action,
-            image_theme or slide_topic,
-        )
-
-    description = str(target.get("description") or "")
-    raw = f"{slide_topic} {slide_purpose} {slide_content} {description}"
-    raw = re.sub(r"https?://\S+", " ", raw)
-    raw = re.sub(r"[\[\]{}<>\"']", " ", raw)
-
-    generic_terms = {
-        "url", "image", "images", "photo", "portrait", "landscape", "wide",
-        "tall", "square", "displayed", "display", "sized", "approximately",
-        "aspect", "ratio", "powerpoint", "slide", "px", "color", "background",
-    }
-    words = [
-        word.strip(".,:;()")
-        for word in raw.split()
-        if word.strip(".,:;()")
-        and word.strip(".,:;()").lower() not in generic_terms
+    return [
+        tool
+        for tool in tools
+        if tool_matches_image_mode(tool, image_mode, approved_image_count)
     ]
-    query = " ".join(words[:16]).strip()
-    return query[:240] or "professional presentation visual"
-
-
-def _complete_native_tool_plan(
-    tool_plan: list[dict],
-    candidate_tools: list,
-    slide_content: str,
-    slide_topic: str = "",
-    slide_purpose: str = "",
-    image_strategy: str = "semantic",
-    slide_action: str = "CONTENT_TOOLS",
-    image_theme: str = "",
-) -> list[dict]:
-    """Complete omitted image searches without issuing another LLM request.
-
-    Qwen can return a valid XML function call while silently omitting the
-    companion image-search calls.  Image targets are deterministic from the
-    selected tool schema, so fill only the missing searches here and preserve
-    any searches the model did return.
-    """
-    if not isinstance(tool_plan, list):
-        return tool_plan
-
-    search_name = SEARCH_DDGS_TOOL.name
-    slide_calls = [call for call in tool_plan if call.get("name") != search_name]
-    if len(slide_calls) != 1:
-        return tool_plan
-
-    allowed_names = [tool.name for tool in candidate_tools]
-    slide_call = constrain_tool_call_to_candidates(slide_calls[0], allowed_names)
-    selected_tool = next(
-        (tool for tool in candidate_tools if tool.name == slide_call.get("name")),
-        None,
-    )
-    if selected_tool is None:
-        return [slide_call, *[call for call in tool_plan if call.get("name") == search_name]]
-
-    image_targets = get_image_targets_in_order(
-        selected_tool,
-        slide_call.get("arguments", {}),
-    )
-    search_calls = [
-        call for call in tool_plan if call.get("name") == search_name
-    ][:len(image_targets)]
-    missing_targets = image_targets[len(search_calls):]
-    for target in missing_targets:
-        search_calls.append(
-            {
-                "name": search_name,
-                "arguments": {
-                    "query": _build_fallback_image_query(
-                        slide_content,
-                        target,
-                        slide_topic=slide_topic,
-                        slide_purpose=slide_purpose,
-                        image_strategy=image_strategy,
-                        slide_action=slide_action,
-                        image_theme=image_theme,
-                    ),
-                    "layout": None,
-                    "size": "Large",
-                },
-            }
-        )
-        print(
-            "  -> Added omitted image search for "
-            f"{target['path_string']} (deterministic fallback query)"
-        )
-
-    return [slide_call, *search_calls]
-
-
-def _apply_image_search_strategy(
-    tool_plan: list[dict],
-    candidate_tools: list,
-    image_strategy: str,
-    slide_action: str,
-    image_theme: str = "",
-) -> list[dict]:
-    """Rewrite decorative searches so names are never treated as image subjects."""
-    if image_strategy != "decorative" or not isinstance(tool_plan, list):
-        return tool_plan
-
-    slide_call = next(
-        (call for call in tool_plan if call.get("name") != SEARCH_DDGS_TOOL.name),
-        None,
-    )
-    if not slide_call:
-        return tool_plan
-    selected_tool = next(
-        (tool for tool in candidate_tools if tool.name == slide_call.get("name")),
-        None,
-    )
-    if selected_tool is None:
-        return tool_plan
-
-    targets = get_image_targets_in_order(
-        selected_tool,
-        slide_call.get("arguments", {}),
-    )
-    search_calls = [
-        call for call in tool_plan if call.get("name") == SEARCH_DDGS_TOOL.name
-    ]
-    for target, call in zip(targets, search_calls):
-        arguments = dict(call.get("arguments") or {})
-        theme = image_theme or str(arguments.get("query") or "")
-        arguments["query"] = _build_decorative_image_query(
-            target,
-            slide_action,
-            theme,
-        )
-        call["arguments"] = arguments
-    return [slide_call, *search_calls]
-
-
-def _canonicalize_native_tool_plan(
-    tool_plan: list[dict],
-    preferred_tool_name: str = "",
-) -> list[dict]:
-    """Keep one slide call first and preserve all image-search calls."""
-    if not isinstance(tool_plan, list):
-        return tool_plan
-
-    slide_calls = [
-        call for call in tool_plan
-        if isinstance(call, dict) and call.get("name") != SEARCH_DDGS_TOOL.name
-    ]
-    search_calls = [
-        call for call in tool_plan
-        if isinstance(call, dict) and call.get("name") == SEARCH_DDGS_TOOL.name
-    ]
-    if not slide_calls:
-        return tool_plan
-
-    selected = next(
-        (
-            call for call in slide_calls
-            if preferred_tool_name and call.get("name") == preferred_tool_name
-        ),
-        slide_calls[0],
-    )
-    return [selected, *search_calls]
 
 
 def generate_slide(state: State, config: RunnableConfig) -> State:
@@ -418,13 +153,9 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     presentation_instruction = str(
         (state.get("slide_options") or {}).get("presentation_instruction") or ""
     ).strip()
-    document_image_assignments = [
-        image
-        for image in (state.get("slide_options") or {}).get(
-            "document_image_assignments", []
-        ) or []
+    approved_images = [
+        image for image in state.get("current_approved_images") or []
         if isinstance(image, dict)
-        and int(image.get("slide_index", -1)) == int(idx)
     ]
     
     if isinstance(current_text, (dict, list)):
@@ -432,13 +163,21 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     if not current_text:
         current_text = "Default slide content"
 
-    if document_image_assignments:
+    if approved_images:
         verified_image_context = "\n".join(
-            f"Verified source image available for this slide: "
-            f"{image.get('image_id', '')}; role={image.get('role', 'illustration')}; "
-            f"document section={str(image.get('section_path') or '')[:240]}. "
-            "Use it when this layout has a compatible image slot."
-            for image in document_image_assignments
+            json.dumps(
+                {
+                    "source_id": image.get("source_id") or image.get("image_id"),
+                    "source_type": image.get("source_type"),
+                    "source_url": image.get("source_url") or image.get("source_path"),
+                    "role": image.get("role", "illustration"),
+                    "visual_notes": image.get("visual_notes", ""),
+                    "caption_hint": image.get("caption_hint", ""),
+                    "placement_hint": image.get("placement_hint", ""),
+                },
+                ensure_ascii=False,
+            )
+            for image in approved_images
         )
         current_context_map = (
             f"{current_context_map or ''}\n{verified_image_context}"
@@ -452,9 +191,30 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         if state.get("force_no_image_layout")
         else _resolve_image_mode(current_plan)
     )
-    image_strategy = _resolve_image_strategy(current_plan)
-    image_theme = str(current_plan.get('image_theme') or '').strip()
-    
+
+    # An approved image is a concrete asset, not a suggestion. Prefer an
+    # image-capable layout so the executor can inject it deterministically.
+    if approved_images and not state.get("force_no_image_layout"):
+        image_mode = "semantic"
+
+    approved_image_count = len(approved_images)
+    if image_mode == "semantic":
+        has_compatible_image_layout = any(
+            tool_matches_image_mode(tool, "semantic", approved_image_count)
+            for tools in all_tools_dict.values()
+            for tool in tools
+        )
+        if not has_compatible_image_layout:
+            # Do not select a gallery layout that needs more assets than the
+            # verifier approved. A clean no-image layout is deterministic and
+            # avoids a late executor retry with a blank image area.
+            print(
+                "  -> No compatible image layout for approved asset count; "
+                "switching to no-image composition"
+            )
+            state["force_no_image_layout"] = True
+            image_mode = "none"
+
     print(f"--- Preparing & Generating slide {idx + 1}/{length_slide_chunks} ---")
     print(f"  -> Category: '{tool_category}'")
     
@@ -469,6 +229,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         category_tools = _filter_tools_by_image_mode(
             all_tools_dict.get(tool_category, []),
             image_mode,
+            approved_image_count,
         )
         category_lookup = {
             tool.name: tool for tool in category_tools
@@ -482,14 +243,16 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             print(f"  -> Using deck-assigned layout: {selected_name}")
 
     if not my_tools and state.get("candidate_tools"):
-        # Remove search tool if present in candidate_tools cache to get original my_tools.
         cached = [
             tool
             for tool in state["candidate_tools"]
-            if getattr(tool, "name", "") != SEARCH_DDGS_TOOL.name
-            and getattr(tool, "name", "") not in excluded_tools
+            if getattr(tool, "name", "") not in excluded_tools
         ]
-        cached = _filter_tools_by_image_mode(cached, image_mode)
+        cached = _filter_tools_by_image_mode(
+            cached,
+            image_mode,
+            approved_image_count,
+        )
         if cached:
             my_tools = cached
             print(f"  -> Reusing {len(my_tools)} cached tools from state (retry attempt)")
@@ -509,6 +272,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 retrieved_tools = _filter_tools_by_image_mode(
                     retrieved_tools or [],
                     image_mode,
+                    approved_image_count,
                 )[:TOOL_RETRIEVER_TOP_K]
                 if retrieved_tools:
                     my_tools = retrieved_tools
@@ -520,6 +284,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                     my_tools = _filter_tools_by_image_mode(
                         all_tools_dict.get(tool_category, []),
                         image_mode,
+                        approved_image_count,
                     )[:TOOL_RETRIEVER_TOP_K]
                 print(
                     f"  -> FAISS selected {len(retrieved_tools)} tools for '{tool_category}': "
@@ -530,11 +295,13 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 my_tools = _filter_tools_by_image_mode(
                     all_tools_dict.get(tool_category, []),
                     image_mode,
+                    approved_image_count,
                 )[:TOOL_RETRIEVER_TOP_K]
         else:
             my_tools = _filter_tools_by_image_mode(
                 all_tools_dict.get(tool_category, []),
                 image_mode,
+                approved_image_count,
             )[:TOOL_RETRIEVER_TOP_K]
 
     if not my_tools:
@@ -542,6 +309,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         my_tools = _filter_tools_by_image_mode(
             all_tools_dict.get('CONTENT_TOOLS', []),
             image_mode,
+            approved_image_count,
         )[:TOOL_RETRIEVER_TOP_K]
 
     # A duplicate-layout retry excludes the rejected layout tool. This is a
@@ -552,7 +320,11 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             filtered_tools = [
                 tool for tool in all_tools_dict.get(tool_category, [])
                 if tool.name not in excluded_tools
-                and tool_matches_image_mode(tool, image_mode)
+                and tool_matches_image_mode(
+                    tool,
+                    image_mode,
+                    approved_image_count,
+                )
             ]
         if filtered_tools:
             my_tools = filtered_tools
@@ -593,13 +365,12 @@ TRANSITION SLIDE CONTRACT:
     # 6. Reuse the planner's creative brief. Planning and deck-style planning
     # already own their LLM calls; slide generation should make exactly one
     # generation call and should not invoke a second hidden preparer model.
-    design_instruction = state.get("design_instruction")
+    design_instruction = str(current_plan.get("visual_layout_request") or "").strip()
+    if not design_instruction:
+        design_instruction = state.get("design_instruction")
     if not design_instruction:
         design_instruction = creative_thought
             
-    # Assign prepared values. The image-search plan is produced by this same
-    # generator invocation; no later LLM call is allowed to create search specs.
-    image_search_rules = IMAGE_SEARCH_EXECUTION_PLAN_RULES
     output_format_rules = """
 
 OUTPUT FORMAT: TOOL CALLS ONLY
@@ -611,16 +382,10 @@ OUTPUT FORMAT: TOOL CALLS ONLY
 
     system_prompt = (
         generator_system_prompt
-        + "\n\n"
-        + image_search_rules
         + output_format_rules
     )
     native_system_prompt = system_prompt + "\n\n" + NATIVE_TOOL_CALLING_SYSTEM_PROMPT
-    generator_tools = (
-        [SEARCH_DDGS_TOOL, *my_tools]
-        if image_mode != "none"
-        else list(my_tools)
-    )
+    generator_tools = list(my_tools)
 
     # The configured LangChain chat model owns tool schemas and transport.
     human_prompt = HUMAN_PROMPT_TEMPLATE.format(
@@ -629,7 +394,26 @@ OUTPUT FORMAT: TOOL CALLS ONLY
         slide_topic=slide_topic,
         presentation_instruction=presentation_instruction,
         image_mode=image_mode,
-        image_theme=image_theme,
+        visual_layout_request=str(current_plan.get("visual_layout_request") or ""),
+        approved_images=(
+            json.dumps(
+                [
+                    {
+                        "source_id": image.get("source_id") or image.get("image_id"),
+                        "source_url": image.get("source_url") or image.get("source_path"),
+                        "role": image.get("role", "illustration"),
+                        "visual_notes": image.get("visual_notes", ""),
+                        "caption_hint": image.get("caption_hint", ""),
+                        "placement_hint": image.get("placement_hint", ""),
+                    }
+                    for image in approved_images
+                ],
+                ensure_ascii=False,
+                indent=2,
+            )
+            if approved_images
+            else "None — use a layout with no image fields."
+        ),
         recent_tools=recent_tools_str,
         slide_plan=json.dumps(current_plan, indent=2),
         slide_content=current_text,
@@ -686,10 +470,8 @@ OUTPUT FORMAT: TOOL CALLS ONLY
     tool_call_dict = None
     tool_plan = native_tool_calls
 
-    for call in tool_plan:
-        if call.get("name") != SEARCH_DDGS_TOOL.name:
-            tool_call_dict = call
-            break
+    if tool_plan:
+        tool_call_dict = tool_plan[0]
 
     if not tool_call_dict:
         raw_text = (content or "").strip()
@@ -721,25 +503,7 @@ OUTPUT FORMAT: TOOL CALLS ONLY
                 "  -> Corrected generated tool name "
                 f"'{generated_name}' to assigned layout '{tool_call_dict.get('name')}'"
             )
-        tool_plan = [
-            constrain_tool_call_to_candidates(call, allowed_slide_tool_names)
-            if call.get("name") != SEARCH_DDGS_TOOL.name else call
-            for call in tool_plan
-        ]
-        tool_plan = _canonicalize_native_tool_plan(
-            tool_plan,
-            preferred_tool_name=str(state.get("preferred_tool_name") or ""),
-        )
-        tool_plan = _complete_native_tool_plan(
-            tool_plan,
-            my_tools,
-            f"{slide_topic}\n{current_text}",
-            slide_topic=slide_topic,
-            slide_purpose=str(current_plan.get("slide_purpose") or ""),
-            image_strategy=image_strategy,
-            slide_action=tool_category,
-            image_theme=image_theme,
-        )
+        tool_plan = [constrain_tool_call_to_candidates(tool_call_dict, allowed_slide_tool_names)]
         tool_call_dict = tool_plan[0]
         tool_call_dict = apply_deck_style_to_tool_call(
             tool_call_dict,
@@ -748,16 +512,8 @@ OUTPUT FORMAT: TOOL CALLS ONLY
         )
         tool_plan = [
             apply_deck_style_to_tool_call(call, my_tools, deck_style_plan)
-            if call.get("name") != SEARCH_DDGS_TOOL.name else call
             for call in tool_plan
         ]
-        tool_plan = _apply_image_search_strategy(
-            tool_plan,
-            my_tools,
-            image_strategy,
-            tool_category,
-            image_theme,
-        )
         tool_call_dict = tool_plan[0]
         # Save valid parsed tool call for retry memory
         state["last_valid_tool_call"] = tool_call_dict

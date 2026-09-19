@@ -1,56 +1,15 @@
 import asyncio
-import time
 
 from backend.workflows.slidegen_workflow.nodes import pipelined_orchestrator as pipeline
 from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_slide
 
 
-class _FakePlanner:
-    def __init__(self, events):
-        self.events = events
-
-    def batch(self, inputs, config=None):
-        index = inputs[0]["slide_number"] - 1
-        self.events.append(f"plan_start_{index}")
-        time.sleep(0.02)
-        self.events.append(f"plan_end_{index}")
-        return [
-            {
-                "slide_topic": f"Topic {index}",
-                "thought": "Use a concise readable layout.",
-                "image_mode": "none",
-                "image_strategy": "decorative",
-                "image_theme": "",
-                "action": "CONTENT_TOOLS",
-            }
-        ]
-
-
-def test_planner_next_batch_overlaps_generation(monkeypatch):
+def test_generation_uses_final_refined_plans(monkeypatch):
     events = []
     chunks = [
         {"heading": "First", "position": ["1.1"]},
         {"heading": "Second", "position": ["1.2"]},
     ]
-    fake_planner = _FakePlanner(events)
-
-    monkeypatch.setattr(pipeline, "PLANNING_BATCH_SIZE", 1)
-    monkeypatch.setattr(
-        pipeline,
-        "prepare_planner_context",
-        lambda state, config: {
-            "slide_chunks": chunks,
-            "slide_context_maps": ["first", "second"],
-            "slide_positions": [["1.1"], ["1.2"]],
-            "section_ids": [],
-            "all_inputs": [
-                {"slide_number": 1},
-                {"slide_number": 2},
-            ],
-            "planner_chain": fake_planner,
-            "stream_callback": None,
-        },
-    )
     monkeypatch.setattr(
         pipeline,
         "assign_layouts",
@@ -75,12 +34,20 @@ def test_planner_next_batch_overlaps_generation(monkeypatch):
                 "slide_chunks": chunks,
                 "slide_context_maps": ["first", "second"],
                 "slide_positions": [["1.1"], ["1.2"]],
+                "slide_plans": [
+                    {"action": "CONTENT_TOOLS", "image_mode": "none"},
+                    {"action": "CONTENT_TOOLS", "image_mode": "none"},
+                ],
+                "slide_final_contents": [
+                    "First refined content",
+                    "Second refined content",
+                ],
             },
             {"configurable": {}},
         )
     )
 
-    assert events.index("gen_start_0") < events.index("plan_end_1")
+    assert events == ["gen_start_0", "gen_start_1", "gen_end_0", "gen_end_1"]
     assert [slide["index"] for slide in result["final_slides"]] == [0, 1]
 
 

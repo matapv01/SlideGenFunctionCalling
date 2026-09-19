@@ -91,58 +91,6 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 
 # ================================= SLIDE GENERATION PROMPTS =================================
 
-IMAGE_SEARCH_EXECUTION_PLAN_RULES = """
-🖼️ **IMAGE SEARCH CONTRACT:**
-
-Return exactly one slide XML tool call and, only when the selected layout needs
-images, one `search_ddgs_images` call for each image slot. The application
-validates and canonicalizes the order, so do not emit multiple slide XML tools.
-
-1. Choose the assigned slide XML tool and inspect its complete parameter schema.
-2. Fill the slide XML tool's text/style/layout parameters.
-   - For EVERY image URL/path parameter, leave the value as an empty string "".
-   - Do NOT invent, guess, or fill any image URL.
-3. For EVERY image URL/path parameter you left empty, emit exactly one
-   `search_ddgs_images` call in schema declaration order:
-   - Call 1 maps to the first image parameter.
-   - Call 2 maps to the second image parameter.
-   - Call N maps to the Nth image parameter.
-4. Apply the IMAGE MODE and IMAGE THEME from the user message:
-   - `none`: use a layout with no image parameters and emit only the slide XML
-     tool call. Do not emit `search_ddgs_images`.
-   - `semantic`: derive the query from the concrete subject and the role of
-     the image slot. Keep the subject specific and factual.
-   - `decorative`: derive a generic conceptual illustration from the slide
-     purpose and image slot. Never include a person's name, company/book title,
-     literal slide title, or text that should be readable inside the image.
-     Use the supplied IMAGE THEME so different content slides get different
-     purpose-led visuals instead of the same generic query.
-     For example, an introduction/profile can use "friendly person waving hello
-     illustration".
-5. For each `search_ddgs_images` call fill the arguments:
-   - `query`: follow the selected image strategy and the semantic role of that
-     image slot. Use 2-5 concise English nouns/noun phrases. Do not include
-     pixel sizes, orientation words, URLs, or generic words like
-     image/photo/wallpaper/beautiful/modern.
-   - `layout` and `size`: derive from the image parameter description in the slide
-     tool schema (words like portrait, landscape, banner, avatar, full-height,
-     background, and any pixel hint such as 960x1080px).
-6. Choose `layout` strictly from the image slot description:
-   - `Tall`: portrait, vertical, full-height, or height > width.
-   - `Wide`: landscape, horizontal, banner, background, full-width, or width > height.
-   - `Square`: square, avatar, circle, profile, logo, icon, or near-equal dimensions.
-7. Choose `size` strictly from the image slot description and visual importance:
-   - `Large`: max dimension >= 900px, full-height, full-width, background, hero,
-     half-slide, or main feature image.
-   - `Medium`: cards, portraits, thumbnails, profile/team photos, or 400–899px.
-   - `Small`: icons, logos, badges, small decorations, or below 400px.
-8. For nested objects (e.g. team members), keep each nested `image_url` empty so
-   the executor can discover and inject the real URL later.
-9. If the selected slide tool has NO image parameters, emit ONLY the slide XML tool
-   with no search calls after it.
-10. Output no prose, markdown, or extra tool calls.
-"""
-
 # Critical rule for math/equations - include in all slide prompts
 # This prompt is passed as a fixed system message; keep LaTeX braces literal.
 MATH_EQUATION_RULES = """
@@ -190,7 +138,10 @@ XML_CONTENT_PROMPT = """
    - If no suitable list field exists, keep the content as a paragraph or use separate text fields; do not simulate bullets by typing `•`, `-`, `*`, or numbers manually.
 4. LINE BREAKS: Use explicit `<br>` only for intentional visual separation between distinct lines. Do not add `<br>` after every clause or sentence in a short paragraph. Never use bullet characters (`•`, `-`, `*`) or numbering inside a list field; the selected XML tool owns the marker.
 5. CONTENT: Keep wording concise and remove filler words without changing the core meaning. NEVER dump long multi-sentence paragraphs into small card or column slots — condense to 15-25 words per item.
-6. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
+6. IMAGES: Use only approved image assets listed in the user message. Leave
+   declared image URL/path fields empty; the executor injects the approved
+   asset deterministically. Never call an image-search tool and never invent a
+   URL. If no approved asset is listed, choose a layout with no image fields.
 7. MATH/EQUATIONS: If you need formulas, use LaTeX wrapped in proper <math-field> tags.
 8. TEXT-COLOR EMPHASIS:
    - When the slide contains a key metric, date, result, or keyword, emphasize 1 to 3 short phrases. Otherwise, do not add emphasis.
@@ -219,10 +170,10 @@ Generate a readable, professional XML function call.
 
 NATIVE_TOOL_CALLING_SYSTEM_PROMPT = """
 NATIVE TOOL CALLING CONTRACT:
-- The XML layouts and search tool are supplied as native function tools. Inspect their schemas directly.
+- The XML layouts are supplied as native function tools. Inspect their schemas directly.
 - Invoke tools through the tool-calling interface. Never serialize a tool call in message content.
 - Do not emit <tool_call> tags, JSON tool-call objects, markdown, or explanatory prose.
-- Return exactly one XML slide tool call and, when needed, one search_ddgs_images call per image slot. Put the XML call first; the application validates and normalizes the final order.
+- Return exactly one XML slide tool call. Do not emit image-search calls.
 - If the selected XML tool has no image slots, return only that XML tool call.
 """
 
@@ -241,8 +192,11 @@ DECK-LEVEL PRESENTATION DIRECTION (SHARED ACROSS ALL BATCHES):
 IMAGE MODE:
 {image_mode}
 
-IMAGE THEME:
-{image_theme}
+VISUAL LAYOUT REQUEST:
+{visual_layout_request}
+
+APPROVED IMAGE ASSETS:
+{approved_images}
 
 ASSIGNED LAYOUT:
 {recent_tools}
@@ -317,49 +271,36 @@ You are an expert presentation designer and slide planner. Your task is to analy
    period when it matters. This sentence is used later to verify whether a
    candidate image supports the slide; do not describe generic aesthetics.
 
-7. **Choose the Image Mode** (`image_mode`):
-   - `none`: This is the DEFAULT and should be used for most text, explanation,
-     definition, summary, agenda, quote, and data slides. Choose this when the
-     slide is complete with text, shapes, or a chart and an image would add
-     noise or an arbitrary search result. Charts normally use `none` unless the
-     slide explicitly needs a visual subject.
-   - `semantic`: Use only when the slide contains a concrete, searchable
-     subject such as a person, place, object, process, event, scientific
-     concept, or clearly described scene. Search that subject directly. This
-     is also appropriate for an intro slide when the visual should establish
-     the deck's concrete subject rather than act as abstract decoration.
-   - `decorative`: Use sparingly, only when a supporting visual materially
-     improves the composition or for an intentional intro, transition, team,
-     or closing composition. Do not use it just to fill empty space. Do not
-     search a person's name, book title, company name, literal slide title,
-     or text that may appear inside an image. Search a generic conceptual
-     illustration based on the slide purpose instead.
-   - For introductions, names, bios, greetings, and section dividers, prefer
-     `none` when a visual adds no meaning. Use `semantic` when the subject
-     itself should be recognized, and use `decorative` only for an intentional
-     abstract visual composition. Never choose images for two ordinary content
-     slides in a row merely because both layouts support image slots.
+7. **Plan visual evidence** (`image_search_intents`): Return an empty list when
+   the slide is complete with text, shapes, or charts. Otherwise return at most
+   one intent describing a concrete visual that materially supports the slide.
+   Each intent has:
+   - `query`: 2-5 concise factual nouns or noun phrases;
+   - `role`: one of `evidence`, `illustration`, `chart`, `diagram`, or `photo`;
+   - `layout`: `Wide`, `Tall`, `Square`, or null;
+   - `required`: true only when the message cannot be communicated correctly
+     without that visual.
+   Do not search literal slide text merely because the layout has an image slot.
+   Do not invent a subject that is absent from the source. The backend performs
+   the search and always limits it to its configured candidate count.
 
-8. **Choose the Image Theme** (`image_theme`): Return a short lower-case English
-   visual motif of 2-5 words that is safe to search. For `semantic`, name the concrete
-   subject. For `decorative`, name the concept or human activity the image
-   should communicate, not the literal slide heading. Examples: `workflow
-   collaboration`, `customer support conversation`, `abstract growth trend`.
-   For `semantic`, the theme may include the concrete subject or named entity
-   that the image must depict. For `decorative`, use only a generic concept;
-   never return text that should be rendered inside the image.
+8. **Describe the visual direction** (`visual_layout_request`): Write one short,
+   domain-neutral sentence describing how a visual or a no-image composition
+   should support the slide. Do not mention a provider, URL, or a specific
+   candidate image.
 
 **OUTPUT REQUIREMENT:**
-- Populate only the structured fields `slide_topic`, `slide_purpose`, `thought`,
-  `image_mode`, `image_theme`, and `action`.
+- Populate the structured fields `slide_topic`, `slide_purpose`, `thought`,
+  `image_mode`, `image_search_intents`,
+  `visual_layout_request`, and `action`.
 - Do not add explanations, markdown, or fields outside the schema. The caller
   validates the structured response; do not serialize the object manually.
-- The 'image_mode' field must be one of 'none', 'semantic', or 'decorative'.
-- The 'image_theme' field must be a short search phrase appropriate to the
-  selected image mode: it may identify the concrete subject for `semantic`,
-  while it must remain a generic visual motif for `decorative`.
+- The 'image_mode' field must be one of 'none' or 'semantic', and must be
+  `semantic` exactly when `image_search_intents` is non-empty.
 - The 'action' field must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS',
   'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
+- Keep `image_mode` aligned with the intent list: use `none` when the list is
+  empty and `semantic` exactly when a visual intent exists.
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """

@@ -50,24 +50,39 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
         category = plan.get("action", "CONTENT_TOOLS")
         category_tools = list(tools_dict.get(category, []))
         image_mode = str(plan.get("image_mode") or "").lower()
-        if image_mode not in {"none", "semantic", "decorative"}:
+        approved_image_count = len(job.get("approved_images") or [])
+        if image_mode not in {"none", "semantic"}:
             image_mode = ""
         compatible_tools = (
-            [tool for tool in category_tools if tool_matches_image_mode(tool, image_mode)]
+            [
+                tool
+                for tool in category_tools
+                if tool_matches_image_mode(
+                    tool,
+                    image_mode,
+                    approved_image_count,
+                )
+            ]
             if image_mode
             else category_tools
         )
         if (
-            image_mode in {"semantic", "decorative"}
+            image_mode == "semantic"
             and category_tools
             and not compatible_tools
-            and all(not tool_matches_image_mode(tool, "semantic") for tool in category_tools)
+            and all(
+                not tool_matches_image_mode(
+                    tool,
+                    "semantic",
+                    approved_image_count,
+                )
+                for tool in category_tools
+            )
         ):
             # Some categories, notably charts, are intentionally text/vector
             # only. Do not force the generator to invent an image layout.
             image_mode = "none"
             plan["image_mode"] = image_mode
-            plan["image_strategy"] = "decorative"
             compatible_tools = category_tools
         candidates = []
         if tool_retriever and compatible_tools:
@@ -155,6 +170,7 @@ def dispatch_section_batches(state: State):
         "deck_style_plan": state.get("deck_style_plan", {}),
         "deck_slide_count": state.get("deck_slide_count", 0),
         "slide_options": state.get("slide_options", {}),
+        "slide_context_maps": list(state.get("slide_context_maps") or []),
         "output_format": state.get("output_format", "xml"),
         "document_title": state.get("document_title", ""),
     }

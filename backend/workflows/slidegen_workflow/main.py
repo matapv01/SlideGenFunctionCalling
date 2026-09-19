@@ -234,6 +234,7 @@ async def run_canonical_slide_workflow(
             "document_structure": [],
             "document_outline": [],
             "slide_chunks": canonical_chunks,
+            "slide_final_contents": [],
             "slide_positions": normalized["slide_positions"],
             "slide_context_maps": normalized["slide_context_maps"],
             "section_ids": normalized["section_ids"],
@@ -249,6 +250,9 @@ async def run_canonical_slide_workflow(
             "slide_options": options,
             "output_format": output_format,
             "document_images": list(options.get("document_images") or []),
+            "image_search_candidates": [],
+            "approved_image_assignments": [],
+            "slide_refinements": [],
             "user_request": str(options.get("user_request") or ""),
         }
 

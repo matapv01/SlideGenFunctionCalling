@@ -14,6 +14,15 @@ def _position_text(position: Any) -> str:
     return str(position) if position is not None else ""
 
 
+def _image_belongs_to_slide(image: Any, index: int) -> bool:
+    if not isinstance(image, dict):
+        return False
+    try:
+        return int(image.get("slide_index", -1)) == index
+    except (TypeError, ValueError):
+        return False
+
+
 def _special_kind(chunk: Any, plan: Dict[str, Any], index: int) -> str:
     data = chunk if isinstance(chunk, dict) else {}
     heading = str(data.get("heading", "")).upper()
@@ -87,6 +96,8 @@ def build_slide_jobs(state: Dict[str, Any]) -> List[Dict[str, Any]]:
     )
 
     jobs: List[Dict[str, Any]] = []
+    final_contents = list(state.get("slide_final_contents") or [])
+    approved_images = list(state.get("approved_image_assignments") or [])
     fallback_section = 1
     fallback_section_has_content = False
     fallback_content_index = 0
@@ -143,12 +154,23 @@ def build_slide_jobs(state: Dict[str, Any]) -> List[Dict[str, Any]]:
                     fallback_section_has_content = True
             position = None
 
+        job_content = (
+            final_contents[index]
+            if index < len(final_contents) and str(final_contents[index]).strip()
+            else chunk
+        )
+        job_images = [
+            image for image in approved_images
+            if _image_belongs_to_slide(image, index)
+        ]
         jobs.append(
             {
                 "index": index,
-                "content": chunk,
+                "content": job_content,
+                "source_content": chunk,
                 "context_map": context,
                 "plan": plan,
+                "approved_images": job_images,
                 "position": position,
                 "slide_type": kind,
                 "batch_id": batch_id,

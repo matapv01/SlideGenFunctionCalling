@@ -1,6 +1,5 @@
 from backend.workflows.slidegen_workflow.nodes.slide_planner import (
     _normalize_image_mode,
-    _normalize_image_strategy,
     _normalize_plan_action,
     build_compact_slide_outline,
     normalize_planner_result,
@@ -8,7 +7,7 @@ from backend.workflows.slidegen_workflow.nodes.slide_planner import (
     prepare_planner_context,
 )
 from backend.workflows.slidegen_workflow.nodes.slide_generator import (
-    _build_decorative_image_query,
+    _resolve_image_mode,
 )
 
 
@@ -60,60 +59,38 @@ def test_deck_instruction_is_shared_by_every_planner_input():
     ]
 
 
-def test_identity_slides_use_decorative_image_strategy():
+def test_image_mode_requires_an_explicit_current_mode():
     assert _normalize_image_mode({"image_mode": "none"}) == "none"
-    assert _normalize_image_mode({"image_strategy": "semantic"}) == "semantic"
+    assert _normalize_image_mode({"image_mode": "semantic"}) == "semantic"
 
-    assert _normalize_image_strategy(
-        {"action": "TEAM_TOOLS", "image_strategy": "semantic"},
-        {"heading": "Team"},
-        2,
-    ) == "decorative"
-
-    query = _build_decorative_image_query(
-        {"description": "portrait image"},
-        "TEAM_TOOLS",
-        "team brainstorming",
-    )
-    assert "John Smith" not in query
-    assert "team" in query
-    assert "illustration" in query
-    assert "brainstorming" in query
-
-    generic_query = _build_decorative_image_query(
-        {"description": "supporting illustration"},
-        "CONTENT_TOOLS",
-        "workflow collaboration",
-    )
-    assert "John Smith" not in generic_query
-    assert generic_query == "workflow collaboration conceptual illustration"
+    assert _resolve_image_mode({"action": "TEAM_TOOLS", "image_mode": "none"}) == "none"
+    assert _resolve_image_mode({"action": "CONTENT_TOOLS", "image_mode": "semantic"}) == "semantic"
 
 
-def test_content_image_policy_defaults_to_none_and_spaces_decorative_images():
+def test_content_image_policy_uses_only_explicit_search_intents():
     assert _normalize_image_mode({"action": "CONTENT_TOOLS"}) == "none"
-    assert _normalize_image_mode({"action": "INTRO_TOOLS"}) == "decorative"
 
     plans = [
         {
             "action": "CONTENT_TOOLS",
             "image_mode": "semantic",
-            "image_theme": "factory robotics",
+            "image_search_intents": [{"query": "factory robotics"}],
         },
         {
             "action": "CONTENT_TOOLS",
-            "image_mode": "decorative",
-            "image_theme": "workflow collaboration",
+            "image_mode": "semantic",
+            "image_search_intents": [],
         },
         {
             "action": "CONTENT_TOOLS",
-            "image_mode": "decorative",
-            "image_theme": "customer support",
+            "image_mode": "none",
+            "image_search_intents": [],
         },
     ]
 
     normalize_image_sequence(plans)
 
-    assert [plan["image_mode"] for plan in plans] == ["semantic", "none", "decorative"]
+    assert [plan["image_mode"] for plan in plans] == ["semantic", "none", "none"]
 
 
 def test_planner_normalizes_slide_purpose_for_image_context():
@@ -123,7 +100,7 @@ def test_planner_normalizes_slide_purpose_for_image_context():
             "slide_purpose": "Mở đầu hành trình Nguyễn Ái Quốc ra đi tìm đường cứu nước năm 1911.",
             "thought": "Use a strong historical opening composition.",
             "image_mode": "semantic",
-            "image_theme": "nguyen ai quoc departure 1911",
+            "image_search_intents": [],
             "action": "INTRO_TOOLS",
         },
         {"heading": "Hành trình ra đi"},

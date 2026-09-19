@@ -24,9 +24,11 @@ _NS = {
     "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
+    "v": "urn:schemas-microsoft-com:vml",
     "pr": "http://schemas.openxmlformats.org/package/2006/relationships",
 }
 _RID = f"{{{_NS['r']}}}embed"
+_R_LINK = f"{{{_NS['r']}}}link"
 _MAX_IMAGE_BYTES = 20 * 1024 * 1024
 
 
@@ -37,7 +39,7 @@ def _safe_name(value: str, fallback: str) -> str:
 
 def _paragraph_text(paragraph: ET.Element) -> str:
     return " ".join(
-        text.strip()
+        text.text.strip()
         for text in paragraph.findall(".//w:t", _NS)
         if text.text and text.text.strip()
     ).strip()
@@ -78,6 +80,43 @@ def _image_size(paragraph: ET.Element) -> tuple[int | None, int | None]:
 class DocumentImageExtractor:
     """Extract embedded image occurrences from a private DOCX package."""
 
+    @staticmethod
+    def _relationships_part(part_name: str) -> str:
+        directory = posixpath.dirname(part_name)
+        basename = posixpath.basename(part_name)
+        return posixpath.join(directory, "_rels", f"{basename}.rels")
+
+    @staticmethod
+    def _resolve_package_target(part_name: str, target: str) -> str:
+        normalized_target = target.replace("\\", "/")
+        if normalized_target.startswith("/"):
+            return posixpath.normpath(normalized_target.lstrip("/"))
+        return posixpath.normpath(
+            posixpath.join(posixpath.dirname(part_name), normalized_target)
+        )
+
+    @staticmethod
+    def _paragraph_image_ids(paragraph: ET.Element) -> list[str]:
+        """Return embedded DrawingML and legacy VML relationship ids."""
+        ids: list[str] = []
+        for element in (
+            paragraph.findall(".//a:blip", _NS)
+            + paragraph.findall(".//v:imagedata", _NS)
+        ):
+            relationship_id = str(
+                element.get(_RID) or element.get(_R_LINK) or ""
+            ).strip()
+            if relationship_id:
+                ids.append(relationship_id)
+        return ids
+
+    @staticmethod
+    def _alt_text(paragraph: ET.Element) -> str:
+        doc_pr = paragraph.find(".//wp:docPr", _NS)
+        if doc_pr is None:
+            return ""
+        return str(doc_pr.get("descr") or doc_pr.get("name") or "").strip()[:500]
+
     def extract(
         self,
         *,
@@ -93,106 +132,122 @@ class DocumentImageExtractor:
         image_root.mkdir(parents=True, exist_ok=True)
 
         with zipfile.ZipFile(source) as package:
-            try:
-                document_xml = ET.fromstring(package.read("word/document.xml"))
-                relationship_xml = ET.fromstring(
-                    package.read("word/_rels/document.xml.rels")
-                )
-            except KeyError:
+            package_names = set(package.namelist())
+            xml_parts = sorted(
+                name
+                for name in package_names
+                if name.startswith("word/") and name.endswith(".xml")
+            )
+            if not xml_parts:
                 return []
 
-            relationships: dict[str, str] = {}
-            for relationship in relationship_xml.findall("pr:Relationship", _NS):
-                rel_id = str(relationship.get("Id") or "")
-                target = str(relationship.get("Target") or "")
-                if rel_id and target:
-                    relationships[rel_id] = target
-
-            paragraphs = document_xml.findall(".//w:body//w:p", _NS)
-            paragraph_texts = [_paragraph_text(paragraph) for paragraph in paragraphs]
-            section_stack: list[tuple[int, str]] = []
             images: list[dict[str, Any]] = []
-
-            for paragraph_index, paragraph in enumerate(paragraphs):
-                text = paragraph_texts[paragraph_index]
-                heading_level = _heading_level(paragraph)
-                if heading_level is not None and text:
-                    while section_stack and section_stack[-1][0] >= heading_level:
-                        section_stack.pop()
-                    section_stack.append((heading_level, text))
-
-                embedded_ids = [
-                    str(blip.get(_RID) or "").strip()
-                    for blip in paragraph.findall(".//a:blip", _NS)
-                ]
-                embedded_ids = [rid for rid in embedded_ids if rid]
-                if not embedded_ids:
+            for part_name in xml_parts:
+                relationship_name = self._relationships_part(part_name)
+                try:
+                    part_xml = ET.fromstring(package.read(part_name))
+                    relationship_xml = ET.fromstring(
+                        package.read(relationship_name)
+                    )
+                except (KeyError, ET.ParseError):
                     continue
 
-                section_titles = [title for _, title in section_stack]
-                section_path = " > ".join(section_titles)
-                previous_text = next(
-                    (
-                        paragraph_texts[index]
-                        for index in range(paragraph_index - 1, -1, -1)
-                        if paragraph_texts[index]
-                    ),
-                    "",
-                )
-                next_text = next(
-                    (
-                        paragraph_texts[index]
-                        for index in range(paragraph_index + 1, len(paragraph_texts))
-                        if paragraph_texts[index]
-                    ),
-                    "",
-                )
-                nearby_text = " ".join(
-                    part for part in (text, previous_text, next_text) if part
-                )[:1800]
-                width, height = _image_size(paragraph)
+                relationships: dict[str, str] = {}
+                for relationship in relationship_xml.findall("pr:Relationship", _NS):
+                    if str(relationship.get("TargetMode") or "").lower() == "external":
+                        continue
+                    rel_id = str(relationship.get("Id") or "")
+                    target = str(relationship.get("Target") or "")
+                    if rel_id and target:
+                        relationships[rel_id] = target
 
-                for rid in embedded_ids:
-                    target = relationships.get(rid, "")
-                    package_target = target.replace("\\", "/").lstrip("/")
-                    package_path = posixpath.normpath(
-                        package_target
-                        if package_target.startswith("word/")
-                        else posixpath.join("word", package_target)
+                paragraphs = part_xml.findall(".//w:p", _NS)
+                paragraph_texts = [
+                    _paragraph_text(paragraph) for paragraph in paragraphs
+                ]
+                section_stack: list[tuple[int, str]] = []
+
+                for paragraph_index, paragraph in enumerate(paragraphs):
+                    text = paragraph_texts[paragraph_index]
+                    heading_level = _heading_level(paragraph)
+                    if heading_level is not None and text:
+                        while section_stack and section_stack[-1][0] >= heading_level:
+                            section_stack.pop()
+                        section_stack.append((heading_level, text))
+
+                    embedded_ids = list(
+                        dict.fromkeys(self._paragraph_image_ids(paragraph))
                     )
-                    if not package_path.startswith("word/media/"):
-                        continue
-                    try:
-                        image_bytes = package.read(package_path)
-                    except KeyError:
-                        continue
-                    if not image_bytes or len(image_bytes) > _MAX_IMAGE_BYTES:
+                    if not embedded_ids:
                         continue
 
-                    ordinal = len(images)
-                    original_name = Path(package_path).name
-                    suffix = Path(original_name).suffix.lower() or ".img"
-                    file_name = f"{ordinal:04d}_{_safe_name(original_name, f'image{ordinal}{suffix}')}"
-                    destination = image_root / file_name
-                    destination.write_bytes(image_bytes)
-                    digest = hashlib.sha256(image_bytes).hexdigest()
-                    mime_type = mimetypes.guess_type(original_name)[0] or "application/octet-stream"
-                    images.append(
-                        {
-                            "image_id": f"{document_id}:{ordinal}",
-                            "document_id": document_id,
-                            "ordinal": ordinal,
-                            "source_path": str(destination),
-                            "filename": original_name,
-                            "mime_type": mime_type,
-                            "content_hash": digest,
-                            "section_path": section_path,
-                            "section_title": section_titles[-1] if section_titles else "",
-                            "nearby_text": nearby_text,
-                            "width": width,
-                            "height": height,
-                        }
+                    section_titles = [title for _, title in section_stack]
+                    section_path = " > ".join(section_titles)
+                    previous_text = next(
+                        (
+                            paragraph_texts[index]
+                            for index in range(paragraph_index - 1, -1, -1)
+                            if paragraph_texts[index]
+                        ),
+                        "",
                     )
+                    next_text = next(
+                        (
+                            paragraph_texts[index]
+                            for index in range(paragraph_index + 1, len(paragraphs))
+                            if paragraph_texts[index]
+                        ),
+                        "",
+                    )
+                    nearby_text = " ".join(
+                        part for part in (text, previous_text, next_text) if part
+                    )[:1800]
+                    width, height = _image_size(paragraph)
+                    alt_text = self._alt_text(paragraph)
+
+                    for rid in embedded_ids:
+                        package_path = self._resolve_package_target(
+                            part_name,
+                            relationships.get(rid, ""),
+                        )
+                        if not package_path.startswith("word/media/"):
+                            continue
+                        try:
+                            image_bytes = package.read(package_path)
+                        except KeyError:
+                            continue
+                        if not image_bytes or len(image_bytes) > _MAX_IMAGE_BYTES:
+                            continue
+
+                        ordinal = len(images)
+                        original_name = Path(package_path).name
+                        suffix = Path(original_name).suffix.lower() or ".img"
+                        file_name = (
+                            f"{ordinal:04d}_"
+                            f"{_safe_name(original_name, f'image{ordinal}{suffix}')}"
+                        )
+                        destination = image_root / file_name
+                        destination.write_bytes(image_bytes)
+                        digest = hashlib.sha256(image_bytes).hexdigest()
+                        mime_type = mimetypes.guess_type(original_name)[0] or "application/octet-stream"
+                        images.append(
+                            {
+                                "image_id": f"{document_id}:{ordinal}",
+                                "document_id": document_id,
+                                "ordinal": ordinal,
+                                "source_path": str(destination),
+                                "filename": original_name,
+                                "mime_type": mime_type,
+                                "content_hash": digest,
+                                "source_part": part_name,
+                                "section_path": section_path,
+                                "section_title": section_titles[-1] if section_titles else "",
+                                "nearby_text": nearby_text,
+                                "alt_text": alt_text,
+                                "width": width,
+                                "height": height,
+                            }
+                        )
 
         return images
 
