@@ -43,6 +43,11 @@ from backend.infrastructure.database.repositories.sqlite_user_repo import Sqlite
 
 router = APIRouter(prefix="/auth", tags=["AUTHENTICATION"])
 
+# This route is mounted below the API router at /api/v1. Keep the callback
+# path explicit instead of deriving it from the incoming request path; the
+# public frontend mount (/slidegen) is unrelated to the API mount.
+_GOOGLE_CALLBACK_PATH = "/api/v1/auth/google/callback"
+
 _google_oauth_states: dict[str, float] = {}
 _GOOGLE_STATE_TTL_SECONDS = 600
 
@@ -134,9 +139,21 @@ def _consume_verification(challenge_id: str, code: str) -> str:
         return challenge.email
 
 
+def _is_email_verification_exempt(user) -> bool:
+    """Keep a role-based bypass for manually managed administrator accounts."""
+    return bool(user and user.is_admin)
+
+
 def _server_origin(request: Request) -> str:
-    scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0].strip()
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0].strip().lower()
     host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc)).split(",")[0].strip()
+    hostname = host.rsplit("@", 1)[-1].split(":", 1)[0].lower().rstrip(".")
+    # Public OAuth callbacks must use HTTPS. Some upstream reverse proxies
+    # forward the internal HTTP hop as X-Forwarded-Proto=http even though the
+    # browser reached the public domain over HTTPS. Keep localhost usable for
+    # Docker development, but normalize every non-local public host to HTTPS.
+    if scheme == "http" and hostname not in {"localhost", "127.0.0.1", "::1"}:
+        scheme = "https"
     return f"{scheme}://{host}"
 
 
@@ -146,25 +163,21 @@ def _frontend_base(request: Request) -> str:
 
 def _google_callback_url(request: Request) -> str:
     if GOOGLE_REDIRECT_URI:
-        return GOOGLE_REDIRECT_URI
-    # The OAuth request starts at /google/login, but Google must redirect to
-    # the sibling /google/callback endpoint after authorization.
-    callback_path = f"{request.url.path.rsplit('/', 1)[0]}/callback"
-    return f"{_server_origin(request)}{callback_path}"
+        return GOOGLE_REDIRECT_URI.rstrip("/")
+    # The frontend lives at /slidegen, while OAuth callbacks stay under the
+    # API mount. This remains correct behind nginx because _server_origin()
+    # uses the forwarded public scheme and host.
+    return f"{_server_origin(request)}{_GOOGLE_CALLBACK_PATH}"
 
 
 def _google_result_redirect(
     request: Request,
     *,
     token: str | None = None,
-    challenge_id: str | None = None,
-    email: str | None = None,
     error: str | None = None,
 ) -> RedirectResponse:
     if token:
         fragment = f"google_token={quote(token)}"
-    elif challenge_id:
-        fragment = f"google_challenge={quote(challenge_id)}&google_email={quote(email or '')}"
     else:
         fragment = f"google_error={quote(error or 'oauth_failed')}"
     return RedirectResponse(url=f"{_frontend_base(request)}/login#{fragment}", status_code=303)
@@ -227,7 +240,10 @@ async def google_callback(request: Request, code: str | None = None, state: str 
         return _google_result_redirect(request, error="provider_failed")
 
     email = str(userinfo.get("email", "")).strip().lower()
-    if not email or not userinfo.get("email_verified", False):
+    # Google userinfo returns a boolean here. Require the actual boolean value
+    # instead of accepting a truthy string supplied by an unexpected provider
+    # response.
+    if not email or userinfo.get("email_verified") is not True:
         return _google_result_redirect(request, error="email_not_verified")
 
     user_repo = SqliteUserRepository()
@@ -238,27 +254,32 @@ async def google_callback(request: Request, code: str | None = None, state: str 
 
     try:
         if user is None:
-            user = auth_service.register_user(email, full_name, secrets.token_urlsafe(48))
+            # Google has already verified this email with the identity
+            # provider, so no second Slidegen OTP is needed.
+            user = auth_service.register_user(
+                email,
+                full_name,
+                secrets.token_urlsafe(48),
+                email_verified=True,
+            )
         elif not user.is_active:
             return _google_result_redirect(request, error="account_inactive")
+        elif user.id is not None and not user.email_verified:
+            # A user who initially registered with password can also prove
+            # ownership through Google's verified identity.
+            user_repo.mark_email_verified(user.id)
+            user = user_repo.get_by_email(email) or user
         if user.id is not None:
             user_repo.create_or_update_profile(UserProfile(user_id=user.id, full_name=full_name, avatar_url=avatar_url))
     except Exception:
         return _google_result_redirect(request, error="account_failed")
 
-    # Google has verified the identity, but Slidegen still requires the same
-    # email OTP step as password sign-in before issuing an access token.
-    try:
-        verification = await _issue_email_verification(email)
-    except HTTPException as exc:
-        if exc.status_code == 503:
-            return _google_result_redirect(request, error="verification_unavailable")
-        return _google_result_redirect(request, error="account_failed")
-
+    # A successful Google OAuth flow has already verified the email identity.
+    # It must never enter Slidegen's email OTP flow, including when the account
+    # was originally created with password authentication.
     return _google_result_redirect(
         request,
-        challenge_id=verification.challenge_id,
-        email=verification.email,
+        token=auth_service.create_access_token(data={"sub": user.email}),
     )
 
 
@@ -271,7 +292,7 @@ async def register(
     return UserResponse.model_validate(user)
 
 
-@router.post("/login", response_model=EmailVerificationChallenge)
+@router.post("/login", response_model=EmailVerificationChallenge | Token)
 async def login(
     user_data: UserLogin,
     auth_service: AuthService = Depends(get_auth_service)
@@ -282,6 +303,10 @@ async def login(
     
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Tài khoản hiện không hoạt động.")
+    if user.email_verified or _is_email_verification_exempt(user):
+        return Token(
+            access_token=auth_service.create_access_token(data={"sub": user.email}),
+        )
     return await _issue_email_verification(user.email)
 
 
@@ -294,6 +319,8 @@ async def verify_email_code(
     user = auth_service.user_repo.get_by_email(email)
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="Tài khoản không còn hoạt động.")
+    if user.id is not None:
+        auth_service.user_repo.mark_email_verified(user.id)
     access_token = auth_service.create_access_token(data={"sub": user.email})
     return Token(access_token=access_token, token_type="bearer")
 

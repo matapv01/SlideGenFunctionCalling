@@ -39,28 +39,22 @@ http://localhost:8082/slidegen/admin
 Nếu deploy qua domain, thay `http://localhost:8082` bằng domain tương ứng, ví dụ:
 `https://ptitai.org/slidegen/admin`.
 
-Trong tab **Quản lý user**, admin nhập mật khẩu mặc định cho lần reset (tối thiểu 6 ký tự),
-sau đó có thể đặt lại mật khẩu hoặc reset riêng cửa sổ 5 giờ của từng user. Mật khẩu chỉ được gửi
-để hash ở backend, không được lưu trong cấu hình admin.
+### Google OAuth callback
 
-Tài khoản admin khởi tạo được quy ước là `admin@email.com`, mật khẩu khởi tạo là
-`123456`. Mật khẩu này đủ 6 ký tự theo policy hiện tại; nên đổi ngay sau lần
-đăng nhập đầu tiên.
+Google Cloud Console must contain the exact authorized redirect URI for the
+environment:
 
-Nếu tài khoản `admin@email.com` đã tồn tại nhưng chưa có quyền admin, chạy lệnh
-sau để cấp quyền trực tiếp:
+- Production: `https://ptitai.org/api/v1/auth/google/callback`
+- Local Docker: `http://localhost:8082/api/v1/auth/google/callback`
+
+Do not add `/slidegen` to the callback path. `/slidegen` is the frontend mount;
+the OAuth callback is served by the API under `/api/v1/auth`.
+
+Để cấp quyền admin cho một tài khoản đã tồn tại, chạy:
 
 ```bash
-# Production
-docker compose exec slidegen python scripts/manage_admin.py grant admin@email.com
-
-# Development
-docker compose -f docker-compose.dev.yml exec slidegen-dev \
-  python scripts/manage_admin.py grant admin@email.com
+docker compose exec slidegen python scripts/manage_admin.py grant email@example.com
 ```
-
-Sau khi chạy lệnh, đăng nhập tài khoản đó, mở tab **Admin** → **Quản lý user**
-để cấp hoặc gỡ quyền cho các tài khoản khác.
 
 ### 2. REST API
 ```bash

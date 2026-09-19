@@ -1491,14 +1491,60 @@ html:not(.dark) .sgl-landing .mega-feature > small {
   color: #686963;
 }
 
-.sg-auth .auth-verification-hint {
+.sg-auth .auth-verification-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
   max-width: 390px;
   margin: 16px 0 0;
-  color: #9a9b94;
+  padding: 10px 12px;
+  border: 1px solid rgba(245, 157, 137, 0.35);
+  border-radius: 10px;
+  background: rgba(245, 157, 137, 0.08);
+  color: #d8d8d0;
   font-size: 12px;
   line-height: 1.55;
 }
 
-html:not(.dark) .sg-auth .auth-verification-hint {
-  color: #777872;
+.sg-auth .auth-verification-alert-icon {
+  display: inline-flex;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #f59d89;
+  color: #242424;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sg-auth .auth-verification-alert strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #f59d89;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sg-auth .auth-verification-alert p {
+  margin: 0;
+}
+
+html:not(.dark) .sg-auth .auth-verification-alert {
+  border-color: rgba(182, 95, 76, 0.35);
+  background: rgba(182, 95, 76, 0.08);
+  color: #555650;
+}
+
+html:not(.dark) .sg-auth .auth-verification-alert-icon {
+  background: #b65f4c;
+  color: #fffaf3;
+}
+
+html:not(.dark) .sg-auth .auth-verification-alert strong {
+  color: #b65f4c;
 }

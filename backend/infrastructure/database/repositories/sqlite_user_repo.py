@@ -142,6 +142,12 @@ class SqliteUserRepository(UserRepository):
         except (KeyError, TypeError, IndexError):
             is_admin = False
 
+        email_verified = True
+        try:
+            email_verified = bool(row['email_verified'])
+        except (KeyError, TypeError, IndexError):
+            email_verified = True
+
         return User(
             id=row['id'],
             email=row['email'],
@@ -157,6 +163,7 @@ class SqliteUserRepository(UserRepository):
             chat_message_count=chat_message_count,
             docx_usage=docx_usage,
             is_active=bool(row['is_active']),
+            email_verified=email_verified,
             is_admin=is_admin,
             cancel_at_period_end=cancel_at_period_end,
             created_at=row['created_at'] # Giả sử DB trả về datetime hoặc string parse được
@@ -254,14 +261,14 @@ class SqliteUserRepository(UserRepository):
                     daily_usage_reset_date, idea_usage_today, docx_usage_today,
                     usage_window_started_at, chat_usage_5h,
                     chat_usage_credits_5h, chat_messages_5h, docx_usage_5h,
-                    is_active, is_admin
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    is_active, email_verified, is_admin
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 user.email, user.hashed_password, user.subscription_tier,
                 user.daily_usage_reset_date, user.idea_usage_today, user.docx_usage_today,
                 user.usage_window_started_at, user.chat_message_count,
                 user.chat_usage, user.chat_message_count, user.docx_usage,
-                user.is_active, user.is_admin
+                user.is_active, user.email_verified, user.is_admin
             ))
             conn.commit()
             user_id = cursor.lastrowid
@@ -277,6 +284,17 @@ class SqliteUserRepository(UserRepository):
                 'UPDATE users SET hashed_password = ? WHERE id = ?',
                 (new_hashed_password, user_id)
             )
+            conn.commit()
+
+
+    def mark_email_verified(self, user_id: int) -> None:
+        with get_db_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE users SET email_verified = 1 WHERE id = ?",
+                (user_id,),
+            )
+            if cursor.rowcount == 0:
+                raise LookupError("User not found")
             conn.commit()
 
 

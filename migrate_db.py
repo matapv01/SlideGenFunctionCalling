@@ -57,6 +57,12 @@ def migrate_database():
         if "is_admin" not in columns:
             migrations.append("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0")
 
+        # Existing accounts are treated as already verified. New accounts set
+        # this explicitly to false through AuthService until their signup OTP
+        # is accepted.
+        if "email_verified" not in columns:
+            migrations.append("ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT 1")
+
         # Run migrations
         for migration in migrations:
             print(f"Running: {migration}")

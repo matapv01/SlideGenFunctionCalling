@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { api, setGlobalLogout, type EmailVerificationChallenge } from "@/lib/api";
+import { api, setGlobalLogout, type AuthResponse, type EmailVerificationChallenge } from "@/lib/api";
 
 interface User {
   id: number;
@@ -15,9 +15,9 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string, remember?: boolean) => Promise<EmailVerificationChallenge>;
+  login: (email: string, password: string, remember?: boolean) => Promise<AuthResponse>;
   loginWithAccessToken: (accessToken: string) => Promise<void>;
-  register: (fullName: string, email: string, password: string) => Promise<EmailVerificationChallenge>;
+  register: (fullName: string, email: string, password: string) => Promise<AuthResponse>;
   verifyEmailCode: (challengeId: string, code: string) => Promise<void>;
   resendEmailCode: (challengeId: string) => Promise<EmailVerificationChallenge>;
   logout: () => void;

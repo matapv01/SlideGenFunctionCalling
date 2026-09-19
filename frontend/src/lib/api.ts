@@ -75,7 +75,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 // Types based on backend models
-interface Token {
+export interface AuthTokenResponse {
   access_token: string;
   token_type: string;
 }
@@ -86,6 +86,8 @@ export interface EmailVerificationChallenge {
   expires_in: number;
   message: string;
 }
+
+export type AuthResponse = EmailVerificationChallenge | AuthTokenResponse;
 
 interface UserResponse {
   id: number;
@@ -310,7 +312,7 @@ export type OutputFormat = "xml";
 export const api = {
   // Auth endpoints - match backend /api/auth/*
   login: async (email: string, password: string) => {
-    return request<EmailVerificationChallenge>("/auth/login", {
+    return request<AuthResponse>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -325,7 +327,7 @@ export const api = {
   },
 
   verifyEmailCode: async (challengeId: string, code: string) => {
-    const tokenResponse = await request<Token>("/auth/verify-email-code", {
+    const tokenResponse = await request<AuthTokenResponse>("/auth/verify-email-code", {
       method: "POST",
       body: JSON.stringify({ challenge_id: challengeId, code }),
     });

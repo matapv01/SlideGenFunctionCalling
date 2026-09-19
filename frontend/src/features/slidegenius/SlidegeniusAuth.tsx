@@ -52,8 +52,8 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
   const verificationText = language === "vi"
     ? {
       eyebrow: "XÁC THỰC EMAIL",
-      title: "Kiểm tra email của bạn.",
-      description: "Nhập mã 6 số chúng tôi vừa gửi để hoàn tất đăng nhập.",
+      title: "Xác thực email của bạn.",
+      description: "Nhập mã 6 số chúng tôi vừa gửi để hoàn tất đăng ký.",
       code: "Mã xác thực",
       placeholder: "000000",
       verify: "Xác thực và tiếp tục",
@@ -65,8 +65,8 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
     }
     : {
       eyebrow: "VERIFY YOUR EMAIL",
-      title: "Check your inbox.",
-      description: "Enter the 6-digit code we just sent to finish signing in.",
+      title: "Verify your email.",
+      description: "Enter the 6-digit code we sent to finish creating your account.",
       code: "Verification code",
       placeholder: "000000",
       verify: "Verify and continue",
@@ -78,36 +78,24 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
     };
 
   const verificationSpamHint = language === "vi"
-    ? "Chưa thấy email? Hãy kiểm tra Thư rác/Quảng cáo và chọn Không phải thư rác."
-    : "Can't find it? Check Spam or Promotions and mark the email as Not spam.";
+    ? "Nếu chưa thấy mã sau vài phút, hãy kiểm tra Spam/Thư rác hoặc Quảng cáo, rồi chọn “Không phải thư rác”."
+    : "If the code does not arrive within a few minutes, check Spam or Promotions and mark the email as Not spam.";
+  const verificationSpamLabel = language === "vi" ? "Lưu ý" : "Heads up";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const googleToken = params.get("google_token");
-    const googleChallenge = params.get("google_challenge");
-    const googleEmail = params.get("google_email") || "";
     const googleError = params.get("google_error");
-    if (!googleToken && !googleChallenge && !googleError) return;
+    if (!googleToken && !googleError) return;
     window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
 
     if (googleError) {
-      if (googleError === "verification_unavailable") {
-        setError(language === "vi" ? "Chưa cấu hình gửi mã xác thực email trên máy chủ." : "Email verification is not configured on the server.");
-        return;
-      }
       const message = googleError === "not_configured"
         ? (language === "vi" ? "Đăng nhập Google chưa được cấu hình trên máy chủ." : "Google sign-in is not configured on the server.")
+        : googleError === "email_not_verified"
+          ? (language === "vi" ? "Google chưa xác minh địa chỉ email này." : "Google has not verified this email address.")
         : (language === "vi" ? "Đăng nhập Google chưa được hoàn tất." : "Google sign-in was not completed.");
       setError(message);
-      return;
-    }
-    if (googleChallenge) {
-      setVerificationChallenge({
-        challenge_id: googleChallenge,
-        email: googleEmail,
-        expires_in: 600,
-        message: "A verification code was sent to your email.",
-      });
       return;
     }
     if (!googleToken) return;
@@ -134,21 +122,29 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
     setLoading(true);
     try {
       if (isSignup) {
-        const challenge = await register(fullName.trim(), email.trim(), password);
-        setVerificationChallenge(challenge);
+        const authResult = await register(fullName.trim(), email.trim(), password);
+        if ("access_token" in authResult) {
+          await loginWithAccessToken(authResult.access_token);
+          toast({ title: language === "en" ? "Account created" : "Tạo tài khoản thành công" });
+          navigate(from, { replace: true });
+          return;
+        }
+        setVerificationChallenge(authResult);
         setVerificationCode("");
         toast({ title: verificationText.sent });
         return;
-        toast({ title: language === "en" ? "Account created" : "Tạo tài khoản thành công" });
-        navigate("/home", { replace: true });
       } else {
-        const challenge = await login(email.trim(), password, remember);
-        setVerificationChallenge(challenge);
+        const authResult = await login(email.trim(), password, remember);
+        if ("access_token" in authResult) {
+          await loginWithAccessToken(authResult.access_token);
+          toast({ title: language === "en" ? "Signed in" : "Đăng nhập thành công" });
+          navigate(from, { replace: true });
+          return;
+        }
+        setVerificationChallenge(authResult);
         setVerificationCode("");
         toast({ title: verificationText.sent });
         return;
-        toast({ title: language === "en" ? "Signed in" : "Đăng nhập thành công" });
-        navigate(from, { replace: true });
       }
     } catch (submitError) {
       const fallback = isSignup ? t.signUpError : t.signInError;
@@ -217,7 +213,7 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
         <div className="auth-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <header className="auth-header"><Link className="brand" to="/" aria-label="Slidegen home"><span className="brand-word"><span>slide</span><b>gen</b></span></Link><div className="auth-header-actions"><button className="auth-language" type="button" onClick={() => setLanguage(language === "en" ? "vi" : "en")} aria-label={t.language}>{language === "en" ? "VI" : "EN"} <span>↗</span></button><Link to="/">{t.back}</Link></div></header>
         <section className="auth-shell auth-shell-signin" aria-labelledby="verification-title">
-          <div className="auth-intro"><p className="auth-eyebrow">{verificationText.eyebrow}</p><h1 id="verification-title">{verificationText.title}</h1><p className="auth-description">{verificationText.description}</p><p className="auth-verification-hint">{verificationSpamHint}</p><div className="auth-note"><span className="auth-note-line" /><span>{verificationChallenge.email}</span></div></div>
+          <div className="auth-intro"><p className="auth-eyebrow">{verificationText.eyebrow}</p><h1 id="verification-title">{verificationText.title}</h1><p className="auth-description">{verificationText.description}</p><div className="auth-verification-alert" role="note"><span className="auth-verification-alert-icon" aria-hidden="true">!</span><div><strong>{verificationSpamLabel}</strong><p>{verificationSpamHint}</p></div></div><div className="auth-note"><span className="auth-note-line" /><span>{verificationChallenge.email}</span></div></div>
           <div className="auth-card"><div className="auth-card-heading"><span>{verificationText.eyebrow}</span><span>SLIDEGEN / CODE</span></div><form onSubmit={handleVerifyCode}><label>{verificationText.code}<input autoFocus name="verification-code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder={verificationText.placeholder} value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))} required /></label>{error && <p className="auth-error" role="alert">{error}</p>}<button className="auth-submit" type="submit" disabled={verificationLoading || resendLoading}>{verificationLoading ? "..." : verificationText.verify}<span>↗</span></button></form><div className="auth-code-actions"><button type="button" onClick={() => void handleResendCode()} disabled={resendLoading || verificationLoading}>{resendLoading ? "..." : verificationText.resend}</button><button type="button" onClick={() => { setVerificationChallenge(null); setVerificationCode(""); setError(""); }}>{verificationText.back}</button></div></div>
         </section>
         <footer className="auth-footer"><span>© 2026 Slidegen</span><span>Ideas into slides.</span></footer>

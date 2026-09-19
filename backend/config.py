@@ -85,12 +85,14 @@ AUTH_OTP_MAX_ATTEMPTS = int(os.getenv("AUTH_OTP_MAX_ATTEMPTS", "5"))
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
 LLM_MODEL = "qwen"
 # Qwen chạy trên host: dùng localhost khi backend chạy trực tiếp,
-# và host.docker.internal khi backend chạy trong Docker.
-LLM_BASE_URL = (
+# và host.docker.internal khi backend chạy trong Docker. Cho phép từng môi
+# trường ghi đè rõ ràng, vì Qwen cũng có thể chạy ở container/service riêng.
+_DEFAULT_LLM_BASE_URL = (
     "http://host.docker.internal:8080/v1"
     if RUNNING_IN_DOCKER
     else "http://127.0.0.1:8080/v1"
 )
+LLM_BASE_URL = (os.getenv("LLM_BASE_URL") or _DEFAULT_LLM_BASE_URL).strip().rstrip("/")
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
 LLM_TEMPERATURE = 0.5
 # Max tokens trong response (Gemini Flash hỗ trợ lên đến 8k output tokens)

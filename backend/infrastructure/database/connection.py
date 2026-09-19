@@ -44,6 +44,7 @@ def init_db():
                 docx_usage_5h INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_active BOOLEAN DEFAULT 1,
+                email_verified BOOLEAN NOT NULL DEFAULT 1,
                 is_admin BOOLEAN NOT NULL DEFAULT 0
             )
         """)
@@ -467,6 +468,15 @@ def init_db():
         except Exception:
             pass  # Column already exists
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_admin ON users(is_admin)")
+
+        # Email verification is required once at registration. Legacy users
+        # are trusted as already verified so this migration never forces an
+        # existing account through a new login challenge.
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT 1")
+        except sqlite3.OperationalError as exc:
+            if "duplicate column name" not in str(exc).lower():
+                raise
 
         # Migrate usage from the old daily counters to the canonical rolling
         # five-hour window. Existing counters are preserved for the first

@@ -56,7 +56,14 @@ class AuthService:
             return None
         return user
 
-    def register_user(self, email: str, full_name: str, password: str) -> User:
+    def register_user(
+        self,
+        email: str,
+        full_name: str,
+        password: str,
+        *,
+        email_verified: bool = False,
+    ) -> User:
         existing_user = self.user_repo.get_by_email(email)
         if existing_user:
             raise HTTPException(status_code=400, detail="Email đã được đăng ký")
@@ -69,6 +76,7 @@ class AuthService:
             email=email,
             hashed_password=hashed_password,
             is_active=True,
+            email_verified=email_verified,
             created_at=None
         )
         created_user = self.user_repo.create(new_user)
