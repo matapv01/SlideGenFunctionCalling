@@ -17,7 +17,8 @@ class SqliteUserRepository(UserRepository):
             with get_db_connection() as conn:
                 row = conn.execute(
                     """
-                    SELECT chat_credits, docx_upload, max_docx_slides
+                    SELECT chat_credits, docx_upload, max_docx_slides,
+                           max_docx_file_mb, max_docx_total_mb
                     FROM subscription_plan_limits
                     WHERE tier = ?
                     """,
@@ -33,6 +34,8 @@ class SqliteUserRepository(UserRepository):
             "chat_messages": float(row["chat_credits"]),
             "docx_upload": int(row["docx_upload"]),
             "max_docx_slides": int(row["max_docx_slides"]),
+            "max_docx_file_mb": int(row["max_docx_file_mb"]),
+            "max_docx_total_mb": int(row["max_docx_total_mb"]),
         }
 
     @staticmethod

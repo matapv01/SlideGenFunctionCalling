@@ -17,7 +17,7 @@ from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Q
 from fastapi.responses import JSONResponse, StreamingResponse
 
 # Config & Domain
-from backend.config import DOCX_MAX_CHARS, OUTPUT_DIR, TEMP_DIR, THRESHOLD_CHAR_LIMIT
+from backend.config import OUTPUT_DIR, TEMP_DIR, THRESHOLD_CHAR_LIMIT
 
 # Dependencies
 from backend.api.dependencies import (
@@ -75,8 +75,27 @@ def _cleanup_temp_dir():
     except: pass
 
 
+def _validate_docx_upload_size(
+    content_size: int,
+    upload_limits: dict[str, int],
+) -> None:
+    """Validate raw DOCX size against the administrator-managed plan policy."""
+    max_file_bytes = int(upload_limits["max_file_bytes"])
+    if content_size <= max_file_bytes:
+        return
+
+    limit_mb = max_file_bytes / (1024 * 1024)
+    raise HTTPException(
+        status_code=413,
+        detail=(
+            f"Tệp DOCX vượt quá giới hạn {limit_mb:g} MB của gói hiện tại. "
+            "Vui lòng chọn tài liệu nhỏ hơn rồi thử lại."
+        ),
+    )
+
+
 def _check_docx_slide_limit(temp_path, subscription_service, user):
-    """Reject oversized DOCX files before preprocessing or slide planning."""
+    """Validate the estimated slide count before planning the DOCX."""
     try:
         from docx import Document
 
@@ -98,16 +117,6 @@ def _check_docx_slide_limit(temp_path, subscription_service, user):
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
                         visit_paragraph(paragraph)
-
-        if DOCX_MAX_CHARS > 0 and content_chars > DOCX_MAX_CHARS:
-            raise HTTPException(
-                status_code=413,
-                detail=(
-                    f"Tài liệu quá dài ({content_chars:,} ký tự). "
-                    f"Hệ thống chỉ hỗ trợ tối đa {DOCX_MAX_CHARS:,} ký tự cho mỗi DOCX. "
-                    "Vui lòng rút ngắn tài liệu rồi thử lại."
-                ),
-            )
 
         chars_per_slide = max(1, THRESHOLD_CHAR_LIMIT)
         content_slide_estimate = math.ceil(content_chars / chars_per_slide)
@@ -249,9 +258,12 @@ async def generate_from_docx_normal(
     project_name = normalize_project_name(os.path.splitext(original_filename)[0])
     output_folder = prepare_output_folder(os.path.splitext(original_filename)[0])
 
+    upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
+    content = await file.read(upload_limits["max_file_bytes"] + 1)
+    _validate_docx_upload_size(len(content), upload_limits)
+
     temp_path = _new_temp_docx_path(original_filename)
     with open(temp_path, "wb") as f:
-        content = await file.read()
         f.write(content)
 
     try:
@@ -347,7 +359,9 @@ async def prepare_docx_stream(
 
     original_filename = Path(file.filename).name
     temp_path = _new_temp_docx_path(original_filename)
-    content = await file.read()
+    upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
+    content = await file.read(upload_limits["max_file_bytes"] + 1)
+    _validate_docx_upload_size(len(content), upload_limits)
     with open(temp_path, "wb") as f:
         f.write(content)
 
@@ -545,7 +559,9 @@ async def create_manual_session_from_docx(
 
     original_filename = Path(file.filename).name
     temp_path = _new_temp_docx_path(original_filename)
-    content = await file.read()
+    upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
+    content = await file.read(upload_limits["max_file_bytes"] + 1)
+    _validate_docx_upload_size(len(content), upload_limits)
     with open(temp_path, "wb") as f:
         f.write(content)
 

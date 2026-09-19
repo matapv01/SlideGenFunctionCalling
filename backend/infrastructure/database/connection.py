@@ -385,8 +385,8 @@ def init_db():
                 # managed from the Admin page. INSERT OR IGNORE above ensures
                 # existing administrator-edited values remain authoritative.
                 ("free", 20, 3, 30, 10, 50),
-                ("plus", 50, 10, 50, 10, 50),
-                ("ultra", 100, 20, 50, 10, 50),
+                ("plus", 50, 10, 50, 20, 100),
+                ("ultra", 100, 20, 50, 40, 200),
             ),
         )
 

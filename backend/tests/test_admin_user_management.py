@@ -98,3 +98,55 @@ def test_admin_role_is_persisted_and_cannot_remove_the_last_admin(
             target_user_id=first_id,
             is_admin=False,
         )
+
+
+def test_admin_can_set_individual_docx_limits_for_each_plan(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        connection,
+        "DATABASE_PATH",
+        str(tmp_path / "admin-plan-limits.db"),
+    )
+    connection.init_db()
+
+    user_id = _insert_user("plan-admin@example.com", datetime.now())
+    user_repo = SqliteUserRepository()
+    user_repo.set_admin_status(user_id, True)
+    service = SubscriptionService(user_repo, SqliteUsageConfigRepository())
+
+    service.update_admin_usage_config(
+        {},
+        {},
+        {
+            "free": {
+                "chat_credits": 10,
+                "docx_upload": 2,
+                "max_docx_slides": 20,
+                "max_docx_file_mb": 5,
+                "max_docx_total_mb": 15,
+            },
+            "plus": {
+                "chat_credits": 50,
+                "docx_upload": 10,
+                "max_docx_slides": 50,
+                "max_docx_file_mb": 20,
+                "max_docx_total_mb": 100,
+            },
+            "ultra": {
+                "chat_credits": 100,
+                "docx_upload": 20,
+                "max_docx_slides": 100,
+                "max_docx_file_mb": 50,
+                "max_docx_total_mb": 300,
+            },
+        },
+    )
+
+    config = service.get_admin_usage_config()
+    assert config["plan_limits"]["free"]["max_docx_file_mb"] == 5
+    assert config["plan_limits"]["free"]["max_docx_total_mb"] == 15
+    assert config["plan_limits"]["plus"]["max_docx_file_mb"] == 20
+    assert config["plan_limits"]["ultra"]["max_docx_total_mb"] == 300
+    assert service.get_upload_limits_for_user(user_id) == {
+        "max_file_bytes": 5 * 1024 * 1024,
+        "max_total_bytes": 15 * 1024 * 1024,
+    }

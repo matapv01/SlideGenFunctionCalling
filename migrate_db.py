@@ -141,9 +141,12 @@ def migrate_database():
             VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
-                ("free", 2, 3, 50, 10, 50),
-                ("plus", 10, 10, 50, 10, 50),
-                ("ultra", -1, -1, -1, 10, 50),
+                # Bootstrap values are only for a database that has never
+                # received an admin policy. Existing rows are preserved by
+                # INSERT OR IGNORE; runtime changes always come from Admin.
+                ("free", 20, 3, 30, 10, 50),
+                ("plus", 50, 10, 50, 20, 100),
+                ("ultra", 100, 20, 50, 40, 200),
             ),
         )
 

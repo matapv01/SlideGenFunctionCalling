@@ -151,6 +151,12 @@ class SubscriptionService:
                 raise ValueError(
                     f"Unsupported plan tier: {', '.join(sorted(unknown_tiers))}"
                 )
+            missing_tiers = allowed_tiers - set(plan_limits)
+            if missing_tiers:
+                raise ValueError(
+                    "Cần cấu hình đầy đủ các plan: "
+                    + ", ".join(sorted(missing_tiers))
+                )
             for tier, values in plan_limits.items():
                 chat_credits = float(values["chat_credits"])
                 docx_upload = int(values["docx_upload"])

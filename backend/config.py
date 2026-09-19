@@ -183,10 +183,6 @@ SLIDE_CHAR_LIMIT = 600
 CONTENT_CHAR_LIMIT_FOR_SPLIT = 800
 # Giới hạn ký tự cho 1 chunk content (cũng dùng để ước lượng số slide)
 THRESHOLD_CHAR_LIMIT = 800
-# Hard input limit checked before document preprocessing/planning.
-# 40,000 characters is equivalent to the current 50-slide estimate at
-# THRESHOLD_CHAR_LIMIT characters per slide.
-DOCX_MAX_CHARS = 40_000
 # LangGraph steps needed by long-document preprocessing and slide batches.
 WORKFLOW_RECURSION_LIMIT = 2000
 

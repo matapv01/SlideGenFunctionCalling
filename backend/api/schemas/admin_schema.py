@@ -13,8 +13,10 @@ class PlanLimit(BaseModel):
     chat_credits: float
     docx_upload: int
     max_docx_slides: int
-    max_docx_file_mb: int = 10
-    max_docx_total_mb: int = 50
+    # Require both values in every admin payload. An omitted value must not
+    # silently replace a saved policy with a code-level default.
+    max_docx_file_mb: int
+    max_docx_total_mb: int
 
 
 class AdminUsageConfigResponse(BaseModel):

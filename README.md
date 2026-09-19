@@ -20,6 +20,14 @@ phần trăm usage của từng model/effort, limit của từng plan, quản l�
 lại mật khẩu, reset usage và cấp/gỡ quyền admin. Backend kiểm tra quyền ở mỗi
 request; thay đổi role có hiệu lực ngay mà không cần rebuild.
 
+Trong bảng **Giới hạn plan**, hai cột DOCX là nguồn cấu hình duy nhất cho việc
+upload tài liệu: `DOCX tối đa / file (MB)` giới hạn từng file, còn
+`DOCX tối đa / cuộc trò chuyện (MB)` giới hạn tổng tất cả file đã đính kèm trong
+một conversation. Hai giá trị này được áp dụng riêng theo plan `Free`, `Plus` và
+`Ultra` cho cả chatbot RAG lẫn các luồng upload DOCX cũ; không cần sửa code hay
+`.env`. Mức bootstrap hiện tại là `Free: 10/50 MB`, `Plus: 20/100 MB`,
+`Ultra: 40/200 MB`. Giới hạn file không được lớn hơn giới hạn conversation.
+
 ### Trang quản trị
 
 Sau khi đăng nhập bằng tài khoản admin, mở trực tiếp:

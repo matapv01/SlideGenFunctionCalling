@@ -3,15 +3,14 @@ from datetime import date
 
 import pytest
 from fastapi import HTTPException
-from docx import Document
 
 from backend.api.constants import EventTypes
 from backend.api.v1.generate_router import (
     _check_docx_slide_limit,
     _run_stream_task,
+    _validate_docx_upload_size,
     _workflow_error_payload,
 )
-from backend.config import DOCX_MAX_CHARS
 from backend.application.services.subscription_service import SubscriptionService
 from backend.domain.entities.user import User
 
@@ -51,22 +50,19 @@ def test_docx_slide_limit_is_expanded_and_has_clear_error() -> None:
     assert "50" in str(error.value.detail)
 
 
-def test_docx_character_limit_is_rejected_before_workflow(tmp_path) -> None:
-    document = Document()
-    document.add_paragraph("x" * (DOCX_MAX_CHARS + 1))
-    docx_path = tmp_path / "oversized.docx"
-    document.save(docx_path)
-
+def test_docx_file_size_limit_comes_from_the_admin_policy() -> None:
+    max_file_bytes = 2 * 1024 * 1024
     with pytest.raises(HTTPException) as error:
-        _check_docx_slide_limit(
-            docx_path,
-            _FakeSubscriptionService(),
-            _user(),
+        _validate_docx_upload_size(
+            max_file_bytes + 1,
+            {
+                "max_file_bytes": max_file_bytes,
+                "max_total_bytes": 10 * 1024 * 1024,
+            },
         )
 
     assert error.value.status_code == 413
-    assert "ký tự" in str(error.value.detail)
-    assert f"{DOCX_MAX_CHARS:,}" in str(error.value.detail)
+    assert "2 MB" in str(error.value.detail)
 
 
 def test_workflow_error_payload_keeps_document_too_long_reason() -> None:
