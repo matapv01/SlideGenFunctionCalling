@@ -531,56 +531,6 @@
   .sgx-home.workspace-page .workspace-slide-stream-drawer { top: 12px; right: 12px; bottom: 12px; width: min(360px, calc(100vw - 24px)); }
 }
 
-.sgx-home.workspace-page .workspace-brand-actions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-}
-
-.sgx-home.workspace-page .workspace-theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 30px;
-  padding: 0 8px;
-  border: 1px solid #ffffff24;
-  border-radius: 999px;
-  background: #ffffff08;
-  color: #f5a08a;
-  cursor: pointer;
-  font: 10px "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  transition: border-color .16s ease, background .16s ease, color .16s ease;
-}
-
-.sgx-home.workspace-page .workspace-theme-toggle:hover,
-.sgx-home.workspace-page .workspace-theme-toggle:focus-visible {
-  border-color: #f5a08a88;
-  background: #f5a08a12;
-  outline: 0;
-}
-
-.sgx-home.workspace-page .workspace-theme-toggle > span {
-  font-size: 15px;
-  line-height: 1;
-}
-
-.sgx-home.workspace-page.sidebar-collapsed .workspace-brand-actions {
-  display: none;
-}
-
-/* Theme switching is shared by the app-level control on every route. */
-.sgx-home.workspace-page .workspace-brand-actions {
-  display: none;
-}
-
-@media (max-width: 760px) {
-  .sgx-home.workspace-page .workspace-brand-actions {
-    margin-left: auto;
-  }
-}
-
 /* Make chat messages easier to scan without changing the compact layout. */
 .sgx-home.workspace-page .chat-assistant-message .chat-markdown {
   font-size: 14px;
@@ -590,4 +540,168 @@
 .sgx-home.workspace-page .chat-user-bubble p {
   font-size: 14px;
   line-height: 1.55;
+}
+
+/* Keep the chat readable and the slide process panel themed in light mode. */
+html:not(.dark) .sgx-home.workspace-page .chat-assistant-message .chat-markdown { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown h1,
+html:not(.dark) .sgx-home.workspace-page .chat-markdown h2,
+html:not(.dark) .sgx-home.workspace-page .chat-markdown h3,
+html:not(.dark) .sgx-home.workspace-page .chat-markdown h4 { color: #202a23; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown strong { color: #27342b; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown em { color: #3f4b43; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown code { border-color: #d9d6ce; background: #eeece6; color: #a34836; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown pre { border-color: #dedbd3; background: #f0eee9; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown pre code { color: #3c4941; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown .chat-math { color: #303c34; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown .chat-math-block,
+html:not(.dark) .sgx-home.workspace-page .chat-markdown .chat-math-fallback.is-block { border-color: #ddd9d1; background: #f2f0eb; color: #27342b; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown blockquote { color: #59645c; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown hr { border-top-color: #dedbd3; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown .chat-citation { background: #fff0ea; color: #a34836; }
+html:not(.dark) .sgx-home.workspace-page .chat-markdown button.chat-citation:hover,
+html:not(.dark) .sgx-home.workspace-page .chat-markdown button.chat-citation:focus-visible { color: #873b2c; }
+html:not(.dark) .sgx-home.workspace-page .chat-sources-heading { color: #657168; }
+html:not(.dark) .sgx-home.workspace-page .chat-source-chip { border-color: #d9d6ce; background: #f5f3ef; color: #4d5a51; }
+html:not(.dark) .sgx-home.workspace-page .chat-source-chip:hover,
+html:not(.dark) .sgx-home.workspace-page .chat-source-chip:focus-visible,
+html:not(.dark) .sgx-home.workspace-page .chat-source-chip.active { background: #fff0ea; color: #2d3a31; }
+html:not(.dark) .sgx-home.workspace-page .chat-source-chip-title { color: inherit; }
+html:not(.dark) .sgx-home.workspace-page .chat-source-panel-body > p { color: #4d5a51; }
+html:not(.dark) .sgx-home.workspace-page .chat-source-panel-body > p span,
+html:not(.dark) .sgx-home.workspace-page .chat-source-panel-excerpt > span { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .chat-source-panel-excerpt blockquote { background: #f2f0eb; color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .chat-message-attachment { border-color: #ddd9d1; background: #f5f3ef; }
+html:not(.dark) .sgx-home.workspace-page .chat-message-attachment strong { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .chat-pending-message { color: #5f6b62; }
+html:not(.dark) .sgx-home.workspace-page .chat-thinking-step,
+html:not(.dark) .sgx-home.workspace-page .chat-message-meta,
+html:not(.dark) .sgx-home.workspace-page .chat-message-meta button { color: #6c776f; }
+html:not(.dark) .sgx-home.workspace-page .chat-pending-loader { border-color: #d8d5cd; border-top-color: #d97861; }
+html:not(.dark) .sgx-home.workspace-page .chat-error,
+html:not(.dark) .sgx-home.workspace-page .project-action-message,
+html:not(.dark) .sgx-home.workspace-page .subscription-message { border-color: #efb5a5; background: #fff1ec; color: #a34836; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-copy strong,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-copy strong { color: #2d3a31; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-copy span,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-deleted,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-copy small { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-progress { background: #e6e2da; }
+
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-panel {
+  border-color: #d9d6ce;
+  background: #fbfaf7;
+  box-shadow: 0 12px 28px #33423818;
+  color: #465149;
+}
+html:not(.dark) .sgx-home.workspace-page .workspace-slide-stream-drawer .chat-slide-stream-panel { box-shadow: 0 18px 42px #33423830; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-header { border-bottom-color: #e2dfd8; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-header h3 { color: #202a23; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-header button { border-color: #d7d4cb; background: #f4f2ed; color: #647068; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress-copy { color: #657168; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress-copy strong { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress { background: #e5e2db; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-description { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-list { scrollbar-color: #a8afa7 #efede8; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-list::-webkit-scrollbar-track { background: #efede8; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-list::-webkit-scrollbar-thumb { background: #a8afa7; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-card { border-color: #dedbd3; background: #ffffff; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-preview > span { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-card-meta strong { color: #344138; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-empty { border-color: #c9c6bd; color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-complete { border-top-color: #e2dfd8; color: #68746b; }
+
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-body { scrollbar-color: #a8afa7 transparent; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-body::-webkit-scrollbar-thumb { background: #a8afa7; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-section { border-bottom-color: #e2dfd8; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-copy { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-copy.muted,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-document { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-answer,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-setting-grid span { border-color: #dedbd3; background: #f5f3ef; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-answer span,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-setting-grid small,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-count-grid span { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-answer strong,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-setting-grid strong,
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-count-grid strong { color: #2d3a31; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-plan-count-grid { border-color: #efb5a5; background: #fff4ef; }
+
+/* Generation indicators should remain paper-white on every light-mode route. */
+html:not(.dark) .sgx-global-slide-generation-indicator button {
+  border-color: #e3a99a;
+  background: #fffefa;
+  color: #27312a;
+  box-shadow: 0 14px 34px #33423824;
+}
+html:not(.dark) .sgx-global-slide-generation-indicator button:hover { border-color: #d97861; background: #fff4ef; }
+html:not(.dark) .sgx-global-slide-generation-copy strong { color: #27312a; }
+html:not(.dark) .sgx-global-slide-generation-copy small { color: #68746b; }
+html:not(.dark) .sgx-global-slide-generation-arrow { color: #c65f49; }
+html:not(.dark) .sgx-global-slide-generation-spinner { border-color: #d9d6ce; border-top-color: #27312a; }
+
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card {
+  border-color: #efb5a5;
+  background: #fffefa;
+  box-shadow: 0 9px 22px #33423818;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-progress { background: #e6e2da; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-copy strong { color: #2d3a31; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-generation-card-copy small { color: #68746b; }
+
+/* Keep the composer controls readable against the light paper background. */
+html:not(.dark) .sgx-home.workspace-page .composer-model-button {
+  color: #344138;
+  font-size: 11px;
+  font-weight: 600;
+}
+html:not(.dark) .sgx-home.workspace-page .composer-model-button span {
+  color: #5c6a61;
+  font-size: 10px;
+  font-weight: 500;
+}
+html:not(.dark) .sgx-home.workspace-page .composer-model-button:hover,
+html:not(.dark) .sgx-home.workspace-page .composer-model-button:focus-visible { color: #202a23; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-inline { gap: 9px; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-meter { gap: 4px; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-circle {
+  width: 27px;
+  height: 27px;
+  background: conic-gradient(var(--usage-color) var(--usage-progress), #d9d6ce 0);
+}
+html:not(.dark) .sgx-home.workspace-page .composer-usage-circle > span {
+  width: 21px;
+  height: 21px;
+  background: #fffefa;
+  color: #344138;
+  font-size: 8px;
+  font-weight: 700;
+}
+html:not(.dark) .sgx-home.workspace-page .composer-usage-circle { --usage-color: #6e8a6d; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-meter.is-warning .composer-usage-circle { --usage-color: #b47b14; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-meter.is-critical .composer-usage-circle { --usage-color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-meter.is-unlimited .composer-usage-circle { --usage-color: #3f7a6a; }
+html:not(.dark) .sgx-home.workspace-page .composer-usage-label {
+  color: #4f5b52;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+}
+
+/* The collapsed sidebar keeps the new mark while hiding only the wordmark. */
+.sgx-home.workspace-page.sidebar-collapsed .workspace-brand .slidegen-logo {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  gap: 0;
+  overflow: visible;
+}
+.sgx-home.workspace-page.sidebar-collapsed .workspace-brand .slidegen-logo-image {
+  display: none;
+}
+.sgx-home.workspace-page.sidebar-collapsed .workspace-brand .slidegen-logo-mark-image {
+  display: block;
+  width: 30px;
+  height: 30px;
 }
