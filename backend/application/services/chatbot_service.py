@@ -1006,6 +1006,37 @@ class ChatbotService:
             job = self._chat_message_jobs.get(job_id) if job_id else None
             return self._chat_message_snapshot(job) if job else None
 
+    def cancel_active_chat_message(self, user_id: int) -> bool:
+        """Interrupt the user's current ordinary chat response."""
+        with self._active_slide_generations_lock:
+            job_id = self._active_chat_message_jobs.get(user_id)
+            job = self._chat_message_jobs.get(job_id) if job_id else None
+            if job is None or job.finished:
+                return False
+
+            status = {
+                "stage": "cancelled",
+                "title": "Stopped",
+                "description": "The response was interrupted.",
+                "message": "Stopped",
+            }
+            job.finished = True
+            job.state["phase"] = "cancelled"
+            job.state["status"] = status
+            event = (len(job.events) + 1, "cancelled", status)
+            job.events.append(event)
+            subscribers = list(job.subscribers)
+            task = job.task
+            if self._active_chat_message_jobs.get(user_id) == job.id:
+                self._active_chat_message_jobs.pop(user_id, None)
+
+        if task is not None and not task.done():
+            task.cancel()
+        for queue in subscribers:
+            if not job.loop.is_closed():
+                job.loop.call_soon_threadsafe(queue.put_nowait, event)
+        return True
+
     def subscribe_chat_message(
         self,
         job_id: str,
@@ -1043,7 +1074,7 @@ class ChatbotService:
             event = (sequence, str(event_type), payload)
             job.events.append(event)
             self._apply_chat_message_event(job, event[1], payload)
-            if event[1] in {"complete", "error_event"}:
+            if event[1] in {"complete", "error_event", "cancelled"}:
                 job.finished = True
             subscribers = list(job.subscribers)
 
@@ -1085,6 +1116,15 @@ class ChatbotService:
                 "title": "Chat failed",
                 "description": message,
                 "message": "Something went wrong",
+            }
+            return
+        if event_type == "cancelled":
+            job.state["phase"] = "cancelled"
+            job.state["status"] = {
+                "stage": "cancelled",
+                "title": "Stopped",
+                "description": "The response was interrupted.",
+                "message": "Stopped",
             }
 
     @staticmethod

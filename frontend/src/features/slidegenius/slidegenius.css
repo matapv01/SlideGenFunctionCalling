@@ -1548,3 +1548,18 @@ html:not(.dark) .sg-auth .auth-verification-alert-icon {
 html:not(.dark) .sg-auth .auth-verification-alert strong {
   color: #b65f4c;
 }
+
+.sgx-home.workspace-page .composer-send.composer-stop {
+  background: #f5a08a;
+  color: #202020;
+  font-size: 11px;
+}
+
+.sgx-home.workspace-page .composer-send.composer-stop span {
+  display: block;
+  line-height: 1;
+}
+
+.sgx-home.workspace-page .composer-send.composer-stop:hover {
+  background: #ffb09c;
+}

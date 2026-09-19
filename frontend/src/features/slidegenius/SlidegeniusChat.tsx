@@ -9,6 +9,7 @@ import {
   ChatMessageJob,
   ChatSession,
   archiveChatSession,
+  cancelActiveChatMessage,
   createChatSession,
   deleteChatDocument,
   loadChatbotConfig,
@@ -413,6 +414,8 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
   // Otherwise a slower document request can populate the new conversation.
   const sessionViewRequestRef = useRef(0);
   const chatMessageJobRef = useRef<string | null>(null);
+  const chatMessageAbortControllerRef = useRef<AbortController | null>(null);
+  const chatCancelRequestedRef = useRef(false);
   const clarificationInputRef = useRef<HTMLInputElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const lastOpenRequestRef = useRef(0);
@@ -548,6 +551,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         copyMessage: "Sao chép tin nhắn",
         unavailable: "Không thể tải cuộc trò chuyện.",
         sending: "Đang suy nghĩ...",
+        stopResponse: "Dừng phản hồi",
         documentThinkingTitle: "Đang phân tích tài liệu",
         documentThinkingSteps: [
           "Đang đọc cấu trúc DOCX",
@@ -619,6 +623,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         copyMessage: "Copy message",
         unavailable: "Unable to load conversations.",
         sending: "Thinking...",
+        stopResponse: "Stop response",
         documentThinkingTitle: "Analyzing document",
         documentThinkingSteps: [
           "Reading the DOCX structure",
@@ -752,6 +757,10 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
       applyChatTurnResult(optimisticId, chatTurnFromStreamEvent(event.data));
       setActiveChatJob(null);
       void loadSubscriptionUsage();
+      return;
+    }
+    if (event.type === "cancelled") {
+      setActiveChatJob(null);
       return;
     }
     if (event.type === "error_event") {
@@ -929,12 +938,17 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     setThinkingMode(job.document_ids.length || sessionDocuments.length ? "document" : "conversation");
     setDocumentThinkingStep(0);
     chatMessageJobRef.current = job.id;
+    const controller = new AbortController();
+    chatMessageAbortControllerRef.current = controller;
+    chatCancelRequestedRef.current = false;
 
     void streamChatMessageJob(
       job.id,
       (event) => handleChatStreamEvent(optimisticId, event),
+      controller.signal,
     )
       .catch((requestError) => {
+        if (chatCancelRequestedRef.current) return;
         setMessages((current) => current.filter((item) => item.id !== optimisticId));
         setMessage(job.query);
         setUploadedDocuments(pendingDocuments);
@@ -942,6 +956,10 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
       })
       .finally(() => {
         if (chatMessageJobRef.current === job.id) chatMessageJobRef.current = null;
+        if (chatMessageAbortControllerRef.current === controller) {
+          chatMessageAbortControllerRef.current = null;
+        }
+        chatCancelRequestedRef.current = false;
         setSending(false);
         setThinkingMode(null);
         setDocumentThinkingStep(0);
@@ -1238,6 +1256,23 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     setShowScrollToLatest(false);
   };
 
+  const stopChatResponse = async () => {
+    if (!sending) return;
+    chatCancelRequestedRef.current = true;
+    setError("");
+    try {
+      const result = await cancelActiveChatMessage();
+      if (result.cancelled) {
+        chatMessageAbortControllerRef.current?.abort();
+      } else {
+        chatCancelRequestedRef.current = false;
+      }
+    } catch (requestError) {
+      chatCancelRequestedRef.current = false;
+      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+    }
+  };
+
   const sendMessageContent = async (
     cleanMessage: string,
     options: SendMessageOptions = {},
@@ -1314,6 +1349,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     setDocumentThinkingStep(0);
     setActiveChatJob(null);
     chatMessageJobRef.current = String(optimisticMessage.id);
+    const controller = new AbortController();
+    chatMessageAbortControllerRef.current = controller;
+    chatCancelRequestedRef.current = false;
     try {
       await streamChatMessage(
         sessionId,
@@ -1322,15 +1360,21 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         effort,
         options.slideCount,
         (event) => handleChatStreamEvent(optimisticMessage.id, event),
-        undefined,
+        controller.signal,
         documentIds,
       );
     } catch (requestError) {
-      setMessages((current) => current.filter((item) => item.id !== optimisticMessage.id));
-      setMessage(cleanMessage);
-      setUploadedDocuments(pendingDocuments);
-      setError(requestError instanceof Error ? requestError.message : text.unavailable);
+      if (!chatCancelRequestedRef.current) {
+        setMessages((current) => current.filter((item) => item.id !== optimisticMessage.id));
+        setMessage(cleanMessage);
+        setUploadedDocuments(pendingDocuments);
+        setError(requestError instanceof Error ? requestError.message : text.unavailable);
+      }
     } finally {
+      if (chatMessageAbortControllerRef.current === controller) {
+        chatMessageAbortControllerRef.current = null;
+      }
+      chatCancelRequestedRef.current = false;
       setSending(false);
       setThinkingMode(null);
       setDocumentThinkingStep(0);
@@ -1936,7 +1980,19 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
               <UsageMeter label={text.chatUsageShort} percent={chatUsagePercent} detail={chatUsageTooltip} />
               <UsageMeter label={text.documentUsageShort} percent={documentUsagePercent} detail={documentUsageTooltip} />
             </div>
-            <button className="composer-send" type="submit" aria-label="Send message" disabled={sending || uploading || !message.trim()}>↗</button>
+            {sending ? (
+              <button
+                className="composer-send composer-stop"
+                type="button"
+                aria-label={text.stopResponse}
+                title={text.stopResponse}
+                onClick={() => void stopChatResponse()}
+              >
+                <span aria-hidden="true">■</span>
+              </button>
+            ) : (
+              <button className="composer-send" type="submit" aria-label="Send message" disabled={uploading || !message.trim()}>↗</button>
+            )}
           </div>
         </form>
         <p className="chat-disclaimer">Slidegenius can make mistakes. Review important work before sharing.</p>

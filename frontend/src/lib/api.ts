@@ -370,6 +370,11 @@ export const api = {
   getActiveChatMessageJob: () =>
     request<ChatMessageJobResponse | null>("/chat/message-jobs/active"),
 
+  cancelActiveChatMessage: () =>
+    request<{ cancelled: boolean }>("/chat/message-jobs/active/cancel", {
+      method: "POST",
+    }),
+
   streamChatMessage: (
     sessionId: string,
     data: { content: string; model?: string; effort?: string; slide_count?: number; document_ids?: string[] },

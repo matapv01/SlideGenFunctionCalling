@@ -318,7 +318,7 @@ def _chat_message_stream(
             while True:
                 _, event_type, payload = await events.get()
                 yield _sse_event(event_type, payload)
-                if event_type in {"complete", "error_event"}:
+                if event_type in {"complete", "error_event", "cancelled"}:
                     break
         finally:
             # The detached task keeps working after the browser disconnects.
@@ -345,6 +345,15 @@ async def get_active_chat_message_job(
 ) -> dict | None:
     """Return an ordinary chat job that a new tab can reconnect to."""
     return chatbot.get_active_chat_message(current_user.id)
+
+
+@router.post("/message-jobs/active/cancel")
+async def cancel_active_chat_message(
+    current_user: UserResponse = Depends(get_current_active_user),
+    chatbot: ChatbotService = Depends(get_chatbot_service),
+) -> dict[str, bool]:
+    """Interrupt the user's current ordinary chat response."""
+    return {"cancelled": chatbot.cancel_active_chat_message(current_user.id)}
 
 
 @router.get("/message-jobs/{job_id}/stream")

@@ -65,6 +65,10 @@ export function loadActiveChatMessageJob() {
   return api.getActiveChatMessageJob();
 }
 
+export function cancelActiveChatMessage() {
+  return api.cancelActiveChatMessage();
+}
+
 export function loadChatSessions() {
   return api.getChatSessions();
 }
