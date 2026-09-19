@@ -64,6 +64,19 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "").strip()
 GOOGLE_FRONTEND_URL = os.getenv("GOOGLE_FRONTEND_URL", "").strip().rstrip("/")
 
+# Email verification. SMTP is intentionally explicit so password and Google
+# sign-ins both use the same second step before an access token is issued.
+SMTP_HOST = os.getenv("SMTP_HOST", "").strip()
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "").strip()
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", SMTP_USERNAME).strip()
+SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").strip().lower() in {"1", "true", "yes", "on"}
+SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "false").strip().lower() in {"1", "true", "yes", "on"}
+AUTH_OTP_EXPIRE_MINUTES = int(os.getenv("AUTH_OTP_EXPIRE_MINUTES", "10"))
+AUTH_OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("AUTH_OTP_RESEND_COOLDOWN_SECONDS", "45"))
+AUTH_OTP_MAX_ATTEMPTS = int(os.getenv("AUTH_OTP_MAX_ATTEMPTS", "5"))
+
 # ============================================================================
 # HYPERPARAMETERS - Tùy chỉnh để điều chỉnh hành vi của hệ thống
 # ============================================================================

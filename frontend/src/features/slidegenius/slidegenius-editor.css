@@ -154,3 +154,84 @@
     transition: none;
   }
 }
+
+/* Keep the editor on the same account-wide theme as Settings and Projects. */
+html:not(.dark) .sg-editor-shell {
+  --background: 42 22% 97%;
+  --foreground: 60 7% 13%;
+  --card: 42 25% 99%;
+  --card-foreground: 60 7% 13%;
+  --popover: 42 25% 99%;
+  --popover-foreground: 60 7% 13%;
+  --secondary: 42 12% 92%;
+  --secondary-foreground: 60 7% 13%;
+  --muted: 42 12% 92%;
+  --muted-foreground: 60 4% 43%;
+  --border: 60 5% 82%;
+  --input: 60 5% 82%;
+  color-scheme: light;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-toolbar {
+  border-color: #20202018;
+  background: #f7f6f1ed;
+  box-shadow: 0 10px 28px #20202012;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-brand {
+  color: #202020;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-brand b {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-workspace {
+  background: #e8e7e1;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-sidebar,
+html:not(.dark) .sg-editor-shell .sg-editor-properties {
+  border-color: #20202018;
+  background: #faf9f5;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-canvas {
+  background-color: #e5e4de !important;
+  scrollbar-color: #aaa99f transparent;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-canvas::-webkit-scrollbar-thumb,
+html:not(.dark) .sg-editor-shell .sg-editor-sidebar::-webkit-scrollbar-thumb,
+html:not(.dark) .sg-editor-shell .sg-editor-properties::-webkit-scrollbar-thumb {
+  background: #aaa99f;
+  background-clip: padding-box;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-canvas::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .sg-editor-shell .sg-editor-sidebar::-webkit-scrollbar-thumb:hover,
+html:not(.dark) .sg-editor-shell .sg-editor-properties::-webkit-scrollbar-thumb:hover {
+  background: #777872;
+  background-clip: padding-box;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-popover,
+html:not(.dark) .sg-editor-popover {
+  border-color: #2020201c;
+  background: #fffefa;
+  color: #30312e;
+  box-shadow: 0 18px 38px #20202020;
+}
+
+html:not(.dark) .sg-editor-shell .sg-editor-popover [data-highlighted],
+html:not(.dark) .sg-editor-popover [data-highlighted] {
+  background: #2020200a;
+  color: #b65f4c;
+}
+
+html:not(.dark) .sg-editor-tooltip {
+  border-color: #2020201c;
+  background: #fffefa;
+  color: #30312e;
+  box-shadow: 0 10px 24px #20202020;
+}

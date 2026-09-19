@@ -15,7 +15,7 @@ type ThemeChoice = "light" | "dark";
 export default function SlidegeniusSettings() {
   const { user, updateUser } = useAuth();
   const { language, setLanguage, t } = useLanguage();
-  const { theme, toggleTheme, autoTheme, setAutoTheme } = useTheme();
+  const { theme, autoTheme, setTheme, setAutoTheme } = useTheme();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [fullName, setFullName] = useState("");
@@ -195,8 +195,13 @@ export default function SlidegeniusSettings() {
       }
       if (hasAppearanceChanges) {
         setLanguage(draftLanguage);
-        if (draftAutoTheme !== autoTheme) setAutoTheme(draftAutoTheme);
-        if (!draftAutoTheme && draftTheme !== theme) toggleTheme();
+        if (draftAutoTheme) {
+          if (!autoTheme) setAutoTheme(true);
+        } else if (autoTheme || draftTheme !== theme) {
+          // Apply the selected mode directly. This also exits Auto mode,
+          // avoiding the old toggle-based race when switching from Auto.
+          setTheme(draftTheme);
+        }
         publishNotificationsEnabled(notificationsEnabled);
         savedAppearanceRef.current = {
           language: draftLanguage,
@@ -263,6 +268,18 @@ export default function SlidegeniusSettings() {
       ? (language === "vi" ? "Tối" : "Dark")
       : (language === "vi" ? "Sáng" : "Light");
 
+  const previewTheme = (nextTheme: ThemeChoice) => {
+    setDraftAutoTheme(false);
+    setDraftTheme(nextTheme);
+    // Apply the choice immediately; the account preference is persisted by Save.
+    setTheme(nextTheme);
+  };
+
+  const previewAutoTheme = () => {
+    setDraftAutoTheme(true);
+    setAutoTheme(true);
+  };
+
   return (
     <section className="workspace-panel settings-panel sgx-settings-panel">
       <div className="sgx-settings-layout">
@@ -314,9 +331,9 @@ export default function SlidegeniusSettings() {
         <div className="sgx-settings-section">
           <div className="sgx-settings-section-heading"><h3>{t.appearance_title}</h3><p>{t.appearance_subtitle}</p></div>
           <div className="sgx-settings-field"><span>{t.appearance_theme}</span><div className="sgx-settings-choice-grid">
-            <button type="button" className={!draftAutoTheme && draftTheme === "light" ? "selected" : ""} onClick={() => { setDraftAutoTheme(false); setDraftTheme("light"); }}>{t.appearance_theme_light}</button>
-            <button type="button" className={!draftAutoTheme && draftTheme === "dark" ? "selected" : ""} onClick={() => { setDraftAutoTheme(false); setDraftTheme("dark"); }}>{t.appearance_theme_dark}</button>
-            <button type="button" className={draftAutoTheme ? "selected" : ""} onClick={() => setDraftAutoTheme(true)}>{t.appearance_auto_theme}</button>
+            <button type="button" className={!draftAutoTheme && draftTheme === "light" ? "selected" : ""} onClick={() => previewTheme("light")}>{t.appearance_theme_light}</button>
+            <button type="button" className={!draftAutoTheme && draftTheme === "dark" ? "selected" : ""} onClick={() => previewTheme("dark")}>{t.appearance_theme_dark}</button>
+            <button type="button" className={draftAutoTheme ? "selected" : ""} onClick={previewAutoTheme}>{t.appearance_auto_theme}</button>
           </div></div>
           <label className="sgx-settings-field"><span>{t.appearance_language}<small>{t.appearance_language_hint}</small></span><select value={draftLanguage} onChange={(event) => setDraftLanguage(event.target.value as "vi" | "en")}><option value="vi">Tiếng Việt</option><option value="en">English</option></select></label>
           <label className="sgx-settings-switch"><span><b>{t.appearance_notifications}</b><small>{t.appearance_notifications_hint}</small></span><input type="checkbox" checked={notificationsEnabled} onChange={(event) => setNotificationsEnabled(event.target.checked)} /><i /></label>

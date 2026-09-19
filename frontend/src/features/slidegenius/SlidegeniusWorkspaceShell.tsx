@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/lib/api";
 import { ChatSlideStreamPanel } from "./ChatSlideStreamPanel";
 import { useSlideGeneration } from "./SlideGenerationContext";
@@ -31,6 +32,8 @@ const shellCopy = {
     currentPlan: "CURRENT PLAN",
     help: "Need a hand?",
     logout: "Log out",
+    useLightMode: "Use light mode",
+    useDarkMode: "Use dark mode",
   },
   vi: {
     tabs: { slidegenius: "Slidegenius", projects: "Quản lý dự án", manual: "Manual", guide: "Hướng dẫn", settings: "Cài đặt", admin: "Admin" },
@@ -42,6 +45,8 @@ const shellCopy = {
     currentPlan: "GÓI HIỆN TẠI",
     help: "Cần trợ giúp?",
     logout: "Đăng xuất",
+    useLightMode: "Chuyển sang giao diện sáng",
+    useDarkMode: "Chuyển sang giao diện tối",
   },
 } as const;
 
@@ -108,6 +113,7 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { language } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const text = shellCopy[language];
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -117,6 +123,14 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
   const initials = useMemo(() => userName.slice(0, 2).toUpperCase(), [userName]);
   const currentPlan = workspacePlanLabel(subscriptionTier, language);
   const isUltraPlan = subscriptionTier.toLowerCase() === "ultra";
+
+  const handleThemeToggle = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    void api.updateSettings({ theme: nextTheme }).catch(() => {
+      // Keep the local preference even when account settings are temporarily unavailable.
+    });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -138,6 +152,18 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
       <aside className="workspace-sidebar">
         <div className="workspace-brand-row">
           <Link className="workspace-brand" to="/"><span>slide</span><b>gen</b></Link>
+          <div className="workspace-brand-actions">
+            <button
+              className="workspace-theme-toggle"
+              type="button"
+              onClick={handleThemeToggle}
+              aria-label={theme === "dark" ? text.useLightMode : text.useDarkMode}
+              title={theme === "dark" ? text.useLightMode : text.useDarkMode}
+            >
+              <span aria-hidden="true">{theme === "dark" ? "☼" : "◐"}</span>
+              <small>{theme === "dark" ? "Light" : "Dark"}</small>
+            </button>
+          </div>
           <button
             className="workspace-collapse"
             type="button"

@@ -1,0 +1,84 @@
+.global-theme-toggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #20202022;
+  border-radius: 999px;
+  background: #ffffffee;
+  box-shadow: 0 10px 28px #2020201f;
+  backdrop-filter: blur(14px);
+}
+
+.global-theme-toggle button {
+  display: inline-flex;
+  min-width: 66px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #70736c;
+  cursor: pointer;
+  font: 10px/1 "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.global-theme-toggle button:hover,
+.global-theme-toggle button:focus-visible {
+  color: #202020;
+  outline: 0;
+  transform: translateY(-1px);
+}
+
+.global-theme-toggle button.active {
+  background: #202020;
+  color: #fff;
+}
+
+.global-theme-toggle button > span {
+  font-size: 14px;
+  line-height: 1;
+}
+
+html.dark .global-theme-toggle {
+  border-color: #ffffff26;
+  background: #262825ee;
+  box-shadow: 0 10px 28px #00000045;
+}
+
+html.dark .global-theme-toggle button {
+  color: #aeb1a8;
+}
+
+html.dark .global-theme-toggle button:hover,
+html.dark .global-theme-toggle button:focus-visible {
+  color: #f5f5ee;
+}
+
+html.dark .global-theme-toggle button.active {
+  background: #f5a08a;
+  color: #202020;
+}
+
+@media (max-width: 560px) {
+  .global-theme-toggle {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .global-theme-toggle button {
+    min-width: 42px;
+    padding: 8px;
+  }
+
+  .global-theme-toggle button small {
+    display: none;
+  }
+}

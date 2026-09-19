@@ -47,7 +47,6 @@ from backend.workflows.slidegen_workflow.tools.xml_tool import (
     generate_three_ideas_slide_xml,
     generate_ai_content_slide_xml,
     generate_two_ideas_slide_xml,
-    generate_our_history_slide_xml,
     generate_instructions_slide_xml,
     generate_split_content_slide_xml,
     generate_picture_quote_slide_xml,
@@ -378,33 +377,6 @@ class GenerateThreeIdeasSlideInput(BaseModel):
         description="Color of each idea description.",
     )
 
-class GenerateOurHistorySlideInput(BaseModel):
-    """Input schema for generate_our_history_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top of the content area. example: 'OUR HISTORY'")
-    event_titles: List[str] = Field(..., min_length=1, description="List of event headings displayed in vertically stacked history sections. Must have the same length as event_descriptions and event_years. example: ['SATURN', 'MARS', 'NEPTUNE']")
-    event_descriptions: List[str] = Field(..., min_length=1, description="List of supporting descriptions for each history event. Must have the same length as event_titles and event_years. example: ['Saturn is composed of hydrogen and helium.', 'Despite being red, Mars is actually a cold place.', 'Neptune is the farthest planet from the Sun.']")
-    event_years: List[str] = Field(..., min_length=1, description="List of year or timeline labels displayed beside each history event. Must have the same length as event_titles and event_descriptions. example: ['1998', '2005', '2024']")
-
-    @model_validator(mode="after")
-    def validate_event_lengths(self):
-        lengths = {
-            len(self.event_titles),
-            len(self.event_descriptions),
-            len(self.event_years),
-        }
-        if len(lengths) != 1:
-            raise ValueError(
-                "event_titles, event_descriptions, and event_years must have matching lengths"
-            )
-        return self
-    image_url: str = Field(default="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=85&w=1200&auto=format&fit=crop", description="URL for a portrait image sized 445 × 900 px with an approximately 1:2 aspect ratio.")    
-    background_color: str = Field(default="#151515", description="Background color of the slide.")
-    title_color: str = Field(default="#FFFFFF", description="Color of the main title text.")
-    heading_color: str = Field(default="#FFFFFF", description="Color of each event heading.")
-    body_color: str = Field(default="#F2F2F2", description="Color of each event description.")
-    year_color: str = Field(default="#FFFFFF", description="Color of each year or timeline label.")
-    line_color: str = Field(default="#E8E8E8", description="Color of the vertical timeline separator lines.")
 
 class GenerateInstructionsSlideInput(BaseModel):
     """Input schema for generate_instructions_slide_xml."""
@@ -820,12 +792,7 @@ CONTENT_TOOLS = [
         description="""Generates a split-layout three-ideas slide with a dark content area, a large title, three idea headings, three supporting descriptions, and a full-height image panel on the right. Ideal for explaining three concepts, comparisons, highlights, or key points.""",
         args_schema=GenerateThreeIdeasSlideInput
     ),
-    StructuredTool.from_function(
-    func=generate_our_history_slide_xml,
-    name="generate_our_history_slide_xml",
-    description="Generates a split-layout history slide with a dark content area on the left and a full-height image panel on the right. The content area contains a large title and multiple vertically stacked history events, with right-aligned headings and descriptions, year markers, and vertical separator lines. Ideal for company histories, project milestones, product evolution, timelines, and organizational growth.",
-    args_schema=GenerateOurHistorySlideInput,
-    ),
+
     StructuredTool.from_function(
     func=generate_instructions_slide_xml,
     name="generate_instructions_slide_xml",

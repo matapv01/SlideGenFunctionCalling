@@ -212,3 +212,1293 @@
   .sgx-home.workspace-page .manual-card { grid-template-columns: auto minmax(0, 1fr); }
   .sgx-home.workspace-page .manual-upload-button { grid-column: 1 / -1; justify-self: start; }
 }
+
+/* Landing and workspace share the same product surface: charcoal canvas,
+   peach accent, restrained borders, and the same display typeface. */
+.sgl-landing.slidegen-page {
+  background: #202020;
+  color: #f4f3ee;
+}
+
+.sgl-landing .site-header {
+  background: #242424;
+  border: 1px solid #ffffff12;
+  border-top: 0;
+  box-shadow: 0 12px 30px #0005;
+}
+
+.sgl-landing .hero {
+  min-height: 760px;
+  background-color: #202020;
+}
+
+.sgl-landing .hero-video-overlay {
+  background: linear-gradient(180deg, #202020c9 0%, #202020a8 48%, #202020f5 100%);
+}
+
+.sgl-landing .dot-grid {
+  opacity: .22;
+  background-image: radial-gradient(#ffffff 1px, transparent 1px);
+  mask-image: linear-gradient(#000, #000 62%, transparent 98%);
+}
+
+.sgl-landing .hero-topline {
+  color: #f4f3ee;
+}
+
+.sgl-landing .hero-copy {
+  color: #c2c4bd;
+}
+
+.sgl-landing .prompt-field {
+  border-color: #ffffff24;
+  background: #292a29e8;
+  color: #c2c4bd;
+  box-shadow: 0 12px 32px #0004;
+}
+
+.sgl-landing .landing-prompt-input {
+  color: #f4f3ee;
+}
+
+.sgl-landing .landing-prompt-input::placeholder {
+  color: #858880;
+}
+
+.sgl-landing .signup,
+.sgl-landing .header-actions > .start-button {
+  background: #f5a08a;
+  color: #242522;
+}
+
+.sgl-landing .signup:hover,
+.sgl-landing .header-actions > .start-button:hover {
+  background: #fff;
+  color: #202020;
+}
+
+.sgl-landing .showcase-section {
+  background: #202020;
+}
+
+.sgl-landing .section-intro h2,
+.sgl-landing .feature-copy h3 {
+  color: #f4f3ee;
+}
+
+.sgl-landing .section-intro > span,
+.sgl-landing .feature-copy > span {
+  color: #999c94;
+}
+
+.sgl-landing .feature-stage {
+  border-top: 1px solid #ffffff1c;
+}
+
+.sgl-landing .feature-copy a {
+  color: #f4f3ee;
+}
+
+.sgl-landing .feature-canvas {
+  border: 1px solid #ffffff1c;
+  background: #292a29;
+  box-shadow: 0 28px 70px #0005;
+}
+
+.sgl-landing .canvas-grid {
+  opacity: .28;
+  background-image: linear-gradient(#ffffff18 1px, transparent 1px), linear-gradient(90deg, #ffffff18 1px, transparent 1px);
+}
+
+.sgl-landing .create-section {
+  border-top: 1px solid #ffffff12;
+}
+
+.sgl-landing .newsletter {
+  border-color: #ffffff1c;
+  background: #292a29;
+}
+
+.sgl-landing .site-footer {
+  border-top: 1px solid #ffffff12;
+}
+
+@media (max-width: 760px) {
+  .sgl-landing .hero {
+    min-height: 660px;
+  }
+
+  .sgl-landing .hero-topline {
+    margin-top: 0;
+  }
+}
+
+/* Light mode for the public surface. The slide canvases stay dark enough to
+   preserve presentation contrast, while the surrounding page follows the
+   light workspace palette. */
+html:not(.dark) .sgl-landing.slidegen-page {
+  background: #f3f3f1;
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .site-header {
+  background: #f8f7f2;
+  border-color: #20202018;
+  color: #202020;
+  box-shadow: 0 12px 30px #20202012;
+}
+
+html:not(.dark) .sgl-landing .header-actions > a:not(.start-button) {
+  border-color: #20202024;
+  color: #4d4e49;
+}
+
+html:not(.dark) .sgl-landing .header-actions > a:not(.start-button):hover {
+  background: #20202008;
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .hero-video-overlay {
+  background: linear-gradient(180deg, #f3f3f1d9 0%, #f3f3f18c 48%, #f3f3f1f2 100%);
+}
+
+html:not(.dark) .sgl-landing .dot-grid {
+  opacity: .42;
+  background-image: radial-gradient(#8f908a 1px, transparent 1px);
+}
+
+html:not(.dark) .sgl-landing .hero-topline {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .hero-copy {
+  color: #4f504b;
+}
+
+html:not(.dark) .sgl-landing .prompt-field {
+  border-color: #2020201c;
+  background: #ffffffd9;
+  color: #686963;
+  box-shadow: 0 12px 32px #20202012;
+}
+
+html:not(.dark) .sgl-landing .landing-prompt-input {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .landing-prompt-input::placeholder {
+  color: #777872;
+}
+
+html:not(.dark) .sgl-landing .showcase-section {
+  background: #f3f3f1;
+}
+
+html:not(.dark) .sgl-landing .section-intro h2,
+html:not(.dark) .sgl-landing .feature-copy h3 {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .section-intro > span,
+html:not(.dark) .sgl-landing .feature-copy > span {
+  color: #686963;
+}
+
+html:not(.dark) .sgl-landing .feature-stage {
+  border-top-color: #2020201c;
+}
+
+html:not(.dark) .sgl-landing .feature-copy a {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .create-section {
+  background: #e6e5df;
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .create-section h2 {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .create-section a {
+  border-color: #202020;
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .newsletter {
+  border-color: #2020201c;
+  background: #f3f3f1;
+}
+
+html:not(.dark) .sgl-landing .newsletter strong {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .newsletter input {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .newsletter button {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .site-footer {
+  background: #deddd7;
+  color: #4d4e49;
+}
+
+html:not(.dark) .sgl-landing .footer-brand .brand {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .footer-links a {
+  color: #666761;
+}
+
+html:not(.dark) .sgl-landing .footer-bottom {
+  border-top-color: #2020201c;
+  color: #777872;
+}
+
+/* Light mode for the authenticated workspace. */
+html:not(.dark) .sgx-home.workspace-page {
+  background: #f3f3f1;
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-sidebar {
+  border-right-color: #20202014;
+  background: #ebeae5;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-brand {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-sidebar-label {
+  color: #92938d;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-nav button {
+  color: #6d6f69;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-nav button:hover,
+html:not(.dark) .sgx-home.workspace-page .workspace-nav button.active {
+  background: #2020200a;
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-plan-card,
+html:not(.dark) .sgx-home.workspace-page .chat-history,
+html:not(.dark) .sgx-home.workspace-page .chat-panel,
+html:not(.dark) .sgx-home.workspace-page .project-card,
+html:not(.dark) .sgx-home.workspace-page .subscription-card,
+html:not(.dark) .sgx-home.workspace-page .manual-card {
+  border-color: #20202018;
+  background: #faf9f5;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-plan-label,
+html:not(.dark) .sgx-home.workspace-page .workspace-user small,
+html:not(.dark) .sgx-home.workspace-page .workspace-help,
+html:not(.dark) .sgx-home.workspace-page .chat-history-top,
+html:not(.dark) .sgx-home.workspace-page .chat-history-item span,
+html:not(.dark) .sgx-home.workspace-page .chat-empty > p,
+html:not(.dark) .sgx-home.workspace-page .project-card > span,
+html:not(.dark) .sgx-home.workspace-page .guide-steps p,
+html:not(.dark) .sgx-home.workspace-page .subscription-description {
+  color: #777872;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-plan-card strong,
+html:not(.dark) .sgx-home.workspace-page .workspace-user strong,
+html:not(.dark) .sgx-home.workspace-page .project-card h3,
+html:not(.dark) .sgx-home.workspace-page .subscription-card h3,
+html:not(.dark) .sgx-home.workspace-page .manual-card strong,
+html:not(.dark) .sgx-home.workspace-page .guide-steps h3 {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-main,
+html:not(.dark) .sgx-home.workspace-page .workspace-panel h2,
+html:not(.dark) .sgx-home.workspace-page .panel-heading h2 {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-panel-header,
+html:not(.dark) .sgx-home.workspace-page .workspace-header,
+html:not(.dark) .sgx-home.workspace-page .settings-list,
+html:not(.dark) .sgx-home.workspace-page .settings-list label,
+html:not(.dark) .sgx-home.workspace-page .guide-steps article {
+  border-color: #20202018;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-message,
+html:not(.dark) .sgx-home.workspace-page .chat-suggestions button,
+html:not(.dark) .sgx-home.workspace-page .chat-composer,
+html:not(.dark) .sgx-home.workspace-page .subscription-overview,
+html:not(.dark) .sgx-home.workspace-page .subscription-actions input {
+  border-color: #20202018;
+  background: #faf9f5;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-message p,
+html:not(.dark) .sgx-home.workspace-page .chat-suggestions button,
+html:not(.dark) .sgx-home.workspace-page .chat-composer textarea,
+html:not(.dark) .sgx-home.workspace-page .subscription-overview strong,
+html:not(.dark) .sgx-home.workspace-page .subscription-actions input {
+  color: #30312e;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-composer textarea::placeholder,
+html:not(.dark) .sgx-home.workspace-page .composer-model-button,
+html:not(.dark) .sgx-home.workspace-page .composer-plus {
+  color: #777872;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-user-menu,
+html:not(.dark) .sgx-home.workspace-page .composer-tools-menu,
+html:not(.dark) .sgx-home.workspace-page .composer-model-menu {
+  border-color: #20202018;
+  background: #faf9f5;
+  box-shadow: 0 18px 38px #20202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-user-menu button,
+html:not(.dark) .sgx-home.workspace-page .composer-tools-menu button,
+html:not(.dark) .sgx-home.workspace-page .composer-model-menu button {
+  color: #30312e;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-user-menu button:hover,
+html:not(.dark) .sgx-home.workspace-page .composer-tools-menu button:hover,
+html:not(.dark) .sgx-home.workspace-page .composer-model-menu button:hover,
+html:not(.dark) .sgx-home.workspace-page .composer-model-menu button.selected {
+  background: #2020200a;
+}
+
+.sg-auth .auth-code-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sg-auth .auth-code-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6d6f69;
+  font: 11px "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.sg-auth .auth-code-actions button:first-child {
+  color: #f0522c;
+}
+
+.sg-auth .auth-code-actions button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+/* Meaningful source-to-deck preview for the landing page feature cards. */
+.sgl-landing .feature-canvas {
+  min-height: 430px;
+  padding: 0 30px 28px;
+  isolation: isolate;
+  background: linear-gradient(135deg, #30322f 0%, #202220 72%);
+}
+
+.sgl-landing .canvas-title {
+  top: 58px;
+  left: 30px;
+  max-width: 72%;
+  color: #f7f6f0;
+  font: 500 clamp(30px, 3.8vw, 52px)/.98 "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: -.055em;
+}
+
+.sgl-landing .canvas-subtitle {
+  top: 132px;
+  left: 33px;
+  max-width: 290px;
+  color: #ffad97;
+  line-height: 1.4;
+}
+
+.sgl-landing .canvas-visual {
+  position: absolute;
+  z-index: 1;
+  right: 30px;
+  bottom: 28px;
+  left: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.sgl-landing .visual-source,
+.sgl-landing .visual-deck {
+  flex: 0 0 auto;
+  min-height: 148px;
+  border-radius: 8px;
+  box-shadow: 0 18px 30px #0003;
+}
+
+.sgl-landing .visual-source {
+  display: grid;
+  width: 150px;
+  grid-template-rows: auto 1fr repeat(3, 4px);
+  gap: 12px;
+  padding: 18px;
+  transform: rotate(-5deg);
+  border: 1px solid #20202022;
+  background: #f2f0e7;
+  color: #252723;
+}
+
+.sgl-landing .visual-source span,
+.sgl-landing .visual-deck > span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+
+.sgl-landing .visual-source strong {
+  align-self: center;
+  font-size: 31px;
+  font-weight: 600;
+  letter-spacing: -.08em;
+}
+
+.sgl-landing .visual-source > i,
+.sgl-landing .visual-deck i {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: #20202022;
+}
+
+.sgl-landing .visual-source > i:nth-of-type(2) {
+  width: 72%;
+}
+
+.sgl-landing .visual-source > i:nth-of-type(3) {
+  width: 86%;
+}
+
+.sgl-landing .visual-source > i:nth-of-type(4) {
+  width: 54%;
+}
+
+.sgl-landing .visual-connector {
+  display: grid;
+  min-width: 54px;
+  justify-items: center;
+  gap: 8px;
+  color: #ff866b;
+}
+
+.sgl-landing .visual-connector span {
+  font-size: 27px;
+  line-height: 1;
+}
+
+.sgl-landing .visual-connector i {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #ff866b33, #ff866b, #ff866b33);
+}
+
+.sgl-landing .visual-deck {
+  position: relative;
+  display: grid;
+  width: min(300px, 45%);
+  grid-template-rows: auto 1fr auto;
+  gap: 14px;
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid #ffad9780;
+  background: linear-gradient(135deg, #f0522c, #e8895b 58%, #f3bd73);
+  color: #fffaf2;
+}
+
+.sgl-landing .visual-deck::before {
+  position: absolute;
+  top: -45px;
+  right: -35px;
+  width: 150px;
+  height: 150px;
+  border: 1px solid #ffffff55;
+  border-radius: 50%;
+  content: "";
+}
+
+.sgl-landing .visual-deck > span {
+  position: relative;
+  color: #fff3e9;
+}
+
+.sgl-landing .visual-deck strong {
+  position: relative;
+  align-self: center;
+  max-width: 180px;
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 500;
+  letter-spacing: -.045em;
+}
+
+.sgl-landing .visual-deck > div {
+  position: relative;
+  display: grid;
+  gap: 7px;
+}
+
+.sgl-landing .visual-deck i {
+  width: 82%;
+  background: #ffffff55;
+}
+
+.sgl-landing .visual-deck i:nth-child(2) {
+  width: 58%;
+}
+
+.sgl-landing .visual-deck i:nth-child(3) {
+  width: 70%;
+}
+
+.sgl-landing .feature-canvas-1 .visual-source {
+  background: #f4c6b9;
+}
+
+.sgl-landing .feature-canvas-2 .visual-source {
+  background: #d8e2d3;
+}
+
+.sgl-landing .feature-canvas-2 .visual-source strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(12px, 1.9vw, 20px);
+  letter-spacing: -.05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html:not(.dark) .sgl-landing .feature-canvas {
+  border-color: #20202024;
+  background: linear-gradient(135deg, #30322f 0%, #202220 72%);
+}
+
+@media (max-width: 760px) {
+  .sgl-landing .feature-canvas {
+    min-height: 360px;
+    padding: 0 20px 20px;
+  }
+
+  .sgl-landing .canvas-title {
+    top: 52px;
+    left: 20px;
+    max-width: 82%;
+  }
+
+  .sgl-landing .canvas-subtitle {
+    top: 112px;
+    left: 23px;
+  }
+
+  .sgl-landing .canvas-visual {
+    right: 20px;
+    bottom: 20px;
+    left: 20px;
+    gap: 9px;
+  }
+
+  .sgl-landing .visual-source {
+    width: 90px;
+    min-height: 100px;
+    padding: 11px;
+  }
+
+  .sgl-landing .visual-source strong {
+    font-size: 20px;
+  }
+
+  .sgl-landing .visual-connector {
+    min-width: 20px;
+  }
+
+  .sgl-landing .visual-connector span {
+    font-size: 21px;
+  }
+
+  .sgl-landing .visual-deck {
+    width: min(145px, 48%);
+    min-height: 100px;
+    padding: 11px;
+  }
+
+  .sgl-landing .visual-deck strong {
+    font-size: 18px;
+  }
+}
+
+/* A tighter footer with a clear brand-to-navigation hierarchy. */
+.sgl-landing .site-footer {
+  padding: 78px clamp(22px, 8vw, 120px) 26px;
+}
+
+.sgl-landing .footer-top {
+  display: grid;
+  grid-template-columns: minmax(220px, .85fr) minmax(0, 1.55fr);
+  gap: clamp(56px, 12vw, 180px);
+  padding-bottom: 76px;
+}
+
+.sgl-landing .footer-brand {
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.sgl-landing .footer-brand > span {
+  max-width: 190px;
+  color: #a8a8a1;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sgl-landing .footer-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f5a08a;
+  color: #fff;
+  font-size: 12px;
+  text-decoration: none;
+  transition: color .18s ease, gap .18s ease;
+}
+
+.sgl-landing .footer-cta:hover,
+.sgl-landing .footer-cta:focus-visible {
+  gap: 17px;
+  color: #f5a08a;
+  outline: 0;
+}
+
+.sgl-landing .footer-links {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  gap: clamp(28px, 5vw, 76px);
+}
+
+.sgl-landing .footer-links div {
+  gap: 12px;
+}
+
+.sgl-landing .footer-links b {
+  margin-bottom: 9px;
+  color: #f5a08a;
+  font-size: 10px;
+  letter-spacing: .18em;
+}
+
+.sgl-landing .footer-links a {
+  width: fit-content;
+  transition: color .18s ease, transform .18s ease;
+}
+
+.sgl-landing .footer-links a:hover,
+.sgl-landing .footer-links a:focus-visible {
+  color: #fff;
+  transform: translateX(3px);
+  outline: 0;
+}
+
+.sgl-landing .footer-bottom {
+  align-items: center;
+  padding-top: 19px;
+  font-size: 11px;
+}
+
+.sgl-landing .footer-status,
+.sgl-landing .footer-legal {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sgl-landing .footer-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9ec7bb;
+  box-shadow: 0 0 0 4px #9ec7bb18;
+}
+
+.sgl-landing .footer-legal a {
+  color: inherit;
+  text-decoration: none;
+  transition: color .18s ease;
+}
+
+.sgl-landing .footer-legal a:hover,
+.sgl-landing .footer-legal a:focus-visible {
+  color: #f5a08a;
+  outline: 0;
+}
+
+html:not(.dark) .sgl-landing .footer-brand > span {
+  color: #73746d;
+}
+
+html:not(.dark) .sgl-landing .footer-cta {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .footer-cta:hover,
+html:not(.dark) .sgl-landing .footer-cta:focus-visible,
+html:not(.dark) .sgl-landing .footer-links a:hover,
+html:not(.dark) .sgl-landing .footer-links a:focus-visible {
+  color: #d9654e;
+}
+
+html:not(.dark) .sgl-landing .footer-status i {
+  background: #5d9373;
+  box-shadow: 0 0 0 4px #5d937318;
+}
+
+/* Light mode for the shared sign-in and registration surface. */
+html:not(.dark) .sg-auth.auth-page {
+  background: #f3f3f1;
+  color: #202020;
+}
+
+html:not(.dark) .sg-auth .auth-atmosphere::before {
+  background-image: linear-gradient(#20202012 1px, transparent 1px), linear-gradient(90deg, #20202012 1px, transparent 1px);
+}
+
+html:not(.dark) .sg-auth .auth-atmosphere span {
+  border-color: #d6816e66;
+}
+
+html:not(.dark) .sg-auth .auth-atmosphere span:nth-child(2) {
+  border-color: #2020201c;
+}
+
+html:not(.dark) .sg-auth .auth-header {
+  border-bottom-color: #2020201c;
+}
+
+html:not(.dark) .sg-auth .auth-header .brand {
+  color: #202020;
+}
+
+html:not(.dark) .sg-auth .auth-header-actions {
+  color: #777872;
+}
+
+html:not(.dark) .sg-auth .auth-intro h1 {
+  color: #202020;
+}
+
+html:not(.dark) .sg-auth .auth-description {
+  color: #61625c;
+}
+
+html:not(.dark) .sg-auth .auth-note {
+  color: #777872;
+}
+
+html:not(.dark) .sg-auth .auth-card {
+  border-color: #2020201c;
+  background: #fffefa;
+  box-shadow: 0 28px 80px #20202018;
+}
+
+html:not(.dark) .sg-auth .auth-footer {
+  color: #777872;
+}
+
+/* The peach accent is intentionally deeper on light surfaces so labels and
+   links keep readable contrast against white backgrounds. */
+html:not(.dark) .sgl-landing .section-intro > p,
+html:not(.dark) .sgl-landing .feature-copy > p,
+html:not(.dark) .sgl-landing .create-section > div > p,
+html:not(.dark) .sgl-landing .footer-links b,
+html:not(.dark) .sgx-home.workspace-page .workspace-eyebrow,
+html:not(.dark) .sgx-home.workspace-page .workspace-nav button.active,
+html:not(.dark) .sgx-home.workspace-page .workspace-plan-card button,
+html:not(.dark) .sgx-home.workspace-page .chat-history-top button,
+html:not(.dark) .sgx-home.workspace-page .chat-suggestions span,
+html:not(.dark) .sgx-home.workspace-page .composer-plus,
+html:not(.dark) .sgx-home.workspace-page .project-card > p,
+html:not(.dark) .sgx-home.workspace-page .guide-steps span,
+html:not(.dark) .sgx-home.workspace-page .subscription-label {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgx-home.workspace-page .workspace-nav button.active {
+  box-shadow: inset 2px 0 #b65f4c;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-history-item:hover,
+html:not(.dark) .sgx-home.workspace-page .chat-history-item.active {
+  border-left-color: #b65f4c;
+}
+
+@media (max-width: 760px) {
+  .sgl-landing .site-footer {
+    padding: 58px 22px 22px;
+  }
+
+  .sgl-landing .footer-top {
+    grid-template-columns: 1fr;
+    gap: 54px;
+    padding-bottom: 58px;
+  }
+
+  .sgl-landing .footer-links {
+    gap: 32px 20px;
+  }
+
+  .sgl-landing .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+/* Slightly larger workspace chrome for easier reading. */
+.sgx-home.workspace-page .workspace-sidebar-label { font-size: 10px; }
+.sgx-home.workspace-page .workspace-nav button { font-size: 14px; }
+.sgx-home.workspace-page .workspace-plan-label { font-size: 9px; }
+.sgx-home.workspace-page .workspace-plan-card strong { font-size: 13px; }
+.sgx-home.workspace-page .workspace-user strong { font-size: 12px; }
+.sgx-home.workspace-page .workspace-user small { font-size: 11px; }
+.sgx-home.workspace-page .workspace-eyebrow { font-size: 11px; }
+.sgx-home.workspace-page .panel-heading > div > p:last-child,
+.sgx-home.workspace-page .guide-lead { font-size: 15px; }
+.sgx-home.workspace-page .project-card > p { font-size: 10px; }
+.sgx-home.workspace-page .project-card h3 { font-size: 20px; }
+.sgx-home.workspace-page .project-card span { font-size: 12px; }
+.sgx-home.workspace-page .guide-steps p { font-size: 13px; }
+.sgx-home.workspace-page .subscription-description { font-size: 13px; }
+
+/* Keep conversation history readable on the light workspace surface. */
+html:not(.dark) .sgx-home.workspace-page .new-chat-button {
+  border-color: #2020201c;
+  background: #ffffffaa;
+  color: #30312e;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-history-item {
+  color: #30312e;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-history-item:hover,
+html:not(.dark) .sgx-home.workspace-page .chat-history-item.active {
+  background: #20202008;
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .chat-history-item span {
+  color: #8a8b84;
+}
+
+/* Give the workspace conversation controls a little more breathing room. */
+.sgx-home.workspace-page .chat-history-top {
+  font-size: 10px;
+}
+
+.sgx-home.workspace-page .new-chat-button {
+  font-size: 12px;
+}
+
+.sgx-home.workspace-page .chat-history-item {
+  font-size: 12px;
+}
+
+.sgx-home.workspace-page .chat-history-item span {
+  font-size: 10px;
+}
+
+.sgx-home.workspace-page .chat-suggestions button {
+  font-size: 11px;
+}
+
+.sgx-home.workspace-page .chat-composer textarea {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Add a subtle sense of movement to the lower landing-page sections. */
+.sgl-landing .create-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.sgl-landing .create-section::before {
+  position: absolute;
+  z-index: 0;
+  inset: -38% -12%;
+  content: "";
+  background:
+    radial-gradient(circle at 76% 28%, #f0522c3b 0, transparent 22%),
+    radial-gradient(circle at 10% 92%, #5275a71c 0, transparent 28%);
+  filter: blur(18px);
+  animation: sgl-create-atmosphere 14s ease-in-out infinite alternate;
+}
+
+.sgl-landing .create-section > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sgl-landing .newsletter {
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.sgl-landing .newsletter::before {
+  position: absolute;
+  top: 0;
+  left: -35%;
+  width: 35%;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, #f5a08a, transparent);
+  animation: sgl-newsletter-scan 8s ease-in-out infinite;
+}
+
+.sgl-landing .newsletter:hover,
+.sgl-landing .newsletter:focus-within {
+  border-color: #f5a08a66;
+  box-shadow: 0 18px 45px #0000002e;
+  transform: translateY(-4px);
+}
+
+.sgl-landing .site-footer {
+  position: relative;
+  overflow: hidden;
+}
+
+.sgl-landing .site-footer::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  opacity: .24;
+  pointer-events: none;
+  background-image: radial-gradient(#f5a08a 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(115deg, #000, transparent 48%);
+}
+
+.sgl-landing .site-footer::after {
+  position: absolute;
+  top: 0;
+  left: -25%;
+  width: 42%;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, #f5a08a, transparent);
+  animation: sgl-footer-scan 12s ease-in-out infinite;
+}
+
+.sgl-landing .site-footer > * {
+  position: relative;
+  z-index: 1;
+}
+
+html:not(.dark) .sgl-landing .create-section::before {
+  background:
+    radial-gradient(circle at 76% 28%, #d9654e2e 0, transparent 22%),
+    radial-gradient(circle at 10% 92%, #5275a71c 0, transparent 28%);
+}
+
+html:not(.dark) .sgl-landing .newsletter:hover,
+html:not(.dark) .sgl-landing .newsletter:focus-within {
+  border-color: #b65f4c66;
+  box-shadow: 0 18px 45px #2020201c;
+}
+
+html:not(.dark) .sgl-landing .site-footer::before {
+  background-image: radial-gradient(#b65f4c 1px, transparent 1px);
+}
+
+html:not(.dark) .sgl-landing .site-footer::after {
+  background: linear-gradient(90deg, transparent, #b65f4c, transparent);
+}
+
+@keyframes sgl-create-atmosphere {
+  from { transform: translate3d(-2%, 1%, 0) scale(1); }
+  to { transform: translate3d(4%, -3%, 0) scale(1.08); }
+}
+
+@keyframes sgl-newsletter-scan {
+  0%, 18% { transform: translateX(0); opacity: 0; }
+  30%, 70% { transform: translateX(390%); opacity: 1; }
+  82%, 100% { transform: translateX(390%); opacity: 0; }
+}
+
+@keyframes sgl-footer-scan {
+  0%, 20% { transform: translateX(0); opacity: 0; }
+  35%, 72% { transform: translateX(300%); opacity: .8; }
+  86%, 100% { transform: translateX(300%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sgl-landing .create-section::before,
+  .sgl-landing .newsletter::before,
+  .sgl-landing .site-footer::after {
+    animation: none;
+  }
+
+  .sgl-landing .newsletter:hover,
+  .sgl-landing .newsletter:focus-within {
+    transform: none;
+  }
+}
+
+/* Bring the source-to-deck feature cards to life as they enter the viewport. */
+.sgl-landing .feature-stage {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .7s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
+}
+
+.sgl-landing .feature-stage.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sgl-landing .feature-stage:nth-child(2) {
+  transition-delay: .08s;
+}
+
+.sgl-landing .feature-stage:nth-child(3) {
+  transition-delay: .16s;
+}
+
+.sgl-landing .feature-stage:nth-child(4) {
+  transition-delay: .24s;
+}
+
+.sgl-landing .feature-canvas {
+  transition: transform .5s cubic-bezier(.22, 1, .36, 1), box-shadow .5s ease;
+}
+
+.sgl-landing .feature-canvas:hover {
+  box-shadow: 0 34px 82px #17171738;
+  transform: translateY(-8px) rotate(.35deg);
+}
+
+.sgl-landing .canvas-grid {
+  animation: sgl-canvas-grid 18s linear infinite;
+  transition: opacity .35s ease;
+}
+
+.sgl-landing .feature-canvas:hover .canvas-grid {
+  opacity: .42;
+}
+
+.sgl-landing .visual-source {
+  animation: sgl-source-float 7s ease-in-out infinite;
+}
+
+.sgl-landing .visual-deck {
+  animation: sgl-deck-float 8s ease-in-out infinite reverse;
+}
+
+.sgl-landing .feature-canvas-1 .visual-source,
+.sgl-landing .feature-canvas-3 .visual-source {
+  animation-delay: -2s;
+}
+
+.sgl-landing .feature-canvas-1 .visual-deck,
+.sgl-landing .feature-canvas-3 .visual-deck {
+  animation-delay: -4s;
+}
+
+.sgl-landing .visual-connector span {
+  animation: sgl-connector-pulse 2.8s ease-in-out infinite;
+}
+
+.sgl-landing .visual-connector i {
+  background-size: 220% 100%;
+  animation: sgl-connector-flow 3.2s linear infinite;
+}
+
+.sgl-landing .visual-deck::before {
+  transform-origin: center;
+  animation: sgl-deck-ring 16s linear infinite;
+}
+
+@keyframes sgl-canvas-grid {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 42px 42px, 42px 42px; }
+}
+
+@keyframes sgl-source-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-5deg); }
+  50% { transform: translate3d(-4px, -7px, 0) rotate(-3.5deg); }
+}
+
+@keyframes sgl-deck-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(3px, -6px, 0); }
+}
+
+@keyframes sgl-connector-pulse {
+  0%, 100% { opacity: .65; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
+}
+
+@keyframes sgl-connector-flow {
+  from { background-position: 0 0; }
+  to { background-position: 220% 0; }
+}
+
+@keyframes sgl-deck-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sgl-landing .feature-stage {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .sgl-landing .feature-canvas:hover {
+    transform: none;
+  }
+
+  .sgl-landing .canvas-grid,
+  .sgl-landing .visual-source,
+  .sgl-landing .visual-deck,
+  .sgl-landing .visual-connector span,
+  .sgl-landing .visual-connector i,
+  .sgl-landing .visual-deck::before {
+    animation: none;
+  }
+}
+
+/* The feature previews follow the surrounding light surface in Light mode. */
+html:not(.dark) .sgl-landing .feature-canvas {
+  border-color: #2020201c;
+  background: linear-gradient(135deg, #fffefa 0%, #ebeae4 100%);
+  box-shadow: 0 28px 70px #2020201c;
+}
+
+html:not(.dark) .sgl-landing .canvas-grid {
+  opacity: .48;
+  background-image: linear-gradient(#20202012 1px, transparent 1px), linear-gradient(90deg, #20202012 1px, transparent 1px);
+}
+
+html:not(.dark) .sgl-landing .canvas-label {
+  color: #62635d;
+}
+
+html:not(.dark) .sgl-landing .canvas-title {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .canvas-subtitle {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgl-landing .visual-connector {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgl-landing .visual-connector i {
+  background: linear-gradient(90deg, #b65f4c33, #b65f4c, #b65f4c33);
+}
+
+html:not(.dark) .sgl-landing .feature-canvas:hover {
+  box-shadow: 0 34px 82px #2020202b;
+}
+
+/* Keep landing-page navigation menus aligned with the active Light theme. */
+html:not(.dark) .sgl-landing .mega-menu {
+  border-color: #2020201c;
+  background: #fffefa;
+  box-shadow: 0 24px 70px #20202024;
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .mega-column > p {
+  color: #777872;
+}
+
+html:not(.dark) .sgl-landing .mega-column > a {
+  color: #30312e;
+}
+
+html:not(.dark) .sgl-landing .mega-column > a:hover {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .mega-column > a:hover b {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgl-landing .mega-column i {
+  background: #eeece5;
+  color: #555650;
+}
+
+html:not(.dark) .sgl-landing .mega-column small {
+  color: #777872;
+}
+
+html:not(.dark) .sgl-landing .mega-feature {
+  background: #eeece5;
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .feature-preview {
+  background:
+    radial-gradient(circle at 70% 35%, #c9cbc3 0 2px, transparent 3px),
+    radial-gradient(circle at 20% 75%, #d8b2a6 0 2px, transparent 3px),
+    #f8f6ef;
+}
+
+html:not(.dark) .sgl-landing .feature-preview::after {
+  border-color: #b65f4c;
+}
+
+html:not(.dark) .sgl-landing .feature-preview span,
+html:not(.dark) .sgl-landing .feature-preview em {
+  color: #b65f4c;
+}
+
+html:not(.dark) .sgl-landing .feature-preview strong {
+  color: #202020;
+}
+
+html:not(.dark) .sgl-landing .mega-feature > small {
+  color: #686963;
+}
+
+.sg-auth .auth-verification-hint {
+  max-width: 390px;
+  margin: 16px 0 0;
+  color: #9a9b94;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+html:not(.dark) .sg-auth .auth-verification-hint {
+  color: #777872;
+}

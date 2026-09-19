@@ -4,13 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { publicAssetUrl } from "@/lib/publicAssetUrl";
 import "./slidegenius.css";
 
-const categories = [
-  { eyebrow: ["01 / DECKS", "01 / BÀI TRÌNH BÀY"], label: ["Presentations", "Bản trình bày"], title: ["Turn a thought into a story.", "Biến ý tưởng thành câu chuyện."], copy: ["Slidegen builds the structure, rhythm, and visual language behind your next great presentation.", "Slidegen tạo cấu trúc, nhịp điệu và ngôn ngữ hình ảnh cho bài trình bày tiếp theo của bạn."], tone: "light" },
-  { eyebrow: ["02 / PITCH", "02 / GỌI VỐN"], label: ["Pitch decks", "Hồ sơ gọi vốn"], title: ["Make the room lean in.", "Khiến mọi người chăm chú lắng nghe."], copy: ["From first slide to final ask, create a deck that makes the opportunity impossible to miss.", "Từ trang đầu tiên đến lời kêu gọi cuối cùng, tạo một bài trình bày khiến cơ hội không thể bị bỏ qua."], tone: "dark" },
-  { eyebrow: ["03 / REPORTS", "03 / BÁO CÁO"], label: ["Reports", "Báo cáo"], title: ["Make data feel alive.", "Thổi sức sống vào dữ liệu."], copy: ["Transform dense ideas and complex findings into clear, memorable visual narratives.", "Biến những ý tưởng dày đặc và phát hiện phức tạp thành câu chuyện hình ảnh rõ ràng, đáng nhớ."], tone: "sand" },
-  { eyebrow: ["04 / BRAND", "04 / THƯƠNG HIỆU"], label: ["Branding", "Nhận diện thương hiệu"], title: ["Give your ideas a point of view.", "Trao cá tính riêng cho ý tưởng."], copy: ["Explore bold visual systems that make every slide feel unmistakably yours.", "Khám phá hệ thống hình ảnh táo bạo để mỗi trang chiếu mang dấu ấn riêng của bạn."], tone: "coral" },
-  { eyebrow: ["05 / WORKSHOPS", "05 / HỘI THẢO"], label: ["Workshops", "Hội thảo"], title: ["Get everyone on the same page.", "Đưa mọi người về cùng một hướng."], copy: ["Build flexible, collaborative canvases for the conversations that move work forward.", "Xây dựng không gian linh hoạt, cộng tác cho những cuộc trò chuyện thúc đẩy công việc tiến lên."], tone: "ink" },
-] as const;
+const categories = ([
+  { eyebrow: ["01 / CHAT", "01 / CHAT"], label: ["Slidegenius", "Slidegenius"], title: ["Start with a rough idea.", "Bắt đầu từ một ý tưởng thô."], copy: ["Describe the story in natural language and let Slidegenius shape the brief, structure, and direction.", "Mô tả câu chuyện bằng ngôn ngữ tự nhiên để Slidegenius định hình brief, cấu trúc và hướng triển khai."], tone: "light" },
+  { eyebrow: ["02 / DOCX", "02 / DOCX"], label: ["Document to deck", "Từ tài liệu đến slide"], title: ["Bring the source material in.", "Đưa tài liệu gốc vào."], copy: ["Upload a DOCX, ground the conversation in your content, and turn dense material into a clear presentation.", "Tải DOCX lên, đặt cuộc trò chuyện trên nền nội dung của bạn và biến tài liệu dày thành bài trình bày rõ ràng."], tone: "dark" },
+  { eyebrow: ["03 / MANUAL", "03 / THỦ CÔNG"], label: ["Structure editor", "Structure editor"], title: ["Shape the story yourself.", "Tự định hình câu chuyện."], copy: ["Edit the Markdown structure, review each slide, then send the approved outline to the design engine.", "Chỉnh cấu trúc Markdown, xem trước từng slide rồi gửi outline đã duyệt đến bộ máy thiết kế."], tone: "sand" },
+  { eyebrow: ["04 / EDITOR", "04 / BIÊN TẬP"], label: ["XML slide editor", "XML slide editor"], title: ["Make every slide yours.", "Biến từng slide thành của bạn."], copy: ["Fine-tune text, shapes, images, equations, layers, notes, and transitions in the editable workspace.", "Tinh chỉnh text, shape, hình ảnh, công thức, layer, ghi chú và hiệu ứng chuyển cảnh trong workspace."], tone: "coral" },
+  { eyebrow: ["05 / PRESENT", "05 / TRÌNH CHIẾU"], label: ["Present and export", "Trình chiếu và xuất file"], title: ["Take the deck all the way.", "Hoàn thiện deck đến bước cuối."], copy: ["Present in fullscreen, collaborate with your team, keep versions, and export when the story is ready.", "Trình chiếu toàn màn hình, cộng tác cùng team, lưu phiên bản và xuất file khi câu chuyện đã sẵn sàng."], tone: "ink" },
+] as const).filter((category) => category.label[0] !== "XML slide editor");
 
 const typingPrompts = { en: ["What do you want to create?", "A bold pitch deck for tomorrow", "A story your audience remembers"], vi: ["Bạn muốn tạo ra điều gì?", "Một bài gọi vốn ấn tượng cho ngày mai", "Một câu chuyện khán giả sẽ nhớ mãi"] };
 
@@ -23,6 +23,7 @@ export default function SlidegeniusLanding() {
   const [promptIndex, setPromptIndex] = useState(0);
   const [typedPrompt, setTypedPrompt] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [newsletterEmail, setNewsletterEmail] = useState("");
   const isVietnamese = language === "vi";
 
   useEffect(() => {
@@ -42,6 +43,28 @@ export default function SlidegeniusLanding() {
     return () => window.clearTimeout(timer);
   }, [language, promptIndex]);
 
+  useEffect(() => {
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.sgl-landing .feature-stage'));
+    if (!cards.length) return undefined;
+
+    if (!('IntersectionObserver' in window)) {
+      cards.forEach((card) => card.classList.add('is-visible'));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.16 });
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, []);
+
   const openMenuSmoothly = (menu: string) => {
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
     setOpenMenu(menu);
@@ -52,7 +75,12 @@ export default function SlidegeniusLanding() {
   };
   const handlePromptSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    navigate("/login");
+    navigate(isAuthenticated ? "/home" : "/login");
+  };
+  const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = newsletterEmail.trim();
+    navigate(email ? `/register?email=${encodeURIComponent(email)}` : "/register");
   };
 
   return (
@@ -68,10 +96,46 @@ export default function SlidegeniusLanding() {
         </nav>
         <div className="header-actions"><button className="language-switcher" type="button" aria-label="Switch language" onClick={() => setLanguage((current) => current === "en" ? "vi" : "en")}><span className={!isVietnamese ? "is-active" : ""}>EN</span><span>/</span><span className={isVietnamese ? "is-active" : ""}>VI</span></button>{isAuthenticated ? <Link to="/home">Workspace</Link> : <Link to="/login">Sign In</Link>} {!isAuthenticated && <Link className="start-button" to="/register">{isVietnamese ? "Bắt đầu miễn phí" : "Start for Free"}</Link>}</div>
       </header>
-      <section id="top" className="hero" style={{ backgroundImage: `url("${publicAssetUrl("bgslidegen-poster.png")}")` }}><video className="hero-background-video" autoPlay muted loop playsInline preload="auto" poster={publicAssetUrl("bgslidegen-poster.png")} aria-label="Slidegen animated background"><source src={publicAssetUrl("bgslidegen.mp4")} type="video/mp4" /></video><div className="hero-video-overlay" /><p className="hero-topline">{isVietnamese ? "BIẾN ĐIỀU KHÓ THÀNH HIỆN HỮU" : "MAKE THE IMPOSSIBLE VISIBLE"}</p><div className="dot-grid" /><div className="hero-copy">{isVietnamese ? <>Trợ lý AI cho đội ngũ sáng tạo.<br />Tạo hình ảnh, video và câu chuyện cùng Slidegen.</> : <>AI agents for creative teams.<br />Create images, video, and stories with Slidegen.</>}</div><form className="prompt-wrap" onSubmit={handlePromptSubmit}><div className="prompt-field"><input className="landing-prompt-input" type="text" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder={typedPrompt} aria-label={isVietnamese ? "Bạn muốn tạo gì?" : "What do you want to create?"} /></div><button className="signup" type="submit">{isVietnamese ? "Tạo ngay" : "Create"}<span>↗</span></button></form></section>
-      <section id="templates" className="showcase-section"><div className="section-intro"><p>{isVietnamese ? "MỘT STUDIO. MỌI CÂU CHUYỆN." : "ONE STUDIO. EVERY STORY."}</p><h2>{isVietnamese ? "Ý tưởng chuyển động." : "Ideas, in motion."}</h2><span>{isVietnamese ? "Một hệ thống sáng tạo linh hoạt cho mọi cách đội ngũ của bạn muốn truyền đạt." : "One flexible creative system for every way your team needs to communicate."}</span></div><div className="feature-list">{categories.map((category, index) => { const value = isVietnamese ? 1 : 0; return <article className={`feature-stage tone-${category.tone}`} key={category.label[value]}><div className="feature-copy"><p>{category.eyebrow[value]}</p><h3 className="title-unified">{category.title[value]}</h3><span>{category.copy[value]}</span><a href="#create">{isVietnamese ? "Khám phá Slidegen" : "Explore Slidegen"}<b>↗</b></a></div><div className="feature-canvas"><div className="canvas-grid" /><div className="canvas-label">SLIDEGEN / 0{index + 1}</div><div className="canvas-title">{category.label[value]}</div><div className="canvas-subtitle">{category.title[value]}</div><div className="canvas-shape shape-a" /><div className="canvas-shape shape-b" /><div className="canvas-node node-one" /><div className="canvas-node node-two" /><div className="canvas-line line-one" /><div className="canvas-line line-two" /></div></article>; })}</div></section>
-      <section id="create" className="create-section"><div><p>SLIDEGEN FOR CREATIVE TEAMS</p><h2 className="title-unified">{isVietnamese ? <>Khiến ý tưởng<br /><em>không thể bị bỏ qua.</em></> : <>Make the idea<br /><em>impossible to ignore.</em></>}</h2><a href="#top">{isVietnamese ? "Bắt đầu sáng tạo" : "Start creating"}<span>↗</span></a></div><div className="newsletter"><p>{isVietnamese ? "ĐỪNG BỎ LỠ" : "STAY IN THE LOOP"}</p><strong>{isVietnamese ? "Tư duy sáng tạo, gửi đến bạn." : "Creative thinking, delivered."}</strong><form onSubmit={(event) => event.preventDefault()}><input aria-label="Email address" placeholder={isVietnamese ? "Địa chỉ email của bạn" : "Your email address"} type="email" /><button type="submit">{isVietnamese ? "Tham gia" : "Join"}<span>↗</span></button></form></div></section>
-      <footer className="site-footer"><div className="footer-brand"><a className="brand" href="#top"><span className="brand-word"><span>slide</span><b>gen</b></span></a><span>{isVietnamese ? "Cùng nhau tạo nên công việc tốt hơn." : "Make better work, together."}</span></div><div className="footer-links"><div><b>Product</b><a href="#templates">Presentations</a><a href="#templates">Pitch decks</a><a href="#templates">Reports</a></div><div><b>Company</b><a href="#top">About</a><a href="#top">Careers</a><a href="#top">Contact</a></div><div><b>Social</b><a href="#top">Instagram</a><a href="#top">LinkedIn</a><a href="#top">X / Twitter</a></div></div><div className="footer-bottom"><span>© 2026 Slidegen</span><span>All systems go</span><span>Privacy · Terms</span></div></footer>
+      <section id="top" className="hero" style={{ backgroundImage: `url("${publicAssetUrl("bgslidegen-poster.png")}")` }}>
+        <video className="hero-background-video" autoPlay muted loop playsInline preload="auto" poster={publicAssetUrl("bgslidegen-poster.png")} aria-label="Slidegen animated background">
+          <source src={publicAssetUrl("bgslidegen.mp4")} type="video/mp4" />
+        </video>
+        <div className="hero-video-overlay" />
+        <p className="hero-topline">{isVietnamese ? "BIẾN Ý TƯỞNG THÀNH SLIDE" : "TURN IDEAS INTO SLIDES"}</p>
+        <div className="dot-grid" />
+        <div className="hero-copy">
+          {isVietnamese
+            ? <>Workspace AI cho bài trình bày.<br />Từ brief, DOCX đến deck có thể chỉnh sửa.</>
+            : <>An AI workspace for presentations.<br />From brief and DOCX to an editable deck.</>}
+        </div>
+        <form className="prompt-wrap" onSubmit={handlePromptSubmit}>
+          <div className="prompt-field">
+            <input className="landing-prompt-input" type="text" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder={typedPrompt} aria-label={isVietnamese ? "Bạn muốn tạo gì?" : "What do you want to create?"} />
+          </div>
+          <button className="signup" type="submit">{isVietnamese ? "Mở workspace" : "Open workspace"}<span>↗</span></button>
+        </form>
+      </section>
+      <section id="templates" className="showcase-section"><div className="section-intro"><p>{isVietnamese ? "MỘT STUDIO. MỌI CÂU CHUYỆN." : "ONE STUDIO. EVERY STORY."}</p><h2>{isVietnamese ? "Ý tưởng chuyển động." : "Ideas, in motion."}</h2><span>{isVietnamese ? "Một hệ thống sáng tạo linh hoạt cho mọi cách đội ngũ của bạn muốn truyền đạt." : "One flexible creative system for every way your team needs to communicate."}</span></div><div className="feature-list">{categories.map((category, index) => { const value = isVietnamese ? 1 : 0; const sourceLabels = isVietnamese ? ["BRIEF", "DOCX", "MARKDOWN", "CANVAS", "DECK"] : ["BRIEF", "DOCX", "MARKDOWN", "CANVAS", "DECK"]; const cardNumber = category.eyebrow[0].slice(0, 2); return <article className={`feature-stage tone-${category.tone}`} key={category.label[value]}><div className="feature-copy"><p>{category.eyebrow[value]}</p><h3 className="title-unified">{category.title[value]}</h3><span>{category.copy[value]}</span><a href="#create">{isVietnamese ? "Khám phá Slidegen" : "Explore Slidegen"}<b>↗</b></a></div><div className={`feature-canvas feature-canvas-${index}`}><div className="canvas-grid" /><div className="canvas-label">SLIDEGEN / {cardNumber}</div><div className="canvas-title">{category.label[value]}</div><div className="canvas-subtitle">{category.title[value]}</div><div className="canvas-visual" aria-hidden="true"><div className="visual-source"><span>SOURCE</span><strong>{sourceLabels[index]}</strong><i /><i /><i /></div><div className="visual-connector"><span>→</span><i /></div><div className="visual-deck"><span>SLIDEGENIUS</span><strong>{isVietnamese ? "Deck sẵn sàng" : "Deck ready"}</strong><div><i /><i /><i /></div></div></div></div></article>; })}</div></section>
+      <section id="create" className="create-section"><div><p>SLIDEGEN FOR CREATIVE TEAMS</p><h2 className="title-unified">{isVietnamese ? <>Khiến ý tưởng<br /><em>không thể bị bỏ qua.</em></> : <>Make the idea<br /><em>impossible to ignore.</em></>}</h2><a href="#top">{isVietnamese ? "Bắt đầu sáng tạo" : "Start creating"}<span>↗</span></a></div><div className="newsletter"><p>{isVietnamese ? "ĐỪNG BỎ LỠ" : "STAY IN THE LOOP"}</p><strong>{isVietnamese ? "Tư duy sáng tạo, gửi đến bạn." : "Creative thinking, delivered."}</strong><form onSubmit={handleNewsletterSubmit}><input aria-label="Email address" name="newsletter-email" placeholder={isVietnamese ? "Địa chỉ email của bạn" : "Your email address"} type="email" value={newsletterEmail} onChange={(event) => setNewsletterEmail(event.target.value)} required /><button type="submit">{isVietnamese ? "Tham gia" : "Join"}<span>↗</span></button></form></div></section>
+      <footer className="site-footer">
+        <div className="footer-top">
+          <div className="footer-brand">
+            <a className="brand" href="#top" aria-label="Slidegen home"><span className="brand-word"><span>slide</span><b>gen</b></span></a>
+            <span>{isVietnamese ? "Cùng nhau tạo nên công việc tốt hơn." : "Make better work, together."}</span>
+            <a className="footer-cta" href="#create">{isVietnamese ? "Bắt đầu sáng tạo" : "Start creating"}<span>↗</span></a>
+          </div>
+          <div className="footer-links">
+            <div><b>Product</b><a href="#templates">Presentations</a><a href="#templates">Pitch decks</a><a href="#templates">Reports</a></div>
+            <div><b>Company</b><a href="#top">About</a><a href="#top">Careers</a><a href="#top">Contact</a></div>
+            <div><b>Social</b><a href="#top">Instagram</a><a href="#top">LinkedIn</a><a href="#top">X / Twitter</a></div>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>© 2026 Slidegen</span>
+          <span className="footer-status"><i />All systems go</span>
+          <span className="footer-legal"><a href="#top">Privacy</a><span>·</span><a href="#top">Terms</a></span>
+        </div>
+      </footer>
     </main>
   );
 }

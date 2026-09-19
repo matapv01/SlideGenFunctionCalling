@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import GlobalThemeToggle from "@/components/GlobalThemeToggle";
 import { SlideGenerationProvider } from "./features/slidegenius/SlideGenerationContext";
 
 import StructureEditor from "./pages/StructureEditor";
@@ -26,6 +27,7 @@ const ProvidersLayout = () => {
           <SlideGenerationProvider>
             <TooltipProvider>
               <Toaster />
+              <GlobalThemeToggle />
               <Outlet />
             </TooltipProvider>
           </SlideGenerationProvider>
