@@ -183,7 +183,10 @@
     max-width: 1500px;
   }
   .sgx-home.workspace-page[data-tab="projects"] .project-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    /* Keep empty tracks so a single project does not stretch into a full
+       width hero card. */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
+    justify-content: start;
     gap: 18px;
   }
   .sgx-home.workspace-page[data-tab="projects"] .project-art {
@@ -519,6 +522,14 @@ html:not(.dark) .sgx-home.workspace-page .subscription-card h3,
 html:not(.dark) .sgx-home.workspace-page .manual-card strong,
 html:not(.dark) .sgx-home.workspace-page .guide-steps h3 {
   color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .subscription-price {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .subscription-price small {
+  color: #68746b;
 }
 
 html:not(.dark) .sgx-home.workspace-page .workspace-main,

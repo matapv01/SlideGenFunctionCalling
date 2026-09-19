@@ -86,6 +86,121 @@
 .admin-users-actions button:first-child { border-color: #f5a08a66; color: #f5a08a; }
 .admin-users-actions button:hover { background: #f5a08a18; }
 .admin-users-actions button:disabled { cursor: not-allowed; opacity: .45; }
+
+/* Keep the admin controls on the same paper-like surface as the light
+   workspace instead of leaking the dark-mode palette into cards and tables. */
+html:not(.dark) .sgx-home.workspace-page .admin-section-tabs {
+  border-color: #d9d6ce;
+  background: #e8e6e0;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-section-tabs button { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-section-tabs button:hover { color: #27342b; }
+html:not(.dark) .sgx-home.workspace-page .admin-section-tabs button.active {
+  background: #f5a08a;
+  color: #242524;
+}
+html:not(.dark) .sgx-home.workspace-page[data-tab="admin"] .workspace-main {
+  scrollbar-color: #a8afa7 transparent;
+}
+html:not(.dark) .sgx-home.workspace-page[data-tab="admin"] .workspace-main::-webkit-scrollbar-thumb {
+  border-color: #f3f3f1;
+  background: #a8afa7;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-usage-window { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-window strong { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-reset {
+  border-color: #d97861;
+  background: #fff4ef;
+  color: #c65f49;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-usage-reset:hover { background: #ffebe4; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-card {
+  border-color: #dedbd3;
+  background: #fffefa;
+  box-shadow: 0 8px 22px #33423812;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-usage-card-heading { border-bottom-color: #e2dfd8; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-card-heading h3 { color: #27342b; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-card-heading p { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-card-heading > span { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-weight-row {
+  border-bottom-color: #e8e5de;
+  color: #465149;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-usage-weight-row strong { color: #344138; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-weight-row small { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-input-wrap {
+  border-color: #d9d6ce;
+  background: #f5f3ef;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-usage-input-wrap:focus-within { border-color: #d97861; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-input-wrap input { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-input-wrap i { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-table { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-table th,
+html:not(.dark) .sgx-home.workspace-page .admin-usage-table td { border-bottom-color: #e8e5de; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-table thead th { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-table tbody th { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-plan-input {
+  border-color: #d9d6ce;
+  background: #f5f3ef;
+  color: #c65f49;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-usage-plan-input:focus { border-color: #d97861; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-footer p { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-footer p span { color: #7b857d; }
+html:not(.dark) .sgx-home.workspace-page .admin-usage-state { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-password-box label { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-password-box input {
+  border-color: #d9d6ce;
+  background: #f5f3ef;
+  color: #c65f49;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-password-box input:focus { border-color: #d97861; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-password-box small { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-table-wrap {
+  border-color: #dedbd3;
+  background: #fffefa;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-table { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-table th,
+html:not(.dark) .sgx-home.workspace-page .admin-users-table td { border-bottom-color: #e8e5de; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-table thead th { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-table td:first-child strong { color: #344138; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-table td:first-child small { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-table td:first-child em.is-active {
+  background: #eaf3e9;
+  color: #477052;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-table td:first-child em.is-inactive {
+  background: #fff0ea;
+  color: #b45f4d;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-plan { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-role {
+  border-color: #d9d6ce;
+  color: #68746b;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-role.is-admin {
+  border-color: #d6816e;
+  background: #fff0ea;
+  color: #b45f4d;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-usage { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-usage strong { color: #344138; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-window { color: #465149; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-window span { color: #707b73; }
+html:not(.dark) .sgx-home.workspace-page .admin-users-actions button {
+  border-color: #d9d6ce;
+  background: #f5f3ef;
+  color: #465149;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-actions button:first-child {
+  border-color: #d6816e;
+  color: #b45f4d;
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-actions button:hover { background: #fff0ea; }
+
 @media (max-width: 760px) {
   .sgx-home.workspace-page .admin-usage-panel { padding-bottom: 28px; }
   .admin-usage-header { display: grid; align-items: start; gap: 20px; }
