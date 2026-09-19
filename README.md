@@ -25,8 +25,8 @@ upload tài liệu: `DOCX tối đa / file (MB)` giới hạn từng file, còn
 `DOCX tối đa / cuộc trò chuyện (MB)` giới hạn tổng tất cả file đã đính kèm trong
 một conversation. Hai giá trị này được áp dụng riêng theo plan `Free`, `Plus` và
 `Ultra` cho cả chatbot RAG lẫn các luồng upload DOCX cũ; không cần sửa code hay
-`.env`. Mức bootstrap hiện tại là `Free: 10/50 MB`, `Plus: 20/100 MB`,
-`Ultra: 40/200 MB`. Giới hạn file không được lớn hơn giới hạn conversation.
+`.env`. Mức bootstrap hiện tại là `Free: 30/150 MB`, `Plus: 50/250 MB`,
+`Ultra: 80/400 MB`. Giới hạn file không được lớn hơn giới hạn conversation.
 
 ### Trang quản trị
 
