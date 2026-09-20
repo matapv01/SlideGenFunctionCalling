@@ -77,6 +77,7 @@ class AuthService:
             hashed_password=hashed_password,
             is_active=True,
             email_verified=email_verified,
+            onboarding_completed=False,
             created_at=None
         )
         created_user = self.user_repo.create(new_user)

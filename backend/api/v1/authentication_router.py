@@ -19,7 +19,8 @@ from backend.api.schemas.auth_schema import (
     EmailVerificationChallenge,
     EmailVerificationRequest,
     EmailVerificationResendRequest,
-    UserResponse, 
+    UserResponse,
+    OnboardingAnswers,
     ChangePasswordRequest  # Import thêm cái này
 )
 from backend.api.dependencies import get_auth_service, get_current_active_user
@@ -175,12 +176,14 @@ def _google_result_redirect(
     *,
     token: str | None = None,
     error: str | None = None,
+    is_new_user: bool = False,
 ) -> RedirectResponse:
     if token:
         fragment = f"google_token={quote(token)}"
     else:
         fragment = f"google_error={quote(error or 'oauth_failed')}"
-    return RedirectResponse(url=f"{_frontend_base(request)}/login#{fragment}", status_code=303)
+    auth_page = "register" if is_new_user else "login"
+    return RedirectResponse(url=f"{_frontend_base(request)}/{auth_page}#{fragment}", status_code=303)
 
 
 @router.get("/google/login", name="google_login")
@@ -249,6 +252,7 @@ async def google_callback(request: Request, code: str | None = None, state: str 
     user_repo = SqliteUserRepository()
     auth_service = AuthService(user_repo)
     user = user_repo.get_by_email(email)
+    is_new_user = user is None or not user.email_verified
     full_name = str(userinfo.get("name", "")).strip() or email.split("@", 1)[0]
     avatar_url = str(userinfo.get("picture", "")).strip() or None
 
@@ -280,6 +284,7 @@ async def google_callback(request: Request, code: str | None = None, state: str 
     return _google_result_redirect(
         request,
         token=auth_service.create_access_token(data={"sub": user.email}),
+        is_new_user=is_new_user,
     )
 
 
@@ -359,6 +364,17 @@ async def resend_email_code(verification_data: EmailVerificationResendRequest):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: UserResponse = Depends(get_current_active_user)):
     return current_user
+
+
+@router.post("/onboarding", response_model=UserResponse)
+async def complete_onboarding(
+    answers: OnboardingAnswers,
+    current_user: UserResponse = Depends(get_current_active_user),
+):
+    if current_user.onboarding_completed:
+        return current_user
+    SqliteUserRepository().complete_onboarding(current_user.id, answers.use_cases, answers.role)
+    return current_user.model_copy(update={"onboarding_completed": True})
 
 
 @router.post("/logout")

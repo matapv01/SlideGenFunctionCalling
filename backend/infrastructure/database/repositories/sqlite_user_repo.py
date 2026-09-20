@@ -148,6 +148,12 @@ class SqliteUserRepository(UserRepository):
         except (KeyError, TypeError, IndexError):
             email_verified = True
 
+        onboarding_completed = True
+        try:
+            onboarding_completed = bool(row['onboarding_completed'])
+        except (KeyError, TypeError, IndexError):
+            pass
+
         return User(
             id=row['id'],
             email=row['email'],
@@ -164,6 +170,7 @@ class SqliteUserRepository(UserRepository):
             docx_usage=docx_usage,
             is_active=bool(row['is_active']),
             email_verified=email_verified,
+            onboarding_completed=onboarding_completed,
             is_admin=is_admin,
             cancel_at_period_end=cancel_at_period_end,
             created_at=row['created_at'] # Giả sử DB trả về datetime hoặc string parse được
@@ -261,14 +268,14 @@ class SqliteUserRepository(UserRepository):
                     daily_usage_reset_date, idea_usage_today, docx_usage_today,
                     usage_window_started_at, chat_usage_5h,
                     chat_usage_credits_5h, chat_messages_5h, docx_usage_5h,
-                    is_active, email_verified, is_admin
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    is_active, email_verified, is_admin, onboarding_completed
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 user.email, user.hashed_password, user.subscription_tier,
                 user.daily_usage_reset_date, user.idea_usage_today, user.docx_usage_today,
                 user.usage_window_started_at, user.chat_message_count,
                 user.chat_usage, user.chat_message_count, user.docx_usage,
-                user.is_active, user.email_verified, user.is_admin
+                user.is_active, user.email_verified, user.is_admin, user.onboarding_completed
             ))
             conn.commit()
             user_id = cursor.lastrowid
@@ -292,6 +299,20 @@ class SqliteUserRepository(UserRepository):
             cursor = conn.execute(
                 "UPDATE users SET email_verified = 1 WHERE id = ?",
                 (user_id,),
+            )
+            if cursor.rowcount == 0:
+                raise LookupError("User not found")
+            conn.commit()
+
+    def complete_onboarding(self, user_id: int, use_cases: list[str], role: str | None) -> None:
+        with get_db_connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE users SET onboarding_completed = 1,
+                    onboarding_use_cases = ?, onboarding_role = ?
+                WHERE id = ?
+                """,
+                (json.dumps(use_cases), role, user_id),
             )
             if cursor.rowcount == 0:
                 raise LookupError("User not found")

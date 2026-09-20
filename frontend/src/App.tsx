@@ -14,6 +14,7 @@ import XmlSlideEditor from "./pages/XmlSlideEditor";
 import XmlRenderPreview from "./pages/XmlRenderPreview";
 import NotFound from "./pages/NotFound";
 import SlidegeniusAuth from "./features/slidegenius/SlidegeniusAuth";
+import SlidegeniusOnboarding from "./features/slidegenius/SlidegeniusOnboarding";
 import { SlidegeniusHome, SlidegeniusLanding, SlidegeniusProjectView } from "./features/slidegenius";
 import AdminUsagePage from "./features/admin/AdminUsagePage";
 
@@ -44,6 +45,7 @@ const router = createBrowserRouter([
       { path: "home", element: <ProtectedRoute><SlidegeniusHome /></ProtectedRoute> },
       { path: "login", element: <SlidegeniusAuth mode="signin" /> },
       { path: "register", element: <SlidegeniusAuth mode="signup" /> },
+      { path: "onboarding", element: <ProtectedRoute><SlidegeniusOnboarding /></ProtectedRoute> },
       { path: "guide", element: <ProtectedRoute><SlidegeniusHome initialTab="guide" /></ProtectedRoute> },
       { path: "manual", element: <ProtectedRoute><SlidegeniusHome initialTab="manual" /></ProtectedRoute> },
       { path: "projects", element: <ProtectedRoute><SlidegeniusHome initialTab="projects" /></ProtectedRoute> },

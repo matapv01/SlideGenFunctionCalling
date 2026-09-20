@@ -25,7 +25,7 @@ const copy = {
 export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithAccessToken, register, verifyEmailCode, resendEmailCode, isAuthenticated, isLoading } = useAuth();
+  const { login, loginWithAccessToken, register, verifyEmailCode, resendEmailCode, isAuthenticated, isLoading, user } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { toast } = useToast();
   const t = copy[language];
@@ -102,15 +102,17 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
     if (!googleToken) return;
 
     setGoogleLoading(true);
-    void loginWithAccessToken(googleToken).then(() => {
+    void loginWithAccessToken(googleToken).then((authenticatedUser) => {
       toast({ title: language === "en" ? "Signed in with Google" : "Đăng nhập Google thành công" });
-      navigate(from, { replace: true });
+      navigate(authenticatedUser.onboarding_completed === false ? "/onboarding" : from, { replace: true });
     }).catch(() => {
       setError(language === "vi" ? "Không thể đăng nhập bằng Google." : "Unable to sign in with Google.");
     }).finally(() => setGoogleLoading(false));
   }, [from, language, loginWithAccessToken, navigate, toast]);
 
-  if (!isLoading && isAuthenticated) return <Navigate to="/home" replace />;
+  if (!isLoading && isAuthenticated && !loading && !googleLoading && !verificationLoading) {
+    return <Navigate to={user?.onboarding_completed === false ? "/onboarding" : "/home"} replace />;
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -125,9 +127,9 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
       if (isSignup) {
         const authResult = await register(fullName.trim(), email.trim(), password);
         if ("access_token" in authResult) {
-          await loginWithAccessToken(authResult.access_token);
+          const authenticatedUser = await loginWithAccessToken(authResult.access_token);
           toast({ title: language === "en" ? "Account created" : "Tạo tài khoản thành công" });
-          navigate(from, { replace: true });
+          navigate(authenticatedUser.onboarding_completed === false ? "/onboarding" : from, { replace: true });
           return;
         }
         setVerificationChallenge(authResult);
@@ -137,9 +139,9 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
       } else {
         const authResult = await login(email.trim(), password, remember);
         if ("access_token" in authResult) {
-          await loginWithAccessToken(authResult.access_token);
+          const authenticatedUser = await loginWithAccessToken(authResult.access_token);
           toast({ title: language === "en" ? "Signed in" : "Đăng nhập thành công" });
-          navigate(from, { replace: true });
+          navigate(authenticatedUser.onboarding_completed === false ? "/onboarding" : from, { replace: true });
           return;
         }
         setVerificationChallenge(authResult);
@@ -177,9 +179,9 @@ export default function SlidegeniusAuth({ mode }: { mode: AuthMode }) {
     setError("");
     setVerificationLoading(true);
     try {
-      await verifyEmailCode(verificationChallenge.challenge_id, verificationCode.trim());
+      const authenticatedUser = await verifyEmailCode(verificationChallenge.challenge_id, verificationCode.trim());
       toast({ title: verificationText.verified });
-      navigate(from, { replace: true });
+      navigate(authenticatedUser.onboarding_completed === false ? "/onboarding" : from, { replace: true });
     } catch (verifyError) {
       const reason = verifyError instanceof Error && verifyError.message.trim()
         ? verifyError.message.trim()

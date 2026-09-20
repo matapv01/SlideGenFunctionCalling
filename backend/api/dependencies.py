@@ -256,6 +256,7 @@ async def get_current_user(
         id=user.id, email=user.email,
         created_at=user.created_at, is_active=bool(user.is_active),
         is_admin=bool(user.is_admin),
+        onboarding_completed=bool(user.onboarding_completed),
         full_name=full_name, avatar_url=avatar_url, username=username
     )
 
