@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
@@ -96,6 +97,7 @@ def search_image_candidates(state: State, config: RunnableConfig) -> State:
     to the verifier node, and no candidate is injected into XML here.
     """
     print("\n---------------- Executing Node: image_candidate_search ----------------")
+    started = time.perf_counter()
     options = dict(state.get("slide_options") or {})
     verifier = (config or {}).get("configurable", {}).get("image_relevance_verifier")
     plans = list(state.get("slide_plans") or [])
@@ -149,5 +151,10 @@ def search_image_candidates(state: State, config: RunnableConfig) -> State:
     print(
         f"  -> Discovered {sum(bool(item.get('candidates')) for item in results)} "
         f"image intent result(s) across {len(results)} intent(s)"
+    )
+    logger.info(
+        "Image candidate search completed in %.2fs (%d intents)",
+        time.perf_counter() - started,
+        len(results),
     )
     return state

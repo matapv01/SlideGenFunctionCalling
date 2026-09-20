@@ -49,6 +49,10 @@ API_PORT = 12008
 
 # --- Credentials / secrets (the only values read from .env) ---
 LLM_API_KEY = os.getenv("LLM_API_KEY")
+# The VLM uses its own credential slot so it can move to a separate provider
+# later. Until that is configured explicitly, reuse the generator credential to
+# keep local and existing deployments working without a second secret.
+VLM_API_KEY = os.getenv("VLM_API_KEY") or LLM_API_KEY
 TAVILY_API_KEYS = tuple(
     key
     for key in (
@@ -92,20 +96,26 @@ _DEFAULT_LLM_BASE_URL = (
     if RUNNING_IN_DOCKER
     else "http://127.0.0.1:8080/v1"
 )
-LLM_BASE_URL = (os.getenv("LLM_BASE_URL") or _DEFAULT_LLM_BASE_URL).strip().rstrip("/")
+LLM_BASE_URL = _DEFAULT_LLM_BASE_URL
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
 LLM_TEMPERATURE = 0.5
 # Max tokens trong response của provider OpenAI-compatible.
 LLM_MAX_TOKENS = 20000
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
 LLM_TOP_P = 1.0
+# Network/request deadlines. The shared limiter also uses these values while a
+# request waits for an endpoint slot, preventing a saturated Qwen server from
+# leaving a workflow blocked indefinitely.
+LLM_REQUEST_TIMEOUT_SECONDS = 180
+VLM_REQUEST_TIMEOUT_SECONDS = 180
 
 # --- VLM Configuration ---
-# Image relevance verification currently uses the same multimodal Qwen
-# endpoint as the rest of the application. Keep this as a config constant so
-# changing the model later is a deliberate code/config change, not a hidden
-# .env override that can make Docker and local behave differently.
-VLM_MODEL = LLM_MODEL
+# Image relevance verification has a dedicated provider/configuration boundary.
+# It intentionally points to the same Qwen deployment for now. Change these
+# constants when a dedicated vision endpoint/model is available; credentials
+# remain environment-backed through VLM_API_KEY above.
+VLM_MODEL = "qwen"
+VLM_BASE_URL = _DEFAULT_LLM_BASE_URL
 # Short-term conversation memory configuration.
 CHATBOT_MAX_HISTORY_TURNS = 5
 CHATBOT_DEFAULT_MODEL = "genius-3"
@@ -228,6 +238,16 @@ LLM_REQUEST_MAX_CONCURRENCY = 5
 PLANNER_MAX_CONCURRENCY = 5
 IMAGE_SEARCH_MAX_RESULTS = 10
 IMAGE_SEARCH_MAX_CONCURRENCY = 5
+# Search discovery and VLM verification can fan out independently. Keep the
+# VLM request cap aligned with the tested Qwen endpoint, while limiting the
+# number of images inside each individual multimodal request below.
+VLM_REQUEST_MAX_CONCURRENCY = 5
+# Search returns up to ten ranked candidates; VLM verifies the best five after
+# metadata/ration ranking, balancing relevance against multimodal payload size.
+VLM_MAX_SEARCH_CANDIDATES = 5
+VLM_DOCUMENT_IMAGE_BATCH_SIZE = 3
+VLM_MAX_IMAGE_EDGE = 768
+VLM_MAX_IMAGE_BYTES = 512 * 1024
 # Backward-compatible alias for integrations that still import the old name.
 SECTION_MAX_CONCURRENCY = SLIDE_MAX_CONCURRENCY
 SECTION_FALLBACK_BATCH_SIZE = 3

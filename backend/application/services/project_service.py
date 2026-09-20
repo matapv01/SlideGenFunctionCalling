@@ -1,6 +1,7 @@
 # File: backend/application/services/project_service.py
 
 import re
+import shutil
 import zipfile
 from typing import List, Union
 from pathlib import Path
@@ -9,6 +10,8 @@ from backend.domain.entities.project import Project, Slide
 from backend.domain.project_name import normalize_project_name
 from backend.domain.ports.project_repository import ProjectRepository
 from backend.api.schemas.project_schema import ProjectCreate, ProjectUpdate, SlideCreate, SlideUpdate
+from backend.config import OUTPUT_DIR
+from backend.application.services.slide_asset_service import slide_asset_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -101,6 +104,16 @@ class ProjectService:
             raise HTTPException(status_code=403, detail="Chỉ chủ sở hữu mới có thể xóa dự án")
             
         self.repo.delete_project(project_id)
+        # Generated XML projects keep their verified images in a private
+        # project asset folder. Remove it together with the database project;
+        # the path is fixed below OUTPUT_DIR and never comes from the client.
+        asset_dir = (OUTPUT_DIR / f"project_{project_id}").resolve()
+        output_root = OUTPUT_DIR.resolve()
+        try:
+            asset_dir.relative_to(output_root)
+        except ValueError:
+            return
+        shutil.rmtree(asset_dir, ignore_errors=True)
 
 
     def create_slide(self, project_id: int, user_id: int, data: Union[SlideCreate, dict]) -> int:
@@ -230,10 +243,14 @@ class ProjectService:
                 xml_folder = base / "xml"
                 xml_files = sorted(xml_folder.glob("*.xml"), key=self.extract_slide_index)
                 logger.info(f"Found {len(xml_files)} XML files in {xml_folder}")
+                project_asset_dir = OUTPUT_DIR / f"project_{project_id}"
 
                 for idx, xml_file in enumerate(xml_files):
                     with open(xml_file, "r", encoding="utf-8") as file:
-                        xml_content = file.read()
+                        xml_content = slide_asset_service.rewrite_xml_sources(
+                            file.read(),
+                            project_asset_dir,
+                        )
 
                     slide = Slide(
                         id=None,

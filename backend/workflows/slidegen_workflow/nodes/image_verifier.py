@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 
-from backend.config import IMAGE_SEARCH_MAX_CONCURRENCY
+from backend.config import VLM_REQUEST_MAX_CONCURRENCY
 from backend.workflows.slidegen_workflow.graph.stage import State
 
 logger = logging.getLogger(__name__)
@@ -154,6 +155,7 @@ def verify_slide_images(state: State, config: RunnableConfig) -> State:
     simply produce an empty assignment for that slide.
     """
     print("\n---------------- Executing Node: image_verifier ----------------")
+    started = time.perf_counter()
     options = dict(state.get("slide_options") or {})
     verifier = (config or {}).get("configurable", {}).get("image_relevance_verifier")
     candidates = list(
@@ -170,7 +172,7 @@ def verify_slide_images(state: State, config: RunnableConfig) -> State:
         ]
         assignments = []
         with ThreadPoolExecutor(
-            max_workers=min(IMAGE_SEARCH_MAX_CONCURRENCY, max(1, len(jobs) + 1))
+            max_workers=min(VLM_REQUEST_MAX_CONCURRENCY, max(1, len(jobs) + 1))
         ) as executor:
             futures = [
                 executor.submit(_verify_search_group, verifier, group, state)
@@ -198,4 +200,9 @@ def verify_slide_images(state: State, config: RunnableConfig) -> State:
     options["document_image_assignments"] = state["document_image_assignments"]
     state["slide_options"] = options
     print(f"  -> Approved {len(assignments)} image assignment(s)")
+    logger.info(
+        "Image verification completed in %.2fs (%d assignments)",
+        time.perf_counter() - started,
+        len(assignments),
+    )
     return state

@@ -12237,9 +12237,16 @@ def generate_bullet_content_slide_xml(
         block_y: float,
         block_height: float,
     ) -> float:
+        # Keep the diagonal geometry bounded by the canvas. Long content may
+        # extend below the nominal slide while fitting is being calculated;
+        # extrapolating the diagonal there collapses later textboxes to width 1.
+        safe_y = min(
+            panel_bottom_y,
+            max(panel_top_y, block_y + block_height),
+        )
         safe_right_edge = (
             diagonal_x_at_y(
-                block_y + block_height
+                safe_y
             )
             - accent_half_width
             - text_right_padding

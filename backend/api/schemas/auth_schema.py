@@ -1,6 +1,6 @@
 # File: backend/schemas/auth_schema.py
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Literal, Optional
 from datetime import datetime
 
@@ -68,8 +68,7 @@ class UserResponse(UserBase):
     avatar_url: Optional[str] = None
     onboarding_completed: bool = True
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OnboardingAnswers(BaseModel):

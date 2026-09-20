@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 
-from backend.config import PLANNING_BATCH_SIZE
+from backend.config import PLANNER_MAX_CONCURRENCY, PLANNING_BATCH_SIZE
 from backend.workflows.slidegen_workflow.graph.stage import (
     SlideRefinementBatch,
     State,
@@ -135,11 +137,13 @@ def _invoke_refinement_batch(chain, payload: dict[str, Any], config: RunnableCon
 def refine_slide_plans(state: State, config: RunnableConfig) -> State:
     """Create final content/layout briefs after image verification."""
     print("\n---------------- Executing Node: slide_planner_phase_2 ----------------")
+    started = time.perf_counter()
     chunks = list(state.get("slide_chunks") or [])
     plans = list(state.get("slide_plans") or [])
     if not chunks:
         state["slide_refinements"] = []
         state["slide_final_contents"] = []
+        logger.info("Phase-two planner skipped: no slides (%.2fs)", time.perf_counter() - started)
         return state
 
     configurable = config.get("configurable", {}) if config else {}
@@ -160,8 +164,16 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
     # phase-one content and its no-image layout brief avoids an unnecessary
     # second planner request on the common path.
     if not grouped_images:
+        logger.info(
+            "Phase-two planner skipped: no approved images (%.2fs)",
+            time.perf_counter() - started,
+        )
         return _apply_refinements(state, fallback, grouped_images)
     if llm is None:
+        logger.info(
+            "Phase-two planner skipped: no planner provider (%.2fs)",
+            time.perf_counter() - started,
+        )
         return _apply_refinements(state, fallback, grouped_images)
 
     prompt = ChatPromptTemplate.from_messages(
@@ -171,47 +183,86 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
         ]
     )
     chain = prompt | llm.with_structured_output(SlideRefinementBatch)
+    # Slides without approved images already have a deterministic no-image
+    # fallback. Refine only slides that actually gained visual evidence; this
+    # avoids spending planner calls on unchanged text-only slides.
+    refinement_indices = [
+        index
+        for index in sorted(grouped_images)
+        if 0 <= index < len(chunks)
+    ]
+    batch_payloads: list[tuple[list[int], dict[str, Any]]] = []
+    for start in range(0, len(refinement_indices), PLANNING_BATCH_SIZE):
+        batch_indices = refinement_indices[start : start + PLANNING_BATCH_SIZE]
+        slides = []
+        for index in batch_indices:
+            plan = plans[index] if index < len(plans) else {}
+            images = grouped_images.get(index, [])
+            slides.append(
+                {
+                    "slide_index": index,
+                    "source_content": _content_text(chunks[index])[:5000],
+                    "phase_1_plan": plan,
+                    "approved_images": [
+                        {
+                            "source_id": image.get("source_id"),
+                            "source_type": image.get("source_type"),
+                            "source_url": image.get("source_url"),
+                            "source_path": image.get("source_path"),
+                            "role": image.get("role"),
+                            "visual_notes": image.get("visual_notes"),
+                            "caption_hint": image.get("caption_hint"),
+                            "placement_hint": image.get("placement_hint"),
+                        }
+                        for image in images
+                    ],
+                }
+            )
+        batch_payloads.append(
+            (
+                batch_indices,
+                {
+                    "deck_topic": str(
+                        style.get("deck_topic") or state.get("document_title") or ""
+                    ),
+                    "deck_outline": _deck_outline(state),
+                    "presentation_instruction": str(
+                        options.get("presentation_instruction") or ""
+                    ),
+                    "slides": json.dumps(slides, ensure_ascii=False, default=str),
+                },
+            )
+        )
+
     refinements: list[dict[str, Any]] = []
     try:
-        for start in range(0, len(chunks), PLANNING_BATCH_SIZE):
-            end = min(start + PLANNING_BATCH_SIZE, len(chunks))
-            slides = []
-            for index in range(start, end):
-                plan = plans[index] if index < len(plans) else {}
-                images = grouped_images.get(index, [])
-                slides.append(
-                    {
-                        "slide_index": index,
-                        "source_content": _content_text(chunks[index])[:5000],
-                        "phase_1_plan": plan,
-                        "approved_images": [
-                            {
-                                "source_id": image.get("source_id"),
-                                "source_type": image.get("source_type"),
-                                "source_url": image.get("source_url"),
-                                "source_path": image.get("source_path"),
-                                "role": image.get("role"),
-                                "visual_notes": image.get("visual_notes"),
-                                "caption_hint": image.get("caption_hint"),
-                                "placement_hint": image.get("placement_hint"),
-                            }
-                            for image in images
-                        ],
-                    }
-                )
-            payload = {
-                "deck_topic": str(style.get("deck_topic") or state.get("document_title") or ""),
-                "deck_outline": _deck_outline(state),
-                "presentation_instruction": str(options.get("presentation_instruction") or ""),
-                "slides": json.dumps(slides, ensure_ascii=False, default=str),
-            }
+        def invoke_payload(item: tuple[list[int], dict[str, Any]]) -> list[dict[str, Any]]:
+            batch_indices, payload = item
             result = _invoke_refinement_batch(chain, payload, config)
             raw = _as_dict(result).get("refinements")
-            if not isinstance(raw, list) or len(raw) != end - start:
+            if not isinstance(raw, list) or len(raw) != len(batch_indices):
                 raise ValueError("phase-two planner returned an incomplete batch")
-            refinements.extend(_as_dict(item) for item in raw)
+            normalized: list[dict[str, Any]] = []
+            for fallback_index, refinement in zip(batch_indices, raw):
+                item_dict = _as_dict(refinement)
+                item_dict.setdefault("slide_index", fallback_index)
+                normalized.append(item_dict)
+            return normalized
+
+        # The shared request limiter still caps total LLM pressure. Running
+        # independent phase-two batches concurrently removes an avoidable
+        # serial wait when a deck has many image-backed slides.
+        with ThreadPoolExecutor(
+            max_workers=min(
+                max(1, int(PLANNER_MAX_CONCURRENCY)),
+                max(1, len(batch_payloads)),
+            )
+        ) as executor:
+            for batch_refinements in executor.map(invoke_payload, batch_payloads):
+                refinements.extend(batch_refinements)
     except Exception as exc:
         logger.warning("Phase-two planner failed; preserving phase-one plans: %s", exc)
+        logger.info("Phase-two planner fallback completed in %.2fs", time.perf_counter() - started)
         return _apply_refinements(state, fallback, grouped_images)
 
     normalized: list[dict[str, Any]] = []
@@ -236,6 +287,11 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
         item["retrieval_query"] = str(candidate.get("retrieval_query") or "").strip()[:300]
         item["image_mode"] = "semantic" if grouped_images.get(index) else "none"
         normalized.append(item)
+    logger.info(
+        "Phase-two planner completed in %.2fs (%d image-backed slides)",
+        time.perf_counter() - started,
+        len(refinement_indices),
+    )
     return _apply_refinements(state, normalized, grouped_images)
 
 

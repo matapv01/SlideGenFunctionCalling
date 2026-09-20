@@ -9,8 +9,9 @@ from backend.infrastructure.llm.request_limiter import LLMRequestLimiter
 logger = logging.getLogger(__name__)
 
 class GeminiLLMProvider(LLMProvider):
-    def __init__(self, api_keys: str = None, base_url: str = None, model: str = None, temperature: float = None, max_tokens: int = None, top_p: float = None, add_stop_token: List[str] = None, request_limiter: LLMRequestLimiter | None = None):
+    def __init__(self, api_keys: str = None, base_url: str = None, model: str = None, temperature: float = None, max_tokens: int = None, top_p: float = None, add_stop_token: List[str] = None, request_limiter: LLMRequestLimiter | None = None, request_timeout: float | None = None):
         self.request_limiter = request_limiter
+        self.request_timeout = request_timeout
         self.llm_client = LLMClient(
             api_keys=api_keys,
             base_url=base_url,
@@ -18,7 +19,8 @@ class GeminiLLMProvider(LLMProvider):
             temperature=temperature,
             max_tokens=max_tokens,
             top_p=top_p,
-            add_stop_token=add_stop_token
+            add_stop_token=add_stop_token,
+            timeout=request_timeout,
         ).llm
 
     def generate_completion(
@@ -44,7 +46,7 @@ class GeminiLLMProvider(LLMProvider):
         if self.request_limiter is None:
             response = llm.invoke(messages)
         else:
-            with self.request_limiter.slot():
+            with self.request_limiter.slot(timeout=self.request_timeout):
                 response = llm.invoke(messages)
         content = getattr(response, "content", "") or ""
         if isinstance(content, list):

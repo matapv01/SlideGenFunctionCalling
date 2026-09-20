@@ -537,13 +537,16 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             break
 
         llm_calls += 1
+        rewriter_kwargs = {}
+        if configurable.get("llm_request_limiter") is not None:
+            rewriter_kwargs["request_limiter"] = configurable["llm_request_limiter"]
         candidate_arguments = _call_slide_rewriter(
             llm,
             state,
             records,
             tool_call,
             round_number,
-            request_limiter=configurable.get("llm_request_limiter"),
+            **rewriter_kwargs,
         )
         if candidate_arguments is None:
             skipped_unfixable += len(overflowing)

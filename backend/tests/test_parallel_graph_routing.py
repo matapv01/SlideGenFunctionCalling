@@ -121,5 +121,7 @@ def test_layouts_are_assigned_globally_before_fan_out():
 def test_parallel_graph_has_no_final_duplicate_repair_node():
     graph = build_parallel_workflow()
 
-    assert "assign_layouts" in graph.nodes
+    # Layout assignment is now performed inside the generation pipeline before
+    # fan-out, so it is not a second graph node.
+    assert "plan_and_generate_pipeline" in graph.nodes
     assert "repair_cross_batch_duplicates" not in graph.nodes

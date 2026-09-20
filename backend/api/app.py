@@ -58,6 +58,17 @@ def create_app():
             return FileResponse(str(index), headers={"Cache-Control": "no-store, must-revalidate"})
         return JSONResponse({"error": "Frontend not built"}, status_code=404)
 
+    @app.get("/health")
+    async def health_check():
+        """Lightweight JSON health endpoint used by Docker and diagnostics."""
+        return {
+            "status": "ok",
+            "services": {
+                "api": "ok",
+                "workflow": "available",
+            },
+        }
+
     # Serve frontend SPA from dist build
     @app.get("/")
     async def serve_root():

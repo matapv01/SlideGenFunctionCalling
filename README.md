@@ -107,11 +107,12 @@ duyệt và không tự search ảnh. Nếu endpoint text-only,
 search không có ứng viên hoặc verifier không khả dụng, workflow không chèn ảnh
 stock mặc định và slide chuyển sang layout không ảnh.
 
-Model dùng cho kiểm chứng ảnh được cấu hình tập trung trong
-`backend/config.py` bằng `VLM_MODEL = LLM_MODEL`; hiện tại cả hai cùng là
-`qwen` và dùng chung endpoint/API key của LLM. Khi triển khai một model vision
-riêng, chỉ cần đổi hằng số này và provider tương ứng trong composition root,
-không thêm override rải rác trong `.env`. Ảnh DOCX được lưu private dưới
+Model và endpoint kiểm chứng ảnh được cấu hình tập trung trong
+`backend/config.py` qua `VLM_MODEL` và `VLM_BASE_URL`; hiện tại cả hai cùng
+trỏ tới Qwen như generator. Credential đọc từ `VLM_API_KEY` trong `.env` và
+tạm thời fallback sang `LLM_API_KEY` nếu chưa khai báo biến riêng. Khi triển
+khai một model vision riêng, chỉ cần đổi hằng số VLM và credential tương ứng,
+không thêm override URL/model rải rác trong `.env`. Ảnh DOCX được lưu private dưới
 `static/chatbot_documents` và được copy vào asset của project khi được chọn;
 không trả đường dẫn nội bộ ra API.
 

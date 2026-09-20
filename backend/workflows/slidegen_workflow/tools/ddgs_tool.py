@@ -4,6 +4,9 @@ import json
 import logging
 import math
 import re
+import threading
+import time
+from collections import OrderedDict
 from typing import Optional
 
 try:
@@ -13,8 +16,34 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Global in-memory cache — 0ms latency on repeated queries
-_IMAGE_CACHE = {}
+# Bounded process-local cache. Search results are intentionally short-lived:
+# image providers can change ranking and an unbounded dict would grow forever
+# under varied user queries.
+_IMAGE_CACHE_TTL_SECONDS = 15 * 60
+_IMAGE_CACHE_MAX_ITEMS = 256
+_IMAGE_CACHE: OrderedDict[tuple, tuple[float, str]] = OrderedDict()
+_IMAGE_CACHE_LOCK = threading.Lock()
+
+
+def _get_cached_images(key: tuple) -> str | None:
+    now = time.monotonic()
+    with _IMAGE_CACHE_LOCK:
+        cached = _IMAGE_CACHE.pop(key, None)
+        if cached is None:
+            return None
+        created_at, result = cached
+        if now - created_at >= _IMAGE_CACHE_TTL_SECONDS:
+            return None
+        _IMAGE_CACHE[key] = (created_at, result)
+        return result
+
+
+def _cache_images(key: tuple, result: str) -> None:
+    with _IMAGE_CACHE_LOCK:
+        _IMAGE_CACHE.pop(key, None)
+        _IMAGE_CACHE[key] = (time.monotonic(), result)
+        while len(_IMAGE_CACHE) > _IMAGE_CACHE_MAX_ITEMS:
+            _IMAGE_CACHE.popitem(last=False)
 
 
 def _to_int(value) -> Optional[int]:
@@ -144,9 +173,10 @@ def search_ddgs_images(
         max_results,
         target_description,
     )
-    if cache_key in _IMAGE_CACHE:
+    cached = _get_cached_images(cache_key)
+    if cached is not None:
         logger.info(f"⚡ [CACHE HIT] '{query}'")
-        return _IMAGE_CACHE[cache_key]
+        return cached
 
     try:
         with DDGS() as ddgs:
@@ -178,7 +208,7 @@ def search_ddgs_images(
                 # multimodal verifier; this tool must never invent a fallback
                 # image when the provider returns no result.
                 res_json = json.dumps(urls[:10], ensure_ascii=False)
-                _IMAGE_CACHE[cache_key] = res_json
+                _cache_images(cache_key, res_json)
                 return res_json
 
     except Exception as e:
@@ -187,5 +217,5 @@ def search_ddgs_images(
     # An empty result is intentional. The workflow will choose a no-image
     # layout instead of inserting an unrelated stock image.
     empty_result = json.dumps([], ensure_ascii=False)
-    _IMAGE_CACHE[cache_key] = empty_result
+    _cache_images(cache_key, empty_result)
     return empty_result

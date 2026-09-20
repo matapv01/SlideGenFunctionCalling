@@ -1,6 +1,6 @@
 # File: backend/schemas/edit_schema.py
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any, Literal
 
 class DocumentNode(BaseModel):
@@ -9,11 +9,10 @@ class DocumentNode(BaseModel):
     level: int
     title: str = ""
     content: str = ""
-    children: List['DocumentNode'] = []
+    children: List['DocumentNode'] = Field(default_factory=list)
     is_transition: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Cho phép Pydantic hiểu kiểu đệ quy của children
 DocumentNode.model_rebuild()

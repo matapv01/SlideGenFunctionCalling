@@ -103,7 +103,7 @@ MATH_EQUATION_RULES = """
    - Unicode fractions: ½, ¼, ⅓
    - Unicode math symbols as text: √, ∫, ∑, ∏, ∞
    - Plain text like "x^2" or "a_1"
-   - `$E = mc^2$` or `\(E=mc^2\)`
+   - `$E = mc^2$` or `\\(E=mc^2\\)`
 
 ✅ **CORRECT EXAMPLES:**
    - Quadratic: `<math-field>ax^2 + bx + c = 0</math-field>`
@@ -275,12 +275,20 @@ You are an expert presentation designer and slide planner. Your task is to analy
    the slide is complete with text, shapes, or charts. Otherwise return at most
    one intent describing a concrete visual that materially supports the slide.
    Each intent has:
-   - `query`: 2-5 concise factual nouns or noun phrases;
+   - `query`: 2-5 concise factual nouns or noun phrases. Prefer the exact
+     named person, institution, place, event, product, document, or time period
+     from the slide/deck over generic words such as "technology", "business",
+     or "modern". A query must be specific enough that two different search
+     engines are likely to return the same subject;
    - `role`: one of `evidence`, `illustration`, `chart`, `diagram`, or `photo`;
    - `layout`: `Wide`, `Tall`, `Square`, or null;
    - `required`: true only when the message cannot be communicated correctly
      without that visual.
    Do not search literal slide text merely because the layout has an image slot.
+   For a factual or document-grounded slide, do not request a generic stock
+   illustration when an exact subject is available. Use a generic illustration
+   only when the message is genuinely conceptual and the visual role is
+   illustrative rather than evidentiary.
    Do not invent a subject that is absent from the source. The backend performs
    the search and always limits it to its configured candidate count.
 

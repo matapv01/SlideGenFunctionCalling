@@ -52,6 +52,15 @@ function projectAssetProxyUrl(source: string): string | null {
   return `/api/v1/image-serve/project-asset?path=${encodeURIComponent(relativePath)}`;
 }
 
+function temporaryAssetProxyUrl(source: string): string | null {
+  // Chatbot streaming renders from a temporary workflow directory. The XML
+  // intentionally keeps the container-local path for the PPTX converter; the
+  // browser must fetch that same file through the authenticated temp endpoint.
+  const normalized = source.replace(/\\/g, "/");
+  if (!normalized.toLowerCase().includes("/static/temp/")) return null;
+  return `/api/v1/temp/file?path=${encodeURIComponent(source)}`;
+}
+
 const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => {
   const hostRef = useRef<HTMLSpanElement>(null);
 
@@ -989,12 +998,13 @@ export const XmlSlideCanvas = ({
     if (tag === "image") {
       const source = element.attrs.src || "";
       const projectAssetSource = projectAssetProxyUrl(source);
+      const temporaryAssetSource = temporaryAssetProxyUrl(source);
       const proxySource = remoteImageProxyUrl(source);
       return (
         <div key={element.id} {...common} className="overflow-hidden bg-slate-200">
           <img
             key={source}
-            src={projectAssetSource || source}
+            src={projectAssetSource || temporaryAssetSource || source}
             alt={element.attrs.alt || "Slide element"}
             className="h-full w-full"
             style={{ display: "block", objectFit: (element.attrs.fit || "cover") as CSSProperties["objectFit"] }}
@@ -1006,6 +1016,11 @@ export const XmlSlideCanvas = ({
               const image = event.currentTarget;
               if (projectAssetSource && image.dataset.projectAssetAttempted !== "true") {
                 image.dataset.projectAssetAttempted = "true";
+                image.src = source;
+                return;
+              }
+              if (temporaryAssetSource && image.dataset.temporaryAssetAttempted !== "true") {
+                image.dataset.temporaryAssetAttempted = "true";
                 image.src = source;
                 return;
               }

@@ -4,31 +4,33 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import ipaddress
 import io
 import json
 import logging
 import mimetypes
-import socket
 import threading
 import time
-import urllib.request
+from collections import OrderedDict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit
-
 from PIL import Image
 
+from backend.config import (
+    VLM_DOCUMENT_IMAGE_BATCH_SIZE,
+    VLM_MAX_IMAGE_BYTES,
+    VLM_MAX_IMAGE_EDGE,
+    VLM_MAX_SEARCH_CANDIDATES,
+    VLM_REQUEST_MAX_CONCURRENCY,
+)
 from backend.domain.ports.llm_provider import LLMProvider
+from backend.application.services.slide_asset_service import slide_asset_service
 
 logger = logging.getLogger(__name__)
 
-_MAX_REMOTE_BYTES = 8 * 1024 * 1024
-_MAX_MODEL_IMAGE_BYTES = 2 * 1024 * 1024
-_MAX_IMAGE_EDGE = 1400
-_MAX_SEARCH_CANDIDATES = 10
-_DOCUMENT_IMAGE_BATCH_SIZE = 4
 _VISION_RETRY_SECONDS = 60.0
+_DECISION_CACHE_TTL_SECONDS = 30 * 60
+_DECISION_CACHE_MAX_ITEMS = 256
 
 
 def _as_bool(value: Any) -> bool:
@@ -55,8 +57,11 @@ class ImageRelevanceService:
     ) -> None:
         self.llm_provider = llm_provider
         self.model = model or None
-        self._cache: dict[str, dict[str, Any]] = {}
+        self._cache: OrderedDict[str, tuple[float, dict[str, Any]]] = OrderedDict()
         self._cache_lock = threading.Lock()
+        self._request_semaphore = threading.BoundedSemaphore(
+            max(1, int(VLM_REQUEST_MAX_CONCURRENCY))
+        )
         self._vision_available: bool | None = None
         self._vision_retry_at = 0.0
 
@@ -84,7 +89,7 @@ class ImageRelevanceService:
             str(url).strip()
             for url in candidates
             if isinstance(url, str) and str(url).strip()
-        ][: _MAX_SEARCH_CANDIDATES]
+        ][: VLM_MAX_SEARCH_CANDIDATES]
         if not urls:
             return {"available": False, "approved": [], "decisions": []}
         # Do not download and normalize every candidate after a recent vision
@@ -110,6 +115,12 @@ class ImageRelevanceService:
                     "judged from the deck topic and slide purpose, not from the "
                     "amount of text on that slide. The rendered slide arguments "
                     "are the most concrete representation of what will be shown. "
+                    "For factual or document-grounded slides, reject generic stock "
+                    "photos, generic icons, and broad concept art when the slide "
+                    "names a specific person, institution, place, event, product, "
+                    "document, or period. Approve a generic illustration only when "
+                    "the slide purpose is explicitly conceptual and the visual role "
+                    "is illustrative rather than evidentiary. "
                     "Return JSON only in the form "
                     '{"candidates":[{"index":0,"use":true,"confidence":0.0,'
                     '"reason":"...","caption_hint":"...",'
@@ -165,6 +176,11 @@ class ImageRelevanceService:
         if cached is not None:
             return cached
 
+        logger.info(
+            "VLM search verification: images=%d payload_kb=%.1f",
+            len(loaded),
+            sum(len(data_uri) for _, _, data_uri in loaded) / 1024,
+        )
         raw = self._invoke(parts, max_tokens=700)
         if raw is None:
             return {"available": False, "approved": [], "decisions": []}
@@ -256,119 +272,34 @@ class ImageRelevanceService:
                 f"action: {str(plan.get('action') or '')[:80]} | "
                 f"content: {content[:900]}"
             )
-        assignments: list[dict[str, Any]] = []
-        for offset in range(0, len(usable_images), _DOCUMENT_IMAGE_BATCH_SIZE):
-            batch_images = usable_images[offset : offset + _DOCUMENT_IMAGE_BATCH_SIZE]
-            batch: list[tuple[str, dict[str, Any], str]] = []
-            for image in batch_images:
-                image_id = str(
-                    image.get("image_id") or image.get("content_hash") or ""
-                )
-                data_uri = self._to_data_uri(str(image.get("source_path") or ""))
-                if image_id and data_uri:
-                    batch.append((image_id, image, data_uri))
-            if not batch:
-                continue
+        batch_jobs = [
+            usable_images[offset : offset + VLM_DOCUMENT_IMAGE_BATCH_SIZE]
+            for offset in range(0, len(usable_images), VLM_DOCUMENT_IMAGE_BATCH_SIZE)
+        ]
 
-            by_id = {image_id: image for image_id, image, _ in batch}
-            parts: list[dict[str, Any]] = [
-                {
-                    "type": "text",
-                    "text": (
-                        "Review every embedded document image in this batch. "
-                        "For each image, decide whether it materially supports one "
-                        "slide in the proposed deck. Use the image itself, its local "
-                        "heading context, the complete deck plan, and target slide "
-                        "content together. Do not force an image into a slide when it "
-                        "is unrelated, redundant, or ambiguous. Each image must appear "
-                        "exactly once in the JSON response, with use=false when it "
-                        "should not be used. Slide indexes are zero-based. Return JSON "
-                        "only as "
-                        '{"images":[{"image_id":"...","use":true,'
-                        '"slide_index":0,"confidence":0.0,'
-                        '"role":"evidence|illustration|chart|diagram|photo",'
-                        '"reason":"...","caption_hint":"...",'
-                        '"placement_hint":"..."}]}.\n\n'
-                        f"User presentation request:\n{str(user_request or '')[:1800]}\n\n"
-                        f"Deck topic:\n{str(deck_topic or '')[:800]}\n\n"
-                        f"Deck outline:\n{str(deck_outline or '')[:2600]}\n\n"
-                        f"Presentation instruction:\n{str(presentation_instruction or '')[:1400]}\n\n"
-                        f"Candidate slides:\n{chr(10).join(slide_lines)}"
-                    ),
-                }
-            ]
-            for image_id, image, data_uri in batch:
-                parts.append(
-                    {
-                        "type": "text",
-                        "text": (
-                            f"Embedded image id: {image_id}\n"
-                            f"Original filename: {str(image.get('filename') or '')[:200]}\n"
-                            f"Heading path: {str(image.get('section_path') or '')[:500]}\n"
-                            f"Displayed size: {image.get('width') or '?'}x{image.get('height') or '?'}\n"
-                            f"Alt text: {str(image.get('alt_text') or '')[:500]}\n"
-                            f"Nearby document text: {str(image.get('nearby_text') or '')[:1200]}"
-                        ),
-                    }
-                )
-                parts.append({"type": "image_url", "image_url": {"url": data_uri}})
-
-            cache_key = self._cache_key(
-                "document",
-                [
-                    f"{image_id}:{self._source_hash(data_uri)}"
-                    for image_id, _, data_uri in batch
-                ],
-                user_request,
-                deck_topic,
-                deck_outline,
-                presentation_instruction,
-                "\n".join(slide_lines),
+        def verify_batch(batch_images: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            return self._verify_document_image_batch(
+                batch_images,
+                slide_lines=slide_lines,
+                slide_count=len(slide_chunks),
+                user_request=user_request,
+                deck_topic=deck_topic,
+                deck_outline=deck_outline,
+                presentation_instruction=presentation_instruction,
+                model=model,
             )
-            cached = self._get_cache(cache_key)
-            if cached is not None:
-                assignments.extend(dict(item) for item in cached.get("assignments", []))
-                continue
 
-            raw = self._invoke(parts, model=model, max_tokens=1200)
-            if raw is None:
-                # The provider has marked vision as unavailable. Do not make
-                # up assignments for images that were not actually reviewed.
-                break
-            parsed = self._parse_json(raw)
-            decisions = parsed.get("images") if isinstance(parsed, dict) else None
-            if not isinstance(decisions, list):
-                continue
-
-            batch_assignments: list[dict[str, Any]] = []
-            for item in decisions:
-                if not isinstance(item, dict) or not _as_bool(item.get("use")):
-                    continue
-                image_id = str(item.get("image_id") or "").strip()
-                if image_id not in by_id:
-                    continue
-                try:
-                    slide_index = int(item.get("slide_index"))
-                    confidence = max(0.0, min(1.0, float(item.get("confidence", 0))))
-                except (TypeError, ValueError):
-                    continue
-                if slide_index < 0 or slide_index >= len(slide_chunks) or confidence < 0.5:
-                    continue
-                source = by_id[image_id]
-                batch_assignments.append(
-                    {
-                        **source,
-                        "slide_index": slide_index,
-                        "confidence": confidence,
-                        "role": str(item.get("role") or "illustration")[:40],
-                        "reason": str(item.get("reason") or "")[:500],
-                        "caption_hint": str(item.get("caption_hint") or "")[:300],
-                        "placement_hint": str(item.get("placement_hint") or "")[:300],
-                    }
-                )
-
-            self._set_cache(cache_key, {"assignments": batch_assignments})
-            assignments.extend(batch_assignments)
+        assignments: list[dict[str, Any]] = []
+        with ThreadPoolExecutor(
+            max_workers=min(
+                max(1, int(VLM_REQUEST_MAX_CONCURRENCY)),
+                len(batch_jobs),
+            )
+        ) as executor:
+            # executor.map preserves the original image-batch order while the
+            # requests themselves run concurrently.
+            for batch_assignments in executor.map(verify_batch, batch_jobs):
+                assignments.extend(batch_assignments)
 
         return [dict(item) for item in assignments]
 
@@ -379,39 +310,62 @@ class ImageRelevanceService:
         model: str | None = None,
         max_tokens: int,
     ) -> str | None:
+        started = time.perf_counter()
         if (
             self._vision_available is False
             and time.monotonic() < self._vision_retry_at
         ):
             return None
         try:
-            result = str(
-                self.llm_provider.generate_completion(
-                    [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a precise multimodal image relevance "
-                                "reviewer. Inspect the supplied images and return "
-                                "only the requested JSON object. Do not invent "
-                                "visual details that are not visible."
-                            ),
-                        },
-                        {"role": "user", "content": content},
-                    ],
-                    model=model or self.model,
-                    max_tokens=max_tokens,
-                    temperature=0.1,
-                    top_p=0.9,
+            request = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a precise multimodal image relevance "
+                        "reviewer. Inspect the supplied images and return "
+                        "only the requested JSON object. Do not invent "
+                        "visual details that are not visible."
+                    ),
+                },
+                {"role": "user", "content": content},
+            ]
+
+            def invoke() -> str:
+                return str(
+                    self.llm_provider.generate_completion(
+                        request,
+                        model=model or self.model,
+                        max_tokens=max_tokens,
+                        temperature=0.1,
+                        top_p=0.9,
+                    )
                 )
-            ).strip()
+
+            # Production providers already own the shared endpoint limiter.
+            # The local fallback semaphore keeps lightweight/fake providers
+            # bounded without acquiring the same semaphore twice.
+            if getattr(self.llm_provider, "request_limiter", None) is None:
+                with self._request_semaphore:
+                    result = invoke()
+            else:
+                result = invoke()
+            result = result.strip()
             self._vision_available = True
             self._vision_retry_at = 0.0
+            logger.info(
+                "VLM request completed in %.2fs (payload_parts=%d)",
+                time.perf_counter() - started,
+                len(content),
+            )
             return result
         except Exception as exc:
             self._vision_available = False
             self._vision_retry_at = time.monotonic() + _VISION_RETRY_SECONDS
-            logger.warning("Multimodal image verification unavailable: %s", exc)
+            logger.warning(
+                "Multimodal image verification unavailable after %.2fs: %s",
+                time.perf_counter() - started,
+                exc,
+            )
             return None
 
     @staticmethod
@@ -439,27 +393,164 @@ class ImageRelevanceService:
         return hashlib.sha256(raw.encode("utf-8", errors="ignore")).hexdigest()
 
     def _get_cache(self, key: str) -> dict[str, Any] | None:
+        now = time.monotonic()
         with self._cache_lock:
-            value = self._cache.get(key)
-            return dict(value) if value is not None else None
+            cached = self._cache.pop(key, None)
+            if cached is None:
+                return None
+            created_at, value = cached
+            if now - created_at >= _DECISION_CACHE_TTL_SECONDS:
+                return None
+            self._cache[key] = (created_at, value)
+            return dict(value)
 
     def _set_cache(self, key: str, value: dict[str, Any]) -> None:
         with self._cache_lock:
             # Keep this process-local cache bounded; image bytes themselves are
             # not stored, only the structured decision and provenance.
-            if len(self._cache) >= 256:
-                self._cache.pop(next(iter(self._cache)))
-            self._cache[key] = dict(value)
+            self._cache.pop(key, None)
+            self._cache[key] = (time.monotonic(), dict(value))
+            while len(self._cache) > _DECISION_CACHE_MAX_ITEMS:
+                self._cache.popitem(last=False)
 
     @staticmethod
     def _source_hash(source: str) -> str:
         return hashlib.sha256(str(source).encode("utf-8")).hexdigest()
 
+    def _verify_document_image_batch(
+        self,
+        batch_images: list[dict[str, Any]],
+        *,
+        slide_lines: list[str],
+        slide_count: int,
+        user_request: str,
+        deck_topic: str,
+        deck_outline: str,
+        presentation_instruction: str,
+        model: str | None,
+    ) -> list[dict[str, Any]]:
+        """Verify one independent DOCX-image batch.
+
+        Every batch receives the same deck context, so batches do not depend on
+        one another and can safely run concurrently. The caller is responsible
+        for restoring their original order.
+        """
+        batch: list[tuple[str, dict[str, Any], str]] = []
+        for image in batch_images:
+            image_id = str(image.get("image_id") or image.get("content_hash") or "")
+            data_uri = self._to_data_uri(str(image.get("source_path") or ""))
+            if image_id and data_uri:
+                batch.append((image_id, image, data_uri))
+        if not batch:
+            return []
+
+        by_id = {image_id: image for image_id, image, _ in batch}
+        parts: list[dict[str, Any]] = [
+            {
+                "type": "text",
+                "text": (
+                    "Review every embedded document image in this batch. "
+                    "For each image, decide whether it materially supports one "
+                    "slide in the proposed deck. Use the image itself, its local "
+                    "heading context, the complete deck plan, and target slide "
+                    "content together. Do not force an image into a slide when it "
+                    "is unrelated, redundant, or ambiguous. Each image must appear "
+                    "exactly once in the JSON response, with use=false when it "
+                    "should not be used. Slide indexes are zero-based. Return JSON "
+                    "only as "
+                    '{"images":[{"image_id":"...","use":true,'
+                    '"slide_index":0,"confidence":0.0,'
+                    '"role":"evidence|illustration|chart|diagram|photo",'
+                    '"reason":"...","caption_hint":"...",'
+                    '"placement_hint":"..."}]}\n\n'
+                    f"User presentation request:\n{str(user_request or '')[:1800]}\n\n"
+                    f"Deck topic:\n{str(deck_topic or '')[:800]}\n\n"
+                    f"Deck outline:\n{str(deck_outline or '')[:2600]}\n\n"
+                    f"Presentation instruction:\n{str(presentation_instruction or '')[:1400]}\n\n"
+                    f"Candidate slides:\n{chr(10).join(slide_lines)}"
+                ),
+            }
+        ]
+        for image_id, image, data_uri in batch:
+            parts.append(
+                {
+                    "type": "text",
+                    "text": (
+                        f"Embedded image id: {image_id}\n"
+                        f"Original filename: {str(image.get('filename') or '')[:200]}\n"
+                        f"Heading path: {str(image.get('section_path') or '')[:500]}\n"
+                        f"Displayed size: {image.get('width') or '?'}x{image.get('height') or '?'}\n"
+                        f"Alt text: {str(image.get('alt_text') or '')[:500]}\n"
+                        f"Nearby document text: {str(image.get('nearby_text') or '')[:1200]}"
+                    ),
+                }
+            )
+            parts.append({"type": "image_url", "image_url": {"url": data_uri}})
+
+        cache_key = self._cache_key(
+            "document",
+            [
+                f"{image_id}:{self._source_hash(data_uri)}"
+                for image_id, _, data_uri in batch
+            ],
+            user_request,
+            deck_topic,
+            deck_outline,
+            presentation_instruction,
+            "\n".join(slide_lines),
+        )
+        cached = self._get_cache(cache_key)
+        if cached is not None:
+            return [dict(item) for item in cached.get("assignments", [])]
+
+        logger.info(
+            "VLM document verification: images=%d payload_kb=%.1f",
+            len(batch),
+            sum(len(data_uri) for _, _, data_uri in batch) / 1024,
+        )
+        raw = self._invoke(parts, model=model, max_tokens=1200)
+        if raw is None:
+            return []
+        parsed = self._parse_json(raw)
+        decisions = parsed.get("images") if isinstance(parsed, dict) else None
+        if not isinstance(decisions, list):
+            return []
+
+        assignments: list[dict[str, Any]] = []
+        for item in decisions:
+            if not isinstance(item, dict) or not _as_bool(item.get("use")):
+                continue
+            image_id = str(item.get("image_id") or "").strip()
+            if image_id not in by_id:
+                continue
+            try:
+                slide_index = int(item.get("slide_index"))
+                confidence = max(0.0, min(1.0, float(item.get("confidence", 0))))
+            except (TypeError, ValueError):
+                continue
+            if slide_index < 0 or slide_index >= slide_count or confidence < 0.5:
+                continue
+            source = by_id[image_id]
+            assignments.append(
+                {
+                    **source,
+                    "slide_index": slide_index,
+                    "confidence": confidence,
+                    "role": str(item.get("role") or "illustration")[:40],
+                    "reason": str(item.get("reason") or "")[:500],
+                    "caption_hint": str(item.get("caption_hint") or "")[:300],
+                    "placement_hint": str(item.get("placement_hint") or "")[:300],
+                }
+            )
+
+        self._set_cache(cache_key, {"assignments": assignments})
+        return assignments
+
     @classmethod
     def _to_data_uri(cls, source: str) -> str | None:
         try:
             if source.lower().startswith(("http://", "https://")):
-                raw, mime_type = cls._download_remote(source)
+                raw, mime_type = slide_asset_service.read_remote(source, timeout=12)
             else:
                 path = Path(source)
                 if not path.is_file():
@@ -469,46 +560,21 @@ class ImageRelevanceService:
             if not raw:
                 return None
             raw, mime_type = cls._normalize_image(raw, mime_type)
+            if source.lower().startswith(("http://", "https://")):
+                # The verifier and the later XML executor share this bounded
+                # process-local cache, so an approved image is not downloaded
+                # a second time before it is materialized into the deck.
+                slide_asset_service.remember_remote(source, raw, mime_type)
             return f"data:{mime_type};base64,{base64.b64encode(raw).decode('ascii')}"
         except Exception as exc:
             logger.debug("Cannot prepare image for Qwen-VL: %s", exc)
             return None
 
     @staticmethod
-    def _download_remote(url: str) -> tuple[bytes, str]:
-        parsed = urlsplit(url)
-        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-            raise ValueError("Unsupported image URL")
-        hostname = parsed.hostname.rstrip(".").lower()
-        if hostname in {"localhost", "localhost.localdomain"} or hostname.endswith(".local"):
-            raise ValueError("Private image host")
-        try:
-            addresses = {
-                result[4][0]
-                for result in socket.getaddrinfo(
-                    hostname,
-                    parsed.port or (443 if parsed.scheme == "https" else 80),
-                )
-            }
-        except socket.gaierror as exc:
-            raise ValueError("Image host cannot be resolved") from exc
-        for address in addresses:
-            ip = ipaddress.ip_address(address)
-            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
-                raise ValueError("Private image host")
-        request = urllib.request.Request(url, headers={"User-Agent": "SlideGen image verifier"})
-        with urllib.request.urlopen(request, timeout=12) as response:
-            raw = response.read(_MAX_REMOTE_BYTES + 1)
-            if len(raw) > _MAX_REMOTE_BYTES:
-                raise ValueError("Image is too large")
-            mime_type = (response.headers.get_content_type() or "image/jpeg").lower()
-        return raw, mime_type if mime_type.startswith("image/") else "image/jpeg"
-
-    @staticmethod
     def _normalize_image(raw: bytes, mime_type: str) -> tuple[bytes, str]:
         with Image.open(io.BytesIO(raw)) as image:
             image.load()
-            image.thumbnail((_MAX_IMAGE_EDGE, _MAX_IMAGE_EDGE), Image.Resampling.LANCZOS)
+            image.thumbnail((VLM_MAX_IMAGE_EDGE, VLM_MAX_IMAGE_EDGE), Image.Resampling.LANCZOS)
             has_alpha = image.mode in {"RGBA", "LA"} or "transparency" in image.info
             if has_alpha:
                 output = io.BytesIO()
@@ -518,7 +584,7 @@ class ImageRelevanceService:
                 output = io.BytesIO()
                 image.convert("RGB").save(output, format="JPEG", quality=82, optimize=True)
                 normalized, normalized_type = output.getvalue(), "image/jpeg"
-        if len(normalized) > _MAX_MODEL_IMAGE_BYTES:
+        if len(normalized) > VLM_MAX_IMAGE_BYTES:
             # Re-encode once more at a smaller quality rather than sending a
             # multi-megabyte image to every Qwen verification request.
             with Image.open(io.BytesIO(normalized)) as image:

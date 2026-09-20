@@ -20,8 +20,14 @@ class LLMRequestLimiter:
         self._semaphore = threading.BoundedSemaphore(self.max_concurrency)
 
     @contextmanager
-    def slot(self) -> Iterator[None]:
-        self._semaphore.acquire()
+    def slot(self, timeout: float | None = None) -> Iterator[None]:
+        acquired = (
+            self._semaphore.acquire()
+            if timeout is None
+            else self._semaphore.acquire(timeout=max(0.0, float(timeout)))
+        )
+        if not acquired:
+            raise TimeoutError("Timed out waiting for an LLM request slot")
         try:
             yield
         finally:

@@ -4,8 +4,9 @@ from backend.config import (
     CAPTURES_DIR, PROJECT_DIR, STATIC_DIR,
     LLM_API_KEY,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
-    VLM_MODEL,
+    VLM_API_KEY, VLM_MODEL, VLM_BASE_URL,
     LLM_REQUEST_MAX_CONCURRENCY,
+    LLM_REQUEST_TIMEOUT_SECONDS, VLM_REQUEST_TIMEOUT_SECONDS,
     CHATBOT_MAX_HISTORY_TURNS,
     FAISS_INDEX_PATH,
 )
@@ -67,7 +68,10 @@ security = HTTPBearer()
 _capture_infra = PlaywrightCaptureProvider()
 _parser_infra = MarkItDownParser()
 
-_llm_request_limiter = LLMRequestLimiter(LLM_REQUEST_MAX_CONCURRENCY)
+# LLM and VLM currently point to the same Qwen endpoint. Use one endpoint-wide
+# gate so planner/generator traffic and multimodal verification cannot combine
+# into an accidental 5 + 5 concurrent burst.
+_qwen_request_limiter = LLMRequestLimiter(LLM_REQUEST_MAX_CONCURRENCY)
 
 _slidegen_llm = GeminiLLMProvider(
     api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
@@ -76,14 +80,25 @@ _slidegen_llm = GeminiLLMProvider(
     temperature=LLM_TEMPERATURE,
     max_tokens=LLM_MAX_TOKENS,
     top_p=LLM_TOP_P,
-    request_limiter=_llm_request_limiter,
+    request_limiter=_qwen_request_limiter,
+    request_timeout=LLM_REQUEST_TIMEOUT_SECONDS,
+)
+_vlm_provider = GeminiLLMProvider(
+    api_keys=[VLM_API_KEY] if VLM_API_KEY else [],
+    model=VLM_MODEL,
+    base_url=VLM_BASE_URL,
+    temperature=LLM_TEMPERATURE,
+    max_tokens=LLM_MAX_TOKENS,
+    top_p=LLM_TOP_P,
+    request_limiter=_qwen_request_limiter,
+    request_timeout=VLM_REQUEST_TIMEOUT_SECONDS,
 )
 _retriever_infra = LocalEmbeddingToolRetrieveProvider(
     tools_dict=TOOLS_DICT,
     index_path=str(FAISS_INDEX_PATH),
 )
 _image_relevance_service = ImageRelevanceService(
-    _slidegen_llm,
+    _vlm_provider,
     model=VLM_MODEL,
 )
 
@@ -98,7 +113,7 @@ _manual_workflow_service = ManualWorkflowService(
 _document_preprocessing_service = DocumentPreprocessingService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
-    llm_request_limiter=_llm_request_limiter,
+    llm_request_limiter=_qwen_request_limiter,
 )
 
 _slidegen_workflow_service = SlideGenWorkflowService(
@@ -109,7 +124,7 @@ _slidegen_workflow_service = SlideGenWorkflowService(
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
     image_relevance_verifier=_image_relevance_service,
-    llm_request_limiter=_llm_request_limiter,
+    llm_request_limiter=_qwen_request_limiter,
 )
 
 # The old DOCX endpoints are adapters. They preprocess the file and then call

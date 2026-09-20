@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import copy
-import shutil
-from pathlib import Path
 from typing import Any
 
-from backend.config import OUTPUT_DIR
+from backend.application.services.slide_asset_service import (
+    SlideAssetError,
+    slide_asset_service,
+)
 
 
 class NoApprovedImageError(ValueError):
@@ -185,51 +186,31 @@ def _set_value_at_path(root: dict, path: list[Any], value: str) -> None:
     current[path[-1]] = value
 
 
-def _materialize_document_image(
-    source_path: str,
-    asset_dir: str | None,
-) -> str | None:
-    """Copy a verified DOCX asset and return a stable browser/render URL."""
-    source = Path(str(source_path or "").strip())
-    if not source.is_file():
-        return None
-    if not asset_dir:
-        return str(source)
-
-    destination_root = Path(asset_dir) / "document_images"
-    destination_root.mkdir(parents=True, exist_ok=True)
-    destination = destination_root / f"{source.parent.name}_{source.name}"
-    try:
-        if (
-            not destination.exists()
-            or destination.stat().st_size != source.stat().st_size
-        ):
-            shutil.copy2(source, destination)
-        try:
-            relative = destination.resolve().relative_to(OUTPUT_DIR.resolve())
-        except ValueError:
-            # Non-standard callers may render outside the persistent output
-            # directory; retain the local path for those callers.
-            return str(destination)
-        return f"/static/output/{relative.as_posix()}"
-    except OSError:
-        return str(source)
-
-
 def _approved_image_url(
     image: dict[str, Any],
     asset_dir: str | None,
 ) -> str | None:
-    """Resolve one verified assignment to a browser/renderable asset URL."""
-    source_path = str(image.get("source_path") or "").strip()
-    if source_path:
-        materialized = _materialize_document_image(source_path, asset_dir)
-        if materialized:
-            return materialized
-    for key in ("source_url", "result_url", "url"):
+    """Resolve one verified assignment to a validated local asset."""
+    if not asset_dir:
+        # Lightweight integrations and unit tests may execute the XML tool
+        # without a workflow output directory. Preserve their verified URL;
+        # every real workflow supplies ``asset_dir`` and takes the local path.
+        return next(
+            (
+                str(image.get(key) or "").strip()
+                for key in ("source_path", "source_url", "result_url", "url")
+                if str(image.get(key) or "").strip()
+            ),
+            None,
+        )
+    for key in ("source_path", "source_url", "result_url", "url"):
         value = str(image.get(key) or "").strip()
-        if value:
-            return value
+        if not value:
+            continue
+        try:
+            return slide_asset_service.materialize(value, asset_dir)
+        except (OSError, SlideAssetError):
+            continue
     return None
 
 
