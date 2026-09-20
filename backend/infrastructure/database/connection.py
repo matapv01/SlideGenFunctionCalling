@@ -45,7 +45,10 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_active BOOLEAN DEFAULT 1,
                 email_verified BOOLEAN NOT NULL DEFAULT 1,
-                is_admin BOOLEAN NOT NULL DEFAULT 0
+                is_admin BOOLEAN NOT NULL DEFAULT 0,
+                onboarding_completed BOOLEAN NOT NULL DEFAULT 1,
+                onboarding_use_cases TEXT,
+                onboarding_role TEXT
             )
         """)
 
@@ -477,6 +480,19 @@ def init_db():
         except sqlite3.OperationalError as exc:
             if "duplicate column name" not in str(exc).lower():
                 raise
+
+        # Existing accounts keep their workspace access. Newly registered
+        # accounts explicitly start with onboarding_completed = 0.
+        for statement in (
+            "ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT 1",
+            "ALTER TABLE users ADD COLUMN onboarding_use_cases TEXT",
+            "ALTER TABLE users ADD COLUMN onboarding_role TEXT",
+        ):
+            try:
+                cursor.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
 
         # Migrate usage from the old daily counters to the canonical rolling
         # five-hour window. Existing counters are preserved for the first

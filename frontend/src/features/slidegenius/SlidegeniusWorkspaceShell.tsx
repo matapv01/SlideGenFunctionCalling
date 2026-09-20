@@ -136,7 +136,9 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
     >
       <aside className="workspace-sidebar">
         <div className="workspace-brand-row">
-          <Link className="workspace-brand" to="/" aria-label="Slidegen home"><SlidegenLogo /></Link>
+          <Link className="workspace-brand" to="/" aria-label="Slidegen home">
+            <SlidegenLogo />
+          </Link>
           <button
             className="workspace-collapse"
             type="button"
@@ -201,7 +203,7 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
               aria-label={text.openSettings}
               aria-expanded={userMenuOpen}
               title={text.tabs.settings}
-              style={{ width: sidebarCollapsed ? 34 : "100%", minWidth: sidebarCollapsed ? 34 : 0, gap: sidebarCollapsed ? 0 : 9, overflow: "hidden" }}
+              style={{ width: sidebarCollapsed ? 30 : "100%", minWidth: sidebarCollapsed ? 30 : 0, gap: sidebarCollapsed ? 0 : 9, overflow: "hidden" }}
             >
               <span>{initials}</span>
               <div style={{ display: sidebarCollapsed ? "none" : "grid" }}>

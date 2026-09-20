@@ -96,6 +96,7 @@ interface UserResponse {
   created_at: string;
   is_active: boolean;
   is_admin?: boolean;
+  onboarding_completed: boolean;
 }
 
 interface ProjectsResponse {
@@ -343,6 +344,12 @@ export const api = {
     }),
 
   me: () => request<UserResponse>("/auth/me"),
+
+  completeOnboarding: (answers: { use_cases: string[]; role: string | null }) =>
+    request<UserResponse>("/auth/onboarding", {
+      method: "POST",
+      body: JSON.stringify(answers),
+    }),
 
   // Chatbot endpoints - /api/chat/*
   getChatbotConfig: () => request<ChatbotConfigResponse>("/chat/config"),

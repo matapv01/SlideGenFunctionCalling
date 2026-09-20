@@ -183,7 +183,10 @@
     max-width: 1500px;
   }
   .sgx-home.workspace-page[data-tab="projects"] .project-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    /* Keep empty tracks so a single project does not stretch into a full
+       width hero card. */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
+    justify-content: start;
     gap: 18px;
   }
   .sgx-home.workspace-page[data-tab="projects"] .project-art {
@@ -519,6 +522,14 @@ html:not(.dark) .sgx-home.workspace-page .subscription-card h3,
 html:not(.dark) .sgx-home.workspace-page .manual-card strong,
 html:not(.dark) .sgx-home.workspace-page .guide-steps h3 {
   color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .subscription-price {
+  color: #202020;
+}
+
+html:not(.dark) .sgx-home.workspace-page .subscription-price small {
+  color: #68746b;
 }
 
 html:not(.dark) .sgx-home.workspace-page .workspace-main,
@@ -1041,16 +1052,16 @@ html:not(.dark) .sgx-home.workspace-page .composer-plus,
 html:not(.dark) .sgx-home.workspace-page .project-card > p,
 html:not(.dark) .sgx-home.workspace-page .guide-steps span,
 html:not(.dark) .sgx-home.workspace-page .subscription-label {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .workspace-nav button.active {
-  box-shadow: inset 2px 0 #b65f4c;
+  box-shadow: inset 2px 0 var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .chat-history-item:hover,
 html:not(.dark) .sgx-home.workspace-page .chat-history-item.active {
-  border-left-color: #b65f4c;
+  border-left-color: var(--sg-light-accent);
 }
 
 @media (max-width: 760px) {
@@ -1110,6 +1121,15 @@ html:not(.dark) .sgx-home.workspace-page .chat-history-item.active {
 
 html:not(.dark) .sgx-home.workspace-page .chat-history-item span {
   color: #8a8b84;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-history-list {
+  scrollbar-color: #b8bbb4 transparent;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-thumb {
+  background: #b8bbb4;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-history-list::-webkit-scrollbar-thumb:hover {
+  background: #8f958d;
 }
 
 /* Give the workspace conversation controls a little more breathing room. */
@@ -1587,12 +1607,37 @@ html:not(.dark) .sg-auth .auth-verification-alert {
 }
 
 html:not(.dark) .sg-auth .auth-verification-alert-icon {
-  background: #b65f4c;
+  background: var(--sg-light-accent);
   color: #fffaf3;
 }
 
 html:not(.dark) .sg-auth .auth-verification-alert strong {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
+}
+
+/* Keep coral accents readable on light surfaces. */
+html:not(.dark) .sgl-landing .brand-word b,
+html:not(.dark) .sgl-landing .language-switcher .is-active,
+html:not(.dark) .sgl-landing .footer-links b,
+html:not(.dark) .sg-auth .auth-language,
+html:not(.dark) .sg-auth .auth-eyebrow,
+html:not(.dark) .sg-auth .auth-card-heading span:last-child {
+  color: var(--sg-light-accent);
+}
+
+html:not(.dark) .sg-auth .auth-note-line {
+  background: var(--sg-light-accent);
+}
+
+html:not(.dark) .sgl-landing .header-actions .start-button,
+html:not(.dark) .sg-auth .auth-submit:hover {
+  background: var(--sg-light-accent-fill);
+  color: #242524;
+}
+
+html:not(.dark) .sgl-landing .header-actions .start-button:hover,
+html:not(.dark) .sg-auth .auth-submit:hover {
+  background: var(--sg-light-accent-fill-hover);
 }
 
 .sgx-home.workspace-page .composer-send.composer-stop {

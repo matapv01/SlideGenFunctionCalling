@@ -1,7 +1,7 @@
 # File: backend/schemas/auth_schema.py
 
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Literal, Optional
 from datetime import datetime
 
 # --- TOKEN SCHEMAS ---
@@ -66,9 +66,15 @@ class UserResponse(UserBase):
     username: Optional[str] = None
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    onboarding_completed: bool = True
 
     class Config:
         from_attributes = True
+
+
+class OnboardingAnswers(BaseModel):
+    use_cases: list[Literal["work", "study", "pitch", "marketing", "reports", "personal"]] = Field(default_factory=list, max_length=6)
+    role: Optional[Literal["student", "educator", "founder", "professional", "creative", "other"]] = None
 
 
 class ChangePasswordRequest(BaseModel):

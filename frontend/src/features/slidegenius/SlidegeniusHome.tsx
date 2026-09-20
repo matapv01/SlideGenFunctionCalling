@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { FilePenLine } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type SubscriptionInfoResponse } from "@/lib/api";
 import { deleteWorkspaceProject, loadWorkspaceSnapshot, renameWorkspaceProject, WorkspaceProject } from "./data/workspaceApi";
@@ -382,7 +383,21 @@ export default function SlidegeniusHome({ initialTab = "slidegenius" }: { initia
                       ) : (
                         <h3 title={projectTitle(project)}>{truncateProjectName(projectTitle(project))}</h3>
                       )}
-                      <span>{project.slide_count ?? 0} slides · {t.updated} {projectUpdated(project.updated_at, language)} ↗</span>
+                      <div className="project-card-footer">
+                        <span>{project.slide_count ?? 0} slides · {t.updated} {projectUpdated(project.updated_at, language)} ↗</span>
+                        <button
+                          className="project-card-edit"
+                          type="button"
+                          aria-label={language === "vi" ? "Chỉnh sửa slide" : "Edit slides"}
+                          title={language === "vi" ? "Chỉnh sửa slide" : "Edit slides"}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/editor?project=${project.id}&slide=0`);
+                          }}
+                        >
+                          <FilePenLine aria-hidden="true" />
+                        </button>
+                      </div>
                     </article>
                   );
                 })}

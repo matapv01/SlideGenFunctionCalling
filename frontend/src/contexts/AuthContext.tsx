@@ -8,6 +8,7 @@ interface User {
   avatar_url?: string;
   full_name?: string;
   is_admin?: boolean;
+  onboarding_completed?: boolean;
 }
 
 interface AuthContextType {
@@ -16,9 +17,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<AuthResponse>;
-  loginWithAccessToken: (accessToken: string) => Promise<void>;
+  loginWithAccessToken: (accessToken: string) => Promise<User>;
   register: (fullName: string, email: string, password: string) => Promise<AuthResponse>;
-  verifyEmailCode: (challengeId: string, code: string) => Promise<void>;
+  verifyEmailCode: (challengeId: string, code: string) => Promise<User>;
   resendEmailCode: (challengeId: string) => Promise<EmailVerificationChallenge>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
@@ -97,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const user = await api.me();
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
+      return user;
     } catch (error) {
       setToken(null);
       setUser(null);
@@ -116,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(res.user);
     localStorage.setItem("token", res.token);
     localStorage.setItem("user", JSON.stringify(res.user));
+    return res.user;
   }, []);
 
   const resendEmailCode = useCallback(async (challengeId: string) => {

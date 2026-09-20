@@ -29,6 +29,7 @@ class User:
     # New accounts must verify once during registration. Existing accounts
     # are migrated as verified so a policy change does not lock them out.
     email_verified: bool = True
+    onboarding_completed: bool = True
     # Authorization is persisted per account and managed through the admin
     # console. It is not derived from deployment environment variables.
     is_admin: bool = False

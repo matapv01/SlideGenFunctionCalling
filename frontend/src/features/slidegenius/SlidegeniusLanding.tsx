@@ -76,7 +76,7 @@ export default function SlidegeniusLanding() {
   };
   const handlePromptSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    navigate(isAuthenticated ? "/home" : "/login");
+    navigate(isAuthenticated ? "/home" : "/register");
   };
   const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

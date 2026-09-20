@@ -183,7 +183,7 @@ html:not(.dark) .sg-editor-shell .sg-editor-brand {
 }
 
 html:not(.dark) .sg-editor-shell .sg-editor-brand b {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sg-editor-shell .sg-editor-workspace {
@@ -226,7 +226,7 @@ html:not(.dark) .sg-editor-popover {
 html:not(.dark) .sg-editor-shell .sg-editor-popover [data-highlighted],
 html:not(.dark) .sg-editor-popover [data-highlighted] {
   background: #2020200a;
-  color: #b65f4c;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sg-editor-tooltip {

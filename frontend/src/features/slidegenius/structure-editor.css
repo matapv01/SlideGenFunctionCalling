@@ -572,8 +572,8 @@ html:not(.dark) .sg-manual-editor .legacy-structure-page .btn {
 
 html:not(.dark) .sg-manual-editor .legacy-app-header .btn:hover:not(:disabled),
 html:not(.dark) .sg-manual-editor .legacy-structure-page .btn:hover:not(:disabled) {
-  border-color: #d97861;
-  background: #fff0ea;
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-soft);
 }
 
 html:not(.dark) .sg-manual-editor .legacy-app-header .btn-danger,
@@ -585,8 +585,8 @@ html:not(.dark) .sg-manual-editor .legacy-structure-page .btn-danger {
 
 html:not(.dark) .sg-manual-editor .legacy-app-header .btn-success,
 html:not(.dark) .sg-manual-editor .legacy-structure-page .btn-success {
-  border-color: #d97861;
-  background: #f5a08a;
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-fill);
   color: #293029;
 }
 
@@ -617,8 +617,8 @@ html:not(.dark) .sg-manual-editor .legacy-structure-page textarea::placeholder {
 }
 
 html:not(.dark) .sg-manual-editor .legacy-structure-page textarea:focus {
-  border-color: #d97861 !important;
-  box-shadow: 0 0 0 2px #d9786124 !important;
+  border-color: var(--sg-light-accent-border) !important;
+  box-shadow: 0 0 0 2px #c65f4924 !important;
 }
 
 html:not(.dark) .sg-manual-editor .legacy-structure-page .bg-muted\/30,
@@ -691,7 +691,7 @@ html:not(.dark) .sg-manual-editor .chat-slide-stream-header { border-bottom-colo
 html:not(.dark) .sg-manual-editor .chat-slide-stream-header h3 { color: #202a23; }
 html:not(.dark) .sg-manual-editor .chat-slide-stream-header button { border-color: #d7d4cb; background: #f4f2ed; color: #647068; }
 html:not(.dark) .sg-manual-editor .chat-slide-stream-progress-copy { color: #657168; }
-html:not(.dark) .sg-manual-editor .chat-slide-stream-progress-copy strong { color: #c65f49; }
+html:not(.dark) .sg-manual-editor .chat-slide-stream-progress-copy strong { color: var(--sg-light-accent); }
 html:not(.dark) .sg-manual-editor .chat-slide-stream-progress { background: #e5e2db; }
 html:not(.dark) .sg-manual-editor .chat-slide-stream-description { color: #68746b; }
 html:not(.dark) .sg-manual-editor .chat-slide-stream-list { scrollbar-color: #a8afa7 #efede8; }
