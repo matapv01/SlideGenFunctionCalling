@@ -110,6 +110,9 @@ MATH_EQUATION_RULES = """
    - Fraction: `<math-field>\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}</math-field>`
    - Put the formula in its own visible text value when possible. Do not put highlight markers inside `<math-field>`.
    - The content between the tags is raw LaTeX: do not add `$...$`, `\\(...\\)`, or Markdown code fences.
+   - Never write a mathematical expression as plain text. Expressions such as `f'(x) = df/dx`, `d/dx x^n = nx^(n-1)`, and `x_i` must be placed inside `<math-field>`.
+   - Inside `<math-field>`, use `_` for subscripts and `^` for superscripts. Never escape them as `\\_` or `\\^`; `\\_` is a literal underscore, not a subscript.
+   - Correct derivative example: `<math-field>\\frac{d}{dx}x^n = nx^{n-1}</math-field>`.
 """
 
 # XML slides use editable text plus one controlled marker for text-color emphasis.

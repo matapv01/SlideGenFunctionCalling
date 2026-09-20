@@ -63,9 +63,23 @@ function temporaryAssetProxyUrl(source: string): string | null {
 
 const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => {
   const hostRef = useRef<HTMLSpanElement>(null);
+  const [mathSpanReady, setMathSpanReady] = useState(
+    () => typeof customElements !== "undefined" && Boolean(customElements.get("math-span")),
+  );
+
+  useEffect(() => {
+    if (mathSpanReady || typeof customElements === "undefined") return;
+    let cancelled = false;
+    customElements.whenDefined("math-span").then(() => {
+      if (!cancelled) setMathSpanReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mathSpanReady]);
 
   useLayoutEffect(() => {
-    if (!hostRef.current || !customElements.get("math-span")) return;
+    if (!hostRef.current || !mathSpanReady) return;
 
     // `math-field` is an editable control. XML formulas are static slide
     // content, so use MathLive's read-only custom element instead. Loading
@@ -79,7 +93,7 @@ const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => 
     mathSpan.style.fontSize = `${fontSize}px`;
     mathSpan.textContent = latex;
     hostRef.current.replaceChildren(mathSpan);
-  }, [color, fontSize, latex]);
+  }, [color, fontSize, latex, mathSpanReady]);
 
   return (
     <span
@@ -91,7 +105,7 @@ const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => 
         fontSize,
       }}
     >
-      {latex}
+      {!mathSpanReady && latex}
     </span>
   );
 };
@@ -105,6 +119,9 @@ const MathFieldEditor = ({ latex, fontSize, color, onChange, onCommit }: MathFie
   const hostRef = useRef<HTMLSpanElement>(null);
   const onChangeRef = useRef(onChange);
   const onCommitRef = useRef(onCommit);
+  const [mathFieldReady, setMathFieldReady] = useState(
+    () => typeof customElements !== "undefined" && Boolean(customElements.get("math-field")),
+  );
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -114,8 +131,19 @@ const MathFieldEditor = ({ latex, fontSize, color, onChange, onCommit }: MathFie
     onCommitRef.current = onCommit;
   }, [onCommit]);
 
+  useEffect(() => {
+    if (mathFieldReady || typeof customElements === "undefined") return;
+    let cancelled = false;
+    customElements.whenDefined("math-field").then(() => {
+      if (!cancelled) setMathFieldReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mathFieldReady]);
+
   useLayoutEffect(() => {
-    if (!hostRef.current || !customElements.get("math-field")) return;
+    if (!hostRef.current || !mathFieldReady) return;
 
     const mathField = document.createElement("math-field") as HTMLElement & {
       value?: string;
@@ -147,7 +175,7 @@ const MathFieldEditor = ({ latex, fontSize, color, onChange, onCommit }: MathFie
   // The math-field host is intentionally mounted once; separate effects update
   // its value and input handler without resetting the caret on every keystroke.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mathFieldReady]);
 
   useEffect(() => {
     const mathField = hostRef.current?.querySelector("math-field") as (HTMLElement & { value?: string }) | null;
@@ -1227,6 +1255,11 @@ export const XmlSlideCanvas = ({
                      {normalizedMixedText(element.leadingText ?? element.text)}
                      {element.children.map((child, childIndex) => (
                        <Fragment key={`${element.id}-math-segment-${childIndex}`}>
+                         {child.tag.toLowerCase() === "run" && (
+                           <span style={richRunStyle(child, element, metrics)}>
+                             {normalizeXmlTextBreaks(child.text)}
+                           </span>
+                         )}
                          {child.tag.toLowerCase() === "math-field" && (
                            <MathFieldPreview
                              latex={child.attrs.value || child.text}

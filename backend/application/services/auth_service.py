@@ -39,6 +39,8 @@ class AuthService:
     def decode_access_token(self, token: str) -> str:
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            if payload.get("purpose"):
+                raise JWTError()
             email: str = payload.get("sub")
             if email is None:
                 raise JWTError()
@@ -78,6 +80,7 @@ class AuthService:
             is_active=True,
             email_verified=email_verified,
             onboarding_completed=False,
+            workspace_tour_version=0,
             created_at=None
         )
         created_user = self.user_repo.create(new_user)

@@ -1,0 +1,278 @@
+.workspace-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.workspace-tour-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 8, 8, .54);
+  pointer-events: auto;
+}
+
+.workspace-tour-spotlight {
+  position: fixed;
+  z-index: 1;
+  border: 2px solid #f5a08a;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(7, 8, 8, .54), 0 0 0 5px rgba(245, 160, 138, .18), 0 10px 30px rgba(0, 0, 0, .2);
+  pointer-events: none;
+  transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease;
+}
+
+.workspace-tour-card {
+  position: fixed;
+  z-index: 2;
+  width: min(360px, calc(100vw - 32px));
+  padding: 22px;
+  border: 1px solid rgba(245, 160, 138, .6);
+  border-radius: 10px;
+  background: #252624;
+  color: #f4f3ed;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  pointer-events: auto;
+  animation: workspace-tour-enter .18s ease-out;
+}
+
+.workspace-tour-card-top,
+.workspace-tour-actions,
+.workspace-tour-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.workspace-tour-card-top > span,
+.workspace-tour-progress {
+  color: #f5a08a;
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.workspace-tour-card-top button {
+  width: 25px;
+  height: 25px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 50%;
+  background: transparent;
+  color: #d7d7d0;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.workspace-tour-progress {
+  margin: 23px 0 10px;
+  color: #a6a79f;
+  letter-spacing: .08em;
+}
+
+.workspace-tour-card h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.workspace-tour-description {
+  min-height: 58px;
+  margin: 12px 0 22px;
+  color: #c1c2bb;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.workspace-tour-tool-preview {
+  display: grid;
+  gap: 6px;
+  margin: -7px 0 19px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .05);
+  color: #e8e8e2;
+  font-size: 12px;
+}
+
+.workspace-tour-tool-preview div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 6px;
+}
+
+.workspace-tour-tool-preview span {
+  display: inline-grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 4px;
+  background: rgba(245, 160, 138, .16);
+  color: #f5a08a;
+  font-size: 14px;
+}
+
+.workspace-tour-manual-preview {
+  display: grid;
+  gap: 4px;
+  margin: -7px 0 19px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.workspace-tour-manual-preview code {
+  display: block;
+  overflow: hidden;
+  color: #e8e8e2;
+  font: 12px/1.45 "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-tour-manual-preview .workspace-tour-mark {
+  color: #f5a08a;
+  font-weight: 700;
+}
+
+.workspace-tour-manual-preview small {
+  margin-top: 4px;
+  color: #a6a79f;
+  font-size: 10px;
+}
+
+.workspace-tour-actions {
+  gap: 12px;
+}
+
+.workspace-tour-skip,
+.workspace-tour-back,
+.workspace-tour-next {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.workspace-tour-skip,
+.workspace-tour-back {
+  padding: 7px 0;
+  background: transparent;
+  color: #aeb0a8;
+  font-size: 12px;
+}
+
+.workspace-tour-navigation {
+  gap: 14px;
+}
+
+.workspace-tour-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px;
+  border-radius: 4px;
+  background: #f5a08a;
+  color: #202020;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workspace-tour-next span {
+  font-size: 15px;
+}
+
+.workspace-tour button:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+.workspace-tour-error {
+  margin: -8px 0 15px;
+  color: #ff9d89;
+  font-size: 12px;
+}
+
+/* Keep the live Manual example readable while the first demo step is running. */
+.workspace-tour-manual-demo.is-manual-typing .workspace-tour-backdrop {
+  background: rgba(7, 8, 8, .16);
+}
+
+.workspace-tour-manual-demo.is-manual-typing .workspace-tour-spotlight {
+  box-shadow: 0 0 0 9999px rgba(7, 8, 8, .16), 0 0 0 5px rgba(245, 160, 138, .18), 0 10px 30px rgba(0, 0, 0, .2);
+}
+
+html:not(.dark) .workspace-tour-card {
+  background: #fffdf8;
+  color: #202020;
+  box-shadow: 0 18px 50px rgba(31, 32, 28, .24);
+}
+
+html:not(.dark) .workspace-tour-card h2 {
+  color: #202020;
+}
+
+html:not(.dark) .workspace-tour-description {
+  color: #555850;
+}
+
+html:not(.dark) .workspace-tour-tool-preview {
+  border-color: #2020201c;
+  background: #f4eee8;
+  color: #3d443e;
+}
+
+html:not(.dark) .workspace-tour-manual-preview {
+  border-color: #2020201c;
+  background: #f4eee8;
+}
+
+html:not(.dark) .workspace-tour-manual-preview code {
+  color: #303630;
+}
+
+html:not(.dark) .workspace-tour-manual-preview small {
+  color: #686b64;
+}
+
+html:not(.dark) .workspace-tour-card-top button {
+  border-color: #2020202b;
+  color: #3b3d38;
+}
+
+html:not(.dark) .workspace-tour-skip,
+html:not(.dark) .workspace-tour-back {
+  color: #686b64;
+}
+
+@keyframes workspace-tour-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 760px) {
+  .workspace-tour-card {
+    top: auto !important;
+    right: 16px;
+    bottom: 16px;
+    left: 16px !important;
+    width: auto;
+  }
+
+  .workspace-tour-spotlight {
+    box-shadow: 0 0 0 9999px rgba(7, 8, 8, .54), 0 0 0 4px rgba(245, 160, 138, .18);
+  }
+}
+
+@media (min-width: 761px) {
+  .workspace-tour-manual-demo.is-manual-typing .workspace-tour-card {
+    top: 16px !important;
+    right: 16px;
+    left: auto !important;
+  }
+}

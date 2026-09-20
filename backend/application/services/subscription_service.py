@@ -280,6 +280,24 @@ class SubscriptionService:
             raise LookupError("User not found")
         return self.get_admin_user(user_id)
 
+    def delete_user(self, *, actor_user_id: int, target_user_id: int) -> dict:
+        """Delete a user while protecting the acting admin and admin lockout."""
+        target = self.user_repo.get_by_id(target_user_id)
+        if target is None:
+            raise LookupError("User not found")
+        if target_user_id == actor_user_id:
+            raise ValueError("Bạn không thể tự xóa tài khoản admin của chính mình")
+        if target.is_admin:
+            count_admins = getattr(self.user_repo, "count_admin_users", None)
+            if not callable(count_admins):
+                raise RuntimeError("Admin role storage is not available")
+            if count_admins() <= 1:
+                raise ValueError("Không thể xóa admin cuối cùng của hệ thống")
+        delete_user = getattr(self.user_repo, "delete_user", None)
+        if not callable(delete_user):
+            raise RuntimeError("User deletion storage is not available")
+        return delete_user(target_user_id)
+
     def get_subscription_info(self, user: User) -> Dict:
         """Get detailed subscription information for user"""
         self._refresh_usage_window(user)

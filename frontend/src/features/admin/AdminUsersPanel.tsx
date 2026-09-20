@@ -20,6 +20,10 @@ const copy = {
     usageConfirm: "Reset usage and restart the five-hour window for",
     usageDone: "Usage reset. The five-hour window starts now.",
     usageError: "Unable to reset user usage.",
+    deleteAction: "Delete account",
+    deleteConfirm: "Delete this account and all of its projects, conversations, and documents",
+    deleteDone: "Account deleted.",
+    deleteError: "Unable to delete account.",
     loadError: "Unable to load users.",
     refresh: "Refresh",
     user: "User",
@@ -33,6 +37,7 @@ const copy = {
     adminDone: "Admin access updated.",
     adminError: "Unable to update admin access.",
     selfAdminNote: "You cannot remove your own access.",
+    selfDeleteNote: "You cannot delete your own admin account.",
     usage: "Current usage",
     window: "Five-hour window",
     started: "Started",
@@ -60,6 +65,10 @@ const copy = {
     usageConfirm: "Reset usage và bắt đầu lại cửa sổ 5 giờ cho",
     usageDone: "Đã reset usage. Cửa sổ 5 giờ bắt đầu từ bây giờ.",
     usageError: "Không thể reset usage của user.",
+    deleteAction: "Xóa tài khoản",
+    deleteConfirm: "Xóa tài khoản này cùng toàn bộ project, hội thoại và tài liệu của tài khoản",
+    deleteDone: "Đã xóa tài khoản.",
+    deleteError: "Không thể xóa tài khoản.",
     loadError: "Không thể tải danh sách user.",
     refresh: "Tải lại",
     user: "User",
@@ -73,6 +82,7 @@ const copy = {
     adminDone: "Đã cập nhật quyền admin.",
     adminError: "Không thể cập nhật quyền admin.",
     selfAdminNote: "Không thể tự gỡ quyền của chính mình.",
+    selfDeleteNote: "Không thể tự xóa tài khoản admin của chính mình.",
     usage: "Usage hiện tại",
     window: "Cửa sổ 5 giờ",
     started: "Bắt đầu",
@@ -111,7 +121,7 @@ export default function AdminUsersPanel() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pendingAction, setPendingAction] = useState<{
-    type: "password" | "usage" | "admin";
+    type: "password" | "usage" | "admin" | "delete";
     user: AdminUser;
     isAdmin?: boolean;
   } | null>(null);
@@ -172,6 +182,15 @@ export default function AdminUsersPanel() {
     setPendingAction({ type: "admin", user, isAdmin: !user.is_admin });
   };
 
+  const handleDeleteUser = (user: AdminUser) => {
+    if (user.id === currentUser?.id) {
+      setError(t.selfDeleteNote);
+      setMessage("");
+      return;
+    }
+    setPendingAction({ type: "delete", user });
+  };
+
   const confirmUsageReset = async () => {
     const action = pendingAction;
     setPendingAction(null);
@@ -205,6 +224,25 @@ export default function AdminUsersPanel() {
       setMessage(`${t.adminDone} ${managedUser.email}`);
     } catch (roleError) {
       setError(roleError instanceof Error ? roleError.message : t.adminError);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const confirmDeleteUser = async () => {
+    const action = pendingAction;
+    setPendingAction(null);
+    if (!action || action.type !== "delete") return;
+    const user = action.user;
+    setBusy(`delete:${user.id}`);
+    setError("");
+    setMessage("");
+    try {
+      await api.deleteAdminUser(user.id);
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+      setMessage(`${t.deleteDone} ${user.email}`);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : t.deleteError);
     } finally {
       setBusy("");
     }
@@ -288,6 +326,15 @@ export default function AdminUsersPanel() {
                       >
                         {busy === `admin:${user.id}` ? "…" : user.is_admin ? t.removeAdmin : t.makeAdmin}
                       </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => void handleDeleteUser(user)}
+                        disabled={Boolean(busy) || user.id === currentUser?.id}
+                        title={user.id === currentUser?.id ? t.selfDeleteNote : undefined}
+                      >
+                        {busy === `delete:${user.id}` ? "…" : t.deleteAction}
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -308,26 +355,34 @@ export default function AdminUsersPanel() {
           ? t.passwordAction
           : pendingAction?.type === "admin"
             ? (pendingAction.isAdmin ? t.makeAdmin : t.removeAdmin)
-            : t.usageAction}
+            : pendingAction?.type === "delete"
+              ? t.deleteAction
+              : t.usageAction}
         description={pendingAction?.type === "password"
           ? `${t.passwordConfirm} ${pendingAction.user.email}?`
           : pendingAction?.type === "admin"
             ? `${t.adminConfirm} ${pendingAction.user.email}?`
-            : `${t.usageConfirm} ${pendingAction?.user.email || ""}?`}
+            : pendingAction?.type === "delete"
+              ? `${t.deleteConfirm} ${pendingAction.user.email}?`
+              : `${t.usageConfirm} ${pendingAction?.user.email || ""}?`}
         confirmLabel={pendingAction?.type === "password"
           ? t.passwordAction
           : pendingAction?.type === "admin"
             ? (pendingAction.isAdmin ? t.makeAdmin : t.removeAdmin)
-            : t.usageAction}
+            : pendingAction?.type === "delete"
+              ? t.deleteAction
+              : t.usageAction}
         cancelLabel={language === "vi" ? "Hủy" : "Cancel"}
         onConfirm={() => void (
           pendingAction?.type === "password"
             ? confirmPasswordReset()
             : pendingAction?.type === "admin"
               ? confirmAdminRole()
-              : confirmUsageReset()
+              : pendingAction?.type === "delete"
+                ? confirmDeleteUser()
+                : confirmUsageReset()
         )}
-        destructive={pendingAction?.type === "usage" || (pendingAction?.type === "admin" && !pendingAction.isAdmin)}
+        destructive={pendingAction?.type === "usage" || pendingAction?.type === "delete" || (pendingAction?.type === "admin" && !pendingAction.isAdmin)}
         busy={Boolean(busy)}
       />
     </div>

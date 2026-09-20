@@ -36,6 +36,46 @@ LITERAL_MATH_FIELD_RE = re.compile(
     r"</math-field>",
     flags=re.IGNORECASE | re.DOTALL,
 )
+# Models occasionally return inline Markdown math even though the XML prompt
+# requires <math-field>. Normalize the common delimiters at the XML boundary
+# so browser preview, PPTX export, and saved slides all use the same path.
+INLINE_LATEX_RE = re.compile(
+    r"(?<!\\)(?:"
+    r"\$\$(?P<display>.*?)\$\$|"
+    r"\$(?P<inline>[^$\n]+?)\$|"
+    r"\\\((?P<paren>.*?)\\\)|"
+    r"\\\[(?P<bracket>.*?)\\\]"
+    r")",
+    flags=re.DOTALL,
+)
+# Some model responses omit the required <math-field> wrapper and write a
+# short ASCII equation directly in a text box. Keep this intentionally narrow:
+# only equation-shaped expressions and common derivative notation are lifted
+# into math fields, so ordinary prose is not reclassified as mathematics.
+_PLAIN_MATH_ATOM = (
+    r"[A-Za-z](?:[A-Za-z0-9']|\([^()\n]*\)|\[[^\]\n]*\])*"
+)
+_SYMBOLIC_MATH_ATOM = r"[\wŷσΑ-Ωα-ω]+(?:\([^()\n]*\))?"
+PLAIN_MATH_RE = re.compile(
+    rf"(?<![\w])(?P<plain>"
+    rf"(?:"
+    rf"(?:d\s*/\s*dx\s+)?{_PLAIN_MATH_ATOM}"
+    rf"(?:\s*(?:\^|/)\s*\(?[A-Za-z0-9+\-]+\)?)?"
+    rf"(?:\s+{_PLAIN_MATH_ATOM})?\s*=\s*"
+    rf"{_PLAIN_MATH_ATOM}"
+    rf"(?:\s*(?:\^|/)\s*\(?[A-Za-z0-9+\-]+\)?)?"
+    rf"(?:\s+{_PLAIN_MATH_ATOM})?"
+    rf"|"
+    rf"{_SYMBOLIC_MATH_ATOM}\s*=\s*"
+    rf"(?=[^;\n.,:]*[∑√^/()+\-])[^;\n.,:]+?"
+    rf")"
+    rf")(?=$|[\s,.;:])",
+    flags=re.IGNORECASE,
+)
+MATH_SEGMENT_RE = re.compile(
+    rf"{INLINE_LATEX_RE.pattern}|{PLAIN_MATH_RE.pattern}",
+    flags=re.IGNORECASE | re.DOTALL,
+)
 MARKDOWN_BOLD_RE = re.compile(r"\*\*(?P<text>.+?)\*\*", flags=re.DOTALL)
 
 
@@ -46,6 +86,152 @@ class HighlightSpec:
     text: str
     text_color: str
     source_path: str = ""
+
+
+def _math_segments(text: str) -> list[tuple[str, str]]:
+    """Split text into ordinary text and supported LaTeX math segments."""
+    segments: list[tuple[str, str]] = []
+    cursor = 0
+    for match in MATH_SEGMENT_RE.finditer(text):
+        formula = next(
+            (
+                match.group(name)
+                for name in ("display", "inline", "paren", "bracket", "plain")
+                if match.group(name) is not None
+            ),
+            "",
+        ).strip()
+        if not formula:
+            continue
+        if match.start() > cursor:
+            segments.append(("text", text[cursor:match.start()]))
+        segments.append(("math", formula))
+        cursor = match.end()
+    if cursor < len(text):
+        segments.append(("text", text[cursor:]))
+    return segments or [("text", text)]
+
+
+def _normalize_math_formula(formula: str) -> str:
+    r"""Repair Markdown-escaped subscripts inside LaTeX math.
+
+    LLM/Markdown output often turns ``_`` into ``\_`` even inside a math
+    span. In LaTeX that is a literal underscore, so it prevents expressions
+    such as ``\sum_{i=1}^{n}x_i`` from being parsed as scripts.
+    """
+    value = str(formula or "").replace(r"\_", "_")
+    value = re.sub(
+        r"\bd\s*/\s*dx\b",
+        lambda _: r"\frac{d}{dx}",
+        value,
+        flags=re.IGNORECASE,
+    )
+    value = re.sub(
+        r"\bdf\s*/\s*dx\b",
+        lambda _: r"\frac{df}{dx}",
+        value,
+        flags=re.IGNORECASE,
+    )
+    return re.sub(
+        r"([A-Za-z0-9)\]])\^\(([^()\n]+)\)",
+        lambda match: f"{match.group(1)}^{{{match.group(2)}}}",
+        value,
+    )
+
+
+def _literal_math_segments(text: str) -> list[tuple[str, str]]:
+    """Split escaped literal math-field tags and inline LaTeX together."""
+    segments: list[tuple[str, str]] = []
+    cursor = 0
+    combined = re.compile(
+        rf"{LITERAL_MATH_FIELD_RE.pattern}|{MATH_SEGMENT_RE.pattern}",
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    for match in combined.finditer(text):
+        if match.start() > cursor:
+            segments.extend(_math_segments(text[cursor:match.start()]))
+        if match.group("value") is not None or match.group("body") is not None:
+            value = match.group("value") or match.group("body") or ""
+            if value.strip():
+                segments.append(("math", value.strip()))
+        else:
+            formula = next(
+                (
+                    match.group(name)
+                    for name in ("display", "inline", "paren", "bracket", "plain")
+                    if match.group(name) is not None
+                ),
+                "",
+            ).strip()
+            if formula:
+                segments.append(("math", formula))
+        cursor = match.end()
+    if cursor < len(text):
+        segments.extend(_math_segments(text[cursor:]))
+    return segments or [("text", text)]
+
+
+def _math_field(formula: str) -> ET.Element:
+    field = ET.Element("math-field")
+    field.text = _normalize_math_formula(formula)
+    return field
+
+
+def _materialize_textbox_math(textbox: ET.Element) -> bool:
+    """Materialize math in leading text and direct run children."""
+    changed = False
+    for field in textbox.iter("math-field"):
+        normalized = _normalize_math_formula(field.text or "")
+        if normalized != (field.text or ""):
+            field.text = normalized
+            changed = True
+
+    leading = textbox.text or ""
+    leading_segments = _literal_math_segments(leading)
+    if any(kind == "math" for kind, _ in leading_segments):
+        textbox.text = None
+        previous: ET.Element | None = None
+        insert_index = 0
+        for kind, value in leading_segments:
+            if kind == "math":
+                field = _math_field(value)
+                textbox.insert(insert_index, field)
+                insert_index += 1
+                previous = field
+            elif previous is None:
+                textbox.text = (textbox.text or "") + value
+            else:
+                previous.tail = (previous.tail or "") + value
+        changed = True
+
+    # Runs cannot contain direct math fields in the XML schema consumed by
+    # the preview/converter. Flatten a run with inline math into sibling runs
+    # and math-field nodes while retaining all run styling attributes.
+    for run in list(textbox):
+        if run.tag != "run" or list(run):
+            continue
+        raw = run.text or ""
+        segments = _literal_math_segments(raw)
+        if not any(kind == "math" for kind, _ in segments):
+            continue
+        index = list(textbox).index(run)
+        original_tail = run.tail
+        replacements: list[ET.Element] = []
+        for kind, value in segments:
+            if not value:
+                continue
+            if kind == "math":
+                replacements.append(_math_field(value))
+            else:
+                replacement = ET.Element("run", dict(run.attrib))
+                replacement.text = value
+                replacements.append(replacement)
+        textbox.remove(run)
+        for offset, replacement in enumerate(replacements):
+            replacement.tail = original_tail if offset == len(replacements) - 1 else None
+            textbox.insert(index + offset, replacement)
+        changed = True
+    return changed
 
 
 def materialize_math_fields_in_xml(xml_content: str) -> str:
@@ -65,34 +251,12 @@ def materialize_math_fields_in_xml(xml_content: str) -> str:
 
     changed = False
     # Export can receive XML from an older saved slide or from the editor,
-    # where a literal math-field may still be escaped inside either textbox
-    # tag.  Normalize both supported text element names at this boundary.
+    # where a literal math-field or inline Markdown math may still be escaped
+    # inside either textbox tag. Normalize both supported text element names.
     for textbox in root.iter():
         if textbox.tag not in {"textbox", "text"}:
             continue
-        if list(textbox):
-            continue
-        raw_text = textbox.text or ""
-        matches = list(LITERAL_MATH_FIELD_RE.finditer(raw_text))
-        if not matches:
-            continue
-
-        textbox.text = raw_text[: matches[0].start()]
-        for index, match in enumerate(matches):
-            field = ET.SubElement(textbox, "math-field")
-            value = match.group("value")
-            body = match.group("body") or ""
-            if value is not None:
-                field.set("value", value)
-            if body:
-                field.text = body
-            next_start = (
-                matches[index + 1].start()
-                if index + 1 < len(matches)
-                else len(raw_text)
-            )
-            field.tail = raw_text[match.end() : next_start]
-        changed = True
+        changed = _materialize_textbox_math(textbox) or changed
 
     if not changed:
         return xml_content

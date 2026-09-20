@@ -30,6 +30,9 @@ class User:
     # are migrated as verified so a policy change does not lock them out.
     email_verified: bool = True
     onboarding_completed: bool = True
+    # Legacy accounts default to the current tour version; new accounts set
+    # this to 0 until they finish or skip the first-workspace tour.
+    workspace_tour_version: int = 1
     # Authorization is persisted per account and managed through the admin
     # console. It is not derived from deployment environment variables.
     is_admin: bool = False

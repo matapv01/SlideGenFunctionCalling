@@ -389,7 +389,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [thinkingMode, setThinkingMode] = useState<"conversation" | "document" | null>(null);
+  const [thinkingMode, setThinkingMode] = useState<"conversation" | "document_processing" | null>(null);
   const [documentThinkingStep, setDocumentThinkingStep] = useState(0);
   const [slidePlanOpen, setSlidePlanOpen] = useState(false);
   const [error, setError] = useState("");
@@ -552,11 +552,12 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         unavailable: "Không thể tải cuộc trò chuyện.",
         sending: "Đang suy nghĩ...",
         stopResponse: "Dừng phản hồi",
-        documentThinkingTitle: "Đang phân tích tài liệu",
-        documentThinkingSteps: [
-          "Đang đọc cấu trúc DOCX",
-          "Đang phân tích nội dung tài liệu",
-          "Đang chuẩn bị ngữ cảnh liên quan",
+        documentProcessingTitle: "Đang đọc hiểu tài liệu",
+        documentOnlyPrompt: "Đọc hiểu tài liệu này",
+        documentProcessingSteps: [
+          "Đang đọc nội dung tài liệu",
+          "Đang xử lý tài liệu lần đầu",
+          "Đang chuẩn bị ngữ cảnh cho cuộc trò chuyện",
         ],
         upload: "Tải tài liệu DOCX",
         uploading: "Đang tải tệp...",
@@ -624,11 +625,12 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         unavailable: "Unable to load conversations.",
         sending: "Thinking...",
         stopResponse: "Stop response",
-        documentThinkingTitle: "Analyzing document",
-        documentThinkingSteps: [
-          "Reading the DOCX structure",
-          "Analyzing the document content",
-          "Preparing relevant context",
+        documentProcessingTitle: "Reading and understanding document",
+        documentOnlyPrompt: "Read and understand this document",
+        documentProcessingSteps: [
+          "Reading the document content",
+          "Processing the document for the first time",
+          "Preparing context for this conversation",
         ],
         upload: "Upload DOCX",
         uploading: "Uploading file...",
@@ -752,10 +754,25 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     });
   };
 
+  const refreshSessionDocumentStatuses = async (sessionId: string) => {
+    const viewRequestId = sessionViewRequestRef.current;
+    try {
+      const documents = await loadChatDocuments(sessionId);
+      if (
+        sessionId !== activeSessionId
+        || viewRequestId !== sessionViewRequestRef.current
+      ) return;
+      setSessionDocuments(documents.filter((document) => document.status !== "failed"));
+    } catch {
+      // The chat result is already valid; document status is only UI metadata.
+    }
+  };
+
   const handleChatStreamEvent = (optimisticId: number, event: { type: string; data: Record<string, unknown> }) => {
     if (event.type === "complete") {
       applyChatTurnResult(optimisticId, chatTurnFromStreamEvent(event.data));
       setActiveChatJob(null);
+      if (activeSessionId) void refreshSessionDocumentStatuses(activeSessionId);
       void loadSubscriptionUsage();
       return;
     }
@@ -781,7 +798,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
   }, [loadSubscriptionUsage]);
 
   useEffect(() => {
-    if (!sending || thinkingMode !== "document") return;
+    if (!sending || thinkingMode !== "document_processing") return;
     const timer = window.setInterval(() => {
       setDocumentThinkingStep((current) => current + 1);
     }, 1600);
@@ -935,7 +952,10 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     }
     setUploadedDocuments([]);
     setSending(true);
-    setThinkingMode(job.document_ids.length || sessionDocuments.length ? "document" : "conversation");
+    const jobNeedsDocumentProcessing = sessionDocuments.some((document) => (
+      job.document_ids.includes(document.id) && document.status !== "ready"
+    ));
+    setThinkingMode(jobNeedsDocumentProcessing ? "document_processing" : "conversation");
     setDocumentThinkingStep(0);
     chatMessageJobRef.current = job.id;
     const controller = new AbortController();
@@ -1277,7 +1297,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     options: SendMessageOptions = {},
   ) => {
     const streamSlides = options.streamSlides === true;
-    if (!cleanMessage || !activeSessionId || sending || uploading) return;
+    if (!activeSessionId || sending || uploading) return;
     // Keep ordinary chat available while a deck is rendering. The explicit
     // slide-stream action is the only operation that must be blocked here.
     if (streamSlides && isGenerating) {
@@ -1292,6 +1312,13 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     blankChatSessionIdsRef.current.delete(sessionId);
     const pendingDocuments = options.documentIds ? [] : [...uploadedDocuments];
     const documentIds = options.documentIds ?? pendingDocuments.map((document) => document.id);
+    const effectiveMessage = cleanMessage || (
+      documentIds.length ? text.documentOnlyPrompt : ""
+    );
+    if (!effectiveMessage) return;
+    const needsDocumentProcessing = sessionDocuments.some((document) => (
+      documentIds.includes(document.id) && document.status !== "ready"
+    ));
     const messageAttachments: MessageAttachment[] = options.messageAttachments
       ? [...options.messageAttachments]
       : pendingDocuments.map((document) => ({
@@ -1303,7 +1330,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
       id: -Date.now(),
       session_id: activeSessionId,
       role: "user",
-      content: cleanMessage,
+      content: effectiveMessage,
       model,
       effort,
       metadata: {
@@ -1326,7 +1353,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     if (streamSlides) {
       const started = startSlideGeneration({
         sessionId,
-        content: cleanMessage,
+        content: effectiveMessage,
         model,
         effort,
         slideCount: options.slideCount,
@@ -1344,7 +1371,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     }
 
     setSending(true);
-    setThinkingMode(pendingDocuments.length > 0 || sessionDocuments.length > 0 ? "document" : "conversation");
+    setThinkingMode(needsDocumentProcessing ? "document_processing" : "conversation");
     setDocumentThinkingStep(0);
     setActiveChatJob(null);
     chatMessageJobRef.current = String(optimisticMessage.id);
@@ -1354,7 +1381,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     try {
       await streamChatMessage(
         sessionId,
-        cleanMessage,
+        effectiveMessage,
         model,
         effort,
         options.slideCount,
@@ -1613,7 +1640,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
   return (
     <section className={`chat-layout ${showSlideStream || slidePlanOpen || Boolean(selectedSource) ? "chat-layout-streaming" : ""}`} onClick={() => { setToolsOpen(false); setModelOpen(false); }}>
       <aside className="chat-history">
-        <div className="chat-history-top">
+        <div className="chat-history-top" data-tour="chat-history">
           <span>{text.conversations}</span>
           <button aria-label={text.newConversation} onClick={() => void startNewConversation()} />
         </div>
@@ -1832,17 +1859,17 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
                 />
               )}
               {sending && (
-                <div className={`chat-pending-message ${thinkingMode === "document" ? "is-document-thinking" : ""}`} role="status" aria-live="polite">
+                <div className={`chat-pending-message ${thinkingMode === "document_processing" ? "is-document-thinking" : ""}`} role="status" aria-live="polite">
                   <span className="chat-assistant-mark" aria-hidden="true">✦</span>
                   <div className="chat-pending-copy">
                     <div className="chat-thinking-summary">
                       <span className="chat-pending-loader" aria-hidden="true" />
-                      <span>{thinkingMode === "document" ? text.documentThinkingTitle : text.sending}</span>
+                      <span>{thinkingMode === "document_processing" ? text.documentProcessingTitle : text.sending}</span>
                     </div>
-                    {thinkingMode === "document" && (
+                    {thinkingMode === "document_processing" && (
                       <div className="chat-thinking-step">
                         <span className="chat-thinking-step-dot" aria-hidden="true" />
-                        <span>{text.documentThinkingSteps[documentThinkingStep % text.documentThinkingSteps.length]}</span>
+                        <span>{text.documentProcessingSteps[documentThinkingStep % text.documentProcessingSteps.length]}</span>
                       </div>
                     )}
                   </div>
@@ -1875,7 +1902,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         )}
 
         {error && <p className="chat-error" role="alert">{error}</p>}
-        <form className="chat-composer" onSubmit={submitMessage}>
+        <form className="chat-composer" data-tour="chat-composer" onSubmit={submitMessage}>
           <input
             ref={fileInputRef}
             type="file"
@@ -1968,10 +1995,10 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
             disabled={loading || sending || !activeSessionId}
           />
           <div className="composer-controls" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="composer-plus" aria-label="Open tools" aria-expanded={toolsOpen} onClick={() => { setToolsOpen(!toolsOpen); setModelOpen(false); }}>+</button>
+            <button type="button" className="composer-plus" data-tour="composer-tools" aria-label="Open tools" aria-expanded={toolsOpen} onClick={() => { setToolsOpen(!toolsOpen); setModelOpen(false); }}>+</button>
             {toolsOpen && <div className="composer-tools-menu"><button type="button" onClick={() => { fileInputRef.current?.click(); setToolsOpen(false); }}>{text.upload}</button><button type="button" className={searchEnabled ? "selected" : ""} onClick={() => { setSearchEnabled(!searchEnabled); setToolsOpen(false); }}>Search</button></div>}
             <div className="composer-spacer" />
-            <div className="composer-model">
+            <div className="composer-model" data-tour="composer-model">
               <button type="button" className="composer-model-button" aria-expanded={modelOpen} onClick={() => { setModelOpen(!modelOpen); setToolsOpen(false); }}>Genius {model.slice(-1)} <span>{effort[0].toUpperCase() + effort.slice(1)}</span></button>
               {modelOpen && <div className="composer-model-menu"><p className="composer-model-menu-label">Model</p>{models.map((item) => <button type="button" key={item} className={model === item ? "selected" : ""} onClick={() => { setModel(item); setModelOpen(false); }}>Genius {item.slice(-1)}{model === item && <i>✓</i>}</button>)}<div className="composer-model-divider" /><p className="composer-model-menu-label">Effort</p>{efforts.map((item) => <button type="button" key={item} className={effort === item ? "selected" : ""} onClick={() => { if (item === "low" || item === "medium" || item === "high") setEffort(item); setModelOpen(false); }}>{item[0].toUpperCase() + item.slice(1)}{effort === item && <i>✓</i>}</button>)}</div>}
             </div>
@@ -1990,7 +2017,12 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
                 <span aria-hidden="true">■</span>
               </button>
             ) : (
-              <button className="composer-send" type="submit" aria-label="Send message" disabled={uploading || !message.trim()}>↗</button>
+              <button
+                className="composer-send"
+                type="submit"
+                aria-label="Send message"
+                disabled={uploading || (!message.trim() && !hasUploadedDocuments)}
+              >↗</button>
             )}
           </div>
         </form>

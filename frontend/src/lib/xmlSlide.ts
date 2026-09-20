@@ -47,6 +47,75 @@ const directElementChildren = (element: Element) =>
     (node): node is Element => node.nodeType === Node.ELEMENT_NODE,
   );
 
+const INLINE_LATEX_RE = /(?<!\\)(?:\$\$(.*?)\$\$|\$([^$\n]+?)\$|\\\((.*?)\\\)|\\\[(.*?)\\\])/gs;
+
+export const normalizeLatexFormula = (value: string) =>
+  value.replace(/\\_/g, "_");
+
+const inlineMathSegments = (value: string) => {
+  const segments: Array<{ type: "text" | "math"; value: string }> = [];
+  let cursor = 0;
+  for (const match of value.matchAll(INLINE_LATEX_RE)) {
+    const formula = [match[1], match[2], match[3], match[4]]
+      .find((candidate) => candidate !== undefined)
+      ?.trim() || "";
+    if (!formula) continue;
+    const start = match.index ?? 0;
+    if (start > cursor) segments.push({ type: "text", value: value.slice(cursor, start) });
+    segments.push({ type: "math", value: normalizeLatexFormula(formula) });
+    cursor = start + match[0].length;
+  }
+  if (cursor < value.length) segments.push({ type: "text", value: value.slice(cursor) });
+  return segments;
+};
+
+const materializeInlineMathInXml = (document: XMLDocument) => {
+  const textboxes = Array.from(document.querySelectorAll("textbox, text"));
+  textboxes.forEach((textbox) => {
+    Array.from(textbox.querySelectorAll("math-field")).forEach((field) => {
+      field.textContent = normalizeLatexFormula(field.textContent || "");
+    });
+    Array.from(textbox.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) {
+        const value = node.nodeValue || "";
+        const segments = inlineMathSegments(value);
+        if (!segments.some((segment) => segment.type === "math")) return;
+        const fragment = document.createDocumentFragment();
+        segments.forEach((segment) => {
+          if (segment.type === "math") {
+            const field = document.createElement("math-field");
+            field.textContent = segment.value;
+            fragment.appendChild(field);
+          } else if (segment.value) {
+            fragment.appendChild(document.createTextNode(segment.value));
+          }
+        });
+        node.replaceWith(fragment);
+        return;
+      }
+
+      if (!(node instanceof Element) || node.tagName.toLowerCase() !== "run") return;
+      const raw = node.textContent || "";
+      const segments = inlineMathSegments(raw);
+      if (!segments.some((segment) => segment.type === "math")) return;
+      const fragment = document.createDocumentFragment();
+      segments.forEach((segment) => {
+        if (segment.type === "math") {
+          const field = document.createElement("math-field");
+          field.textContent = segment.value;
+          fragment.appendChild(field);
+          return;
+        }
+        if (!segment.value) return;
+        const run = node.cloneNode(false) as Element;
+        run.textContent = segment.value;
+        fragment.appendChild(run);
+      });
+      node.replaceWith(fragment);
+    });
+  });
+};
+
 const parseElement = (element: Element, index: number): XmlSlideElement => {
   const attrs = attributesOf(element);
   const children: XmlSlideElement[] = [];
@@ -90,6 +159,11 @@ export const parseXmlSlide = (xml: string): XmlSlideDocument => {
   if (parserError) {
     throw new Error(parserError.textContent || "Dữ liệu trình chiếu không hợp lệ");
   }
+
+  // Older/generated XML can contain Markdown-style `$...$` math instead of
+  // the canonical math-field node. Normalize it before the editor builds its
+  // element model so stored slides render consistently too.
+  materializeInlineMathInXml(parsed);
 
   const presentation = parsed.documentElement;
   if (!presentation || presentation.tagName !== "presentation") {

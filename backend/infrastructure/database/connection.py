@@ -48,7 +48,8 @@ def init_db():
                 is_admin BOOLEAN NOT NULL DEFAULT 0,
                 onboarding_completed BOOLEAN NOT NULL DEFAULT 1,
                 onboarding_use_cases TEXT,
-                onboarding_role TEXT
+                onboarding_role TEXT,
+                workspace_tour_version INTEGER NOT NULL DEFAULT 1
             )
         """)
 
@@ -487,6 +488,7 @@ def init_db():
             "ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT 1",
             "ALTER TABLE users ADD COLUMN onboarding_use_cases TEXT",
             "ALTER TABLE users ADD COLUMN onboarding_role TEXT",
+            "ALTER TABLE users ADD COLUMN workspace_tour_version INTEGER NOT NULL DEFAULT 1",
         ):
             try:
                 cursor.execute(statement)

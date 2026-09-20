@@ -272,6 +272,15 @@ class ChatbotService:
     def list_messages(self, session_id: str, user_id: int) -> list[ChatMessage]:
         return self.repository.list_messages(session_id, user_id)
 
+    @staticmethod
+    def _normalize_chat_query(query: str, document_ids: list[str]) -> str:
+        clean_query = str(query or "").strip()
+        if clean_query:
+            return clean_query
+        if document_ids:
+            return "Read and understand the attached document."
+        raise ValueError("Message cannot be empty")
+
     def archive_session(self, session_id: str, user_id: int) -> None:
         self.repository.archive_session(session_id, user_id)
 
@@ -289,9 +298,8 @@ class ChatbotService:
         slide_callback: Callable[[str, dict[str, Any]], None] | None = None,
         slide_job_id: str | None = None,
     ) -> ChatTurnResult:
-        clean_query = query.strip()
-        if not clean_query:
-            raise ValueError("Message cannot be empty")
+        normalized_document_ids = self._normalize_document_ids(document_ids)
+        clean_query = self._normalize_chat_query(query, normalized_document_ids)
         if len(clean_query) > 12_000:
             raise ValueError("Message is too long")
 
@@ -316,7 +324,6 @@ class ChatbotService:
                 usage_cost=float(generation_config.get("usage_cost", 1.0)),
             )
 
-        normalized_document_ids = self._normalize_document_ids(document_ids)
         await self._ensure_documents_ready(session, normalized_document_ids)
         document_attached = self._has_ready_documents(session)
         message_attachments = self._resolve_document_attachments(
@@ -921,9 +928,8 @@ class ChatbotService:
         job.  The actual LLM/RAG work continues in the service task when the
         browser changes route, refreshes, or loses its network connection.
         """
-        clean_query = query.strip()
-        if not clean_query:
-            raise ValueError("Message cannot be empty")
+        normalized_document_ids = self._normalize_document_ids(document_ids)
+        clean_query = self._normalize_chat_query(query, normalized_document_ids)
         if len(clean_query) > 12_000:
             raise ValueError("Message is too long")
 
@@ -931,7 +937,6 @@ class ChatbotService:
         if session is None or session.archived:
             raise LookupError("Chat session not found")
 
-        normalized_document_ids = self._normalize_document_ids(document_ids)
         attachments = self._resolve_document_attachments(
             session, normalized_document_ids
         )
@@ -1204,13 +1209,11 @@ class ChatbotService:
         A browser reload only removes a subscriber; the job remains owned by
         this application service and can be observed again by job id.
         """
-        clean_query = query.strip()
-        if not clean_query:
-            raise ValueError("Message cannot be empty")
+        normalized_document_ids = self._normalize_document_ids(document_ids)
+        clean_query = self._normalize_chat_query(query, normalized_document_ids)
         session = self.repository.get_session(session_id, user_id)
         if session is None or session.archived:
             raise LookupError("Chat session not found")
-        normalized_document_ids = self._normalize_document_ids(document_ids)
         self._resolve_document_attachments(session, normalized_document_ids)
         generation_config = resolve_chatbot_generation_config(model_name, effort)
         if self.subscription_service is not None:

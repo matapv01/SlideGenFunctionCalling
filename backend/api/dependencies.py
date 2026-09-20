@@ -272,6 +272,7 @@ async def get_current_user(
         created_at=user.created_at, is_active=bool(user.is_active),
         is_admin=bool(user.is_admin),
         onboarding_completed=bool(user.onboarding_completed),
+        workspace_tour_version=int(user.workspace_tour_version),
         full_name=full_name, avatar_url=avatar_url, username=username
     )
 
@@ -309,6 +310,8 @@ async def get_current_user_from_token_param(
         id=user.id, email=user.email,
         created_at=user.created_at, is_active=bool(user.is_active),
         is_admin=bool(user.is_admin),
+        onboarding_completed=bool(user.onboarding_completed),
+        workspace_tour_version=int(user.workspace_tour_version),
     )
 
 
