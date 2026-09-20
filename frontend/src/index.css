@@ -110,6 +110,18 @@
   }
 }
 
+/* Light surfaces need a deeper coral for text and borders. The peach fill is
+   kept for buttons, where the dark foreground remains easy to read. */
+html:not(.dark) {
+  --sg-light-accent: #a84732;
+  --sg-light-accent-strong: #873b2c;
+  --sg-light-accent-fill: #ed8c74;
+  --sg-light-accent-fill-hover: #e27a62;
+  --sg-light-accent-border: #c65f49;
+  --sg-light-accent-soft: #fff0ea;
+  --sg-light-accent-soft-strong: #ffe8df;
+}
+
 @layer base {
   * {
     @apply border-border;

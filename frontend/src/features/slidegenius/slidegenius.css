@@ -1052,16 +1052,16 @@ html:not(.dark) .sgx-home.workspace-page .composer-plus,
 html:not(.dark) .sgx-home.workspace-page .project-card > p,
 html:not(.dark) .sgx-home.workspace-page .guide-steps span,
 html:not(.dark) .sgx-home.workspace-page .subscription-label {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .workspace-nav button.active {
-  box-shadow: inset 2px 0 #b65f4c;
+  box-shadow: inset 2px 0 var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .chat-history-item:hover,
 html:not(.dark) .sgx-home.workspace-page .chat-history-item.active {
-  border-left-color: #b65f4c;
+  border-left-color: var(--sg-light-accent);
 }
 
 @media (max-width: 760px) {
@@ -1607,10 +1607,35 @@ html:not(.dark) .sg-auth .auth-verification-alert {
 }
 
 html:not(.dark) .sg-auth .auth-verification-alert-icon {
-  background: #b65f4c;
+  background: var(--sg-light-accent);
   color: #fffaf3;
 }
 
 html:not(.dark) .sg-auth .auth-verification-alert strong {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
+}
+
+/* Keep coral accents readable on light surfaces. */
+html:not(.dark) .sgl-landing .brand-word b,
+html:not(.dark) .sgl-landing .language-switcher .is-active,
+html:not(.dark) .sgl-landing .footer-links b,
+html:not(.dark) .sg-auth .auth-language,
+html:not(.dark) .sg-auth .auth-eyebrow,
+html:not(.dark) .sg-auth .auth-card-heading span:last-child {
+  color: var(--sg-light-accent);
+}
+
+html:not(.dark) .sg-auth .auth-note-line {
+  background: var(--sg-light-accent);
+}
+
+html:not(.dark) .sgl-landing .header-actions .start-button,
+html:not(.dark) .sg-auth .auth-submit:hover {
+  background: var(--sg-light-accent-fill);
+  color: #242524;
+}
+
+html:not(.dark) .sgl-landing .header-actions .start-button:hover,
+html:not(.dark) .sg-auth .auth-submit:hover {
+  background: var(--sg-light-accent-fill-hover);
 }

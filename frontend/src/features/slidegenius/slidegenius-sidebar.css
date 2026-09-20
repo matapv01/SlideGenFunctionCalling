@@ -699,6 +699,13 @@ html:not(.dark) .sgx-home.workspace-page .chat-user-bubble {
 }
 html:not(.dark) .sgx-home.workspace-page .chat-user-bubble p { color: #3f342f; }
 html:not(.dark) .sgx-home.workspace-page .chat-composer-attachment strong { color: #344138; font-weight: 600; }
+html:not(.dark) .sgx-home.workspace-page .chat-composer-attachment-icon,
+html:not(.dark) .sgx-home.workspace-page .chat-message-attachment-icon {
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-soft);
+  color: var(--sg-light-accent);
+}
+html:not(.dark) .sgx-home.workspace-page .chat-composer-attachment-state { color: var(--sg-light-accent); }
 html:not(.dark) .sgx-home.workspace-page .chat-message-attachment { border-color: #ddd9d1; background: #f5f3ef; }
 html:not(.dark) .sgx-home.workspace-page .chat-message-attachment strong { color: #465149; }
 html:not(.dark) .sgx-home.workspace-page .chat-pending-message { color: #5f6b62; }
@@ -710,26 +717,36 @@ html:not(.dark) .sgx-home.workspace-page .chat-flow-option {
   background: #f5f3ef;
   color: #4d5a51;
 }
+html:not(.dark) .sgx-home.workspace-page .chat-flow-option:not(:disabled) { color: #344138; }
 html:not(.dark) .sgx-home.workspace-page .chat-flow-option:hover:not(:disabled) {
-  border-color: #d6816e;
-  background: #fff0ea;
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-soft);
   color: #2d3a31;
 }
 html:not(.dark) .sgx-home.workspace-page .chat-flow-option.primary {
-  border-color: #d6816e;
-  background: #f5a08a;
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-fill);
   color: #242524;
 }
 html:not(.dark) .sgx-home.workspace-page .chat-flow-option.primary:hover:not(:disabled) {
-  border-color: #c65f49;
-  background: #ffc0ad;
+  border-color: var(--sg-light-accent-strong);
+  background: var(--sg-light-accent-fill-hover);
   color: #242524;
 }
 html:not(.dark) .sgx-home.workspace-page .chat-flow-option.upgrade {
-  border-color: #d6816e;
-  color: #b45f4d;
+  border-color: var(--sg-light-accent-border);
+  color: var(--sg-light-accent);
 }
-html:not(.dark) .sgx-home.workspace-page .chat-pending-loader { border-color: #d8d5cd; border-top-color: #d97861; }
+html:not(.dark) .sgx-home.workspace-page .chat-plan-button {
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-soft);
+  color: var(--sg-light-accent);
+}
+html:not(.dark) .sgx-home.workspace-page .chat-plan-button:hover {
+  border-color: var(--sg-light-accent-strong);
+  background: var(--sg-light-accent-soft-strong);
+}
+html:not(.dark) .sgx-home.workspace-page .chat-pending-loader { border-color: #d8d5cd; border-top-color: var(--sg-light-accent-border); }
 html:not(.dark) .sgx-home.workspace-page .chat-error,
 html:not(.dark) .sgx-home.workspace-page .project-action-message,
 html:not(.dark) .sgx-home.workspace-page .subscription-message { border-color: #efb5a5; background: #fff1ec; color: #a34836; }
@@ -765,7 +782,7 @@ html:not(.dark) .sgx-home.workspace-page .subscription-card-current-usage {
   background: #fff4ef;
 }
 html:not(.dark) .sgx-home.workspace-page .subscription-card-current-usage small { color: #68746b; }
-html:not(.dark) .sgx-home.workspace-page .subscription-card-current-usage strong { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .subscription-card-current-usage strong { color: var(--sg-light-accent); }
 html:not(.dark) .sgx-home.workspace-page .subscription-button.secondary {
   border: 1px solid #d9d6ce;
   background: #f5f3ef;
@@ -789,7 +806,7 @@ html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-header { border-bott
 html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-header h3 { color: #202a23; }
 html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-header button { border-color: #d7d4cb; background: #f4f2ed; color: #647068; }
 html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress-copy { color: #657168; }
-html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress-copy strong { color: #c65f49; }
+html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress-copy strong { color: var(--sg-light-accent); }
 html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-progress { background: #e5e2db; }
 html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-description { color: #68746b; }
 html:not(.dark) .sgx-home.workspace-page .chat-slide-stream-list { scrollbar-color: #a8afa7 #efede8; }

@@ -38,7 +38,7 @@ html:not(.dark) .sgv-heading p,
 html:not(.dark) .sgv-card-meta > span,
 html:not(.dark) .sgv-card-meta button:hover,
 html:not(.dark) .sgv-delete-error {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgv-heading h1 {
@@ -82,20 +82,20 @@ html:not(.dark) .sgv-state {
 }
 
 html:not(.dark) .sgv-delete-button {
-  border-color: #c46f6066;
-  color: #b45f4d;
+  border-color: #c65f4966;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgv-delete-button:hover {
-  border-color: #b45f4d;
-  background: #e4867212;
-  color: #934b3c;
+  border-color: var(--sg-light-accent);
+  background: var(--sg-light-accent-soft);
+  color: var(--sg-light-accent-strong);
 }
 
 html:not(.dark) .sgv-edit-button,
 html:not(.dark) .sgv-state button {
-  border-color: #c46f6066;
-  background: #e88976;
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-fill);
 }
 
 /* Readable type scale for the project detail page. */

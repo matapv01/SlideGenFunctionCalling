@@ -124,20 +124,20 @@
 .sg-auth.onboarding-page .onboarding-spark { display: block; margin-bottom: 28px; color: #f5a08a; font-size: 58px; line-height: 1; }
 
 html:not(.dark) .sg-auth.onboarding-page .onboarding-progress span { background: #20202025; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-progress span.is-active { background: #c75d45; }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-progress span.is-active { background: var(--sg-light-accent); }
 html:not(.dark) .sg-auth.onboarding-page .onboarding-shell h1 { color: #242524; }
 html:not(.dark) .sg-auth.onboarding-page .onboarding-description { color: #59625b; }
 html:not(.dark) .sg-auth.onboarding-page .onboarding-option { border-color: #dcd8d0; background: #fffefa; color: #303731; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-option:hover { border-color: #ce7963; background: #fff4ef; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-option.is-selected { border-color: #ce7963; background: #fff0e9; }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-option:hover { border-color: var(--sg-light-accent-border); background: var(--sg-light-accent-soft); }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-option.is-selected { border-color: var(--sg-light-accent-border); background: var(--sg-light-accent-soft-strong); }
 html:not(.dark) .sg-auth.onboarding-page .onboarding-option-check { border-color: #8b938b; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-option.is-selected .onboarding-option-check { border-color: #c75d45; background: #c75d45; color: #fff; }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-option.is-selected .onboarding-option-check { border-color: var(--sg-light-accent); background: var(--sg-light-accent); color: #fff; }
 html:not(.dark) .sg-auth.onboarding-page .onboarding-skip { color: #59625b; }
 html:not(.dark) .sg-auth.onboarding-page .onboarding-skip:hover { color: #a84732; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-next { background: #ec947c; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-next:hover { background: #f5a98f; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-spark { color: #c75d45; }
-html:not(.dark) .sg-auth.onboarding-page .onboarding-error { color: #a84732; }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-next { background: var(--sg-light-accent-fill); color: #242524; }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-next:hover { background: var(--sg-light-accent-fill-hover); }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-spark { color: var(--sg-light-accent); }
+html:not(.dark) .sg-auth.onboarding-page .onboarding-error { color: var(--sg-light-accent-strong); }
 
 @media (max-width: 600px) {
   .sg-auth.onboarding-page .onboarding-shell { padding-top: 42px; }

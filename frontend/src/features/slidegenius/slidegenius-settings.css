@@ -65,7 +65,7 @@ html:not(.dark) .sgx-home.workspace-page .sgx-settings-summary small,
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-footer p.is-dirty,
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-eyebrow,
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-aside-note > span {
-  color: #b65f4c;
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button {
@@ -78,7 +78,7 @@ html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button.active {
 }
 
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-tabs button.active {
-  border-bottom-color: #b65f4c;
+  border-bottom-color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-field input,
@@ -97,9 +97,9 @@ html:not(.dark) .sgx-home.workspace-page .sgx-settings-field input[readonly] {
 
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-choice-grid button:hover,
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-choice-grid button.selected {
-  border-color: #d6816e99;
-  background: #f5a08a20;
-  color: #b45f4d;
+  border-color: var(--sg-light-accent-border);
+  background: var(--sg-light-accent-soft-strong);
+  color: var(--sg-light-accent);
 }
 
 html:not(.dark) .sgx-home.workspace-page .sgx-settings-note,
