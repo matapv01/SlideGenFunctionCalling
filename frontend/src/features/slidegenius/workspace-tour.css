@@ -87,6 +87,66 @@
   line-height: 1.55;
 }
 
+.workspace-tour-tool-preview {
+  display: grid;
+  gap: 6px;
+  margin: -7px 0 19px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .05);
+  color: #e8e8e2;
+  font-size: 12px;
+}
+
+.workspace-tour-tool-preview div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 6px;
+}
+
+.workspace-tour-tool-preview span {
+  display: inline-grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border-radius: 4px;
+  background: rgba(245, 160, 138, .16);
+  color: #f5a08a;
+  font-size: 14px;
+}
+
+.workspace-tour-manual-preview {
+  display: grid;
+  gap: 4px;
+  margin: -7px 0 19px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.workspace-tour-manual-preview code {
+  display: block;
+  overflow: hidden;
+  color: #e8e8e2;
+  font: 12px/1.45 "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-tour-manual-preview .workspace-tour-mark {
+  color: #f5a08a;
+  font-weight: 700;
+}
+
+.workspace-tour-manual-preview small {
+  margin-top: 4px;
+  color: #a6a79f;
+  font-size: 10px;
+}
+
 .workspace-tour-actions {
   gap: 12px;
 }
@@ -138,6 +198,15 @@
   font-size: 12px;
 }
 
+/* Keep the live Manual example readable while the first demo step is running. */
+.workspace-tour-manual-demo.is-manual-typing .workspace-tour-backdrop {
+  background: rgba(7, 8, 8, .16);
+}
+
+.workspace-tour-manual-demo.is-manual-typing .workspace-tour-spotlight {
+  box-shadow: 0 0 0 9999px rgba(7, 8, 8, .16), 0 0 0 5px rgba(245, 160, 138, .18), 0 10px 30px rgba(0, 0, 0, .2);
+}
+
 html:not(.dark) .workspace-tour-card {
   background: #fffdf8;
   color: #202020;
@@ -150,6 +219,25 @@ html:not(.dark) .workspace-tour-card h2 {
 
 html:not(.dark) .workspace-tour-description {
   color: #555850;
+}
+
+html:not(.dark) .workspace-tour-tool-preview {
+  border-color: #2020201c;
+  background: #f4eee8;
+  color: #3d443e;
+}
+
+html:not(.dark) .workspace-tour-manual-preview {
+  border-color: #2020201c;
+  background: #f4eee8;
+}
+
+html:not(.dark) .workspace-tour-manual-preview code {
+  color: #303630;
+}
+
+html:not(.dark) .workspace-tour-manual-preview small {
+  color: #686b64;
 }
 
 html:not(.dark) .workspace-tour-card-top button {
@@ -178,5 +266,13 @@ html:not(.dark) .workspace-tour-back {
 
   .workspace-tour-spotlight {
     box-shadow: 0 0 0 9999px rgba(7, 8, 8, .54), 0 0 0 4px rgba(245, 160, 138, .18);
+  }
+}
+
+@media (min-width: 761px) {
+  .workspace-tour-manual-demo.is-manual-typing .workspace-tour-card {
+    top: 16px !important;
+    right: 16px;
+    left: auto !important;
   }
 }

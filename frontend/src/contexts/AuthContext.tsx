@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
-  const completeWorkspaceTour = useCallback(async (version = 1) => {
+  const completeWorkspaceTour = useCallback(async (version = 2) => {
     const completedUser = await api.completeWorkspaceTour(version);
     setUser(completedUser);
     localStorage.setItem("user", JSON.stringify(completedUser));

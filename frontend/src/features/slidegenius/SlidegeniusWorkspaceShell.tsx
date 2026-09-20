@@ -152,12 +152,12 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
         </div>
 
         <div className="workspace-sidebar-label">WORKSPACE</div>
-        <nav className="workspace-nav" aria-label="Workspace navigation" data-tour="workspace-nav">
+        <nav className="workspace-nav" aria-label="Workspace navigation">
           {(["slidegenius", "projects", "manual", "guide"] as const).map((item) => (
             <button
               key={item}
               className={activeTab === item ? "active" : ""}
-              data-tour={item === "projects" ? "projects-nav" : undefined}
+              data-tour={item === "slidegenius" ? "workspace-nav" : item === "projects" ? "projects-nav" : item === "manual" ? "manual-nav" : undefined}
               onClick={() => goToTab(item)}
               title={text.tabs[item]}
               aria-label={text.tabs[item]}

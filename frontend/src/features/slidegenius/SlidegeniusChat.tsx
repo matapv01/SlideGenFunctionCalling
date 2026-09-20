@@ -1639,8 +1639,8 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
 
   return (
     <section className={`chat-layout ${showSlideStream || slidePlanOpen || Boolean(selectedSource) ? "chat-layout-streaming" : ""}`} onClick={() => { setToolsOpen(false); setModelOpen(false); }}>
-      <aside className="chat-history" data-tour="chat-history">
-        <div className="chat-history-top">
+      <aside className="chat-history">
+        <div className="chat-history-top" data-tour="chat-history">
           <span>{text.conversations}</span>
           <button aria-label={text.newConversation} onClick={() => void startNewConversation()} />
         </div>
@@ -1995,7 +1995,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
             disabled={loading || sending || !activeSessionId}
           />
           <div className="composer-controls" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="composer-plus" aria-label="Open tools" aria-expanded={toolsOpen} onClick={() => { setToolsOpen(!toolsOpen); setModelOpen(false); }}>+</button>
+            <button type="button" className="composer-plus" data-tour="composer-tools" aria-label="Open tools" aria-expanded={toolsOpen} onClick={() => { setToolsOpen(!toolsOpen); setModelOpen(false); }}>+</button>
             {toolsOpen && <div className="composer-tools-menu"><button type="button" onClick={() => { fileInputRef.current?.click(); setToolsOpen(false); }}>{text.upload}</button><button type="button" className={searchEnabled ? "selected" : ""} onClick={() => { setSearchEnabled(!searchEnabled); setToolsOpen(false); }}>Search</button></div>}
             <div className="composer-spacer" />
             <div className="composer-model" data-tour="composer-model">

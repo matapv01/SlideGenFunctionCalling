@@ -357,7 +357,7 @@ export const api = {
       body: JSON.stringify(answers),
     }),
 
-  completeWorkspaceTour: (version = 1) =>
+  completeWorkspaceTour: (version = 2) =>
     request<UserResponse>("/auth/workspace-tour/complete", {
       method: "POST",
       body: JSON.stringify({ version }),

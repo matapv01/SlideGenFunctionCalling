@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import SlidegenLogo from "@/components/SlidegenLogo";
 import { publicAssetUrl } from "@/lib/publicAssetUrl";
 import "./slidegenius.css";
@@ -18,7 +19,7 @@ const typingPrompts = { en: ["What do you want to create?", "A bold pitch deck f
 export default function SlidegeniusLanding() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [language, setLanguage] = useState<"en" | "vi">("en");
+  const { language, setLanguage } = useLanguage();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const closeTimer = useRef<number | null>(null);
   const [promptIndex, setPromptIndex] = useState(0);
@@ -95,7 +96,7 @@ export default function SlidegeniusLanding() {
           <div className="nav-menu" onMouseEnter={() => openMenuSmoothly("company")} onMouseLeave={closeMenuSmoothly}><button type="button" aria-expanded={openMenu === "company"} onClick={() => openMenuSmoothly("company")}>{isVietnamese ? "Công ty" : "Company"}<span className="nav-chevron" /></button>{openMenu === "company" && <div className="mega-menu compact-mega"><div className="mega-column"><p>{isVietnamese ? "Về Slidegen" : "About Slidegen"}</p><a href="#create"><i>◎</i><span><b>{isVietnamese ? "Câu chuyện của chúng tôi" : "Our story"}</b><small>{isVietnamese ? "Vì sao chúng tôi xây dựng cho đội ngũ sáng tạo" : "Why we build for creative teams"}</small></span></a><a href="#create"><i>⌁</i><span><b>{isVietnamese ? "Tuyển dụng" : "Careers"}</b><small>{isVietnamese ? "Cùng định hình tương lai công việc" : "Help shape the future of work"}</small></span></a><a href="#create"><i>↗</i><span><b>{isVietnamese ? "Liên hệ" : "Contact"}</b><small>{isVietnamese ? "Hãy cùng tạo nên điều gì đó" : "Let's make something together"}</small></span></a></div><div className="mega-column"><p>{isVietnamese ? "Kết nối cùng chúng tôi" : "Stay connected"}</p><a href="#create"><i>◎</i><span><b>{isVietnamese ? "Tạp chí" : "Journal"}</b><small>{isVietnamese ? "Ghi chú từ studio" : "Notes from the studio"}</small></span></a><a href="#create"><i>+</i><span><b>{isVietnamese ? "Bản tin" : "Newsletter"}</b><small>{isVietnamese ? "Tư duy sáng tạo gửi đến bạn" : "Creative thinking, delivered"}</small></span></a></div><a className="mega-feature" href="#create"><div className="feature-preview"><span>SLIDEGEN / STUDIO</span><strong>{isVietnamese ? <>Cùng nhau tạo<br />giá trị tốt hơn.</> : <>Make better<br />work, together.</>}</strong><em>↗</em></div><b>{isVietnamese ? "Gặp gỡ đội ngũ" : "Meet the team"}</b><small>{isVietnamese ? "Con người, quy trình và ý tưởng phía sau Slidegen" : "People, process, and the ideas behind Slidegen"}</small></a></div>}</div>
           <Link to="/subscription">{isVietnamese ? "Bảng giá" : "Pricing"}</Link>
         </nav>
-        <div className="header-actions"><button className="language-switcher" type="button" aria-label="Switch language" onClick={() => setLanguage((current) => current === "en" ? "vi" : "en")}><span className={!isVietnamese ? "is-active" : ""}>EN</span><span>/</span><span className={isVietnamese ? "is-active" : ""}>VI</span></button>{isAuthenticated ? <Link to="/home">Workspace</Link> : <Link to="/login">Sign In</Link>} {!isAuthenticated && <Link className="start-button" to="/register">{isVietnamese ? "Bắt đầu miễn phí" : "Start for Free"}</Link>}</div>
+        <div className="header-actions"><button className="language-switcher" type="button" aria-label="Switch language" onClick={() => setLanguage(language === "en" ? "vi" : "en")}><span className={!isVietnamese ? "is-active" : ""}>EN</span><span>/</span><span className={isVietnamese ? "is-active" : ""}>VI</span></button>{isAuthenticated ? <Link to="/home">Workspace</Link> : <Link to="/login">Sign In</Link>} {!isAuthenticated && <Link className="start-button" to="/register">{isVietnamese ? "Bắt đầu miễn phí" : "Start for Free"}</Link>}</div>
       </header>
       <section id="top" className="hero" style={{ backgroundImage: `url("${publicAssetUrl("bgslidegen-poster.png")}")` }}>
         <video className="hero-background-video" autoPlay muted loop playsInline preload="auto" poster={publicAssetUrl("bgslidegen-poster.png")} aria-label="Slidegen animated background">

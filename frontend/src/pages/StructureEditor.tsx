@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSlideGeneration } from "@/features/slidegenius/SlideGenerationContext";
 import { SlidegeniusWorkspaceShell } from "@/features/slidegenius/SlidegeniusWorkspaceShell";
+import ManualDemoTour from "@/features/slidegenius/ManualDemoTour";
 import "@/features/slidegenius/structure-editor.css";
 
 // ============ TYPES ============
@@ -83,11 +84,22 @@ interface ManualSlideNode {
   is_transition?: boolean;
 }
 
+const MANUAL_DEMO_MARKDOWN = `# Tạo một bài thuyết trình
+
+Nội dung chính của slide đầu tiên.
+- Ý quan trọng thứ nhất
+- Ý quan trọng thứ hai
+
+# Slide tiếp theo
+
+Thêm nội dung cho slide thứ hai ở đây.`;
+
 // ============ MAIN COMPONENT ============
 
 const StructureEditor = () => {
   const [searchParams] = useSearchParams();
   const { projectId } = useParams();
+  const demoMode = searchParams.get("demo") === "1";
   const sessionId = searchParams.get("session") || projectId || null;
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -135,6 +147,24 @@ const StructureEditor = () => {
 
   // Load document and convert existing structure to markdown
   useEffect(() => {
+    if (demoMode) {
+      setDocumentTitle(language === "vi" ? "Bản mẫu Manual" : "Manual demo");
+      setMarkdownContent("");
+      setIsDirty(false);
+      setLoading(false);
+
+      let cursor = 0;
+      const typingTimer = window.setInterval(() => {
+        cursor += 1;
+        setMarkdownContent(MANUAL_DEMO_MARKDOWN.slice(0, cursor));
+        if (cursor >= MANUAL_DEMO_MARKDOWN.length) {
+          window.clearInterval(typingTimer);
+        }
+      }, 14);
+
+      return () => window.clearInterval(typingTimer);
+    }
+
     if (sessionId) {
       loadDocument();
     } else {
@@ -147,7 +177,7 @@ const StructureEditor = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [sessionId, demoMode, language]);
 
   const loadDocument = async () => {
     try {
@@ -447,8 +477,9 @@ const StructureEditor = () => {
       </button>
       <button
         className="btn btn-sm btn-success"
+        data-tour="manual-approve"
         onClick={() => setApproveDialogOpen(true)}
-        disabled={saving || isGenerating || !parsedStructureRef.current || slidePreview.length === 0}
+        disabled={demoMode || saving || isGenerating || !parsedStructureRef.current || slidePreview.length === 0}
       >
         {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Check className="mr-1.5 h-4 w-4" />}
         {saving ? "Processing..." : "Approve & Continue"}
@@ -485,7 +516,7 @@ const StructureEditor = () => {
             {/* Left Panel: Markdown Editor */}
             <div className="flex flex-col gap-3" style={{ width: `${leftWidth}%` }}>
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-foreground">Markdown Editor</div>
+                <div className="text-sm font-semibold text-foreground" data-tour="manual-editor">Markdown Editor</div>
                 <div className="text-xs text-muted-foreground">
                   {markdownContent.split('\n').length} lines • {markdownContent.split(/\s+/).filter(Boolean).length} words
                 </div>
@@ -495,6 +526,7 @@ const StructureEditor = () => {
               <div className="relative flex-1">
                 <Textarea
                   ref={textareaRef}
+                  data-tour="manual-editor"
                   value={markdownContent}
                   onChange={(e) => {
                     setMarkdownContent(e.target.value);
@@ -542,7 +574,7 @@ Note: Each # heading creates a new slide`}
 
             {/* Right Panel: Live Preview */}
             <div className="flex flex-col gap-2" style={{ width: `calc(${100 - leftWidth}% - 1.5rem)` }}>
-              <div className="flex items-center justify-between text-sm font-semibold">
+              <div className="flex items-center justify-between text-sm font-semibold" data-tour="manual-preview">
                 <span>Preview</span>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                   {slidePreview.length} {slidePreview.length === 1 ? 'slide' : 'slides'}
@@ -635,6 +667,7 @@ Note: Each # heading creates a new slide`}
           </div>
         </div>
       </div>
+      {demoMode && <ManualDemoTour />}
 
       {/* Cancel Confirmation */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
