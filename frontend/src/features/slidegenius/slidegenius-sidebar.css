@@ -2,6 +2,7 @@
    only by Home, after the shared feature sheet, so its state rules are final. */
 .sgx-home.workspace-page .workspace-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 20; height: 100svh; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; transition: width .22s ease; }
 .sgx-home.workspace-page .workspace-sidebar::-webkit-scrollbar { display: none; }
+.sgx-home.workspace-page ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 .sgx-home.workspace-page .workspace-brand-row { position: static; width: 100%; height: 30px; min-height: 30px; justify-content: space-between; gap: 16px; }
 .sgx-home.workspace-page .workspace-sidebar-label { height: 12px; line-height: 12px; }
 .sgx-home.workspace-page:not(.sidebar-collapsed) .workspace-brand-row { min-height: 30px; }
@@ -753,6 +754,62 @@ html:not(.dark) .sgx-home.workspace-page .chat-plan-button:hover {
   border-color: var(--sg-light-accent-strong);
   background: var(--sg-light-accent-soft-strong);
 }
+html:not(.dark) .sgx-home.workspace-page .project-empty-state {
+  border-color: #d9d6ce;
+  background: radial-gradient(circle at 50% 0%, #f5a08a26, transparent 52%), #fffefa;
+  box-shadow: inset 0 1px 0 #ffffff, 0 12px 28px #33423810;
+}
+html:not(.dark) .sgx-home.workspace-page .project-empty-mark {
+  border-color: #d97861;
+  background: #fff4ef;
+  color: #c65f49;
+}
+html:not(.dark) .sgx-home.workspace-page .project-empty-state h3 {
+  color: #27312a;
+  font: 600 24px/1.15 "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+html:not(.dark) .sgx-home.workspace-page .project-empty-state p { color: #68746b; }
+html:not(.dark) .sgx-home.workspace-page .project-empty-action {
+  border-color: #e3a99a;
+  background: #f5a08a;
+  color: #242524;
+  box-shadow: 0 6px 14px #8f594218;
+}
+html:not(.dark) .sgx-home.workspace-page .project-empty-action:hover {
+  border-color: #d97861;
+  background: #ffc0ad;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-thread {
+  scrollbar-color: #a8afa7 transparent;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-thread::-webkit-scrollbar-track { background: transparent; }
+html:not(.dark) .sgx-home.workspace-page .chat-thread::-webkit-scrollbar-thumb { background: #a8afa7; }
+html:not(.dark) .sgx-home.workspace-page .chat-thread::-webkit-scrollbar-thumb:hover { background: #89968c; }
+html:not(.dark) .sgx-home.workspace-page .chat-scroll-latest {
+  border-color: #d9d6ce;
+  background: #fffefa;
+  color: #344138;
+  box-shadow: 0 8px 18px #33423824;
+}
+html:not(.dark) .sgx-home.workspace-page .chat-scroll-latest:hover {
+  border-color: #d97861;
+  background: #fff4ef;
+  color: #27312a;
+  box-shadow: 0 10px 22px #33423830;
+}
+html[data-theme="light"] .sgx-home.workspace-page .chat-scroll-latest {
+  border-color: #d9d6ce !important;
+  background: #fffefa !important;
+  color: #344138 !important;
+  box-shadow: 0 8px 18px #33423824 !important;
+}
+html[data-theme="light"] .sgx-home.workspace-page .chat-scroll-latest:hover {
+  border-color: #d97861 !important;
+  background: #fff4ef !important;
+  color: #27312a !important;
+}
+
 html:not(.dark) .sgx-home.workspace-page .chat-pending-loader { border-color: #d8d5cd; border-top-color: var(--sg-light-accent-border); }
 html:not(.dark) .sgx-home.workspace-page .chat-error,
 html:not(.dark) .sgx-home.workspace-page .project-action-message,
