@@ -85,6 +85,8 @@
 .admin-users-actions button { padding: 7px 9px; border: 1px solid #ffffff24; border-radius: 3px; background: #242524; color: #d9dad4; font: 500 10px "Avenir Next", "Segoe UI", system-ui, sans-serif; cursor: pointer; }
 .admin-users-actions button:first-child { border-color: #f5a08a66; color: #f5a08a; }
 .admin-users-actions button:hover { background: #f5a08a18; }
+.admin-users-actions button.danger { border-color: #f5a08a66; color: #f5a08a; }
+.admin-users-actions button.danger:hover { background: #f5a08a24; }
 .admin-users-actions button:disabled { cursor: not-allowed; opacity: .45; }
 
 /* Keep the admin controls on the same paper-like surface as the light
@@ -196,6 +198,10 @@ html:not(.dark) .sgx-home.workspace-page .admin-users-actions button {
   color: #465149;
 }
 html:not(.dark) .sgx-home.workspace-page .admin-users-actions button:first-child {
+  border-color: var(--sg-light-accent-border);
+  color: var(--sg-light-accent);
+}
+html:not(.dark) .sgx-home.workspace-page .admin-users-actions button.danger {
   border-color: var(--sg-light-accent-border);
   color: var(--sg-light-accent);
 }

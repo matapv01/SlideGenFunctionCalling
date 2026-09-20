@@ -1639,7 +1639,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
 
   return (
     <section className={`chat-layout ${showSlideStream || slidePlanOpen || Boolean(selectedSource) ? "chat-layout-streaming" : ""}`} onClick={() => { setToolsOpen(false); setModelOpen(false); }}>
-      <aside className="chat-history">
+      <aside className="chat-history" data-tour="chat-history">
         <div className="chat-history-top">
           <span>{text.conversations}</span>
           <button aria-label={text.newConversation} onClick={() => void startNewConversation()} />
@@ -1902,7 +1902,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         )}
 
         {error && <p className="chat-error" role="alert">{error}</p>}
-        <form className="chat-composer" onSubmit={submitMessage}>
+        <form className="chat-composer" data-tour="chat-composer" onSubmit={submitMessage}>
           <input
             ref={fileInputRef}
             type="file"
@@ -1998,7 +1998,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
             <button type="button" className="composer-plus" aria-label="Open tools" aria-expanded={toolsOpen} onClick={() => { setToolsOpen(!toolsOpen); setModelOpen(false); }}>+</button>
             {toolsOpen && <div className="composer-tools-menu"><button type="button" onClick={() => { fileInputRef.current?.click(); setToolsOpen(false); }}>{text.upload}</button><button type="button" className={searchEnabled ? "selected" : ""} onClick={() => { setSearchEnabled(!searchEnabled); setToolsOpen(false); }}>Search</button></div>}
             <div className="composer-spacer" />
-            <div className="composer-model">
+            <div className="composer-model" data-tour="composer-model">
               <button type="button" className="composer-model-button" aria-expanded={modelOpen} onClick={() => { setModelOpen(!modelOpen); setToolsOpen(false); }}>Genius {model.slice(-1)} <span>{effort[0].toUpperCase() + effort.slice(1)}</span></button>
               {modelOpen && <div className="composer-model-menu"><p className="composer-model-menu-label">Model</p>{models.map((item) => <button type="button" key={item} className={model === item ? "selected" : ""} onClick={() => { setModel(item); setModelOpen(false); }}>Genius {item.slice(-1)}{model === item && <i>✓</i>}</button>)}<div className="composer-model-divider" /><p className="composer-model-menu-label">Effort</p>{efforts.map((item) => <button type="button" key={item} className={effort === item ? "selected" : ""} onClick={() => { if (item === "low" || item === "medium" || item === "high") setEffort(item); setModelOpen(false); }}>{item[0].toUpperCase() + item.slice(1)}{effort === item && <i>✓</i>}</button>)}</div>}
             </div>

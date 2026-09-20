@@ -9,6 +9,7 @@ interface User {
   full_name?: string;
   is_admin?: boolean;
   onboarding_completed?: boolean;
+  workspace_tour_version?: number;
 }
 
 interface AuthContextType {
@@ -18,11 +19,12 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<AuthResponse>;
   loginWithAccessToken: (accessToken: string) => Promise<User>;
-  register: (fullName: string, email: string, password: string) => Promise<AuthResponse>;
+  register: (fullName: string, email: string, password: string, passwordConfirmation: string) => Promise<AuthResponse>;
   verifyEmailCode: (challengeId: string, code: string) => Promise<User>;
   resendEmailCode: (challengeId: string) => Promise<EmailVerificationChallenge>;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
+  completeWorkspaceTour: (version?: number) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -108,8 +110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const register = useCallback(async (fullName: string, email: string, password: string) => {
-    return api.register(fullName, email, password);
+  const register = useCallback(async (fullName: string, email: string, password: string, passwordConfirmation: string) => {
+    return api.register(fullName, email, password, passwordConfirmation);
   }, []);
 
   const verifyEmailCode = useCallback(async (challengeId: string, code: string) => {
@@ -134,8 +136,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
 
+  const completeWorkspaceTour = useCallback(async (version = 1) => {
+    const completedUser = await api.completeWorkspaceTour(version);
+    setUser(completedUser);
+    localStorage.setItem("user", JSON.stringify(completedUser));
+    return completedUser;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, loginWithAccessToken, register, verifyEmailCode, resendEmailCode, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, loginWithAccessToken, register, verifyEmailCode, resendEmailCode, logout, updateUser, completeWorkspaceTour }}>
       {children}
     </AuthContext.Provider>
   );

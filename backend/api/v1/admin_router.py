@@ -122,3 +122,26 @@ async def reset_user_usage(
         raise HTTPException(status_code=404, detail=str(exc))
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
+
+
+@router.delete("/users/{user_id}", response_model=AdminUserActionResponse)
+async def delete_admin_user(
+    user_id: int,
+    current_admin: UserResponse = Depends(get_current_admin_user),
+    subscription_service: SubscriptionService = Depends(get_subscription_service),
+) -> AdminUserActionResponse:
+    try:
+        deleted = subscription_service.delete_user(
+            actor_user_id=current_admin.id,
+            target_user_id=user_id,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    return AdminUserActionResponse(
+        user_id=int(deleted["id"]),
+        message=f"Đã xóa tài khoản {deleted['email']}",
+    )

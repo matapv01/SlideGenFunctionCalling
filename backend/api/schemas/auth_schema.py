@@ -1,6 +1,6 @@
 # File: backend/schemas/auth_schema.py
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from typing import Literal, Optional
 from datetime import datetime
 
@@ -52,6 +52,13 @@ class UserCreate(UserBase):
     """Schema cho API Register (cần password)"""
     full_name: str = Field(..., min_length=3, max_length=50, description="Họ và tên của người dùng")
     password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
+    password_confirmation: str = Field(..., min_length=6, description="Xác nhận mật khẩu")
+
+    @model_validator(mode="after")
+    def passwords_must_match(self):
+        if self.password != self.password_confirmation:
+            raise ValueError("Mật khẩu xác nhận không khớp")
+        return self
 
 
 class UserResponse(UserBase):
@@ -67,6 +74,7 @@ class UserResponse(UserBase):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
     onboarding_completed: bool = True
+    workspace_tour_version: int = 1
 
     class Config:
         from_attributes = True
@@ -75,6 +83,12 @@ class UserResponse(UserBase):
 class OnboardingAnswers(BaseModel):
     use_cases: list[Literal["work", "study", "pitch", "marketing", "reports", "personal"]] = Field(default_factory=list, max_length=6)
     role: Optional[Literal["student", "educator", "founder", "professional", "creative", "other"]] = None
+
+
+class WorkspaceTourCompleteRequest(BaseModel):
+    """Versioned completion marker for the first-workspace tour."""
+
+    version: int = Field(default=1, ge=1, le=100)
 
 
 class ChangePasswordRequest(BaseModel):

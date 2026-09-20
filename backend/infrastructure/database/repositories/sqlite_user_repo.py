@@ -2,11 +2,14 @@
 
 from typing import Optional, List, Dict
 import json
+import shutil
 from datetime import datetime, date, timedelta
+from pathlib import Path
 from backend.domain.entities.user import User, UserProfile, UserSettings, SubscriptionCode, CodeRedemption
 from backend.domain.entities.user import USAGE_WINDOW_HOURS
 from backend.domain.ports.user_repository import UserRepository
 from backend.infrastructure.database.connection import get_db_connection
+from backend.config import CHATBOT_DOCUMENTS_DIR
 
 
 class SqliteUserRepository(UserRepository):
@@ -154,6 +157,12 @@ class SqliteUserRepository(UserRepository):
         except (KeyError, TypeError, IndexError):
             pass
 
+        workspace_tour_version = 1
+        try:
+            workspace_tour_version = int(row['workspace_tour_version'])
+        except (KeyError, TypeError, IndexError, ValueError):
+            pass
+
         return User(
             id=row['id'],
             email=row['email'],
@@ -171,6 +180,7 @@ class SqliteUserRepository(UserRepository):
             is_active=bool(row['is_active']),
             email_verified=email_verified,
             onboarding_completed=onboarding_completed,
+            workspace_tour_version=workspace_tour_version,
             is_admin=is_admin,
             cancel_at_period_end=cancel_at_period_end,
             created_at=row['created_at'] # Giả sử DB trả về datetime hoặc string parse được
@@ -268,14 +278,16 @@ class SqliteUserRepository(UserRepository):
                     daily_usage_reset_date, idea_usage_today, docx_usage_today,
                     usage_window_started_at, chat_usage_5h,
                     chat_usage_credits_5h, chat_messages_5h, docx_usage_5h,
-                    is_active, email_verified, is_admin, onboarding_completed
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    is_active, email_verified, is_admin, onboarding_completed,
+                    workspace_tour_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 user.email, user.hashed_password, user.subscription_tier,
                 user.daily_usage_reset_date, user.idea_usage_today, user.docx_usage_today,
                 user.usage_window_started_at, user.chat_message_count,
                 user.chat_usage, user.chat_message_count, user.docx_usage,
-                user.is_active, user.email_verified, user.is_admin, user.onboarding_completed
+                user.is_active, user.email_verified, user.is_admin, user.onboarding_completed,
+                user.workspace_tour_version
             ))
             conn.commit()
             user_id = cursor.lastrowid
@@ -317,6 +329,153 @@ class SqliteUserRepository(UserRepository):
             if cursor.rowcount == 0:
                 raise LookupError("User not found")
             conn.commit()
+
+
+    def complete_workspace_tour(self, user_id: int, version: int = 1) -> None:
+        with get_db_connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE users SET workspace_tour_version = MAX(workspace_tour_version, ?)
+                WHERE id = ?
+                """,
+                (version, user_id),
+            )
+            if cursor.rowcount == 0:
+                raise LookupError("User not found")
+            conn.commit()
+
+
+    def delete_user(self, user_id: int) -> dict:
+        """Delete an account and its owned workspace data in one transaction."""
+        document_paths: list[str] = []
+        document_ids: list[str] = []
+        deleted_user: dict | None = None
+
+        with get_db_connection() as conn:
+            conn.execute("PRAGMA foreign_keys = ON")
+            tables = {
+                row[0]
+                for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+            }
+            user_row = conn.execute(
+                "SELECT id, email FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            if user_row is None:
+                raise LookupError("User not found")
+            deleted_user = {"id": int(user_row["id"]), "email": user_row["email"]}
+
+            def ids_for(table: str, column: str, values: list) -> list:
+                if table not in tables or not values:
+                    return []
+                placeholders = ",".join("?" for _ in values)
+                return [
+                    row[0]
+                    for row in conn.execute(
+                        f"SELECT id FROM {table} WHERE {column} IN ({placeholders})",
+                        values,
+                    ).fetchall()
+                ]
+
+            def delete_by(table: str, column: str, values: list) -> None:
+                if table not in tables or not values:
+                    return
+                placeholders = ",".join("?" for _ in values)
+                conn.execute(
+                    f"DELETE FROM {table} WHERE {column} IN ({placeholders})",
+                    values,
+                )
+
+            project_ids = ids_for("projects", "user_id", [user_id])
+
+            relation_clauses = ["user_id = ?"]
+            relation_values: list = [user_id]
+            if project_ids:
+                project_placeholders = ",".join("?" for _ in project_ids)
+                relation_clauses.append(f"project_id IN ({project_placeholders})")
+                relation_values.extend(project_ids)
+            relation_where = " OR ".join(relation_clauses)
+
+            session_ids = []
+            if "chatbot_sessions" in tables:
+                session_ids = [
+                    row[0]
+                    for row in conn.execute(
+                        f"SELECT id FROM chatbot_sessions WHERE {relation_where}",
+                        relation_values,
+                    ).fetchall()
+                ]
+
+            if "chatbot_documents" in tables:
+                document_rows = conn.execute(
+                    f"SELECT id, markdown_path FROM chatbot_documents WHERE {relation_where}",
+                    relation_values,
+                ).fetchall()
+                document_ids = [str(row["id"]) for row in document_rows]
+                document_paths = [
+                    str(row["markdown_path"])
+                    for row in document_rows
+                    if row["markdown_path"]
+                ]
+
+            message_ids = ids_for("chatbot_messages", "session_id", session_ids)
+            chunk_ids = ids_for("chatbot_document_chunks", "document_id", document_ids)
+            delete_by("chatbot_message_citations", "message_id", message_ids)
+            delete_by("chatbot_message_citations", "document_id", document_ids)
+            delete_by("chatbot_message_citations", "chunk_id", chunk_ids)
+            delete_by("chatbot_session_documents", "session_id", session_ids)
+            delete_by("chatbot_session_documents", "document_id", document_ids)
+            delete_by("chatbot_document_chunks", "document_id", document_ids)
+            delete_by("chatbot_messages", "session_id", session_ids)
+            delete_by("chatbot_documents", "id", document_ids)
+            delete_by("chatbot_sessions", "id", session_ids)
+
+            delete_by("slides", "project_id", project_ids)
+            delete_by("project_metadata", "project_id", project_ids)
+            delete_by("project_collaborators", "project_id", project_ids)
+            delete_by("project_versions", "project_id", project_ids)
+            delete_by("project_comments", "project_id", project_ids)
+            delete_by("project_collaborators", "user_id", [user_id])
+            delete_by("project_collaborators", "invited_by", [user_id])
+            delete_by("project_versions", "user_id", [user_id])
+            delete_by("project_comments", "user_id", [user_id])
+
+            for table in (
+                "user_profiles",
+                "user_settings",
+                "code_redemptions",
+                "daily_usage_logs",
+                "user_assets",
+            ):
+                delete_by(table, "user_id", [user_id])
+
+            delete_by("projects", "id", project_ids)
+            delete_by("users", "id", [user_id])
+            conn.commit()
+
+        storage_root = Path(CHATBOT_DOCUMENTS_DIR).resolve()
+        for raw_path in document_paths:
+            try:
+                path = Path(raw_path).resolve()
+                if storage_root in path.parents:
+                    path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        for document_id in document_ids:
+            for path in (
+                storage_root / f"{document_id}.docx",
+                storage_root / f"{document_id}.md",
+                storage_root / f"{document_id}_images",
+            ):
+                try:
+                    if path.is_dir():
+                        shutil.rmtree(path, ignore_errors=True)
+                    else:
+                        path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+
+        return deleted_user or {"id": user_id, "email": ""}
 
 
     def get_all(self) -> List[dict]:

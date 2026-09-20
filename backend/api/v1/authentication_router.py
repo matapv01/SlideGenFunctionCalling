@@ -21,6 +21,7 @@ from backend.api.schemas.auth_schema import (
     EmailVerificationResendRequest,
     UserResponse,
     OnboardingAnswers,
+    WorkspaceTourCompleteRequest,
     ChangePasswordRequest  # Import thêm cái này
 )
 from backend.api.dependencies import get_auth_service, get_current_active_user
@@ -258,14 +259,19 @@ async def google_callback(request: Request, code: str | None = None, state: str 
 
     try:
         if user is None:
-            # Google has already verified this email with the identity
-            # provider, so no second Slidegen OTP is needed.
+            # Google already verified the identity, so create the account and
+            # issue a token directly. The random password is not shown to the
+            # user; Google remains the sign-in provider for this account.
             user = auth_service.register_user(
                 email,
                 full_name,
                 secrets.token_urlsafe(48),
                 email_verified=True,
             )
+            if user.id is not None:
+                user_repo.create_or_update_profile(
+                    UserProfile(user_id=user.id, full_name=full_name, avatar_url=avatar_url)
+                )
         elif not user.is_active:
             return _google_result_redirect(request, error="account_inactive")
         elif user.id is not None and not user.email_verified:
@@ -375,6 +381,18 @@ async def complete_onboarding(
         return current_user
     SqliteUserRepository().complete_onboarding(current_user.id, answers.use_cases, answers.role)
     return current_user.model_copy(update={"onboarding_completed": True})
+
+
+@router.post("/workspace-tour/complete", response_model=UserResponse)
+async def complete_workspace_tour(
+    request: WorkspaceTourCompleteRequest,
+    current_user: UserResponse = Depends(get_current_active_user),
+):
+    """Persist that the account has seen or skipped the current workspace tour."""
+    SqliteUserRepository().complete_workspace_tour(current_user.id, request.version)
+    return current_user.model_copy(
+        update={"workspace_tour_version": max(current_user.workspace_tour_version, request.version)}
+    )
 
 
 @router.post("/logout")

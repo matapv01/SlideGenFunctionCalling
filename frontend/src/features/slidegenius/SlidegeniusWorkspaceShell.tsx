@@ -6,6 +6,7 @@ import SlidegenLogo from "@/components/SlidegenLogo";
 import { api } from "@/lib/api";
 import { ChatSlideStreamPanel } from "./ChatSlideStreamPanel";
 import { useSlideGeneration } from "./SlideGenerationContext";
+import WorkspaceTour from "./WorkspaceTour";
 import "./slidegenius.css";
 import "./slidegenius-sidebar.css";
 
@@ -151,11 +152,12 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
         </div>
 
         <div className="workspace-sidebar-label">WORKSPACE</div>
-        <nav className="workspace-nav" aria-label="Workspace navigation">
+        <nav className="workspace-nav" aria-label="Workspace navigation" data-tour="workspace-nav">
           {(["slidegenius", "projects", "manual", "guide"] as const).map((item) => (
             <button
               key={item}
               className={activeTab === item ? "active" : ""}
+              data-tour={item === "projects" ? "projects-nav" : undefined}
               onClick={() => goToTab(item)}
               title={text.tabs[item]}
               aria-label={text.tabs[item]}
@@ -226,6 +228,7 @@ export function SlidegeniusWorkspaceShell({ activeTab, children, className = "" 
         {children}
       </section>
       <WorkspaceManualSlideStream />
+      {activeTab === "slidegenius" && <WorkspaceTour />}
     </main>
   );
 }

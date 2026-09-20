@@ -97,6 +97,7 @@ interface UserResponse {
   is_active: boolean;
   is_admin?: boolean;
   onboarding_completed: boolean;
+  workspace_tour_version: number;
 }
 
 interface ProjectsResponse {
@@ -319,10 +320,15 @@ export const api = {
     });
   },
 
-  register: async (fullName: string, email: string, password: string) => {
+  register: async (fullName: string, email: string, password: string, passwordConfirmation: string) => {
     await request<UserResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, full_name: fullName, password }),
+      body: JSON.stringify({
+        email,
+        full_name: fullName,
+        password,
+        password_confirmation: passwordConfirmation,
+      }),
     });
     return api.login(email, password);
   },
@@ -349,6 +355,12 @@ export const api = {
     request<UserResponse>("/auth/onboarding", {
       method: "POST",
       body: JSON.stringify(answers),
+    }),
+
+  completeWorkspaceTour: (version = 1) =>
+    request<UserResponse>("/auth/workspace-tour/complete", {
+      method: "POST",
+      body: JSON.stringify({ version }),
     }),
 
   // Chatbot endpoints - /api/chat/*
@@ -824,6 +836,11 @@ export const api = {
   resetAdminUserUsage: (userId: number) =>
     request<AdminUser>(`/admin/users/${userId}/usage-reset`, {
       method: "POST",
+    }),
+
+  deleteAdminUser: (userId: number) =>
+    request<{ user_id: number; message: string }>(`/admin/users/${userId}`, {
+      method: "DELETE",
     }),
 
   upgradeSubscription: (tier: string) => request<{ message: string }>("/subscription/upgrade", {
