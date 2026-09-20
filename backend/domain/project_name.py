@@ -1,4 +1,4 @@
-PROJECT_NAME_MAX_LENGTH = 20
+PROJECT_NAME_MAX_LENGTH = 40
 
 
 def normalize_project_name(value: str | None, fallback: str = "Untitled Project") -> str:

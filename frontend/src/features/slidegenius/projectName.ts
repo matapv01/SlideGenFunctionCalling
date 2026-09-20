@@ -1,4 +1,4 @@
-export const PROJECT_NAME_MAX_LENGTH = 20;
+export const PROJECT_NAME_MAX_LENGTH = 40;
 
 function cleanProjectName(value: string | null | undefined, fallback = "Untitled project") {
   const name = String(value ?? "").replace(/\s+/g, " ").trim();
