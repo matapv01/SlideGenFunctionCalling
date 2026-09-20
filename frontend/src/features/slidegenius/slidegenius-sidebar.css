@@ -87,6 +87,13 @@ html:not(.dark) .sgx-home.workspace-page .workspace-collapse:focus-visible {
 .sgx-home.workspace-page .workspace-user-menu button:hover { background: #ffffff12; }
 .sgx-home.workspace-page .workspace-user-menu button span { color: #f5a08a; font-size: 13px; }
 
+/* Keep conversation rows packed to their content instead of stretching each
+   grid track across the full-height history panel. */
+.sgx-home.workspace-page .chat-history-list {
+  align-content: start;
+  grid-auto-rows: max-content;
+}
+
 @media (min-width: 761px) {
   .sgx-home.workspace-page { height: 100svh; min-height: 0; overflow: hidden; }
   .sgx-home.workspace-page .workspace-sidebar { overflow: visible; }

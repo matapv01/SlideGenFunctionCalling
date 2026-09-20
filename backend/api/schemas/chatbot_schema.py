@@ -20,7 +20,8 @@ class ChatSessionOut(BaseModel):
 
 
 class ChatMessageCreate(BaseModel):
-    content: str = Field(min_length=1, max_length=12_000)
+    # A document-only turn is valid; the service supplies a default prompt.
+    content: str = Field(default="", max_length=12_000)
     model: str | None = Field(default=None, max_length=80)
     effort: str | None = Field(default=None, max_length=20)
     canvas: bool = False

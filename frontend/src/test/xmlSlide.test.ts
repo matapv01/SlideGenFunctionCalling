@@ -45,6 +45,50 @@ describe("XML slide rich text", () => {
     expect(textbox.children[1].attrs.color).toBe("#2563EB");
   });
 
+  it("materializes all supported inline LaTeX delimiters", () => {
+    const document = parseXmlSlide(`
+      <presentation width="1600" height="900">
+        <slide>
+          <textbox id="formula" x="0" y="0" width="500" height="200">
+            Probability $P(A)$ and $$\\frac{a}{b}$$ plus \\(x^2\\) and \\[\\alpha+\\beta\\]
+          </textbox>
+        </slide>
+      </presentation>
+    `);
+    const textbox = document.slides[0].elements[0];
+
+    expect(textbox.children.map((child) => child.tag)).toEqual([
+      "math-field",
+      "math-field",
+      "math-field",
+      "math-field",
+    ]);
+    expect(textbox.children.map((child) => child.text)).toEqual([
+      "P(A)",
+      "\\frac{a}{b}",
+      "x^2",
+      "\\alpha+\\beta",
+    ]);
+    expect(textbox.leadingText?.trim()).toBe("Probability");
+  });
+
+  it("repairs Markdown-escaped subscripts inside math", () => {
+    const document = parseXmlSlide(`
+      <presentation width="1600" height="900">
+        <slide>
+          <textbox id="formula" x="0" y="0" width="500" height="200">
+            Mean $\\bar{x}=\\frac{1}{n}\\sum\\_{i=1}^{n}x\\_i$
+          </textbox>
+        </slide>
+      </presentation>
+    `);
+    const textbox = document.slides[0].elements[0];
+
+    expect(textbox.children[0].text).toBe(
+      "\\bar{x}=\\frac{1}{n}\\sum_{i=1}^{n}x_i",
+    );
+  });
+
   it("round-trips rich runs without duplicating visible textbox text", () => {
     const serialized = serializeXmlSlide(parseXmlSlide(richXml));
     const reparsed = parseXmlSlide(serialized);

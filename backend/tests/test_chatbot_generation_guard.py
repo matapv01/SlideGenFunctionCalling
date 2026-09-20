@@ -79,6 +79,16 @@ def _service_with_active_generation() -> ChatbotService:
     return service
 
 
+def test_document_only_turn_gets_a_default_query():
+    service = ChatbotService(ChatRepository(), ChatLLM())
+
+    assert service._normalize_chat_query("", ["document-1"]) == (
+        "Read and understand the attached document."
+    )
+    with pytest.raises(ValueError, match="Message cannot be empty"):
+        service._normalize_chat_query("", [])
+
+
 def test_normal_chat_remains_available_during_slide_generation():
     service = _service_with_active_generation()
 
