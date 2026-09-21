@@ -251,6 +251,64 @@ from trl import GRPOTrainer, GRPOConfig
 from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
 from rl.rewards.conciseness_reward import conciseness_reward
 from rl.rewards.text_embedding_reward import text_embedding_reward
+from rl.rewards.dom_overflow_reward import dom_overflow_reward
+
+# ==============================================================================
+# 5a. EMA BASELINE — Chống triệt tiêu gradient khi σ_R → 0
+# ==============================================================================
+# Khi tất cả phương án trong cùng nhóm G có reward giống hệt nhau,
+# Advantage A_i = (R_i - μ_R) / (σ_R + ε) → 0, gradient bị triệt tiêu hoàn toàn.
+# Giải pháp: Duy trì một đường cơ sở EMA (Exponential Moving Average) từ các
+# bước trước đó. Khi σ_R quá nhỏ, ta dùng V_EMA làm baseline thay vì μ_R.
+# ==============================================================================
+class EMABaseline:
+    """Exponential Moving Average baseline để chống Gradient Vanishing trong GRPO."""
+    def __init__(self, decay: float = 0.99, sigma_floor: float = 0.05):
+        self.decay = decay
+        self.sigma_floor = sigma_floor  # σ tối thiểu để giữ gradient
+        self.v_ema = None  # V_EMA — baseline trung bình lịch sử
+        self.sigma_global = None  # σ toàn cục lịch sử
+
+    def update_and_adjust(self, rewards: list) -> list:
+        """
+        Cập nhật EMA và điều chỉnh rewards nếu cần.
+        
+        Công thức Advantage cải tiến:
+            A_i = (R_i - max(μ_R, V_EMA)) / max(σ_R, σ_global, σ_floor)
+        
+        Args:
+            rewards: List of reward values cho nhóm G phương án
+        Returns:
+            List of adjusted rewards (để TRL tự tính advantage từ đó)
+        """
+        import numpy as np
+        rewards_np = np.array(rewards, dtype=np.float64)
+        mu = rewards_np.mean()
+        sigma = rewards_np.std()
+        
+        # Cập nhật EMA
+        if self.v_ema is None:
+            self.v_ema = mu
+            self.sigma_global = max(sigma, self.sigma_floor)
+        else:
+            self.v_ema = self.decay * self.v_ema + (1 - self.decay) * mu
+            self.sigma_global = self.decay * self.sigma_global + (1 - self.decay) * max(sigma, self.sigma_floor)
+        
+        # Phát hiện trường hợp triệt tiêu gradient
+        if sigma < self.sigma_floor:
+            # σ_R quá nhỏ → dùng V_EMA làm baseline và σ_global làm mẫu
+            baseline = max(mu, self.v_ema)
+            effective_sigma = max(self.sigma_global, self.sigma_floor)
+            # Tính advantage thủ công và encode lại vào rewards
+            # (TRL sẽ tính lại, nhưng ta shift rewards để advantage không bằng 0)
+            adjusted = ((rewards_np - baseline) / effective_sigma).tolist()
+            print(f"  [EMA Baseline] σ_R={sigma:.4f} < floor={self.sigma_floor}. "
+                  f"Using V_EMA={self.v_ema:.4f}, σ_global={self.sigma_global:.4f}")
+            return adjusted
+        
+        return rewards  # Trả về nguyên bản nếu σ_R đủ lớn
+
+ema_baseline = EMABaseline(decay=0.99, sigma_floor=0.05)
 
 training_args = GRPOConfig(
     output_dir=output_dir,
@@ -394,16 +452,41 @@ for step in range(1, total_steps + 1):
     print(f"  Collected {len(all_prompts)} prompts. Running GRPO update...")
 
     dataset = Dataset.from_list(all_prompts)
+    # Reward functions bao gồm cả DOM Overflow Reward mới
+    reward_funcs_list = [
+        slide_aesthetics_reward,
+        content_preservation_reward,
+        visual_consistency_reward,
+        conciseness_reward,
+        text_embedding_reward,
+        dom_overflow_reward,  # DOM Guardrail — phạt tràn chữ, đè chữ, ảnh chết
+    ]
+
     trainer = GRPOTrainer(
         model=model,
         processing_class=tokenizer,
-        reward_funcs=[slide_aesthetics_reward, content_preservation_reward,
-                       visual_consistency_reward, conciseness_reward, text_embedding_reward],
+        reward_funcs=reward_funcs_list,
         args=training_args,
         train_dataset=dataset,
         peft_config=peft_config_for_trainer,
-        optimizers=(optimizer, lr_scheduler),  # tái sử dụng optimizer/scheduler xuyên suốt các step
+        optimizers=(optimizer, lr_scheduler),
     )
+
+    # Áp dụng EMA Baseline: Hook vào reward computation để chống triệt tiêu gradient
+    _orig_compute_rewards = trainer.compute_rewards if hasattr(trainer, 'compute_rewards') else None
+    if _orig_compute_rewards is not None:
+        def _patched_compute_rewards(*args, **kwargs):
+            rewards = _orig_compute_rewards(*args, **kwargs)
+            # Nếu rewards là tensor, chuyển sang list để xử lý
+            import torch as _torch
+            if isinstance(rewards, _torch.Tensor):
+                adjusted = ema_baseline.update_and_adjust(rewards.detach().cpu().tolist())
+                return _torch.tensor(adjusted, dtype=rewards.dtype, device=rewards.device)
+            elif isinstance(rewards, list):
+                return ema_baseline.update_and_adjust(rewards)
+            return rewards
+        trainer.compute_rewards = _patched_compute_rewards
+
     trainer.train()
 
     history = list(trainer.state.log_history or [])

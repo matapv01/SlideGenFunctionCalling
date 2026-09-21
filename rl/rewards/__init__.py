@@ -3,4 +3,5 @@ from .content_reward import content_preservation_reward
 from .consistency_reward import visual_consistency_reward
 from .conciseness_reward import conciseness_reward
 from .text_embedding_reward import text_embedding_reward
+from .dom_overflow_reward import dom_overflow_reward
 

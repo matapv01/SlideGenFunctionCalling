@@ -59,9 +59,9 @@ Consider if the overall aesthetic supports clarity and avoids distraction.
 Check whether this slide feels like part of a unified deck or visually disconnected.
 
 Additional Evaluation Dimensions (Newly Added)
-    - Content Meaning Accuracy: Does the text or visual element truly represent what it intends to convey? Is it logically accurate in the context?
-    - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
-    - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
+    - Visual Overflow/Clipping: Does the text or content fit within the slide boundaries?
+    - Contrast and Readability: Is the text clearly legible against the background?
+    - Layout Appropriateness: Does the chosen layout fit the content?
 
 In addition, if a previous slide is available, evaluate consistency between the current and previous slides in the following aspects:
 - Background color
@@ -75,11 +75,18 @@ Previous accepted tool call:
 Current tool call:
 {tool_call_output}
 
+ViT Aesthetic Score (0.0 to 1.0, Higher is better):
+{vit_score}
+
+Previous Retry Errors/Feedback (if any):
+{previous_errors}
+
 If you deny the slide:
 - Generate feedback explaining what needs to be improved
-- You MAY suggest modifications to the slide content **only if necessary**, such as:
-  - The content is too long and overcrowds the slide
-  - The content lacks clarity or is not well structured for presentation
+- CRITICAL: You must ONLY deny a slide for VISUAL or LAYOUT issues (e.g. text overlapping, unreadable contrast, text overflowing off the slide, extremely tiny unreadable font).
+- DO NOT deny a slide for editorial reasons like "text is redundant", "title is too generic", or "paragraph is too long" UNLESS the text physically breaks the layout or is unreadable.
+- You MAY suggest modifications to the slide content **only if necessary to fix layout issues**, such as:
+  - The content is physically too long and overcrowds/overflows the slide layout
   - The content does not match the selected slide layout appropriately
 
 Allowed modifications include:
@@ -90,6 +97,7 @@ Allowed modifications include:
 However, do NOT remove or alter the **core message** of the content. Preserve its intent and essential meaning.
 
 Provide detailed feedback on what works well and what needs improvement, then make your final decision.
+CRITICAL: You MUST write your `feedback` response ENTIRELY in Vietnamese (Tiếng Việt). Do NOT write the feedback in English.
 """
 
 # ================================= SLIDE GENERATION PROMPTS =================================
@@ -149,6 +157,22 @@ MATH_EQUATION_RULES = """
 ✅ **CORRECT EXAMPLES:**
    - Quadratic: `<math-field>ax^2 + bx + c = 0</math-field>`
    - Fraction: `<math-field>\\frac{{-b \\pm \\sqrt{{b^2-4ac}}}}{{2a}}</math-field>`
+"""
+
+TOOL_SCHEMA_STRICTNESS_RULES = """
+🛑 **CRITICAL - TOOL SCHEMA STRICTNESS:**
+1. YOU MUST STRICTLY ADHERE TO THE SELECTED TOOL'S PARAMETER SCHEMA!
+2. ❌ NEVER invent or hallucinate parameters that are not explicitly listed in the tool's signature.
+   - For example, if the tool does not have a `bg_color` parameter, DO NOT pass `bg_color`.
+   - If the tool does not have `left_bg_color` or `right_bg_color`, DO NOT pass them.
+   - If the tool does not have an `image_url` parameter, DO NOT pass `image_url`.
+3. ⚠️ If a tool does NOT have a background color parameter (like `bg_color` or `left_bg_color`), you MUST ASSUME its background is white/light. In this case, you MUST use dark colors (e.g. #000000, #333333, #0056d2) for all text and accent colors so they are readable! Do not use white (#FFFFFF) text on a white/light background!
+4. 🚨 IGNORING IMPOSSIBLE INSTRUCTIONS: The 'Design Instructions' provided to you by the planner might ask for features (like background images, split colors, or custom background colors) that YOUR CHOSEN TOOL DOES NOT SUPPORT. If the chosen tool's schema lacks parameters for those features, you MUST IGNORE that part of the design instruction. DO NOT invent parameters to fulfill impossible design requests!
+5. 🚫 NO PLACEHOLDERS: NEVER output placeholder text such as 'Your Name', 'Company Name', or 'Title Here'. If you do not have real information for an optional field, just pass an empty string "".
+6. 📊 CHART & TABLE DATA FORMAT: For all chart tools (`generate_bar_chart_slide_*`, `generate_scatter_plot_chart_slide_*`, etc.):
+   - `categories`: MUST be a non-empty list of string labels for the categories/time periods.
+   - `series`: MUST be a list of objects. Each object MUST contain `"name"` and BOTH `"values"` and `"data"` lists containing identical numeric values (e.g. `{"name": "Thời gian (s)", "values": [3.5, 24.0, 9.5, 7.5], "data": [3.5, 24.0, 9.5, 7.5]}`).
+   - NEVER leave `categories` or `series` empty, and ensure numbers match the facts in the text!
 """
 
 INTRO_PROMPT = """
@@ -216,8 +240,10 @@ CONTENT_PROMPT = """
 3. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
-4. CONTENT: Concise, no filler words
+4. CONTENT: Concise, no filler words.
+   ⚠️ IF the source content is long, YOU MUST SUMMARIZE it into short bullet points (max 2-3 lines per idea). Do not copy-paste long paragraphs!
 5. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
+   ⚠️ YOU MUST PRIORITIZE selecting layout tools that have image parameters (`image_url` or `bg_image`). Avoid text-only layouts if possible!
 6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
    ✅ CORRECT: `<math-field>E = mc^2</math-field>`
    ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
@@ -262,25 +288,32 @@ Generate professional, READABLE function call.
 CHART_PROMPT = """
 🎯 CHART SLIDE - Data visualization!
 
-**CRITICAL: CHART MUST BE CLEAR AND READABLE!**
-⚠️ Text labels must contrast with background
-⚠️ Axis labels and values must be legible
-⚠️ Avoid cluttered data points or overlapping labels
+**CRITICAL: CHART MUST BE CLEAR, COMPLETE, AND PROPERLY STRUCTURED!**
+⚠️ Text labels must contrast strongly with background
+⚠️ Axis labels, category names, and values must be legible and accurate
+⚠️ ALWAYS supply BOTH 'values' and 'data' inside each series object so bars render correctly!
 
 **RULES:**
-1. DATA: Extract series names, values, time points, and metrics from content
-   - Identify multi-series trends if available
-   - Use appropriate axis labels (x: time/category, y: metric)
-2. INSIGHT: Translate the main analytical message into clear language
-   - What trend or pattern should the viewer see?
-   - What makes this data meaningful?
-3. VISUAL: Generate high-quality line/bar/area charts
-   - Use contrasting colors for multiple series
-   - Include grid lines for readability
-   - Ensure proper spacing and sizing
-4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
+1. DATA EXTRACTION & FORMATTING:
+   - Extract real numbers, percentages, durations, or metrics from the slide content.
+   - `categories`: Non-empty list of distinct strings for X-axis (e.g. ["Gemini Preparer", "Qwen Inference", "HTML Render", "ViT Scorer"]).
+   - `series`: List of series objects. Each series dict MUST contain:
+     * "name": Meaningful series label (e.g. "Thời gian (giây)" or "Tỷ trọng (%)").
+     * "values": List of floats/ints matching `categories` count (e.g. [3.5, 24.0, 9.5, 7.5]).
+     * "data": Exactly identical list of floats/ints as "values" (for universal tool compatibility).
+   - `unit`: Accurate unit suffix (e.g. "s", " giây", "%", " triệu", "MB").
+   - `y_axis_min`: Usually 0.
+   - `y_axis_max`: Set slightly higher than the maximum number in series (e.g. if max is 24, set 30) so bars do not clip.
+2. INSIGHT & NARRATIVE:
+   - `insight`: 1-2 concise, impactful sentences summarizing the core analytical takeaway (e.g. "Khâu suy luận Qwen chiếm 58% tổng thời gian, là điểm nghẽn lớn nhất cần tối ưu.").
+   - `main_title` & `subtitle`: Clear, professional, and contextual.
+3. VISUAL & CONTRAST:
+   - `colors`: Provide vibrant, high-contrast hex colors (e.g. ["#2563EB", "#F59E0B", "#10B981", "#EF4444"]) to distinguish categories or series.
+   - `show_value`: true (so numbers are clearly visible above each bar).
+   - `show_legend`: true.
+4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`.
 
-Generate professional, DATA-DRIVEN function call.
+Generate professional, ACCURATE, and DATA-DRIVEN function call.
 """
 
 # Map slide types to their specific prompts
@@ -534,13 +567,14 @@ CRITICAL JSON FORMATTING RULES:
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
 5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
 6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
+7. CHART DATA FORMAT: For chart tools, 'categories' MUST be a list of strings, and 'series' MUST be a list of objects containing BOTH 'values' and 'data' lists of numbers (e.g. `{"name": "...", "values": [3.5, 24.0], "data": [3.5, 24.0]}`).
 
-Example:
+Example (FORMAT ILLUSTRATION ONLY — DO NOT COPY THIS TOOL NAME. Select strictly from your provided tools):
 <tool_call>
-{"name": "search_ddgs_images", "arguments": {"query": "business meeting", "layout": "Wide", "size": "Large"}}
+{"name": "example_tool_alpha", "arguments": {"main_title": "BUSINESS PLAN", "subtitle": "2024-2028"}}
 </tool_call>
 <tool_call>
-{"name": "generate_title_slide", "arguments": {"main_title": "BUSINESS PLAN", "subtitle": "2024-2028"}}
+{"name": "search_ddgs_images", "arguments": {"query": "business meeting", "layout": "Wide", "size": "Large"}}
 </tool_call>"""
 
 # --- CoT (Chain-of-Thought) variant: enables Qwen3 thinking mode ---
@@ -558,11 +592,17 @@ Analyze the design instruction and slide content carefully. Then:
 6. Self-check: Are there any None/null/empty values for required fields? Fix them.
 7. Self-check IMAGE PARAMS: Count the EXACT number N of image parameters (e.g. image_url, bg_image_url) present in the chosen tool's schema.
 8. Self-check SEARCH CALLS: You MUST generate EXACTLY N `search_ddgs_images` calls AFTER the slide tool (one per image parameter). For example, if N = 0 output 0 calls, if N = 2 output 2 calls. NEVER output more or fewer search calls than N!
+9. Self-check CHART DATA: If choosing a chart tool (e.g. `generate_bar_chart_slide_*`), ensure 'categories' has string labels and 'series' contains objects with BOTH 'values' and 'data' numeric lists matching each category.
 
 STEP 2 — ACT (output the tool call plan):
 Output an ordered tool call plan inside <tool_call> tags: Output EXACTLY ONE slide HTML tool call FIRST, followed by EXACTLY N `search_ddgs_images` calls corresponding to the N image parameters defined in that slide tool's schema (if N = 0, output ZERO search calls).
 
 CRITICAL RULES:
+- CONTENT QUANTITY TO TOOL MATCHING RULE: Count the number of bullet points/sections in the slide content (e.g. 2 points vs 3 points vs 4 points).
+  * If the content has 2 points, choose a 2-card/2-column tool (or general content tool). NEVER choose a 4-card tool like `generate_body_slide5` if you do not have 4 distinct points!
+  * If you DO select a tool with multi-section parameters (e.g. `subtitle1..4`, `content1..4`), you MUST supply ALL numbered parameters (1 to 4). Never leave `subtitle3`, `content3`, `subtitle4`, `content4` missing!
+- TITLE CONCISENESS & OVERFLOW AVOIDANCE RULE: For title slides or main slide headers, keep `main_title` punchy and concise (ideally 3 to 10 words). NEVER place a full narrative paragraph in `main_title`! Put extended explanations or long subtitles in `subtitle`.
+- CHART TOOLS DATA RULE: For chart tools, 'categories' MUST be a list of strings, and 'series' MUST be a list of objects with BOTH 'values' and 'data' lists containing real numbers matching the slide content facts (e.g. `{"name": "...", "values": [3.5, 24.0, ...], "data": [3.5, 24.0, ...]}`).
 - EXACT 1-TO-1 IMAGE SEARCH COUNT RULE: The number of `search_ddgs_images` calls MUST MATCH EXACTLY the number of image parameters ($N$) defined in the selected slide tool's schema.
   * If $N = 0$ (no image parameters in schema), output EXACTLY 0 `search_ddgs_images` calls.
   * If $N = 1$ (1 image parameter), output EXACTLY 1 `search_ddgs_images` call.
