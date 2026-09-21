@@ -95,3 +95,19 @@ def test_docx_upload_rejects_when_conversation_total_would_be_exceeded(
         )
 
     assert len(repository.documents) == 1
+
+
+def test_non_docx_upload_requires_configured_ocr_service(tmp_path, monkeypatch):
+    monkeypatch.setattr(document_rag_module, "CHATBOT_DOCUMENTS_DIR", tmp_path)
+    service = _service(_DocumentRepository())
+
+    with pytest.raises(ValueError, match="OCR"):
+        asyncio.run(
+            service.create_pending_document(
+                session=_session(),
+                original_filename="scan.pdf",
+                content=b"pdf",
+                max_file_bytes=10 * MEGABYTE,
+                max_total_bytes=50 * MEGABYTE,
+            )
+        )

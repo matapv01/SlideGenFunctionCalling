@@ -119,6 +119,37 @@ def test_build_chunks_materializes_root_sections_and_detail_nodes():
     assert "Revenue reached 100 million" in revenue_detail["content"]
 
 
+def test_build_chunks_keeps_searchable_image_handles_without_local_paths():
+    chunks = DocumentRagService._build_chunks(
+        [
+            {
+                "level": 1,
+                "title": "Architecture",
+                "content": "The system uses a document image.",
+                "children": [],
+            }
+        ],
+        "",
+        document_title="Technical notes",
+        images=[
+            {
+                "image_id": "doc-1:0",
+                "source_path": "/private/static/chatbot_documents/image.png",
+                "filename": "architecture.png",
+                "section_path": "Architecture",
+                "nearby_text": "The architecture diagram.",
+            }
+        ],
+    )
+
+    architecture = next(
+        chunk for chunk in chunks if chunk["node_key"] == "1"
+    )
+    assert "doc-1:0" in architecture["content"]
+    assert "architecture.png" in architecture["content"]
+    assert "/private/static" not in architecture["content"]
+
+
 def test_targeted_retrieval_keeps_the_matching_node_in_its_tree_context():
     logical_chunks = DocumentRagService._build_chunks(
         [

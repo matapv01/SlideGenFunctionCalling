@@ -196,7 +196,7 @@ async def upload_chat_document(
     # document unit in the shared five-hour window.
     subscription_service.check_feature_access_for_user(current_user.id, "docx_upload")
     try:
-        document = await rag.create_pending_docx(
+        document = await rag.create_pending_document(
             session=session,
             original_filename=file.filename or "document.docx",
             content=content,
@@ -210,7 +210,7 @@ async def upload_chat_document(
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception:
         logger.exception("Chat document upload failed for session %s", session_id)
-        raise HTTPException(status_code=503, detail="Không thể tải tài liệu DOCX")
+        raise HTTPException(status_code=503, detail="Không thể tải tài liệu")
     return _document_out(document)
 
 

@@ -707,7 +707,7 @@ const vi: Translations = {
   subscription_ends_on: "Gói sẽ kết thúc ngày",
   subscription_no_expiry: "Không giới hạn thời gian",
   subscription_idea_generation: "Tạo từ ý tưởng",
-  subscription_docx_upload: "Upload DOCX",
+  subscription_docx_upload: "File upload",
   subscription_slide_limit: "Giới hạn slides",
   subscription_today: "hôm nay",
   subscription_slides: "slides",
@@ -810,7 +810,7 @@ const vi: Translations = {
   slidegen_upload_title: "Tạo từ tài liệu",
   slidegen_upload_desc: "Tải tài liệu và để AI tự động tạo slide chuyên nghiệp",
   slidegen_uploading: "Đang tải lên...",
-  slidegen_choose_file: "Tải lên DOCX",
+  slidegen_choose_file: "Tải lên file",
 
   slidegen_idea_title: "Tạo từ ý tưởng",
 
@@ -1239,7 +1239,7 @@ const en: Translations = {
   subscription_ends_on: "Plan ends on",
   subscription_no_expiry: "No expiration",
   subscription_idea_generation: "Idea Generation",
-  subscription_docx_upload: "DOCX Upload",
+  subscription_docx_upload: "File Upload",
   subscription_slide_limit: "Slide Limit",
   subscription_today: "today",
   subscription_slides: "slides",
@@ -1342,7 +1342,7 @@ const en: Translations = {
   slidegen_upload_title: "Create from Document",
   slidegen_upload_desc: "Upload your document and let AI generate professional slides automatically",
   slidegen_uploading: "Uploading...",
-  slidegen_choose_file: "Upload DOCX",
+  slidegen_choose_file: "Upload file",
 
   slidegen_idea_title: "Create from Idea",
 

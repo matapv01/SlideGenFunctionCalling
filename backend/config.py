@@ -109,6 +109,14 @@ LLM_TOP_P = 1.0
 LLM_REQUEST_TIMEOUT_SECONDS = 180
 VLM_REQUEST_TIMEOUT_SECONDS = 180
 
+# OCR service configuration. Native DOCX parsing remains local; this endpoint
+# is used for PDF/image documents or documents that contain no readable text.
+# Keep deployment-specific service settings here so every environment uses the
+# same application contract. Secrets and provider credentials remain in env.
+DOCUMENT_AI_BASE_URL = "http://171.226.10.153:12006"
+DOCUMENT_AI_TIMEOUT_SECONDS = 60.0
+DOCUMENT_AI_MAX_RESPONSE_BYTES = 20 * 1024 * 1024
+
 # --- VLM Configuration ---
 # Image relevance verification has a dedicated provider/configuration boundary.
 # It intentionally points to the same Qwen deployment for now. Change these

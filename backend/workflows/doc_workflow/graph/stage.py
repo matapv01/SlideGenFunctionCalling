@@ -22,6 +22,10 @@ class State(TypedDict, total=False):
     document_preamble: str
     document_structure_origin: str
     document_outline: List[Dict[str, Any]]
+    # Headings supplied by an upstream parser that must remain atomic. OCR
+    # tables use this marker so the content splitter does not send a large
+    # table back to the LLM for hierarchical rewriting.
+    atomic_section_titles: List[str]
     slide_chunks: List[Dict[str, Any]]
     slide_positions: List[Any]
     slide_context_maps: List[str]

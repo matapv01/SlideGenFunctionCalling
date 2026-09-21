@@ -179,6 +179,9 @@ class ChatbotService:
         "Answer entirely in the user's language and never switch languages "
         "without being asked. Keep the answer useful and direct. "
         "Do not invent facts or claim that you performed an action you did not perform. "
+        "When retrieved context contains explicit document metadata such as an exact "
+        "page, table, or image count, treat that metadata as authoritative and use it "
+        "directly instead of saying the information is unavailable. "
         "Do not replace a request to create a slide deck with a generic copied outline; "
         "the slide workflow handles that request separately."
     )
@@ -203,6 +206,7 @@ class ChatbotService:
         rag_query_planner: RagQueryPlanner | None = None,
         user_repository: UserRepository | None = None,
         subscription_service: SubscriptionService | None = None,
+        document_image_tool: Any | None = None,
         default_max_turns: int = 5,
     ) -> None:
         self.repository = repository
@@ -212,6 +216,7 @@ class ChatbotService:
         self.rag_query_planner = rag_query_planner or RagQueryPlanner(llm_provider)
         self.user_repository = user_repository
         self.subscription_service = subscription_service
+        self.document_image_tool = document_image_tool
         self.default_max_turns = max(1, default_max_turns)
         self.slide_intent_service = SlideIntentService(llm_provider)
         # The chatbot service is a process-wide singleton in the API container.
@@ -488,8 +493,17 @@ class ChatbotService:
             standalone_query,
             retrieved.context,
             detect_language(clean_query),
+            image_refs=retrieved.image_refs,
         )
-        answer = (await self._complete(prompt_messages, generation_config)).strip()
+        answer = (
+            await self._complete_with_document_images(
+                prompt_messages=prompt_messages,
+                retrieved=retrieved,
+                session=session,
+                user_id=user_id,
+                generation_config=generation_config,
+            )
+        ).strip()
         if not answer:
             raise RuntimeError("Chatbot returned an empty answer")
 
@@ -765,7 +779,9 @@ class ChatbotService:
     ) -> RetrievedContext:
         context_parts: list[str] = []
         citations: list[dict[str, Any]] = []
+        image_refs: list[dict[str, Any]] = []
         seen_citations: set[tuple[str, str]] = set()
+        seen_images: set[tuple[str, str]] = set()
         for retrieved in contexts:
             if retrieved.context.strip():
                 context_parts.append(retrieved.context.strip())
@@ -778,9 +794,19 @@ class ChatbotService:
                     continue
                 seen_citations.add(key)
                 citations.append(citation)
+            for image in getattr(retrieved, "image_refs", []) or []:
+                image_key = (
+                    str(image.get("document_id") or ""),
+                    str(image.get("image_id") or ""),
+                )
+                if image_key in seen_images or not all(image_key):
+                    continue
+                seen_images.add(image_key)
+                image_refs.append(image)
         return RetrievedContext(
             context="\n\n".join(context_parts),
             citations=citations,
+            image_refs=image_refs,
         )
 
     @staticmethod
@@ -1708,7 +1734,8 @@ class ChatbotService:
         standalone_query: str,
         context: str,
         language: Literal["vi", "en"],
-    ) -> list[dict[str, str]]:
+        image_refs: list[dict[str, Any]] | None = None,
+    ) -> list[dict[str, Any]]:
         system = f"{self._SYSTEM_PROMPT}\n\n{language_instruction(language)}"
         if history_summary:
             system += f"\n\nConversation memory:\n{history_summary}"
@@ -1719,6 +1746,15 @@ class ChatbotService:
                 "When a claim comes from a retrieved source, cite it as [Source N].\n"
                 + context
             )
+        if image_refs:
+            system += (
+                "\n\nDocument images available through a tool. The references are "
+                "not image content. If the user's question requires seeing an "
+                "image, call get_document_image with the exact document_id and "
+                "image_id. If the question can be answered from text, do not "
+                "call the tool.\n"
+                + self._format_image_refs(image_refs)
+            )
         messages = [{"role": "system", "content": system}]
         messages.extend(
             {"role": message.role, "content": message.content}
@@ -1727,6 +1763,131 @@ class ChatbotService:
         )
         messages.append({"role": "user", "content": standalone_query})
         return messages
+
+    @staticmethod
+    def _format_image_refs(image_refs: list[dict[str, Any]]) -> str:
+        lines: list[str] = []
+        for image in image_refs:
+            lines.append(
+                "- document_id={document_id}; image_id={image_id}; "
+                "filename={filename}; section={section}; alt={alt}; nearby={nearby}".format(
+                    document_id=str(image.get("document_id") or ""),
+                    image_id=str(image.get("image_id") or ""),
+                    filename=str(image.get("filename") or "")[:160],
+                    section=str(image.get("section_path") or "")[:300],
+                    alt=str(image.get("alt_text") or "")[:180],
+                    nearby=str(image.get("nearby_text") or "")[:700],
+                )
+            )
+        return "Image references:\n" + "\n".join(lines)
+
+    async def _complete_with_document_images(
+        self,
+        *,
+        prompt_messages: list[dict[str, Any]],
+        retrieved: RetrievedContext,
+        session: ChatSession,
+        user_id: int,
+        generation_config: dict[str, str | float | int],
+    ) -> str:
+        """Let the answer model inspect an image only through a scoped tool.
+
+        The first call can answer directly or emit one or more native tool
+        calls. When it asks for an image, the tool validates ownership and the
+        second call receives the bounded image bytes as multimodal content.
+        This keeps ordinary document questions text-only and avoids a hidden
+        keyword/rule classifier.
+        """
+        generate_tool_calls = getattr(self.llm_provider, "generate_tool_calls", None)
+        if not retrieved.image_refs or self.document_image_tool is None or not callable(
+            generate_tool_calls
+        ):
+            return await self._complete(prompt_messages, generation_config)
+
+        try:
+            result = await asyncio.to_thread(
+                generate_tool_calls,
+                prompt_messages,
+                [self.document_image_tool.schema()],
+                model=str(generation_config["provider_model"]),
+                max_tokens=int(generation_config["max_tokens"]),
+                temperature=float(generation_config["temperature"]),
+                top_p=float(generation_config["top_p"]),
+            )
+        except Exception:
+            logger.exception("Document image tool call failed; using text-only answer")
+            return await self._complete(prompt_messages, generation_config)
+
+        if not isinstance(result, dict):
+            return await self._complete(prompt_messages, generation_config)
+        tool_calls = result.get("tool_calls")
+        if not isinstance(tool_calls, list) or not tool_calls:
+            return str(result.get("content") or "").strip() or await self._complete(
+                prompt_messages, generation_config
+            )
+
+        loaded_images: list[dict[str, Any]] = []
+        seen_image_ids: set[tuple[str, str]] = set()
+        for call in tool_calls[:3]:
+            if not isinstance(call, dict) or str(call.get("name") or "") != self.document_image_tool.name:
+                continue
+            arguments = call.get("args")
+            if not isinstance(arguments, dict):
+                continue
+            document_id = str(arguments.get("document_id") or "").strip()
+            image_id = str(arguments.get("image_id") or "").strip()
+            key = (document_id, image_id)
+            if not document_id or not image_id or key in seen_image_ids:
+                continue
+            seen_image_ids.add(key)
+            image = await asyncio.to_thread(
+                self.document_image_tool.get_document_image,
+                session_id=session.id,
+                user_id=user_id,
+                document_id=document_id,
+                image_id=image_id,
+            )
+            if image and image.get("data_uri"):
+                loaded_images.append(image)
+
+        if not loaded_images:
+            # A malformed or unauthorized tool call must never leak an error
+            # into the UI. Give the model one normal text-only completion.
+            return await self._complete(prompt_messages, generation_config)
+
+        image_content: list[dict[str, Any]] = [
+            {
+                "type": "text",
+                "text": (
+                    "Inspect the attached document image(s) and answer the user's "
+                    "question using both the retrieved text and what is visibly "
+                    "shown. Mention uncertainty when the image is unreadable. "
+                    "Do not expose internal ids or filesystem paths."
+                ),
+            }
+        ]
+        for image in loaded_images:
+            image_content.append(
+                {
+                    "type": "text",
+                    "text": (
+                        f"Image: {image.get('filename', 'document-image')}; "
+                        f"section: {image.get('section_path', '')}; "
+                        f"nearby text: {image.get('nearby_text', '')}"
+                    ),
+                }
+            )
+            image_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": image["data_uri"]},
+                }
+            )
+        multimodal_messages = [
+            *prompt_messages,
+            {"role": "user", "content": image_content},
+        ]
+        return await self._complete(multimodal_messages, generation_config)
 
     async def _compact_if_needed(
         self,
@@ -1766,7 +1927,7 @@ class ChatbotService:
 
     async def _complete(
         self,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         generation_config: dict[str, str | float | int],
     ) -> str:
         """Call the existing synchronous LLM adapter without blocking FastAPI."""

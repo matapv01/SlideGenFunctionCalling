@@ -49,6 +49,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
         include_slide_chunks: bool = False,
         document_id: str | None = None,
         image_output_root: str | None = None,
+        atomic_section_titles: list[str] | None = None,
     ) -> Dict[str, Any]:
         """Run the canonical DOCX analysis graph.
 
@@ -70,6 +71,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
             slide_options=slide_options or {},
             graph_config=graph_config,
             include_slide_chunks=include_slide_chunks,
+            atomic_section_titles=atomic_section_titles,
         )
 
         if not doc_state or not doc_state.get("plain_text"):
@@ -96,6 +98,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
         document_id: str | None = None,
         image_output_root: str | None = None,
         callback=None,
+        atomic_section_titles: list[str] | None = None,
     ) -> Dict[str, Any]:
         """Create the canonical document artifact used by chatbot RAG."""
         return await self.preprocess_document(
@@ -104,6 +107,7 @@ class DocumentPreprocessingService(BaseWorkflowService):
             include_slide_chunks=False,
             document_id=document_id,
             image_output_root=image_output_root,
+            atomic_section_titles=atomic_section_titles,
         )
 
     async def preprocess_for_slide_generation(

@@ -17,7 +17,7 @@ const copy = {
   vi: {
     eyebrow: "BẮT ĐẦU VỚI SLIDEGEN",
     title: "Làm quen với workspace",
-    toolUpload: "Tải tài liệu DOCX",
+    toolUpload: "Tải file",
     toolSearch: "Search trên web",
     manualExampleHeading: "# Tiêu đề slide",
     manualExampleBody: "Nội dung chính của slide",
@@ -26,8 +26,8 @@ const copy = {
     steps: [
       { target: "workspace-nav", title: "Thanh điều hướng workspace", description: "Chuyển nhanh giữa Slidegenius, Projects, Manual và Guide từ thanh bên này." },
       { target: "chat-history", title: "Lịch sử hội thoại", description: "Các cuộc trò chuyện được lưu lại để bạn có thể mở tiếp bất cứ lúc nào." },
-      { target: "chat-composer", title: "Tạo slide bằng một câu lệnh", description: "Nhập ý tưởng, brief hoặc gắn tài liệu DOCX rồi gửi cho Slidegenius." },
-      { target: "composer-tools", title: "Mở thêm công cụ bằng dấu +", description: "Bấm dấu + để chọn tải tài liệu DOCX hoặc bật Search khi cần tìm thông tin trên web." },
+      { target: "chat-composer", title: "Tạo slide bằng một câu lệnh", description: "Nhập ý tưởng, brief hoặc gắn file rồi gửi cho Slidegenius." },
+      { target: "composer-tools", title: "Mở thêm công cụ bằng dấu +", description: "Bấm dấu + để tải file hoặc bật Search khi cần tìm thông tin trên web." },
       { target: "composer-model", title: "Chọn model và mức effort", description: "Genius 3 Medium là lựa chọn cân bằng. Bạn có thể đổi model hoặc mức effort khi cần." },
       { target: "manual-nav", title: "Tự dựng slide bằng Manual", description: "Trong Manual, dùng Markdown để chia cấu trúc: mỗi dòng bắt đầu bằng # tạo một slide mới, nội dung bên dưới là phần thân và - tạo gạch đầu dòng." },
       { target: "projects-nav", title: "Quản lý project", description: "Bài trình bày đã tạo sẽ nằm trong Project Manager để xem, đổi tên và chỉnh sửa." },
@@ -44,7 +44,7 @@ const copy = {
   en: {
     eyebrow: "GET STARTED WITH SLIDEGEN",
     title: "A quick tour of your workspace",
-    toolUpload: "Upload DOCX",
+    toolUpload: "Upload file",
     toolSearch: "Search the web",
     manualExampleHeading: "# Slide title",
     manualExampleBody: "Main slide content",
@@ -53,8 +53,8 @@ const copy = {
     steps: [
       { target: "workspace-nav", title: "Workspace navigation", description: "Move between Slidegenius, Projects, Manual and Guide from this sidebar." },
       { target: "chat-history", title: "Conversation history", description: "Your conversations are saved here so you can pick up where you left off." },
-      { target: "chat-composer", title: "Create slides with a prompt", description: "Enter an idea, brief or attach a DOCX document, then send it to Slidegenius." },
-      { target: "composer-tools", title: "Open tools with the + button", description: "Select the + button to upload a DOCX document or turn on Search when you need web information." },
+      { target: "chat-composer", title: "Create slides with a prompt", description: "Enter an idea, brief or attach a file, then send it to Slidegenius." },
+      { target: "composer-tools", title: "Open tools with the + button", description: "Select the + button to upload a file or turn on Search when you need web information." },
       { target: "composer-model", title: "Choose model and effort", description: "Genius 3 Medium is a balanced default. Change the model or effort whenever you need." },
       { target: "manual-nav", title: "Build slides manually", description: "In Manual, use Markdown to define the structure: each line starting with # creates a new slide, the following lines become content, and - creates a bullet." },
       { target: "projects-nav", title: "Manage your projects", description: "Generated presentations appear in Project Manager, where you can review and edit them." },

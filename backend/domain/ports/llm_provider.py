@@ -33,3 +33,15 @@ class LLMProvider(Protocol):
     ) -> str:
         """Sinh text completion dùng chung cho các application service."""
         ...
+
+    def generate_tool_calls(
+        self,
+        messages: List[Dict[str, Any]],
+        tools: List[Dict[str, Any]],
+        model: str | None = None,
+        max_tokens: int = 2000,
+        temperature: float = 0.5,
+        top_p: float = 1.0,
+    ) -> Dict[str, Any]:
+        """Return a model response together with any native tool calls."""
+        ...

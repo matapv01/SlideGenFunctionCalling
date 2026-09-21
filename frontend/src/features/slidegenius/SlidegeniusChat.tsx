@@ -33,6 +33,8 @@ import SlidegenConfirmDialog from "@/components/SlidegenConfirmDialog";
 
 const defaultModels = ["genius-1", "genius-2", "genius-3"];
 const defaultEfforts = ["low", "medium", "high"] as const;
+const supportedDocumentExtensions = [".docx", ".pdf", ".png", ".jpg", ".jpeg"];
+const supportedDocumentAccept = supportedDocumentExtensions.join(",");
 const sourceSentenceEnd = /[.!?。！？](?:["'”’»)\]}]*)(?=\s|$)/g;
 
 interface SlideFlowOption {
@@ -559,11 +561,11 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
           "Đang xử lý tài liệu lần đầu",
           "Đang chuẩn bị ngữ cảnh cho cuộc trò chuyện",
         ],
-        upload: "Tải tài liệu DOCX",
+        upload: "Tải file",
         uploading: "Đang tải tệp...",
-        uploaded: "Đã gắn tài liệu",
-        removeAttachment: "Xóa tài liệu",
-        cancelUpload: "Hủy tải tài liệu",
+        uploaded: "Đã gắn file",
+        removeAttachment: "Xóa file",
+        cancelUpload: "Hủy tải file",
         scrollToLatest: "Cuộn đến tin nhắn mới nhất",
         otherPlaceholder: "Nhập hướng bạn muốn...",
         slideCountPlaceholder: "Nhập số slide, ví dụ 12 slide...",
@@ -607,9 +609,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         sourceExcerpt: "Đoạn trích",
         sourceNoExcerpt: "Nguồn này chưa có đoạn trích hiển thị.",
         chatUsage: "Chat credit",
-        documentUsage: "Tài liệu DOCX",
+        documentUsage: "File",
         chatUsageShort: "CHAT",
-        documentUsageShort: "DOCX",
+        documentUsageShort: "FILE",
         usageReset: "Reset sau",
       }
     : {
@@ -632,11 +634,11 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
           "Processing the document for the first time",
           "Preparing context for this conversation",
         ],
-        upload: "Upload DOCX",
+        upload: "Upload file",
         uploading: "Uploading file...",
-        uploaded: "Document attached",
-        removeAttachment: "Remove document",
-        cancelUpload: "Cancel document upload",
+        uploaded: "File attached",
+        removeAttachment: "Remove file",
+        cancelUpload: "Cancel file upload",
         scrollToLatest: "Scroll to latest message",
         otherPlaceholder: "Add your own direction...",
         slideCountPlaceholder: "Enter a slide count, for example 12 slides...",
@@ -680,9 +682,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         sourceExcerpt: "Excerpt",
         sourceNoExcerpt: "This source has no excerpt available.",
         chatUsage: "Chat credits",
-        documentUsage: "DOCX files",
+        documentUsage: "Files",
         chatUsageShort: "CHAT",
-        documentUsageShort: "DOCX",
+        documentUsageShort: "FILES",
         usageReset: "Resets in",
       };
 
@@ -1478,8 +1480,11 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !activeSessionId || uploading) return;
-    if (!file.name.toLowerCase().endsWith(".docx")) {
-      setError(language === "vi" ? "Chỉ hỗ trợ file DOCX." : "Only DOCX files are supported.");
+    const fileExtension = `.${file.name.split(".").pop()?.toLowerCase() || ""}`;
+    if (!supportedDocumentExtensions.includes(fileExtension)) {
+      setError(language === "vi"
+        ? "Định dạng file chưa được hỗ trợ. Hỗ trợ DOCX, PDF, PNG, JPG hoặc JPEG."
+        : "This file format is not supported. Supported formats: DOCX, PDF, PNG, JPG, and JPEG.");
       return;
     }
     if (maxUploadBytes <= 0 || maxTotalUploadBytes <= 0) {
@@ -1488,8 +1493,8 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     }
     if (file.size > maxUploadBytes) {
       setError(language === "vi"
-        ? `Mỗi file DOCX tối đa ${formatFileSize(maxUploadBytes)}.`
-        : `Each DOCX file can be at most ${formatFileSize(maxUploadBytes)}.`);
+        ? `Mỗi file tối đa ${formatFileSize(maxUploadBytes)}.`
+        : `Each file can be at most ${formatFileSize(maxUploadBytes)}.`);
       return;
     }
     const currentUploadBytes = sessionDocuments.reduce(
@@ -1498,8 +1503,8 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     );
     if (currentUploadBytes + file.size > maxTotalUploadBytes) {
       setError(language === "vi"
-        ? `Tổng dung lượng DOCX trong cuộc trò chuyện tối đa ${formatFileSize(maxTotalUploadBytes)}. Đã dùng ${formatFileSize(currentUploadBytes)}.`
-        : `DOCX files in this conversation can total ${formatFileSize(maxTotalUploadBytes)}. ${formatFileSize(currentUploadBytes)} is already attached.`);
+        ? `Tổng dung lượng file trong cuộc trò chuyện tối đa ${formatFileSize(maxTotalUploadBytes)}. Đã dùng ${formatFileSize(currentUploadBytes)}.`
+        : `Files in this conversation can total ${formatFileSize(maxTotalUploadBytes)}. ${formatFileSize(currentUploadBytes)} is already attached.`);
       return;
     }
     const sessionId = activeSessionId;
@@ -1906,7 +1911,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
           <input
             ref={fileInputRef}
             type="file"
-            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            accept={supportedDocumentAccept}
             hidden
             onChange={(event) => void handleDocumentSelected(event)}
           />

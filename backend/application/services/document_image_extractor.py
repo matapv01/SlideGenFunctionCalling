@@ -240,6 +240,12 @@ class DocumentImageExtractor:
                                 "mime_type": mime_type,
                                 "content_hash": digest,
                                 "source_part": part_name,
+                                "paragraph_index": paragraph_index,
+                                "block_index": paragraph_index,
+                                "anchor_text": text,
+                                "relative_path": (
+                                    f"{image_root.name}/{file_name}"
+                                ),
                                 "section_path": section_path,
                                 "section_title": section_titles[-1] if section_titles else "",
                                 "nearby_text": nearby_text,
@@ -260,7 +266,12 @@ class DocumentImageExtractor:
             if not raw_path:
                 continue
             path = Path(raw_path)
-            roots.add(path.parent)
+            # Only extracted DOCX assets own their containing directory. OCR
+            # image documents keep the original image beside the canonical
+            # Markdown and must never cause the whole document root to be
+            # removed on a failed retry.
+            if path.parent.name.endswith("_images"):
+                roots.add(path.parent)
         for root in roots:
             try:
                 shutil.rmtree(root)

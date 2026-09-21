@@ -67,3 +67,13 @@ def test_extracts_images_from_document_and_header_parts(tmp_path):
     )
     assert document_image["section_path"] == "History"
     assert (tmp_path / "assets" / "document-1_images").is_dir()
+
+
+def test_cleanup_does_not_remove_original_ocr_image_or_document_root(tmp_path):
+    source_image = tmp_path / "source.png"
+    source_image.write_bytes(b"original")
+
+    DocumentImageExtractor.remove_assets([{"source_path": str(source_image)}])
+
+    assert source_image.is_file()
+    assert tmp_path.is_dir()
