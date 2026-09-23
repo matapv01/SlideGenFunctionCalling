@@ -1,9 +1,9 @@
-from typing import List, Protocol
+from typing import Protocol
 
 
 class EmbeddingProvider(Protocol):
-    def __init__(self, device: str = "cpu"):
-        ...
+    """Embedding boundary used by document ingestion and retrieval."""
 
-    def get_embedding(self, image_path: str) -> List[float]:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        """Return one vector for each input text in the same order."""
         ...

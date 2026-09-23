@@ -6,27 +6,23 @@ from typing import Tuple, List, Dict
 from PIL import Image
 from torchvision import transforms
 from transformers import ViTForImageClassification
+from backend.config import HF_ENDPOINT, VIT_MODEL_DIR, VIT_MODEL_FILENAME
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_VIT_MODEL_DIR = PROJECT_ROOT / "models" / "vit"
-DEFAULT_VIT_MODEL_FILENAME = "best_model_multilabel_DX_10_0.77.pt"
 
 
 def _resolve_vit_model_path() -> Path:
     """Resolve the ViT checkpoint from the project model directory."""
-    configured_dir = os.getenv("VIT_MODEL_DIR")
-    model_dir = Path(configured_dir).expanduser() if configured_dir else DEFAULT_VIT_MODEL_DIR
+    model_dir = Path(VIT_MODEL_DIR).expanduser()
     if not model_dir.is_absolute():
         model_dir = (PROJECT_ROOT / model_dir).resolve()
 
-    model_filename = os.getenv("VIT_MODEL_FILENAME", DEFAULT_VIT_MODEL_FILENAME)
-    model_path = model_dir / model_filename
+    model_path = model_dir / VIT_MODEL_FILENAME
     if not model_path.is_file():
         raise FileNotFoundError(
             f"ViT checkpoint not found at '{model_path}'. "
-            "Place the checkpoint in 'models/vit' or configure "
-            "VIT_MODEL_DIR and VIT_MODEL_FILENAME."
+            "Place the checkpoint in 'models/vit' or update backend.config."
         )
     return model_path
 
@@ -41,7 +37,7 @@ class ViTAestheticProvider:
         print(f"Initializing ViTAestheticProvider on {self.device}")
         
         # Set HuggingFace mirror to avoid connection timeout issues
-        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+        os.environ["HF_ENDPOINT"] = HF_ENDPOINT
         
         self.model = ViTForImageClassification.from_pretrained(
             'WinKawaks/vit-small-patch16-224',

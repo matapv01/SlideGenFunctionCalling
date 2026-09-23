@@ -16,6 +16,7 @@ class State(TypedDict, total=False):
     # Output consumed by planning workflow
     document_outline: List[Dict[str, Any]]
     slide_positions: List[Any]
+    section_ids: List[str]
     slide_context_maps: List[str]
     slide_types: List[str]
     approved_result: Dict[str, Any]

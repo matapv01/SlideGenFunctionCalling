@@ -41,7 +41,15 @@ async def get_settings(
     service: UserService = Depends(get_user_service)
 ):
     """Get current user's settings"""
-    return service.get_settings(current_user.id)
+    settings = service.get_settings(current_user.id)
+    return {
+        "user_id": settings.user_id,
+        "theme": settings.theme,
+        "language": settings.language,
+        # The database keeps this preference in the legacy transition column;
+        # expose the stable public API name to the frontend.
+        "notifications_enabled": settings.default_transition_enabled,
+    }
 
 
 @router.put("/settings")

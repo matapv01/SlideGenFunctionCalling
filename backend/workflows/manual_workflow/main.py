@@ -13,6 +13,9 @@ async def run_manual_workflow(
     title: str,
     slide_options: Optional[Dict[str, Any]],
     graph_config: Dict[str, Any],
+    slide_positions: Optional[List[Any]] = None,
+    slide_context_maps: Optional[List[str]] = None,
+    section_ids: Optional[List[str]] = None,
 ) -> State:
     """Run manual preprocessing workflow and return normalized state."""
     workflow = build_manual_workflow()
@@ -22,6 +25,9 @@ async def run_manual_workflow(
         "document_title": title,
         "slide_chunks": slide_chunks,
         "slide_options": slide_options or {},
+        "slide_positions": slide_positions or [],
+        "slide_context_maps": slide_context_maps or [],
+        "section_ids": section_ids or [],
     }
 
     final_state: State = await app.ainvoke(initial_input, config=graph_config)

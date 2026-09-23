@@ -4,6 +4,15 @@ from backend.workflows.slidegen_workflow.graph.stage import State
 import time
 
 
+def _image_belongs_to_slide(image: object, index: int) -> bool:
+    if not isinstance(image, dict):
+        return False
+    try:
+        return int(image.get("slide_index", -1)) == index
+    except (TypeError, ValueError):
+        return False
+
+
 def provide_next_slide(state: State) -> State:
     """
     Node to prepare the next slide from the queue and update loop counters.
@@ -23,8 +32,17 @@ def provide_next_slide(state: State) -> State:
     if slide_chunks:
         # Get the next slide from the queue - ACTUALLY REMOVE IT
         next_chunk = slide_chunks.pop(0)
+        current_index = state.get('current_slide_index', -1) + 1
+        state['current_source_content'] = next_chunk
+        final_contents = list(state.get('slide_final_contents') or [])
+        if current_index < len(final_contents) and str(final_contents[current_index]).strip():
+            next_chunk = final_contents[current_index]
 
         state['current_slide_text'] = next_chunk
+        state['current_approved_images'] = [
+            image for image in state.get('approved_image_assignments') or []
+            if _image_belongs_to_slide(image, current_index)
+        ]
 
         # Keep state lists in sync by removing corresponding context map and plan
         if slide_context_maps:
@@ -36,11 +54,15 @@ def provide_next_slide(state: State) -> State:
             state['slide_plans'] = slide_plans[1:]
 
         # Increment the index for the new slide
-        current_index = state.get('current_slide_index', -1)
-        state['current_slide_index'] = current_index + 1
+        state['current_slide_index'] = current_index
 
         # Reset retry_count for the new slide
         state['retry_count'] = 0
+        state['executor_retry_count'] = 0
+        state['overflow_retry_count'] = 0
+        state['overflow_excluded_tools'] = []
+        state['last_valid_tool_call'] = {}
+        state['last_valid_xml_content'] = ''
 
         print(f"Queue has {len(slide_chunks)} chunks remaining. Preparing to process slide {state['current_slide_index'] + 1}/{state['length_slide_chunks']}.")
         print("Reset retry_count for new slide: 0")

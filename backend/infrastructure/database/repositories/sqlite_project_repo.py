@@ -23,6 +23,14 @@ class SqliteProjectRepository(ProjectRepository):
 
     def _map_project(self, row) -> Project:
         if not row: return None
+        # List queries expose the canonical count as actual_slide_count. The
+        # fallback keeps this mapper compatible with SELECT * project rows.
+        row_keys = row.keys()
+        slide_count = (
+            row['actual_slide_count']
+            if 'actual_slide_count' in row_keys
+            else (row['slide_count'] or 0)
+        )
         return Project(
             id=row['id'],
             user_id=row['user_id'],
@@ -30,6 +38,7 @@ class SqliteProjectRepository(ProjectRepository):
             description=row['description'],
             source_type=row['source_type'],
             status=row['status'],
+            slide_count=slide_count,
             updated_at=row['updated_at'],
             created_at=row['created_at'],
             slides=[],
@@ -37,7 +46,7 @@ class SqliteProjectRepository(ProjectRepository):
         )
 
     def create_project(self, user_id: int, title: str, description: str = None,
-                    source_type: str = 'idea', source_data: dict = None) -> int:
+                    source_type: str = 'manual', source_data: dict = None) -> int:
         """Create new project and return project ID"""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -55,7 +64,13 @@ class SqliteProjectRepository(ProjectRepository):
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT DISTINCT p.* FROM projects p
+                SELECT DISTINCT p.*,
+                    (
+                        SELECT COUNT(*)
+                        FROM slides s
+                        WHERE s.project_id = p.id
+                    ) AS actual_slide_count
+                FROM projects p
                 LEFT JOIN project_collaborators pc ON pc.project_id = p.id AND pc.user_id = ?
                 WHERE p.user_id = ? OR pc.user_id IS NOT NULL
                 ORDER BY p.updated_at DESC
@@ -74,6 +89,9 @@ class SqliteProjectRepository(ProjectRepository):
             project = self._map_project(row)
             if project:
                 project.slides = self.get_project_slides(project_id)
+                # Keep detail responses consistent with the actual slide list
+                # when older metadata contains a stale cached count.
+                project.slide_count = len(project.slides)
             return project
 
 
@@ -81,7 +99,16 @@ class SqliteProjectRepository(ProjectRepository):
         """Get all projects"""
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM projects ORDER BY created_at DESC")
+            cursor.execute("""
+                SELECT p.*,
+                    (
+                        SELECT COUNT(*)
+                        FROM slides s
+                        WHERE s.project_id = p.id
+                    ) AS actual_slide_count
+                FROM projects p
+                ORDER BY p.created_at DESC
+            """)
             rows = cursor.fetchall()
             return [self._map_project(row) for row in rows]
 

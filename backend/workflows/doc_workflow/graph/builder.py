@@ -21,14 +21,21 @@ def route_after_convert(state: State) -> str:
     return "auto_structure"
 
 
-def build_doc_workflow() -> StateGraph:
-    """Build the document preprocessing workflow graph."""
+def build_doc_workflow(include_slide_chunks: bool = True) -> StateGraph:
+    """Build the document workflow.
+
+    The graph always produces the canonical Markdown/JSON document artifact.
+    ``include_slide_chunks`` controls whether the legacy slide preparation
+    stage is appended. This lets chatbot ingestion reuse document analysis
+    without accidentally coupling RAG to slide generation.
+    """
     workflow = StateGraph(State)
 
     workflow.add_node("convert_document", convert_document)
     workflow.add_node("auto_structure", generate_structure_from_plaintext)
     workflow.add_node("split_content", split_content)
-    workflow.add_node("organize_chunks", organize_chunks)
+    if include_slide_chunks:
+        workflow.add_node("organize_chunks", organize_chunks)
 
     workflow.set_entry_point("convert_document")
 
@@ -38,7 +45,10 @@ def build_doc_workflow() -> StateGraph:
         {"split_content": "split_content", "auto_structure": "auto_structure"},
     )
     workflow.add_edge("auto_structure", "split_content")
-    workflow.add_edge("split_content", "organize_chunks")
-    workflow.set_finish_point("organize_chunks")
+    if include_slide_chunks:
+        workflow.add_edge("split_content", "organize_chunks")
+        workflow.set_finish_point("organize_chunks")
+    else:
+        workflow.set_finish_point("split_content")
 
     return workflow

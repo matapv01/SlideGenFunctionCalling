@@ -1,10 +1,25 @@
 # src/graph/stage.py
-from typing import List, Dict, Any, Literal
+import operator
+from typing import Annotated, List, Dict, Any, Literal
 from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
 # Define the allowed tool categories based on your TOOLS_DICT keys
 ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS']
+ImageRole = Literal['evidence', 'illustration', 'chart', 'diagram', 'photo']
+ImageOrientation = Literal['Wide', 'Tall', 'Square']
+
+
+class ImageSearchIntent(BaseModel):
+    """Planner-owned search intent; the backend executes the actual search."""
+
+    query: str = Field(
+        default="",
+        description="Two to five concise factual nouns or noun phrases.",
+    )
+    role: ImageRole = "illustration"
+    layout: ImageOrientation | None = None
+    required: bool = False
 
 
 class Evaluation(BaseModel):
@@ -17,18 +32,139 @@ class Evaluation(BaseModel):
 
 class SlidePlan(BaseModel):
     """Defines the structure of a slide plan."""
+    slide_topic: str = Field(
+        default="",
+        description=(
+            "A concise semantic subject for this slide. Use it to guide the "
+            "layout, editable text, icons, and image-search queries."
+        ),
+    )
+    slide_purpose: str = Field(
+        default="",
+        description=(
+            "One short sentence explaining the slide's main message in the "
+            "context of the whole deck. Mention the concrete subject, person, "
+            "event, place, time period, or relationship that a relevant visual "
+            "must support. This is semantic context for image verification, not "
+            "a layout instruction."
+        ),
+    )
     thought: str = Field(
-        description="A detailed creative brief for designing the slide. Describe the desired visual style, color palette, layout, typography, and whether to include images, icons, or specific visual elements. This should be a guide for the next step."
+        description=(
+            "A concise creative brief of at most two sentences covering the "
+            "message hierarchy, layout, and visual emphasis. Follow the shared "
+            "deck style contract; do not invent a separate palette or typography."
+        )
+    )
+    image_mode: Literal["none", "semantic"] = Field(
+        default="none",
+        description=(
+            "Default to none. Choose semantic only when an image is a concrete "
+            "subject or visual evidence must be searched directly. Never request "
+            "an image merely because a layout happens to contain an image slot."
+        ),
+    )
+    image_search_intents: List[ImageSearchIntent] = Field(
+        default_factory=list,
+        description=(
+            "Zero or one concise image-search intent for this slide. Use an intent "
+            "only when a real visual materially improves the slide. Each intent "
+            "contains query, role, and optional layout; the backend always limits "
+            "the search to its configured candidate count."
+        ),
+    )
+    visual_layout_request: str = Field(
+        default="",
+        description=(
+            "A short, domain-neutral visual direction for the slide. Describe the "
+            "visual role and composition, not a specific image URL or provider."
+        ),
     )
     action: ToolCategory = Field(
         description="The single, most appropriate category of tools to use for generating this slide."
     )
 
-class slide_context(TypedDict):
-    """Lưu trữ context của slide trước đó."""
-    content: str
-    function_call: Dict
-    image_path: str
+
+class SlidePlanBatch(BaseModel):
+    """Structured plans for a small planner batch."""
+
+    plans: List[SlidePlan] = Field(
+        default_factory=list,
+        description=(
+            "One plan for every requested slide, in the same order as the input."
+        ),
+    )
+
+
+class SlideRefinement(BaseModel):
+    """Final slide brief after image verification and visual reconciliation."""
+
+    slide_index: int = Field(default=0, ge=0)
+    final_content: str = Field(
+        default="",
+        description=(
+            "Presentation-ready content that preserves the source facts and "
+            "meaning while incorporating only grounded visual notes."
+        ),
+    )
+    visual_layout_request: str = Field(
+        default="",
+        description=(
+            "A concise layout request. If no approved image exists, describe a "
+            "clear no-image composition; otherwise explain how the approved image "
+            "supports the slide."
+        ),
+    )
+    retrieval_query: str = Field(
+        default="",
+        description=(
+            "A short factual query for the final document retrieval pass. Do not "
+            "include visual filler or unsupported facts."
+        ),
+    )
+    image_mode: Literal["none", "semantic"] = "none"
+
+
+class SlideRefinementBatch(BaseModel):
+    """Structured phase-two planner response for a small slide batch."""
+
+    refinements: List[SlideRefinement] = Field(default_factory=list)
+
+
+class DeckStylePlan(BaseModel):
+    """One visual contract shared by every slide in a deck."""
+
+    deck_topic: str = "Untitled presentation"
+    visual_direction: str = "Coherent editorial presentation with clear hierarchy"
+    theme_name: str = "Modern editorial"
+    font_family: str = "Arial"
+    title_font_min: int = 36
+    title_font_max: int = 48
+    body_font_min: int = 18
+    body_font_max: int = 28
+    background_color: str = "#F8FAFC"
+    primary_color: str = "#0F172A"
+    secondary_color: str = "#475569"
+    accent_color: str = "#0D9488"
+    text_color: str = "#1F2937"
+    image_style: str = "Clean editorial photography with consistent color grading"
+    chart_style: str = "Minimal charts with direct labels and restrained grid lines"
+    layout_density: Literal["airy", "balanced", "compact"] = "balanced"
+
+class SlideJob(TypedDict, total=False):
+    """Canonical scheduler input shared by every slide source."""
+
+    index: int
+    section_id: str
+    section_order: int
+    order_in_section: int
+    slide_type: str
+    content: Any
+    context_map: str
+    position: Any
+    plan: Dict[str, Any]
+    assigned_tool_candidates: List[str]
+    excluded_tools: List[str]
 
 class State(TypedDict, total=False):
     """
@@ -38,7 +174,6 @@ class State(TypedDict, total=False):
     # Input
     docx_file: str
     slide_options: Dict  # Options for slide generation
-    workflow_mode: str  # Workflow mode (auto, no_structure, manual)
     output_format: str  # XML-only output format
 
 
@@ -48,10 +183,41 @@ class State(TypedDict, total=False):
     plain_text: str  # Plain text content for auto-structure generation
 
     document_outline: List[Dict]
-    slide_chunks: List[str]
+    slide_chunks: List[Any]
+    slide_final_contents: List[str]
     slide_positions: List[Any]
+    section_ids: List[str]
     slide_context_maps: List[str]
     slide_plans: List[Dict]  # Contains 'action' field from planner (INTRO_TOOLS, etc.)
+    deck_style_plan: Dict[str, Any]
+    document_images: List[Dict[str, Any]]
+    document_image_assignments: List[Dict[str, Any]]
+    image_search_candidates: List[Dict[str, Any]]
+    approved_image_assignments: List[Dict[str, Any]]
+    slide_refinements: List[Dict[str, Any]]
+    user_request: str
+
+    # Parallel section orchestration. ``batch_results`` uses a reducer because
+    # multiple LangGraph Send workers write to it concurrently.
+    slide_jobs: List[Dict[str, Any]]
+    section_batches: List[Dict[str, Any]]
+    section_batch: Dict[str, Any]
+    batch_slide_jobs: List[Dict[str, Any]]
+    batch_id: str
+    batch_cursor: int
+    batch_done: bool
+    deck_slide_count: int
+    batch_results: Annotated[List[Dict[str, Any]], operator.add]
+    batch_layout_signatures: List[Dict[str, Any]]
+    duplicate_excluded_tools: List[str]
+    overflow_excluded_tools: List[str]
+    duplicate_retry_count: int
+    duplicate_detected: bool
+    layout_signature: Dict[str, Any]
+    duplicate_report: Dict[str, Any]
+    assigned_tool_candidates: List[str]
+    preferred_tool_name: str
+    layout_assignment_report: Dict[str, Any]
 
     # Slide generation loop state
     current_slide_index: int
@@ -59,6 +225,11 @@ class State(TypedDict, total=False):
     current_slide_text: str
     current_slide_plan: Dict
     current_slide_context_map: str
+    current_slide_position: Any
+    current_slide_type: str
+    current_document_images: List[Dict[str, Any]]
+    current_approved_images: List[Dict[str, Any]]
+    force_no_image_layout: bool
     current_tool_plan: List[Dict]
     current_search_history: List[Dict]
     current_tool_call: Dict
@@ -66,14 +237,16 @@ class State(TypedDict, total=False):
     current_xml_path: str
     current_image_path: str
     current_transitions: List[Dict[str, str]]
+    current_contrast_report: List[Dict[str, Any]]
     previous_image_path: str
-    previous_accepted_tool_call: Dict
-    previous_slide_context: slide_context
     highlight_color: str  # Color for highlighting key phrases in content slides
-    previous_transition_tool_call: Dict  # Store previous transition tool for consistency
+    candidate_tools: List[Any]  # Cached retrieved tools for retry attempts
+    last_processed_slide_index: int  # Track slide index to reset tool cache on new slide
 
     # Retry and evaluation state
     retry_count: int
+    executor_retry_count: int
+    overflow_retry_count: int
     llm : Any
     vlm_decision: str
     vlm_feedback: str
@@ -82,6 +255,8 @@ class State(TypedDict, total=False):
     overflow_report: Dict[str, Any]
     overflow_rewrite_count: int
     overflow_failed: bool
+    last_valid_xml_content: str
+    last_valid_tool_call: Dict[str, Any]
     executor_decision: str  # "pass" or "fail" from tool_call_executor
     executor_feedback: str  # Detailed error description from executor
 

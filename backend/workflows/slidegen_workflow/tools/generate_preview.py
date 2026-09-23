@@ -2,11 +2,14 @@ import sys
 import os
 import inspect
 
-# Add the tools directory to the path so we can import html_tool
-sys.path.append(r'c:\Users\hp\Documents\SlideGenFunctionCalling\backend\workflows\slidegen_workflow\tools')
-import html_tool
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-preview_dir = r'c:\Users\hp\Documents\SlideGenFunctionCalling\backend\workflows\slidegen_workflow\tools\preview_slides'
+from backend.workflows.slidegen_workflow.tools import xml_tool
+from backend.workflows.slidegen_workflow.utils.helper import render_xml_to_png
+
+preview_dir = os.path.join(os.path.dirname(__file__), "preview_slides")
 os.makedirs(preview_dir, exist_ok=True)
 
 index_html = '''<!DOCTYPE html>
@@ -38,18 +41,24 @@ a.slide-link.active { background: #007bff; color: white; border-color: #007bff; 
 '''
 
 # Find all generator functions
-functions = [f for f in inspect.getmembers(html_tool, inspect.isfunction) if f[0].startswith('generate_') and 'slide' in f[0] or 'thank_you' in f[0] or 'cutout' in f[0]]
+functions = [
+    f for f in inspect.getmembers(xml_tool, inspect.isfunction)
+    if f[0].startswith('generate_') and ('slide' in f[0] or 'thank_you' in f[0] or 'cutout' in f[0])
+]
 
 generated_count = 0
 for name, func in functions:
     try:
-        html_content = func()
-        if isinstance(html_content, str) and '<html' in html_content:
-            file_name = f'{name}.html'
-            file_path = os.path.join(preview_dir, file_name)
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-            index_html += f'<li><a href="{file_name}" class="slide-link" onclick="loadSlide(this, \'{file_name}\'); return false;">{name}</a></li>\n'
+        xml_content = func()
+        if isinstance(xml_content, str) and '<presentation' in xml_content:
+            xml_file_name = f'{name}.xml'
+            xml_file_path = os.path.join(preview_dir, xml_file_name)
+            png_file_name = f'{name}.png'
+            png_file_path = os.path.join(preview_dir, png_file_name)
+            with open(xml_file_path, 'w', encoding='utf-8') as f:
+                f.write(xml_content)
+            render_xml_to_png(xml_content, png_file_path)
+            index_html += f'<li><a href="{png_file_name}" class="slide-link" onclick="loadSlide(this, \'{png_file_name}\'); return false;">{name}</a></li>\n'
             generated_count += 1
     except Exception as e:
         print(f'Error generating {name}: {e}')
@@ -114,4 +123,5 @@ with open(index_path, 'w', encoding='utf-8') as f:
 
 print(f'\\nSUCCESS! Generated {generated_count} slides.')
 print(f'Please open this file in your browser to check them:')
-print(f'file:///{index_path.replace("\\\\", "/")}')
+index_url = index_path.replace("\\", "/")
+print(f'file:///{index_url}')

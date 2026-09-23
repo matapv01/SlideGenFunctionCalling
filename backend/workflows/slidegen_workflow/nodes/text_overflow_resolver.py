@@ -285,6 +285,7 @@ def _call_slide_rewriter(
     records: list[dict[str, Any]],
     tool_call: dict[str, Any],
     round_number: int,
+    request_limiter=None,
 ) -> dict[str, Any] | None:
     messages = _slide_rewrite_prompt(
         state,
@@ -294,12 +295,23 @@ def _call_slide_rewriter(
     )
     try:
         if hasattr(llm, "generate_completion"):
-            response = llm.generate_completion(
-                messages=messages,
-                temperature=0.2,
-            )
+            if request_limiter is None:
+                response = llm.generate_completion(
+                    messages=messages,
+                    temperature=0.2,
+                )
+            else:
+                with request_limiter.slot():
+                    response = llm.generate_completion(
+                        messages=messages,
+                        temperature=0.2,
+                    )
         elif hasattr(llm, "invoke"):
-            response = llm.invoke(messages)
+            if request_limiter is None:
+                response = llm.invoke(messages)
+            else:
+                with request_limiter.slot():
+                    response = llm.invoke(messages)
         else:
             logger.warning("Whole-slide overflow rewrite skipped: LLM has no invoke method")
             return None
@@ -525,12 +537,16 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             break
 
         llm_calls += 1
+        rewriter_kwargs = {}
+        if configurable.get("llm_request_limiter") is not None:
+            rewriter_kwargs["request_limiter"] = configurable["llm_request_limiter"]
         candidate_arguments = _call_slide_rewriter(
             llm,
             state,
             records,
             tool_call,
             round_number,
+            **rewriter_kwargs,
         )
         if candidate_arguments is None:
             skipped_unfixable += len(overflowing)
@@ -596,6 +612,10 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
         )
 
     state["current_xml_content"] = ET.tostring(root, encoding="unicode")
+    state["last_valid_xml_content"] = state["current_xml_content"]
+    current_tool_call = state.get("current_tool_call") or {}
+    if current_tool_call.get("name") not in {"PARSE_ERROR", "default_fallback"}:
+        state["last_valid_tool_call"] = current_tool_call
     # A rewrite may happen on the last allowed round.  ``records`` then still
     # describes the XML from before that rewrite; using it here reports a stale
     # overflow and can fail an otherwise repaired slide.  Always measure the
@@ -624,7 +644,7 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
     state["overflow_report"] = report
     remaining_overflow = report["overflowing_boxes"]
     if remaining_overflow:
-        retry_count = int(state.get("retry_count", 0))
+        retry_count = int(state.get("overflow_retry_count", 0))
         logger.error(
             "SLIDE OVERFLOW FAILURE: slide=%s remaining_overflow=%s "
             "measurement=%s retry=%s/%s",
@@ -650,14 +670,22 @@ async def resolve_text_overflow(state: State, config: dict[str, Any]) -> State:
             )
         else:
             state["overflow_failed"] = True
-            state["retry_count"] = retry_count + 1
+            state["overflow_retry_count"] = retry_count + 1
+            state["retry_count"] = int(state.get("retry_count", 0)) + 1
+            overflowing_tool = canonical_tool_name(
+                (state.get("current_tool_call") or {}).get("name")
+            )
+            excluded = list(state.get("overflow_excluded_tools") or [])
+            if overflowing_tool and overflowing_tool not in excluded:
+                excluded.append(overflowing_tool)
+            state["overflow_excluded_tools"] = excluded
             state["executor_decision"] = "fail"
             state["executor_feedback"] = (
                 "WHOLE-SLIDE OVERFLOW VALIDATION FAILED. Read the complete slide "
                 "content and regenerate the slide with all textual fields shortened "
-                "proportionally and harmoniously. First preserve the current design; "
-                "if its geometry still cannot fit the complete slide, choose a different "
-                "available XML layout tool with more suitable space. Preserve facts, "
+                "proportionally and harmoniously. The previous layout could not fit after "
+                "whole-slide repair, so use a different available XML layout with more "
+                "suitable space. Preserve facts, "
                 "numbers, names, images, colors, list structure, and mathematical expressions. "
                 "No textbox may exceed its bounds or the slide boundary. "
                 f"Remaining overflowing boxes: {remaining_overflow}."

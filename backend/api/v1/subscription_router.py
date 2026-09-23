@@ -31,8 +31,12 @@ async def get_subscription_info(
         tier=info["tier"],
         is_active=info["is_active"],
         expires_at=info["expires_at"],
+        usage_limits=info["usage_limits"],
         daily_limits=info["daily_limits"],
         current_usage=info["current_usage"],
+        usage_window_hours=info["usage_window_hours"],
+        usage_window_started_at=info["usage_window_started_at"],
+        usage_reset_at=info["usage_reset_at"],
         usage_reset_date=str(info["usage_reset_date"]),
         cancel_at_period_end=info.get("cancel_at_period_end", False)
     )

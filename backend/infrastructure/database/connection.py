@@ -4,7 +4,10 @@ import sqlite3
 import os
 from contextlib import contextmanager
 
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), "slidegen.db")
+DATABASE_PATH = os.getenv(
+    "SLIDEGEN_DATABASE_PATH",
+    os.path.join(os.path.dirname(__file__), "slidegen.db"),
+)
 
 
 @contextmanager
@@ -34,8 +37,19 @@ def init_db():
                 daily_usage_reset_date DATE DEFAULT CURRENT_DATE,
                 idea_usage_today INTEGER DEFAULT 0,
                 docx_usage_today INTEGER DEFAULT 0,
+                usage_window_started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                chat_usage_5h INTEGER DEFAULT 0,
+                chat_usage_credits_5h REAL DEFAULT 0,
+                chat_messages_5h INTEGER DEFAULT 0,
+                docx_usage_5h INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_active BOOLEAN DEFAULT 1
+                is_active BOOLEAN DEFAULT 1,
+                email_verified BOOLEAN NOT NULL DEFAULT 1,
+                is_admin BOOLEAN NOT NULL DEFAULT 0,
+                onboarding_completed BOOLEAN NOT NULL DEFAULT 1,
+                onboarding_use_cases TEXT,
+                onboarding_role TEXT,
+                workspace_tour_version INTEGER NOT NULL DEFAULT 1
             )
         """)
 
@@ -167,6 +181,112 @@ def init_db():
             )
         """)
 
+        # Chatbot sessions and short-term conversation memory. The chatbot is
+        # a separate application service, so its conversation state does not
+        # share the temporary structure/generation sessions above.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                project_id INTEGER,
+                title TEXT,
+                history_summary TEXT,
+                max_turns INTEGER NOT NULL DEFAULT 5,
+                archived BOOLEAN NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system', 'tool')),
+                content TEXT NOT NULL,
+                standalone_query TEXT,
+                model TEXT,
+                effort TEXT,
+                metadata_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES chatbot_sessions(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Canonical documents owned by the chatbot. The original DOCX is
+        # preprocessed into Markdown + hierarchical JSON before these rows
+        # are indexed for retrieval.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_documents (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                project_id INTEGER,
+                original_filename TEXT NOT NULL,
+                title TEXT,
+                status TEXT NOT NULL DEFAULT 'processing'
+                    CHECK (status IN ('processing', 'ready', 'failed')),
+                content_hash TEXT NOT NULL,
+                size_bytes INTEGER NOT NULL DEFAULT 0,
+                markdown_path TEXT,
+                structure_json TEXT,
+                images_json TEXT,
+                error_message TEXT,
+                chunk_index_version INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_session_documents (
+                session_id TEXT NOT NULL,
+                document_id TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (session_id, document_id),
+                FOREIGN KEY (session_id) REFERENCES chatbot_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (document_id) REFERENCES chatbot_documents(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_document_chunks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                document_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                section_path TEXT NOT NULL,
+                content TEXT NOT NULL,
+                level INTEGER NOT NULL DEFAULT 1,
+                node_key TEXT NOT NULL DEFAULT '',
+                parent_node_key TEXT,
+                node_kind TEXT NOT NULL DEFAULT 'content',
+                embedding_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(document_id, ordinal),
+                FOREIGN KEY (document_id) REFERENCES chatbot_documents(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Citation rows make retrieved sources auditable instead of keeping
+        # them only in an opaque assistant-message blob.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_message_citations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id INTEGER NOT NULL,
+                document_id TEXT NOT NULL,
+                chunk_id INTEGER NOT NULL,
+                similarity REAL NOT NULL,
+                citation_order INTEGER NOT NULL,
+                FOREIGN KEY (message_id) REFERENCES chatbot_messages(id) ON DELETE CASCADE,
+                FOREIGN KEY (document_id) REFERENCES chatbot_documents(id) ON DELETE CASCADE,
+                FOREIGN KEY (chunk_id) REFERENCES chatbot_document_chunks(id) ON DELETE CASCADE
+            )
+        """)
+
         # Subscription codes table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS subscription_codes (
@@ -208,6 +328,73 @@ def init_db():
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_usage_weights (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL,
+                name TEXT NOT NULL,
+                multiplier REAL NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(kind, name)
+            )
+        """)
+
+        # Runtime subscription policy is administrator-managed. These rows are
+        # only inserted when a database is first created; INSERT OR IGNORE
+        # preserves every value changed later from the admin console.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS subscription_plan_limits (
+                tier TEXT PRIMARY KEY,
+                chat_credits REAL NOT NULL,
+                docx_upload INTEGER NOT NULL,
+                max_docx_slides INTEGER NOT NULL,
+                max_docx_file_mb INTEGER NOT NULL DEFAULT 10,
+                max_docx_total_mb INTEGER NOT NULL DEFAULT 50,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # Existing databases may have the original four-column policy table;
+        # migrate it before the INSERT below uses the new byte-limit fields.
+        for statement in (
+            "ALTER TABLE subscription_plan_limits ADD COLUMN max_docx_file_mb INTEGER NOT NULL DEFAULT 10",
+            "ALTER TABLE subscription_plan_limits ADD COLUMN max_docx_total_mb INTEGER NOT NULL DEFAULT 50",
+        ):
+            try:
+                cursor.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
+        cursor.executemany(
+            """
+            INSERT OR IGNORE INTO chatbot_usage_weights (kind, name, multiplier)
+            VALUES (?, ?, ?)
+            """,
+            (
+                ("model", "genius-1", 0.75),
+                ("model", "genius-2", 0.875),
+                ("model", "genius-3", 1.0),
+                ("effort", "low", 0.75),
+                ("effort", "medium", 1.0),
+                ("effort", "high", 1.5),
+            ),
+        )
+        cursor.executemany(
+            """
+            INSERT OR IGNORE INTO subscription_plan_limits
+                (tier, chat_credits, docx_upload, max_docx_slides,
+                 max_docx_file_mb, max_docx_total_mb)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                # Keep first-install defaults aligned with the policy currently
+                # managed from the Admin page. INSERT OR IGNORE above ensures
+                # existing administrator-edited values remain authoritative.
+                ("free", 20, 3, 30, 30, 150),
+                ("plus", 50, 10, 50, 50, 250),
+                ("ultra", 100, 20, 50, 80, 400),
+            ),
+        )
+
         # Create indexes for better performance
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_slides_project_id ON slides(project_id)")
@@ -218,6 +405,34 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_collaborators_user ON project_collaborators(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_versions_project ON project_versions(project_id, created_at DESC)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_comments_project ON project_comments(project_id, created_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_user ON chatbot_sessions(user_id, updated_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_sessions_project ON chatbot_sessions(project_id, updated_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_messages_session ON chatbot_messages(session_id, id DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_documents_user ON chatbot_documents(user_id, updated_at DESC)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_documents_status ON chatbot_documents(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_session_documents_session ON chatbot_session_documents(session_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_document_chunks_document ON chatbot_document_chunks(document_id, ordinal)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_citations_message ON chatbot_message_citations(message_id, citation_order)")
+
+        # Add first-class generation choices to databases created before the
+        # chatbot model/effort fields were introduced.
+        for statement in (
+            "ALTER TABLE chatbot_messages ADD COLUMN model TEXT",
+            "ALTER TABLE chatbot_messages ADD COLUMN effort TEXT",
+            "ALTER TABLE chatbot_documents ADD COLUMN size_bytes INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE chatbot_documents ADD COLUMN chunk_index_version INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE chatbot_documents ADD COLUMN images_json TEXT",
+            "ALTER TABLE chatbot_document_chunks ADD COLUMN node_key TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE chatbot_document_chunks ADD COLUMN parent_node_key TEXT",
+            "ALTER TABLE chatbot_document_chunks ADD COLUMN node_kind TEXT NOT NULL DEFAULT 'content'",
+        ):
+            try:
+                cursor.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
+
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chatbot_document_chunks_tree ON chatbot_document_chunks(document_id, node_key, level)")
 
         # Migrate: add code_type column to existing DB if missing (must run before INSERT below)
         try:
@@ -248,6 +463,76 @@ def init_db():
             cursor.execute("ALTER TABLE users ADD COLUMN cancel_at_period_end BOOLEAN DEFAULT 0")
         except Exception:
             pass  # Column already exists
+
+        # Authorization is persisted per account. Existing databases receive
+        # a non-admin default and can then be managed from the admin console
+        # after the one-time CLI bootstrap.
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0")
+        except Exception:
+            pass  # Column already exists
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_admin ON users(is_admin)")
+
+        # Email verification is required once at registration. Legacy users
+        # are trusted as already verified so this migration never forces an
+        # existing account through a new login challenge.
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT 1")
+        except sqlite3.OperationalError as exc:
+            if "duplicate column name" not in str(exc).lower():
+                raise
+
+        # Existing accounts keep their workspace access. Newly registered
+        # accounts explicitly start with onboarding_completed = 0.
+        for statement in (
+            "ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT 1",
+            "ALTER TABLE users ADD COLUMN onboarding_use_cases TEXT",
+            "ALTER TABLE users ADD COLUMN onboarding_role TEXT",
+            "ALTER TABLE users ADD COLUMN workspace_tour_version INTEGER NOT NULL DEFAULT 1",
+        ):
+            try:
+                cursor.execute(statement)
+            except sqlite3.OperationalError as exc:
+                if "duplicate column name" not in str(exc).lower():
+                    raise
+
+        # Migrate usage from the old daily counters to the canonical rolling
+        # five-hour window. Existing counters are preserved for the first
+        # window, while new writes keep them synchronized for old clients.
+        for statement in (
+            "ALTER TABLE users ADD COLUMN usage_window_started_at TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN chat_usage_5h INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN chat_usage_credits_5h REAL DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN chat_messages_5h INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN docx_usage_5h INTEGER DEFAULT 0",
+        ):
+            try:
+                cursor.execute(statement)
+            except Exception:
+                pass  # Column already exists
+
+        cursor.execute("""
+            UPDATE users SET
+                usage_window_started_at = COALESCE(usage_window_started_at, datetime('now')),
+                chat_usage_5h = CASE
+                    WHEN COALESCE(chat_usage_5h, 0) = 0 THEN COALESCE(idea_usage_today, 0)
+                    ELSE chat_usage_5h
+                END,
+                chat_usage_credits_5h = CASE
+                    WHEN COALESCE(chat_usage_credits_5h, 0) = 0
+                        THEN COALESCE(NULLIF(chat_usage_5h, 0), idea_usage_today, 0)
+                    ELSE chat_usage_credits_5h
+                END,
+                chat_messages_5h = CASE
+                    WHEN COALESCE(chat_messages_5h, 0) = 0
+                        THEN COALESCE(NULLIF(chat_usage_5h, 0), idea_usage_today, 0)
+                    ELSE chat_messages_5h
+                END,
+                docx_usage_5h = CASE
+                    WHEN COALESCE(docx_usage_5h, 0) = 0 THEN COALESCE(docx_usage_today, 0)
+                    ELSE docx_usage_5h
+                END
+        """)
 
         # Migrate existing paid users with NULL expires_at → set 30-day expiry from now
         cursor.execute("""

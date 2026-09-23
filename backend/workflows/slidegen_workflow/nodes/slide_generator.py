@@ -1,71 +1,29 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_generator.py
-import os
 import json
 import time
-from openai import OpenAI
-from langchain_core.messages import SystemMessage
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
-from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
-from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
-from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K, COT_MAX_TOKENS
-from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
+    TOOLS_DICT as XML_TOOLS_DICT,
+    constrain_tool_call_to_candidates,
+)
+from backend.config import (
+    TOOL_RETRIEVER_TOP_K,
+)
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    tool_matches_image_mode,
+)
 from backend.workflows.slidegen_workflow.utils.prompts import (
-    QWEN_GENERATOR_SYSTEM_PROMPT,
-    QWEN_COT_GENERATOR_SYSTEM_PROMPT,
-    QWEN_GENERATOR_HUMAN_TEMPLATE,
     HUMAN_PROMPT_TEMPLATE,
     XML_CONTENT_PROMPT,
     MATH_EQUATION_RULES,
-    SLIDE_PREPARER_SYSTEM_PROMPT,
-    SLIDE_PREPARER_HUMAN_TEMPLATE,
-    IMAGE_SEARCH_EXECUTION_PLAN_RULES,
+    NATIVE_TOOL_CALLING_SYSTEM_PROMPT,
 )
 
-from backend.workflows.slidegen_workflow.utils.helper import (
-    format_tool_for_qwen,
-    parse_tool_calls_json,
-    QWEN_CHAT_TEMPLATE,
+from backend.workflows.slidegen_workflow.utils.deck_style import (
+    apply_deck_style_to_tool_call,
 )
-
-_tokenizer_cache = {}
-
-# Keys that carry slide *content* — these must NOT leak into the next slide's prompt
-_CONTENT_KEYS = frozenset({
-    # text / titles
-    "main_title", "subtitle", "subtitle1", "subtitle2", "content_text",
-    "description_text", "header_text", "headline", "top_text", "title",
-    "author_line", "top_left_text", "bottom_text", "year",
-    "section_title", "section_subtitle",
-    # body content
-    "main_content", "content1", "content2", "content3", "content4",
-    "left_title", "right_title", "left_text", "right_text",
-    "left_content", "right_content", "description",
-    # list / structured content
-    "items", "agenda_items", "mission_items", "list_items", "steps",
-    # image alt text (content-specific)
-    "image_alt_text",
-})
-
-
-def _extract_style_params(tool_call: dict) -> dict:
-    """
-    Return a copy of *tool_call* that keeps only style-related parameters
-    (colors, fonts, opacity, layout, image URLs) and removes content fields
-    so the LLM won't copy text from the previous slide.
-    """
-    if not tool_call:
-        return {}
-    
-    result = {"name": tool_call.get("name", "")}
-    args = tool_call.get("arguments", {})
-    
-    style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
-    result["arguments"] = style_args
-    return result
 
 
 
@@ -90,93 +48,57 @@ def _format_content_as_str(content) -> str:
     return str(content) if content is not None else ""
 
 
-def _build_tool_description_text(tool_schemas: list) -> str:
-    """Build a structured section listing available layout tools and parameter constraints for the LLM."""
-    lines = [
-        "AVAILABLE LAYOUT TOOLS (YOU MUST SELECT EXACTLY ONE TOOL FROM THIS LIST):",
-        "Below are the allowed layout tools for this slide. You MUST pick the single best matching tool from this list and strictly supply all required parameters:"
+def _normalize_native_tool_calls(response) -> list[dict]:
+    """Convert a LangChain AIMessage's native calls to the workflow format."""
+    normalized = []
+    for tool_call in getattr(response, "tool_calls", None) or []:
+        if not isinstance(tool_call, dict):
+            continue
+        function = tool_call.get("function", tool_call)
+        if not isinstance(function, dict):
+            continue
+        name = tool_call.get("name") or function.get("name")
+        arguments = tool_call.get("args")
+        if arguments is None:
+            arguments = tool_call.get("arguments", function.get("arguments", {}))
+        if isinstance(arguments, str):
+            try:
+                arguments = json.loads(arguments)
+            except json.JSONDecodeError:
+                arguments = {}
+        if not isinstance(arguments, dict) or not name:
+            continue
+        normalized.append({"name": name, "arguments": arguments})
+    return normalized
+
+
+def _resolve_image_mode(plan: dict) -> str:
+    """Resolve the explicit planner mode with a conservative default."""
+    explicit_mode = str((plan or {}).get("image_mode") or "").lower()
+    if explicit_mode in {"none", "semantic"}:
+        return explicit_mode
+    return "none"
+
+
+def _filter_tools_by_image_mode(
+    tools: list,
+    image_mode: str,
+    approved_image_count: int | None = None,
+) -> list:
+    """Keep retriever candidates compatible with the planner's image mode."""
+    if image_mode not in {"none", "semantic"}:
+        return list(tools)
+    return [
+        tool
+        for tool in tools
+        if tool_matches_image_mode(tool, image_mode, approved_image_count)
     ]
-    for schema in tool_schemas:
-        func = schema.get("function", {})
-        name = func.get("name", "?")
-        desc = func.get("description", "")
-        params = func.get("parameters", {})
-        properties = params.get("properties", {})
-        required = params.get("required", [])
-        
-        lines.append(f"\n• Tool Name: `{name}`")
-        lines.append(f"  Description: {desc}")
-        
-        param_desc_list = []
-        for prop_name, prop_spec in properties.items():
-            prop_type = prop_spec.get("type", "any")
-            is_req = " (REQUIRED)" if prop_name in required else ""
-            
-            if prop_type == "array":
-                item_spec = prop_spec.get("items", {})
-                if item_spec.get("type") == "object":
-                    item_props = list(item_spec.get("properties", {}).keys())
-                    param_desc_list.append(f"`{prop_name}`: List[dict with keys: {item_props}]{is_req}")
-                else:
-                    item_type = item_spec.get("type", "string")
-                    param_desc_list.append(f"`{prop_name}`: List[{item_type}]{is_req}")
-            else:
-                param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
-                
-        if param_desc_list:
-            lines.append(f"  Parameters: {', '.join(param_desc_list)}")
-            
-    return "\n".join(lines)
 
-
-def _get_qwen_tokenizer(model_name: str):
-    if model_name not in _tokenizer_cache:
-        tok = AutoTokenizer.from_pretrained(model_name)
-        tok.chat_template = QWEN_CHAT_TEMPLATE
-        tok.pad_token = tok.eos_token
-        _tokenizer_cache[model_name] = tok
-    return _tokenizer_cache[model_name]
-
-
-def _get_qwen_config(llm):
-    """Extract (model_name, base_url, api_key) from any LLM wrapper or environment."""
-    model_name = (
-        getattr(llm, 'model_name', None) or 
-        getattr(llm, 'model', None) or 
-        os.environ.get("OPENAI_MODEL", "Qwen/Qwen3-8B")
-    )
-    base_url = (
-        getattr(llm, 'openai_api_base', None) or 
-        getattr(llm, 'base_url', None) or 
-        os.environ.get("OPENAI_BASE_URL", None)
-    )
-    api_key = (
-        getattr(llm, 'openai_api_key', None) or 
-        getattr(llm, 'api_key', None) or 
-        os.environ.get("NVIDIA_API_KEY") or 
-        os.environ.get("OPENAI_API_KEY") or 
-        'not-needed'
-    )
-    return model_name, base_url, api_key
-
-
-def _check_is_qwen(llm) -> bool:
-    """Helper to detect if the loaded LLM is a Qwen variant or NVIDIA API Qwen."""
-    model_name = ""
-    for attr in ["model", "model_name", "model_id"]:
-        if hasattr(llm, attr):
-            model_name = str(getattr(llm, attr)).lower()
-            break
-    if not model_name:
-        model_name = os.environ.get("OPENAI_MODEL", "").lower()
-    
-    base_url = str(getattr(llm, 'base_url', '') or getattr(llm, 'openai_api_base', '') or os.environ.get("OPENAI_BASE_URL", "")).lower()
-    return "qwen" in model_name or "nvidia" in base_url or "nvidia" in model_name
 
 def generate_slide(state: State, config: RunnableConfig) -> State:
     """
     Node for slide generation: Prepares tools/instructions, then invokes the LLM.
-    Supports separate execution paths for Gemini (structured tool binding) and Qwen (native JSON generation).
+    Uses the injected LangChain chat model with native tool binding.
     """
     print("\n---------------- Executing Node: slide_generator (Merged) ----------------")
     start_time = time.time()
@@ -186,7 +108,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     llm = configurable.get('llm')
     if not llm:
         raise ValueError("LLM instance not found in config.")
-        
+
     tool_retriever = configurable.get('tool_retriever')
     all_tools_dict = configurable.get('tools_dict', XML_TOOLS_DICT)
     requested_output_format = str(
@@ -196,13 +118,18 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     ).lower()
     if requested_output_format != 'xml':
         raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
-    output_format = 'xml'
     # The XML FAISS retriever is injected through the workflow config. Keep it
     # enabled so the LLM receives only the most relevant tools for this slide.
-    planner_llm = configurable.get('planner_llm') or llm
     
     # 2. Get dynamic data from state
     idx = state['current_slide_index']
+    
+    # If moving to a new slide index, clear cached candidate_tools and design_instruction from previous slide
+    if state.get("last_processed_slide_index") != idx:
+        state["candidate_tools"] = None
+        state["design_instruction"] = None
+        state["force_no_image_layout"] = False
+        state["last_processed_slide_index"] = idx
     current_text = state.get("current_slide_text", "")
     current_plan = state.get('current_slide_plan')
     current_context_map = state.get('current_slide_context_map')
@@ -213,55 +140,195 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         eval_parts.append(f"[EXECUTOR VALIDATION FEEDBACK]\n{executor_fb}")
     if vlm_fb and vlm_fb != "No feedback provided.":
         eval_parts.append(f"[VLM VISUAL FEEDBACK]\n{vlm_fb}")
-    previous_evaluation = "\n\n".join(eval_parts) if eval_parts else "No evaluation yet."
-    previous_function_call = state.get('current_tool_call', {})
-    previous_slide_function_call = state.get('previous_accepted_tool_call', {})
+    previous_evaluation = (
+        "\n\n".join(eval_parts)
+        if eval_parts
+        else "None — this is the first attempt for this slide."
+    )
+    # This is the previous attempt for the same slide, used only on retry.
+    # Slides in parallel workers never inherit another slide's tool call.
+    previous_function_call = state.get('current_tool_call') or {}
+    deck_style_plan = state.get('deck_style_plan', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
+    presentation_instruction = str(
+        (state.get("slide_options") or {}).get("presentation_instruction") or ""
+    ).strip()
+    approved_images = [
+        image for image in state.get("current_approved_images") or []
+        if isinstance(image, dict)
+    ]
     
     if isinstance(current_text, (dict, list)):
         current_text = _format_content_as_str(current_text)
     if not current_text:
         current_text = "Default slide content"
+
+    if approved_images:
+        verified_image_context = "\n".join(
+            json.dumps(
+                {
+                    "source_id": image.get("source_id") or image.get("image_id"),
+                    "source_type": image.get("source_type"),
+                    "source_url": image.get("source_url") or image.get("source_path"),
+                    "role": image.get("role", "illustration"),
+                    "visual_notes": image.get("visual_notes", ""),
+                    "caption_hint": image.get("caption_hint", ""),
+                    "placement_hint": image.get("placement_hint", ""),
+                },
+                ensure_ascii=False,
+            )
+            for image in approved_images
+        )
+        current_context_map = (
+            f"{current_context_map or ''}\n{verified_image_context}"
+        ).strip()
         
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '')
-    
+    slide_topic = str(current_plan.get('slide_topic') or creative_thought)
+    image_mode = (
+        "none"
+        if state.get("force_no_image_layout")
+        else _resolve_image_mode(current_plan)
+    )
+
+    # An approved image is a concrete asset, not a suggestion. Prefer an
+    # image-capable layout so the executor can inject it deterministically.
+    if approved_images and not state.get("force_no_image_layout"):
+        image_mode = "semantic"
+
+    approved_image_count = len(approved_images)
+    if image_mode == "semantic":
+        has_compatible_image_layout = any(
+            tool_matches_image_mode(tool, "semantic", approved_image_count)
+            for tools in all_tools_dict.values()
+            for tool in tools
+        )
+        if not has_compatible_image_layout:
+            # Do not select a gallery layout that needs more assets than the
+            # verifier approved. A clean no-image layout is deterministic and
+            # avoids a late executor retry with a blank image area.
+            print(
+                "  -> No compatible image layout for approved asset count; "
+                "switching to no-image composition"
+            )
+            state["force_no_image_layout"] = True
+            image_mode = "none"
+
     print(f"--- Preparing & Generating slide {idx + 1}/{length_slide_chunks} ---")
     print(f"  -> Category: '{tool_category}'")
     
-    # 3. Retrieve relevant tools
+    # 3. Retrieve relevant tools (Reuse candidate_tools if available in state for retries)
     my_tools = []
-    if tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
-        prev_transition_tool_name = state['previous_transition_tool_call'].get('name')
-        if prev_transition_tool_name:
-            all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
-            matching_tool = next((t for t in all_transition_tools if t.name == prev_transition_tool_name), None)
-            if matching_tool:
-                my_tools = [matching_tool]
-                print(f"  -> Reusing transition tool for consistency: {prev_transition_tool_name}")
-                
+    assigned_names = list(state.get("assigned_tool_candidates") or [])
+    excluded_tools = {
+        *list(state.get("duplicate_excluded_tools") or []),
+        *list(state.get("overflow_excluded_tools") or []),
+    }
+    if assigned_names:
+        category_tools = _filter_tools_by_image_mode(
+            all_tools_dict.get(tool_category, []),
+            image_mode,
+            approved_image_count,
+        )
+        category_lookup = {
+            tool.name: tool for tool in category_tools
+        }
+        selected_name = next(
+            (name for name in assigned_names if name not in excluded_tools and name in category_lookup),
+            None,
+        )
+        if selected_name:
+            my_tools = [category_lookup[selected_name]]
+            print(f"  -> Using deck-assigned layout: {selected_name}")
+
+    if not my_tools and state.get("candidate_tools"):
+        cached = [
+            tool
+            for tool in state["candidate_tools"]
+            if getattr(tool, "name", "") not in excluded_tools
+        ]
+        cached = _filter_tools_by_image_mode(
+            cached,
+            image_mode,
+            approved_image_count,
+        )
+        if cached:
+            my_tools = cached
+            print(f"  -> Reusing {len(my_tools)} cached tools from state (retry attempt)")
+
     if not my_tools:
         if tool_retriever:
             try:
                 retrieved_tools = tool_retriever.get_relevant_tools(
                     category=tool_category,
-                    query=creative_thought,
-                    top_k=TOOL_RETRIEVER_TOP_K,
+                    query=slide_topic or creative_thought,
+                    top_k=max(
+                        TOOL_RETRIEVER_TOP_K,
+                        len(all_tools_dict.get(tool_category, [])),
+                    ),
                     current_slide_index=idx
                 )
-                my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+                retrieved_tools = _filter_tools_by_image_mode(
+                    retrieved_tools or [],
+                    image_mode,
+                    approved_image_count,
+                )[:TOOL_RETRIEVER_TOP_K]
+                if retrieved_tools:
+                    my_tools = retrieved_tools
+                else:
+                    # FAISS returned 0 results for this category (e.g. CHART_TOOLS, TEAM_TOOLS
+                    # when no dedicated tools are registered). Fall back to category list first,
+                    # then CONTENT_TOOLS — but cap at TOOL_RETRIEVER_TOP_K to avoid overflowing
+                    # remote models with tight context windows (e.g. 10 000 tokens).
+                    my_tools = _filter_tools_by_image_mode(
+                        all_tools_dict.get(tool_category, []),
+                        image_mode,
+                        approved_image_count,
+                    )[:TOOL_RETRIEVER_TOP_K]
                 print(
                     f"  -> FAISS selected {len(retrieved_tools)} tools for '{tool_category}': "
                     f"{[tool.name for tool in retrieved_tools]}"
                 )
             except Exception as e:
                 print(f"⚠️ tool_retriever error ({e}), falling back to category tools for '{tool_category}'")
-                my_tools = all_tools_dict.get(tool_category, [])
+                my_tools = _filter_tools_by_image_mode(
+                    all_tools_dict.get(tool_category, []),
+                    image_mode,
+                    approved_image_count,
+                )[:TOOL_RETRIEVER_TOP_K]
         else:
-            my_tools = all_tools_dict.get(tool_category, [])
-        
+            my_tools = _filter_tools_by_image_mode(
+                all_tools_dict.get(tool_category, []),
+                image_mode,
+                approved_image_count,
+            )[:TOOL_RETRIEVER_TOP_K]
+
     if not my_tools:
-        my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
+        # Last-resort fallback: cap to avoid context overflow on remote models
+        my_tools = _filter_tools_by_image_mode(
+            all_tools_dict.get('CONTENT_TOOLS', []),
+            image_mode,
+            approved_image_count,
+        )[:TOOL_RETRIEVER_TOP_K]
+
+    # A duplicate-layout retry excludes the rejected layout tool. This is a
+    # retry constraint, not a permanent per-tool quota.
+    if excluded_tools:
+        filtered_tools = [tool for tool in my_tools if tool.name not in excluded_tools]
+        if not filtered_tools:
+            filtered_tools = [
+                tool for tool in all_tools_dict.get(tool_category, [])
+                if tool.name not in excluded_tools
+                and tool_matches_image_mode(
+                    tool,
+                    image_mode,
+                    approved_image_count,
+                )
+            ]
+        if filtered_tools:
+            my_tools = filtered_tools
+            print(f"  -> Excluding duplicate layouts: {sorted(excluded_tools)}")
         
     print(f"  -> Prepared {len(my_tools)} tools: {[t.name for t in my_tools]}")
     
@@ -269,265 +336,198 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
     generator_system_prompt = XML_CONTENT_PROMPT
     if slide_type == 'TRANSITION_TOOLS':
-        previous_transition = state.get('previous_transition_tool_call', {})
-        if previous_transition:
-            prev_tool_name = previous_transition.get('name', 'unknown')
-            prev_args = previous_transition.get('arguments', {})
-            args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
-            
-            transition_context = f"""* PREVIOUS TRANSITION details:
-  - Tool used: {prev_tool_name}
-  - Parameters used:
-{args_text}
+        generator_system_prompt += """
 
-* YOU MUST match these parameters EXACTLY:
-  - Same font sizes, colors, background
-  - Same text formatting style (numbered/unnumbered)
-  - Same visual elements and layout
-  - If previous had "1." then use "2.", "3." etc. in sequence
-  - If previous had no numbers, don't add numbers
-* ONLY change the text content to match the new section heading"""
-        else:
-            transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        generator_system_prompt += f"\n\n{transition_context}"
+TRANSITION SLIDE CONTRACT:
+- Generate this transition independently from every other slide.
+- Use the assigned transition layout and the immutable deck style contract.
+- Keep the transition title aligned with the slide topic and section context.
+- Do not copy or infer parameters from a previous tool call.
+"""
         
     generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + generator_system_prompt
     
-    # 5. Extract history for recent tools
-    recent_tools_list = []
-    if hasattr(tool_retriever, 'tool_usage_history') and tool_category in tool_retriever.tool_usage_history:
-        history = list(tool_retriever.tool_usage_history[tool_category])
-        history.reverse()
-        seen = set()
-        for t_name, _ in history:
-            if t_name not in seen:
-                recent_tools_list.append(f"- {t_name}")
-                seen.add(t_name)
-                if len(recent_tools_list) >= 3:
-                    break
-    recent_tools_str = "\n".join(recent_tools_list) if recent_tools_list else "- (None used recently)"
-    
-    # 6. Format Style Context
-    style_context_str = json.dumps(_extract_style_params(previous_slide_function_call), indent=2)
-    
-    # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide
-    print("  -> Calling Gemini to prepare design instructions...")
-    design_instruction = creative_thought
-    if planner_llm:
-        try:
-            human_msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
-                previous_style_context=style_context_str,
-                slide_plan=json.dumps(current_plan, indent=2),
-                slide_content=current_text
-            )
-            messages = [
-                {"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
-                {"role": "user", "content": human_msg}
-            ]
-            response = planner_llm.invoke(messages)
-            if hasattr(response, "content") and response.content:
-                design_instruction = response.content.strip()
-                print("  -> Prepared Instruction:")
-                print("     " + design_instruction.replace("\n", "\n     "))
-        except Exception as e:
-            print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
+    # 5. The deck contract and layout assignment are immutable inputs. Do not
+    # read mutable tool history from another slide worker.
+    assigned_tool_name = str(state.get("preferred_tool_name") or "").strip()
+    recent_tools_str = (
+        "The previous image layout was rejected by the image verifier. Choose "
+        "only a supplied XML layout with no image parameters."
+        if state.get("force_no_image_layout")
+        else (
+            f"Use only the assigned XML layout tool: {assigned_tool_name}"
+            if assigned_tool_name
+            else "No layout was pre-assigned; choose one supplied XML layout tool."
+        )
+    )
+    style_context_str = json.dumps(deck_style_plan, ensure_ascii=False, indent=2)
+
+    # 6. Reuse the planner's creative brief. Planning and deck-style planning
+    # already own their LLM calls; slide generation should make exactly one
+    # generation call and should not invoke a second hidden preparer model.
+    design_instruction = str(current_plan.get("visual_layout_request") or "").strip()
+    if not design_instruction:
+        design_instruction = state.get("design_instruction")
+    if not design_instruction:
+        design_instruction = creative_thought
             
-    # Assign prepared values. The image-search plan is produced by this same
-    # generator invocation; no later LLM call is allowed to create search specs.
-    image_search_rules = IMAGE_SEARCH_EXECUTION_PLAN_RULES
     output_format_rules = """
 
-OUTPUT FORMAT: XML ONLY
-- Use only the selected XML slide tool from the available list.
-- The tool must return the complete XML presentation/slide content.
-- Do not generate CSS, markdown, or a prose explanation.
+OUTPUT FORMAT: TOOL CALLS ONLY
+- Invoke exactly one XML slide tool from the native tools supplied for this request; do not write the XML document yourself.
+- Return native tool calls only. Do not return raw arguments, CSS, markdown, or a prose explanation.
 - Keep text values as plain editable text accepted by the XML tool schema.
 - The only allowed inline control syntax is [[hl color="#RRGGBB"]]phrase[[/hl]] for text-color emphasis; it is removed before final XML generation.
 """
 
     system_prompt = (
         generator_system_prompt
-        + "\n\n"
-        + image_search_rules
         + output_format_rules
     )
-    qwen_system_prompt = (
-        QWEN_GENERATOR_SYSTEM_PROMPT
-        + "\n\n"
-        + generator_system_prompt
-        + "\n\n"
-        + image_search_rules
-        + output_format_rules
-    )
-    human_template = HUMAN_PROMPT_TEMPLATE
-    generator_tools = [SEARCH_DDGS_TOOL, *my_tools]
-            
-    is_qwen = _check_is_qwen(llm)
-    model_name, base_url, api_key = _get_qwen_config(llm)
-    print(f"  -> Model Mode: {'QWEN / OPENAI API (' + str(model_name) + ' @ ' + str(base_url or 'Local') + ')' if is_qwen else 'GEMINI / API'}")
-    content = ""
-    
-    # Format human prompt variables
-    human_vars = {
-        "slide_context_map": current_context_map,
-        "previous_slide_function_call": style_context_str,
-        "recent_tools": recent_tools_str,
-        "slide_plan": json.dumps(current_plan, indent=2),
-        "slide_content": current_text,
-        "previous_function_call": json.dumps(previous_function_call, indent=2),
-        "previous_evaluation": previous_evaluation,
-        "slide_index": idx + 1,
-        "length_slide_chunks": length_slide_chunks,
-    }
-    
-    # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
-    if is_qwen:
-        tool_schemas = [format_tool_for_qwen(t) for t in generator_tools]
+    native_system_prompt = system_prompt + "\n\n" + NATIVE_TOOL_CALLING_SYSTEM_PROMPT
+    generator_tools = list(my_tools)
 
-        qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
-            style_context=style_context_str,
-            design_instruction=design_instruction,
-            slide_content=current_text
-        )
-
-        prev_tool_to_show = previous_function_call
-        if prev_tool_to_show.get("name") == "default_fallback" and state.get("last_valid_tool_call"):
-            prev_tool_to_show = state["last_valid_tool_call"]
-
-        if prev_tool_to_show and prev_tool_to_show != {} and prev_tool_to_show.get("name") != "default_fallback":
-            qwen_user_prompt += f"\n\n[YOUR PREVIOUS TOOL CALL ATTEMPT]\n{json.dumps(prev_tool_to_show, indent=2)}"
-
-        full_feedback = (previous_evaluation if previous_evaluation != "No evaluation yet." else "")
-        if full_feedback.strip():
-            qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{full_feedback.strip()}"
-
-        # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
-        use_cot = state.get("use_cot", True)
-        qwen_base_sys = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
-        tool_desc_text = _build_tool_description_text(tool_schemas)
-        full_qwen_system_prompt = (
-            generator_system_prompt
-            + "\n\n"
-            + image_search_rules
-            + "\n\n"
-            + qwen_base_sys
-            + "\n\n"
-            + tool_desc_text
-            + output_format_rules
-        )
-        messages = [
-            {"role": "system", "content": full_qwen_system_prompt},
-            {"role": "user", "content": qwen_user_prompt},
-        ]
-        model_name, base_url, api_key = _get_qwen_config(llm)
-        client = OpenAI(base_url=base_url, api_key=api_key)
-        
-        try:
-            # Primary API path: OpenAI-compatible ChatCompletions (works for NVIDIA API, vLLM, OpenAI)
-            max_tokens_val = getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000)
-            resp = client.chat.completions.create(
-                model=model_name,
-                messages=messages,
-                max_tokens=max_tokens_val,
-                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+    # The configured LangChain chat model owns tool schemas and transport.
+    human_prompt = HUMAN_PROMPT_TEMPLATE.format(
+        slide_context_map=current_context_map,
+        deck_style_contract=style_context_str,
+        slide_topic=slide_topic,
+        presentation_instruction=presentation_instruction,
+        image_mode=image_mode,
+        visual_layout_request=str(current_plan.get("visual_layout_request") or ""),
+        approved_images=(
+            json.dumps(
+                [
+                    {
+                        "source_id": image.get("source_id") or image.get("image_id"),
+                        "source_url": image.get("source_url") or image.get("source_path"),
+                        "role": image.get("role", "illustration"),
+                        "visual_notes": image.get("visual_notes", ""),
+                        "caption_hint": image.get("caption_hint", ""),
+                        "placement_hint": image.get("placement_hint", ""),
+                    }
+                    for image in approved_images
+                ],
+                ensure_ascii=False,
+                indent=2,
             )
-            content = (resp.choices[0].message.content or "").strip()
-        except Exception as api_err:
-            print(f"⚠️ ChatCompletions API failed ({api_err}), attempting local raw completions fallback...")
-            try:
-                tokenizer = _get_qwen_tokenizer(model_name)
-                prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
-                resp = client.completions.create(
-                    model=model_name,
-                    prompt=prompt,
-                    max_tokens=max_tokens_val,
-                    temperature=getattr(llm, 'temperature', 0.5) or 0.5,
-                    stop=["<|im_end|>"],
-                )
-                content = (resp.choices[0].text or "").strip()
-            except Exception as fallback_err:
-                print(f"❌ Qwen generation failed: {fallback_err}")
-                content = ""
-        
-    # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
-    else:
-        gemini_vars = {**human_vars, "design_instruction": design_instruction}
-        llm_with_tools = llm.bind_tools(generator_tools)
-        slidegen_prompt = ChatPromptTemplate.from_messages([
-            # Keep the assembled system prompt as a fixed message. It contains
-            # LaTeX/JSON braces and may also include a previous tool call;
-            # parsing it as a LangChain template causes "unexpected '{'" errors.
-            SystemMessage(content=system_prompt),
-            ("human", human_template)
-        ])
-        slide_generator_runnable = slidegen_prompt | llm_with_tools
-        response = slide_generator_runnable.invoke(gemini_vars)
-        
+            if approved_images
+            else "None — use a layout with no image fields."
+        ),
+        recent_tools=recent_tools_str,
+        slide_plan=json.dumps(current_plan, indent=2),
+        slide_content=current_text,
+        previous_function_call=(
+            json.dumps(previous_function_call, indent=2)
+            if previous_function_call
+            else "None — this is the first attempt for this slide."
+        ),
+        previous_evaluation=previous_evaluation,
+        slide_index=idx + 1,
+        length_slide_chunks=length_slide_chunks,
+        design_instruction=design_instruction,
+    )
+    messages = [
+        {"role": "system", "content": native_system_prompt},
+        {"role": "user", "content": human_prompt},
+    ]
+    raw_llm_prompt = json.dumps(messages, ensure_ascii=False)
+    content = ""
+    response = None
+    native_tool_calls = []
+    raw_llm_response = ""
+
+    try:
+        request_limiter = configurable.get("llm_request_limiter")
+        bound_llm = llm.bind_tools(
+            generator_tools,
+            tool_choice="required",
+            parallel_tool_calls=True,
+        )
+        if request_limiter is None:
+            response = bound_llm.invoke(messages)
+        else:
+            with request_limiter.slot():
+                response = bound_llm.invoke(messages)
+        native_tool_calls = _normalize_native_tool_calls(response)
+        content = getattr(response, "content", "") or ""
+        if not isinstance(content, str):
+            content = json.dumps(content, ensure_ascii=False)
+        content = content.strip()
+        raw_llm_response = json.dumps(
+            {
+                "content": content,
+                "tool_calls": native_tool_calls,
+            },
+            ensure_ascii=False,
+            default=str,
+        )
+    except Exception as invoke_err:
+        print(f"❌ LLM tool invocation failed: {invoke_err}")
+        raw_llm_response = ""
+
     # 3. Parse JSON / Extract tool call
     tool_call_dict = None
-    tool_plan = []
+    tool_plan = native_tool_calls
 
-    if is_qwen:
-        # Qwen path: raw text from completions endpoint
-        tool_plan = parse_tool_calls_json(content)
-    else:
-        # Gemini path: structured tool calls
-        if hasattr(response, "tool_calls") and response.tool_calls:
-            tool_plan = [
-                {
-                    "name": tc.get("name"),
-                    "arguments": tc.get("args", {}),
-                }
-                for tc in response.tool_calls
-            ]
-            content = json.dumps({"tool_calls": tool_plan}, ensure_ascii=False)
-        else:
-            content = getattr(response, "content", "")
-            tool_plan = parse_tool_calls_json(content)
-            try:
-                cleaned_text = content.strip()
-                if "```json" in cleaned_text:
-                    cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
-                elif "```" in cleaned_text:
-                    cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
-
-                parsed_json = json.loads(cleaned_text)
-                if isinstance(parsed_json, list) and len(parsed_json) > 0:
-                    parsed_json = parsed_json[0]
-
-                if isinstance(parsed_json, dict) and "name" in parsed_json:
-                    tool_call_dict = {
-                        "name": parsed_json["name"],
-                        "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
-                    }
-            except Exception as parse_err:
-                print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
-            
-    for call in tool_plan:
-        if call.get("name") != SEARCH_DDGS_TOOL.name:
-            tool_call_dict = call
-            break
+    if tool_plan:
+        tool_call_dict = tool_plan[0]
 
     if not tool_call_dict:
-        print("❌ You did NOT generate any function call. Setting default fallback.")
-        tool_call_dict = {"name": "default_fallback", "arguments": {}}
+        raw_text = (content or "").strip()
+        if not raw_text:
+            failure_reason = "NO_OUTPUT_GENERATED: The model returned an empty response. You MUST generate a slide tool call."
+        else:
+            failure_reason = (
+                "MISSING_NATIVE_TOOL_CALL: The model returned text instead of invoking "
+                "one of the supplied slide tools. Return a native function/tool call only."
+            )
+
+        print(f"❌ Tool extraction failed: {failure_reason}")
+        print(f"  -> Raw model response preview: {raw_text[:1000]!r}")
+        tool_call_dict = {
+            "name": "PARSE_ERROR",
+            "_parse_error": failure_reason,
+            "arguments": {}
+        }
         tool_plan = [tool_call_dict]
     else:
+        allowed_slide_tool_names = [tool.name for tool in my_tools]
+        generated_name = tool_call_dict.get("name")
+        tool_call_dict = constrain_tool_call_to_candidates(
+            tool_call_dict,
+            allowed_slide_tool_names,
+        )
+        if tool_call_dict.get("name") != generated_name:
+            print(
+                "  -> Corrected generated tool name "
+                f"'{generated_name}' to assigned layout '{tool_call_dict.get('name')}'"
+            )
+        tool_plan = [constrain_tool_call_to_candidates(tool_call_dict, allowed_slide_tool_names)]
+        tool_call_dict = tool_plan[0]
+        tool_call_dict = apply_deck_style_to_tool_call(
+            tool_call_dict,
+            my_tools,
+            deck_style_plan,
+        )
+        tool_plan = [
+            apply_deck_style_to_tool_call(call, my_tools, deck_style_plan)
+            for call in tool_plan
+        ]
+        tool_call_dict = tool_plan[0]
         # Save valid parsed tool call for retry memory
         state["last_valid_tool_call"] = tool_call_dict
         
     print(f"✅ Generated Tool Call: {tool_call_dict.get('name')}")
     state["current_tool_call"] = tool_call_dict
     state["current_tool_plan"] = tool_plan
-    state["raw_llm_response"] = content
+    state["raw_llm_response"] = raw_llm_response or content
+    state["raw_llm_prompt"] = raw_llm_prompt
     
     # Save helper state variables for downstream nodes
     state["candidate_tools"] = generator_tools
     state["style_context_str"] = style_context_str
     state["design_instruction"] = design_instruction
 
-    if slide_type == "TRANSITION_TOOLS":
-        state["previous_transition_tool_call"] = tool_call_dict
-    
     print(f"Time taken: {time.time() - start_time:.2f} seconds.")
     return state

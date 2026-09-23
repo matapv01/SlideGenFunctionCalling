@@ -63,14 +63,11 @@ Additional Evaluation Dimensions (Newly Added)
     - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
     - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
 
-In addition, if a previous slide is available, evaluate consistency between the current and previous slides in the following aspects:
+Evaluate consistency against the immutable deck style contract in the following aspects:
 - Background color
 - Text color
 - Font size
 - Font family
-
-Previous accepted tool call:
-{previous_accepted_tool_call}
 
 Current tool call:
 {tool_call_output}
@@ -94,44 +91,6 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 
 # ================================= SLIDE GENERATION PROMPTS =================================
 
-IMAGE_SEARCH_EXECUTION_PLAN_RULES = """
-🖼️ **CRITICAL — SLIDE-FIRST IMAGE SEARCH PLAN:**
-
-Return one ordered tool-call plan. The slide XML tool comes FIRST; image searches come AFTER.
-
-1. Choose the final slide XML tool and inspect its complete parameter schema.
-2. Call the slide XML tool FIRST with all text/style/layout parameters filled in.
-   - For EVERY image URL/path parameter, leave the value as an empty string "".
-   - Do NOT invent, guess, or fill any image URL.
-3. After the slide XML tool, for EVERY image URL/path parameter you left empty,
-   emit exactly one `search_ddgs_images` call in schema declaration order:
-   - Call 1 maps to the first image parameter.
-   - Call 2 maps to the second image parameter.
-   - Call N maps to the Nth image parameter.
-4. For each `search_ddgs_images` call fill the arguments:
-   - `query`: derive from the slide content and the semantic role of that specific
-     image slot. Use 2-5 concise English nouns/noun phrases. Do not include pixel
-     sizes, orientation words, URLs, or generic words like image/photo/wallpaper/
-     beautiful/modern.
-   - `layout` and `size`: derive from the image parameter description in the slide
-     tool schema (words like portrait, landscape, banner, avatar, full-height,
-     background, and any pixel hint such as 960x1080px).
-5. Choose `layout` strictly from the image slot description:
-   - `Tall`: portrait, vertical, full-height, or height > width.
-   - `Wide`: landscape, horizontal, banner, background, full-width, or width > height.
-   - `Square`: square, avatar, circle, profile, logo, icon, or near-equal dimensions.
-6. Choose `size` strictly from the image slot description and visual importance:
-   - `Large`: max dimension >= 900px, full-height, full-width, background, hero,
-     half-slide, or main feature image.
-   - `Medium`: cards, portraits, thumbnails, profile/team photos, or 400–899px.
-   - `Small`: icons, logos, badges, small decorations, or below 400px.
-7. For nested objects (e.g. team members), keep each nested `image_url` as an empty
-   string so the executor can discover and inject the real URL later.
-8. If the selected slide tool has NO image parameters, emit ONLY the slide XML tool
-   with no search calls after it.
-9. Output no prose, markdown, or extra tool calls after the last search call.
-"""
-
 # Critical rule for math/equations - include in all slide prompts
 # This prompt is passed as a fixed system message; keep LaTeX braces literal.
 MATH_EQUATION_RULES = """
@@ -144,13 +103,16 @@ MATH_EQUATION_RULES = """
    - Unicode fractions: ½, ¼, ⅓
    - Unicode math symbols as text: √, ∫, ∑, ∏, ∞
    - Plain text like "x^2" or "a_1"
-   - `$E = mc^2$` or `\(E=mc^2\)`
+   - `$E = mc^2$` or `\\(E=mc^2\\)`
 
 ✅ **CORRECT EXAMPLES:**
    - Quadratic: `<math-field>ax^2 + bx + c = 0</math-field>`
    - Fraction: `<math-field>\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}</math-field>`
    - Put the formula in its own visible text value when possible. Do not put highlight markers inside `<math-field>`.
    - The content between the tags is raw LaTeX: do not add `$...$`, `\\(...\\)`, or Markdown code fences.
+   - Never write a mathematical expression as plain text. Expressions such as `f'(x) = df/dx`, `d/dx x^n = nx^(n-1)`, and `x_i` must be placed inside `<math-field>`.
+   - Inside `<math-field>`, use `_` for subscripts and `^` for superscripts. Never escape them as `\\_` or `\\^`; `\\_` is a literal underscore, not a subscript.
+   - Correct derivative example: `<math-field>\\frac{d}{dx}x^n = nx^{n-1}</math-field>`.
 """
 
 # XML slides use editable text plus one controlled marker for text-color emphasis.
@@ -162,19 +124,27 @@ XML_CONTENT_PROMPT = """
 ⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → #000000 or very dark text
 ❌ FORBIDDEN: Low-contrast combinations such as gray on gray, #555 on #333, or #ccc on #fff. Accent-colored text is allowed only when it remains clearly readable.
 
+🚨 **STRICT TOOL & PARAMETER RULES (NON-NEGOTIABLE):**
+- **TOOL NAME**: You MUST select ONLY a tool exposed in the native tool schemas for this request. ABSOLUTELY DO NOT invent, guess, or use any tool name from memory, previous slides, or examples.
+- **PARAMETERS**: You MUST ONLY output parameters that are EXPLICITLY defined in the selected tool's schema. ABSOLUTELY DO NOT invent or add extra parameters (e.g. `body_text`, `header_bg`, `main_title_color`, `subtitle_color`, `logo_image_url`) if they are NOT listed in that tool's parameter schema. Supplying an extra parameter will cause the slide to FAIL.
+- **PARAMETER COUNT**: Do NOT add more parameters than what the schema defines. When in doubt, leave optional parameters out entirely rather than guessing a name.
+
 **RULES:**
 1. TEXT: Keep text values concise and editable. Preserve the meaning and language of the source content.
 2. LIST INPUTS: For any list/bullet argument, provide plain item text only. Never add `•`, `-`, `*`, `1.`, `1)`, or other numbering; the selected XML tool owns the marker. Use only the documented indentation when a tool supports nested items.
 3. CONTENT STRUCTURE DECISION (IMPORTANT): Do not turn every sentence into a list.
-   - SHORT PARAGRAPH: If the source has one main idea, one or two sentences, and roughly 35 words or fewer, keep it as one normal paragraph/string. Do not use a bullet-list tool and do not add bullet markers or artificial <br> tags.
-   - LONG OR MULTI-POINT CONTENT: If the source is longer than roughly 45 words, or contains three or more independent facts, actions, benefits, or steps, split it into 3-6 concise list items. Three short related sentences are still a paragraph. Prefer a tool field named `bullet_items`, `items`, `steps`, `topics`, or `cards` when the selected layout provides one.
-   - MEDIUM CONTENT: Keep two related sentences together as a paragraph unless the source clearly contains separate facts or steps.
+   - SHORT PARAGRAPH: If the source has one main idea and one or two sentences, keep it as one normal paragraph/string. Do not use a bullet-list tool and do not add bullet markers or artificial <br> tags.
+   - LONG OR MULTI-POINT CONTENT: If the source contains three or more independent facts, actions, benefits, or steps, or is clearly too long for one text box, split it into 3-6 concise list items. Three short related sentences are still a paragraph. Prefer a tool field named `bullet_items`, `items`, `steps`, `topics`, or `cards` when the selected layout provides one.
+   - MEDIUM CONTENT: Keep two related sentences together as a paragraph unless the source clearly contains separate facts or steps. Use the available text area as the deciding factor instead of a rigid word threshold.
    - A list item should express one complete idea and normally stay under 18-22 words. Preserve the original meaning; do not invent details just to create more items.
    - Never choose a list layout merely because it is available. Use a paragraph layout for a short explanation, quote, definition, or single takeaway.
    - If no suitable list field exists, keep the content as a paragraph or use separate text fields; do not simulate bullets by typing `•`, `-`, `*`, or numbers manually.
 4. LINE BREAKS: Use explicit `<br>` only for intentional visual separation between distinct lines. Do not add `<br>` after every clause or sentence in a short paragraph. Never use bullet characters (`•`, `-`, `*`) or numbering inside a list field; the selected XML tool owns the marker.
-5. CONTENT: Keep wording concise and remove filler words without changing the core meaning.
-6. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
+5. CONTENT: Keep wording concise and remove filler words without changing the core meaning. NEVER dump long multi-sentence paragraphs into small card or column slots — condense to 15-25 words per item.
+6. IMAGES: Use only approved image assets listed in the user message. Leave
+   declared image URL/path fields empty; the executor injects the approved
+   asset deterministically. Never call an image-search tool and never invent a
+   URL. If no approved asset is listed, choose a layout with no image fields.
 7. MATH/EQUATIONS: If you need formulas, use LaTeX wrapped in proper <math-field> tags.
 8. TEXT-COLOR EMPHASIS:
    - When the slide contains a key metric, date, result, or keyword, emphasize 1 to 3 short phrases. Otherwise, do not add emphasis.
@@ -189,23 +159,54 @@ XML_CONTENT_PROMPT = """
    - Do not highlight a full sentence, nest or repeat markers, or place markers in URLs, image-search queries, font/color parameters, or <math-field> content.
    - Do not emit markup tags such as <span> or <highlight>; only the exact marker syntax above is supported.
    - This marker is temporary control syntax and is removed before the final XML is returned.
-8. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
+9. COLOR PARAMETER FILLING:
+   - Read every color parameter's semantic role in the selected tool schema before filling it. For example, `panel_color` is not interchangeable with `background_color`, and `axis_text_color` must remain readable against the panel where it is rendered.
+   - Treat the DECK STYLE CONTRACT in the user message as the canonical palette and typography source. Apply it only to fields that exist in the selected tool schema.
+   - Do not invent a second theme or copy an unavailable previous-slide palette. Preserve each field's semantic role and text contrast.
+   - If a background or panel is dark, use white or light text, labels, legend text, and grid lines. If it is light, use dark text and sufficiently visible grid lines. Never combine dark text with a dark panel or light text with a light panel.
+   - Keep data-series colors distinct and preserve their order: the first series uses the first series color, the second uses the second, and so on. Do not reuse a panel or text color for a data series when it reduces readability.
+   - Output only valid six-digit hexadecimal colors for declared color parameters. Do not pass color parameters that are not defined by the selected tool schema.
+10. OUTPUT: Invoke the selected XML slide tool and return native tool calls only; do not output raw arguments or prose.
 
 Generate a readable, professional XML function call.
+"""
+
+NATIVE_TOOL_CALLING_SYSTEM_PROMPT = """
+NATIVE TOOL CALLING CONTRACT:
+- The XML layouts are supplied as native function tools. Inspect their schemas directly.
+- Invoke tools through the tool-calling interface. Never serialize a tool call in message content.
+- Do not emit <tool_call> tags, JSON tool-call objects, markdown, or explanatory prose.
+- Return exactly one XML slide tool call. Do not emit image-search calls.
+- If the selected XML tool has no image slots, return only that XML tool call.
 """
 
 HUMAN_PROMPT_TEMPLATE = """
 CONTEXT: {slide_context_map}
 
-PREVIOUS SLIDE STYLE CONTEXT:
-{previous_slide_function_call}
+DECK STYLE CONTRACT (IMMUTABLE FOR ALL SLIDES):
+{deck_style_contract}
 
-RECENTLY USED LAYOUTS (for reference):
+SLIDE TOPIC:
+{slide_topic}
+
+DECK-LEVEL PRESENTATION DIRECTION (SHARED ACROSS ALL BATCHES):
+{presentation_instruction}
+
+IMAGE MODE:
+{image_mode}
+
+VISUAL LAYOUT REQUEST:
+{visual_layout_request}
+
+APPROVED IMAGE ASSETS:
+{approved_images}
+
+ASSIGNED LAYOUT:
 {recent_tools}
 
 DESIGN PLAN: {slide_plan}
 
-DESIGN INSTRUCTION (FROM PREPARER):
+PLANNER DESIGN BRIEF:
 {design_instruction}
 
 SLIDE {slide_index}/{length_slide_chunks} CONTENT:
@@ -239,10 +240,11 @@ You are an expert presentation designer and slide planner. Your task is to analy
    - Who is the audience and what do they need to understand?
 
 2. **Identify Content Type** (look beyond surface keywords):
-   - **Data-driven content**: Numbers, percentages, metrics, trends over time, year-over-year growth, market analysis, performance comparisons
-     → These belong to **CHART_TOOLS** (visual data presentation is most effective)
-   - **People-focused content**: Team bios, member introductions, names with roles/titles
-     → **TEAM_TOOLS** (specialized for human presentation)
+   - **Data-driven content**: Use **CHART_TOOLS** only when the slide contains
+     actual structured numeric data, a comparison, a trend, or a metric set
+     that can be plotted. A single number mentioned in prose is not enough.
+   - **People-focused content**: Use **TEAM_TOOLS** for multiple people profiles
+     or a clear team/member presentation, not for a single person mentioned in prose.
    - **Narrative/Conceptual**: Stories, explanations, lessons, processes, abstract ideas, text-heavy content
      → **CONTENT_TOOLS** (flexible for varied information)
    - **Section breaks**: "Next topic", "Chapter 3", visual dividers between major parts
@@ -256,15 +258,60 @@ You are an expert presentation designer and slide planner. Your task is to analy
    - Trust your judgment: match content essence to the tool that will make it shine
    - **NEVER default to CONTENT_TOOLS** just because you're unsure—analyze carefully and choose the specialized tool if it fits
 
-4. **Craft Your Vision** (`thought`): Write 2-3 sentences on:
+4. **Craft Your Vision** (`thought`): Write at most 2 concise sentences on:
    - The visual mood and style that will make this message land
    - Key layout approach (what goes where)
-   - Any special considerations (bold colors, subtle, high-tech, warm, etc.)
+   - Follow the immutable DECK STYLE CONTRACT. Vary composition and geometry,
+     not the deck's typography, palette, image treatment, or chart treatment.
+
+5. **Name the Slide Topic** (`slide_topic`): Return a concise subject of
+   roughly 3-10 words. It should guide relevant imagery and content emphasis,
+   but must not override the deck palette.
+
+6. **Summarize the Slide Purpose** (`slide_purpose`): Return exactly one short
+   sentence describing what this slide is communicating in the context of the
+   whole deck. Include the concrete subject, entity, event, place, or time
+   period when it matters. This sentence is used later to verify whether a
+   candidate image supports the slide; do not describe generic aesthetics.
+
+7. **Plan visual evidence** (`image_search_intents`): Return an empty list when
+   the slide is complete with text, shapes, or charts. Otherwise return at most
+   one intent describing a concrete visual that materially supports the slide.
+   Each intent has:
+   - `query`: 2-5 concise factual nouns or noun phrases. Prefer the exact
+     named person, institution, place, event, product, document, or time period
+     from the slide/deck over generic words such as "technology", "business",
+     or "modern". A query must be specific enough that two different search
+     engines are likely to return the same subject;
+   - `role`: one of `evidence`, `illustration`, `chart`, `diagram`, or `photo`;
+   - `layout`: `Wide`, `Tall`, `Square`, or null;
+   - `required`: true only when the message cannot be communicated correctly
+     without that visual.
+   Do not search literal slide text merely because the layout has an image slot.
+   For a factual or document-grounded slide, do not request a generic stock
+   illustration when an exact subject is available. Use a generic illustration
+   only when the message is genuinely conceptual and the visual role is
+   illustrative rather than evidentiary.
+   Do not invent a subject that is absent from the source. The backend performs
+   the search and always limits it to its configured candidate count.
+
+8. **Describe the visual direction** (`visual_layout_request`): Write one short,
+   domain-neutral sentence describing how a visual or a no-image composition
+   should support the slide. Do not mention a provider, URL, or a specific
+   candidate image.
 
 **OUTPUT REQUIREMENT:**
-- Return ONLY a single, valid JSON object that strictly follows the required schema.
-- Do not add any text, explanations, or markdown formatting before or after the JSON object.
-- The 'action' key must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
+- Populate the structured fields `slide_topic`, `slide_purpose`, `thought`,
+  `image_mode`, `image_search_intents`,
+  `visual_layout_request`, and `action`.
+- Do not add explanations, markdown, or fields outside the schema. The caller
+  validates the structured response; do not serialize the object manually.
+- The 'image_mode' field must be one of 'none' or 'semantic', and must be
+  `semantic` exactly when `image_search_intents` is non-empty.
+- The 'action' field must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS',
+  'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
+- Keep `image_mode` aligned with the intent list: use `none` when the list is
+  empty and `semantic` exactly when a visual intent exists.
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """
@@ -277,8 +324,30 @@ IMPORTANT:
 - If slide number is 2 or higher → NEVER use INTRO_TOOLS
 
 ---
-**PRESENTATION CONTEXT (OUTLINE):**
-This is the structure of the entire presentation. The "YOU ARE HERE" marker shows the position of the current slide you are planning.
+**IMMUTABLE DECK STYLE CONTRACT:**
+All per-slide design decisions must remain compatible with this contract.
+
+{deck_style_plan}
+
+---
+**PRESENTATION OUTLINE (COMPACT):**
+Use this complete slide map to understand the narrative and identify section
+breaks. It contains headings/context only, not the full document text.
+
+{full_outline}
+
+---
+**DECK-LEVEL PRESENTATION DIRECTION (SHARED ACROSS ALL BATCHES):**
+{presentation_instruction}
+
+Apply this direction together with the complete outline. It is shared context
+for every independent planner batch: decide how it applies to this slide from
+the slide content and the whole-deck outline. Do not assume that a batch
+boundary changes the user's requested scope.
+
+**CURRENT SLIDE CONTEXT:**
+The slide being planned is marked below. Make the action and topic specific to
+this slide while keeping it coherent with the full outline.
 
 {slide_context_map}
 
@@ -422,105 +491,3 @@ DOCUMENT TO ANALYZE:
 
 Please analyze this document and create a hierarchical structure with appropriate headings and content distribution.
 """
-
-
-# ================================= QWEN GENERATOR PROMPTS =================================
-
-QWEN_GENERATOR_SYSTEM_PROMPT = """You are an XML slide layout generator. Output ONLY one XML tool function call inside <tool_call> tags. Do NOT use thinking mode. Do NOT output <think> tags.
-
-CRITICAL JSON FORMATTING RULES:
-1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\\\"`. NEVER put raw literal newlines in JSON strings.
-3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
-4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
-5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
-6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
-7. HIGHLIGHT MARKERS IN JSON: Escape the marker's color quotes inside a JSON string, for example `[[hl color=\\\"#2563EB\\\"]]important phrase[[/hl]]`.
-8. LATEX BACKSLASHES IN JSON: Escape every LaTeX backslash twice in the raw JSON string. Write `<math-field>\\\\frac{a}{b}</math-field>` in JSON; after JSON decoding the XML value must contain `<math-field>\\frac{a}{b}</math-field>`.
-
-Example:
-<tool_call>
-{"name": "search_ddgs_images", "arguments": {"query": "business meeting", "layout": "Wide", "size": "Large"}}
-</tool_call>
-<tool_call>
-{"name": "generate_modern_cover_slide_xml", "arguments": {"title": "BUSINESS PLAN", "image_url": ""}}
-</tool_call>"""
-
-# --- CoT (Chain-of-Thought) variant: enables Qwen3 thinking mode ---
-QWEN_COT_GENERATOR_SYSTEM_PROMPT = """You are an expert XML slide layout generator with deep reasoning ability.
-
-You MUST follow this two-step process:
-
-STEP 1 — THINK (inside <think> tags):
-Analyze the design instruction and slide content carefully. Then:
-1. Review each available tool and its parameters
-2. Select the BEST tool that matches the content type and design instruction
-3. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide
-4. Self-check: Are there any None/null/empty values for required fields? Fix them.
-5. Self-check: Are color values valid hex codes (e.g., #2563EB)? Are lists actually lists?
-6. Self-check JSON syntax: Are all open brackets properly closed? Are quotes escaped? No trailing commas?
-
-STEP 2 — ACT (output the tool call):
-Output EXACTLY ONE function call inside <tool_call> tags. The JSON must be strictly valid and complete.
-
-CRITICAL RULES:
-- Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
-- Color values MUST be valid hex codes (e.g., "#1E3A5F", NOT "blue" or "dark")
-- List parameters MUST be actual lists (e.g., ["item1", "item2"], NOT a string)
-- String content MUST come from the slide content provided, NOT made up
-- Output language MUST match the language of the slide content
-
-CRITICAL JSON FORMATTING & SYNTAX RULES:
-1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\\\"`. NEVER put raw literal newlines in JSON strings.
-3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
-4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
-5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
-6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
-7. HIGHLIGHT MARKERS IN JSON: Escape the marker's color quotes inside a JSON string, for example `[[hl color=\\\"#2563EB\\\"]]important phrase[[/hl]]`.
-8. LATEX BACKSLASHES IN JSON: Escape every LaTeX backslash twice in the raw JSON string. Write `<math-field>\\\\frac{a}{b}</math-field>` in JSON; after JSON decoding the XML value must contain `<math-field>\\frac{a}{b}</math-field>`.
-
-Example:
-<think>
-The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
-Available tools: generate_split_content_slide_xml, generate_bullet_content_slide_xml...
-Best match: generate_split_content_slide_xml — it supports a title plus structured content columns.
-Required params: title (str), column_titles (List[str]), column_descriptions (List[str]), image_url (str)...
-Let me fill them with actual content from the slide text.
-Self-check: All required fields filled ✓, colors are hex ✓, points is a list ✓, JSON brackets matched ✓
-</think>
-<tool_call>
-{"name": "generate_split_content_slide_xml", "arguments": {"title": "Hành trình FPT", "column_titles": ["Nền tảng"], "column_descriptions": ["Đội ngũ kỹ sư hùng hậu"], "image_url": "", "background_color": "#F8FAFC", "dark_panel_color": "#23242B", "accent_color": "#98F033", "title_color": "#98F033", "heading_color": "#FFFFFF", "body_color": "#FFFFFF"}}
-</tool_call>"""
-
-QWEN_GENERATOR_HUMAN_TEMPLATE = """{style_context}
-
-[DESIGN]
-{design_instruction}
-
-[CONTENT]
-{slide_content}"""
-
-
-# ================================= SLIDE PREPARER PROMPTS =================================
-
-SLIDE_PREPARER_SYSTEM_PROMPT = """You are a presentation design preparer. Your job is to analyze the content of the current slide, review the styling context of the previous slide, and write a detailed design instruction for the next model to follow.
-Do NOT choose or call any layout tools. Simply write a detailed visual instruction (describing the primary theme color, font scaling, background style, layout suggestion, and formatting rules) that will guide the layout generation model to build a visually consistent and beautiful slide."""
-
-SLIDE_PREPARER_HUMAN_TEMPLATE = """---
-[PREVIOUS SLIDE STYLE CONTEXT]
-{previous_style_context}
-
-[CURRENT SLIDE PLAN]
-{slide_plan}
-
-[CURRENT SLIDE CONTENT]
-{slide_content}
----
-
-Based on the information above, write a detailed visual styling instruction (in English, 3-4 bullet points) for the next slide. Describe:
-1. What theme color and background color to use to match the previous slide.
-2. The recommended text layout structure (e.g. key-value cards, bullet list, comparison columns).
-3. Any specific formatting rules (e.g. font sizes and spacing).
-4. What LANGUAGE to generate the slide text in (match the language of the [CURRENT SLIDE CONTENT] above).
-Keep it concise and clear."""

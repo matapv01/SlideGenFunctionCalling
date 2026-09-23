@@ -4,9 +4,13 @@ from langgraph.graph import END, StateGraph
 
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.nodes.deck_style_planner import create_deck_style
 from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_slide
 from backend.workflows.slidegen_workflow.nodes.next_slide_provider import provide_next_slide
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
+from backend.workflows.slidegen_workflow.nodes.image_candidate_search import search_image_candidates
+from backend.workflows.slidegen_workflow.nodes.image_verifier import verify_slide_images
+from backend.workflows.slidegen_workflow.nodes.slide_refiner import refine_slide_plans
 from backend.workflows.slidegen_workflow.nodes.slide_planner import planning_slide
 from backend.workflows.slidegen_workflow.nodes.text_overflow_resolver import resolve_text_overflow
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
@@ -24,7 +28,7 @@ def route_to_task(state: State) -> str:
 def evaluate_executor_decision(state: State) -> str:
     """Route every generated slide to overflow rules or retry generation."""
     decision = state.get("executor_decision", "fail")
-    retry_count = state.get("retry_count", 0)
+    retry_count = state.get("executor_retry_count", 0)
     if decision == "pass" or retry_count >= EXECUTOR_MAX_RETRIES:
         return "text_overflow_resolver"
     return "generate_slide"
@@ -47,6 +51,10 @@ def evaluate_vlm_decision(state: State) -> str:
 def build_workflow(router_flags: bool = False) -> StateGraph:
     """Build the XML generation graph. ``router_flags`` is kept for API compatibility."""
     workflow = StateGraph(State)
+    workflow.add_node("create_deck_style", create_deck_style)
+    workflow.add_node("search_image_candidates", search_image_candidates)
+    workflow.add_node("verify_slide_images", verify_slide_images)
+    workflow.add_node("refine_slide_plans", refine_slide_plans)
     workflow.add_node("planning_slide", planning_slide)
     workflow.add_node("provide_next_slide", provide_next_slide)
     workflow.add_node("generate_slide", generate_slide)
@@ -55,8 +63,12 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     workflow.add_node("render_xml", render_xml)
     workflow.add_node("finalizer", finalize_slide)
 
-    workflow.set_entry_point("planning_slide")
-    workflow.add_edge("planning_slide", "provide_next_slide")
+    workflow.set_entry_point("create_deck_style")
+    workflow.add_edge("create_deck_style", "planning_slide")
+    workflow.add_edge("planning_slide", "search_image_candidates")
+    workflow.add_edge("search_image_candidates", "verify_slide_images")
+    workflow.add_edge("verify_slide_images", "refine_slide_plans")
+    workflow.add_edge("refine_slide_plans", "provide_next_slide")
     workflow.add_conditional_edges(
         "provide_next_slide",
         route_to_task,

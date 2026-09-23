@@ -1,6 +1,5 @@
 # File: backend/application/services/auth_service.py
 
-import os
 import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional, Dict
@@ -8,6 +7,7 @@ from jose import JWTError, jwt
 from fastapi import HTTPException, status
 from backend.domain.ports.user_repository import UserRepository
 from backend.domain.entities.user import User, UserProfile
+from backend.config import SECRET_KEY
 
 
 class AuthService:
@@ -15,7 +15,7 @@ class AuthService:
     
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
-        self.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+        self.secret_key = SECRET_KEY
         self.algorithm = "HS256"
         self.access_token_expire_minutes = 60 * 24
 
@@ -39,6 +39,8 @@ class AuthService:
     def decode_access_token(self, token: str) -> str:
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            if payload.get("purpose"):
+                raise JWTError()
             email: str = payload.get("sub")
             if email is None:
                 raise JWTError()
@@ -56,7 +58,14 @@ class AuthService:
             return None
         return user
 
-    def register_user(self, email: str, full_name: str, password: str) -> User:
+    def register_user(
+        self,
+        email: str,
+        full_name: str,
+        password: str,
+        *,
+        email_verified: bool = False,
+    ) -> User:
         existing_user = self.user_repo.get_by_email(email)
         if existing_user:
             raise HTTPException(status_code=400, detail="Email đã được đăng ký")
@@ -69,6 +78,9 @@ class AuthService:
             email=email,
             hashed_password=hashed_password,
             is_active=True,
+            email_verified=email_verified,
+            onboarding_completed=False,
+            workspace_tour_version=0,
             created_at=None
         )
         created_user = self.user_repo.create(new_user)
@@ -93,3 +105,12 @@ class AuthService:
             
         new_hashed = self.get_password_hash(new_password)
         self.user_repo.update_password(user_id, new_hashed)
+
+    def reset_password(self, user_id: int, new_password: str) -> None:
+        """Set a new password after an administrator has authorized the action."""
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Mật khẩu mới phải có ít nhất 6 ký tự")
+        if self.user_repo.get_by_id(user_id) is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+
+        self.user_repo.update_password(user_id, self.get_password_hash(new_password))

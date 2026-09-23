@@ -1,13 +1,13 @@
-"""DuckDuckGo image search tool used by the slide execution plan."""
+"""DuckDuckGo candidate search used before slide generation."""
 
 import json
 import logging
 import math
 import re
-from typing import Literal, Optional
-
-from langchain_core.tools import StructuredTool
-from pydantic import BaseModel, Field
+import threading
+import time
+from collections import OrderedDict
+from typing import Optional
 
 try:
     from ddgs import DDGS
@@ -16,8 +16,34 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Global in-memory cache — 0ms latency on repeated queries
-_IMAGE_CACHE = {}
+# Bounded process-local cache. Search results are intentionally short-lived:
+# image providers can change ranking and an unbounded dict would grow forever
+# under varied user queries.
+_IMAGE_CACHE_TTL_SECONDS = 15 * 60
+_IMAGE_CACHE_MAX_ITEMS = 256
+_IMAGE_CACHE: OrderedDict[tuple, tuple[float, str]] = OrderedDict()
+_IMAGE_CACHE_LOCK = threading.Lock()
+
+
+def _get_cached_images(key: tuple) -> str | None:
+    now = time.monotonic()
+    with _IMAGE_CACHE_LOCK:
+        cached = _IMAGE_CACHE.pop(key, None)
+        if cached is None:
+            return None
+        created_at, result = cached
+        if now - created_at >= _IMAGE_CACHE_TTL_SECONDS:
+            return None
+        _IMAGE_CACHE[key] = (created_at, result)
+        return result
+
+
+def _cache_images(key: tuple, result: str) -> None:
+    with _IMAGE_CACHE_LOCK:
+        _IMAGE_CACHE.pop(key, None)
+        _IMAGE_CACHE[key] = (time.monotonic(), result)
+        while len(_IMAGE_CACHE) > _IMAGE_CACHE_MAX_ITEMS:
+            _IMAGE_CACHE.popitem(last=False)
 
 
 def _to_int(value) -> Optional[int]:
@@ -128,7 +154,7 @@ def search_ddgs_images(
     type_image: str = "photo",
     layout: str = None,
     license_image: str = None,
-    max_results: int = 3,
+    max_results: int = 5,
     target_description: str = None,
 ):
     """
@@ -147,9 +173,10 @@ def search_ddgs_images(
         max_results,
         target_description,
     )
-    if cache_key in _IMAGE_CACHE:
+    cached = _get_cached_images(cache_key)
+    if cached is not None:
         logger.info(f"⚡ [CACHE HIT] '{query}'")
-        return _IMAGE_CACHE[cache_key]
+        return cached
 
     try:
         with DDGS() as ddgs:
@@ -177,69 +204,18 @@ def search_ddgs_images(
             )
             urls = [res.get("image") for res in results if res.get("image")]
             if urls:
-                res_json = json.dumps(urls[:3], ensure_ascii=False)
-                _IMAGE_CACHE[cache_key] = res_json
+                # Return a bounded candidate set. Relevance is decided by the
+                # multimodal verifier; this tool must never invent a fallback
+                # image when the provider returns no result.
+                res_json = json.dumps(urls[:10], ensure_ascii=False)
+                _cache_images(cache_key, res_json)
                 return res_json
 
     except Exception as e:
         logger.error(f"Lỗi khi gọi DDGS API cho query '{query}': {e}")
 
-    # Fallback nếu DDG chặn (403 Ratelimit)
-    fallback_urls = [
-        "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1600",
-        "https://images.pexels.com/photos/317356/pexels-photo-317356.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    ]
-    logger.info(f"Using fallback image URLs for '{query}'")
-    res_fallback_json = json.dumps(fallback_urls, ensure_ascii=False)
-    _IMAGE_CACHE[cache_key] = res_fallback_json
-    return res_fallback_json
-
-
-class SearchDDGSImagesInput(BaseModel):
-    """Arguments the slide generator is allowed to choose for one image search."""
-
-    query: str = Field(
-        ...,
-        min_length=1,
-        description=(
-            "A concise English image query derived from the slide content and "
-            "the semantic role of this exact image slot. Use 2-5 concrete nouns "
-            "or noun phrases. Do not include URLs, pixel sizes, orientation "
-            "words, or generic words such as image, photo, wallpaper, beautiful, "
-            "or modern."
-        ),
-    )
-    layout: Optional[Literal["Wide", "Tall", "Square"]] = Field(
-        default=None,
-        description=(
-            "Image orientation derived from the corresponding image parameter "
-            "description in the selected slide tool schema. Use Tall for "
-            "portrait, vertical, full-height, or height greater than width; "
-            "Wide for landscape, horizontal, banner, background, full-width, "
-            "or width greater than height; Square for avatar, circle, profile, "
-            "logo, icon, square, or near-equal width and height."
-        ),
-    )
-    size: Optional[Literal["Large", "Medium", "Small"]] = Field(
-        default="Large",
-        description=(
-            "Requested image size derived from the image parameter description "
-            "and visual importance. Use Large for max dimension >= 900px, hero, "
-            "background, full-height, full-width, half-slide, or main feature "
-            "images; Medium for cards, portraits, thumbnails, profile/team "
-            "photos, or max dimension around 400-899px; Small for icons, logos, "
-            "badges, decorations, or max dimension below 400px."
-        ),
-    )
-
-
-SEARCH_DDGS_TOOL = StructuredTool.from_function(
-    func=search_ddgs_images,
-    name="search_ddgs_images",
-    description=(
-        "Search for one real image needed by a slide. Emit one call for each "
-        "image parameter, in the same declaration order as the final slide "
-        "XML tool. All image-search calls must appear after the slide XML tool."
-    ),
-    args_schema=SearchDDGSImagesInput,
-)
+    # An empty result is intentional. The workflow will choose a no-image
+    # layout instead of inserting an unrelated stock image.
+    empty_result = json.dumps([], ensure_ascii=False)
+    _cache_images(cache_key, empty_result)
+    return empty_result

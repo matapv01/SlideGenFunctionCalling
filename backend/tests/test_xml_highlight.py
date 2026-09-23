@@ -109,6 +109,97 @@ def test_literal_math_field_text_becomes_an_xml_node():
     assert field.text == r"\frac{a}{b}"
 
 
+def test_inline_latex_delimiters_become_math_field_nodes():
+    xml_content = (
+        '<presentation><slide><textbox>'
+        r'Probability $P(A)=\frac{a}{b}$ and \(x^2\) '
+        r'plus $$\sum_{i=1}^{n} i$$ and \[\alpha+\beta\]'
+        '</textbox></slide></presentation>'
+    )
+
+    result = materialize_math_fields_in_xml(xml_content)
+    textbox = ET.fromstring(result).find("./slide/textbox")
+    fields = textbox.findall("./math-field")
+
+    assert textbox.text == "Probability "
+    assert [field.text for field in fields] == [
+        r"P(A)=\frac{a}{b}",
+        "x^2",
+        r"\sum_{i=1}^{n} i",
+        r"\alpha+\beta",
+    ]
+    assert fields[0].tail == " and "
+
+
+def test_inline_latex_inside_runs_is_flattened_without_losing_run_text():
+    xml_content = (
+        '<presentation><slide><textbox>'
+        r'<run color="#111111">Mean $\bar{x}$</run><run> per group</run>'
+        '</textbox></slide></presentation>'
+    )
+
+    result = materialize_math_fields_in_xml(xml_content)
+    textbox = ET.fromstring(result).find("./slide/textbox")
+
+    assert [child.tag for child in textbox] == ["run", "math-field", "run"]
+    assert textbox[0].text == "Mean "
+    assert textbox[1].text == r"\bar{x}"
+    assert textbox[2].text == " per group"
+
+
+def test_markdown_escaped_subscripts_are_repaired_inside_math():
+    xml_content = (
+        '<presentation><slide><textbox>'
+        r'Expected: $\mathbb{E}[X]=\sum\_x xP(X=x)$; '
+        r'Mean: $\bar{x}=\frac{1}{n}\sum\_{i=1}^{n}x\_i$'
+        '</textbox></slide></presentation>'
+    )
+
+    result = materialize_math_fields_in_xml(xml_content)
+    textbox = ET.fromstring(result).find("./slide/textbox")
+    fields = textbox.findall("./math-field")
+
+    assert [field.text for field in fields] == [
+        r"\mathbb{E}[X]=\sum_x xP(X=x)",
+        r"\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i",
+    ]
+
+
+def test_plain_derivative_equations_are_materialized_when_model_omits_math_tags():
+    xml_content = (
+        '<presentation><slide><textbox>'
+        "Đạo hàm: f'(x) = df/dx; Quy tắc: d/dx x^n = nx^(n-1)"
+        '</textbox></slide></presentation>'
+    )
+
+    result = materialize_math_fields_in_xml(xml_content)
+    textbox = ET.fromstring(result).find("./slide/textbox")
+    fields = textbox.findall("./math-field")
+
+    assert [field.text for field in fields] == [
+        r"f'(x) = \frac{df}{dx}",
+        r"\frac{d}{dx} x^n = nx^{n-1}",
+    ]
+
+
+def test_symbolic_equations_with_unicode_math_are_materialized():
+    xml_content = (
+        '<presentation><slide><textbox>'
+        "Hàm dự đoán: ŷ=wx+b; MSE=∑(y-ŷ)^2/n; σ(x)=1/(1+e^-s)"
+        '</textbox></slide></presentation>'
+    )
+
+    result = materialize_math_fields_in_xml(xml_content)
+    textbox = ET.fromstring(result).find("./slide/textbox")
+    fields = textbox.findall("./math-field")
+
+    assert [field.text for field in fields] == [
+        "ŷ=wx+b",
+        "MSE=∑(y-ŷ)^2/n",
+        "σ(x)=1/(1+e^-s)",
+    ]
+
+
 def test_legacy_background_marker_keeps_only_its_foreground_color():
     clean_arguments, highlights = extract_highlight_markers(
         {

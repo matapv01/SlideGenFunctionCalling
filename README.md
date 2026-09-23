@@ -48,9 +48,8 @@ User Input (Idea / Document)
 ## Training
 Tài liệu training nằm ở [rl/README.md](rl/README.md).
 
-- SDFT official: Hugging Face Transformers + TRL `DistilTrainer` + PEFT LoRA.
-- GRPO current: TRL `GRPOTrainer` + rollout/reward custom của repo.
-- Output SDFT: `./qwen_slidegen_sdft/final_adapter`.
+- Direct GRPO: TRL `GRPOTrainer` + PEFT LoRA + XML rollout/reward custom.
+- GRPO starts from the base model or resumes a complete GRPO checkpoint.
 
 ## API Endpoints
 
@@ -96,7 +95,7 @@ backend/
     ├── doc_workflow/       # Xử lý document
     └── idea_workflow/      # Idea -> structure
 frontend/                   # React + TypeScript
-rl/                         # SDFT + GRPO training (xem rl/README.md)
+rl/                         # Direct GRPO training (xem rl/README.md)
 ```
 
 Xem [ARCHITECTURE.md](ARCHITECTURE.md) để hiểu chi tiết thiết kế hệ thống.

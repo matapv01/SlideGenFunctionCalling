@@ -96,12 +96,13 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
     converter = MarkItDown()
     markdown_text = converter.convert(docx_file).text_content
 
-    title, structure = parse_markdown_to_hierarchical_json(markdown_text)
+    preamble, structure = parse_markdown_to_hierarchical_json(markdown_text)
 
     state["plain_text"] = markdown_text
+    state["document_preamble"] = preamble
 
     has_structure = len(structure) > 0
-    workflow_mode = state.get("workflow_mode", "auto_no_heading")
+    workflow_mode = state.get("workflow_mode", "auto")
 
     if workflow_mode == "auto_heading" and not has_structure:
         raise ValueError(
@@ -110,15 +111,22 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
         )
 
     if has_structure:
+        # A DOCX title is metadata, not the whole pre-heading block. Keep the
+        # complete block in document_preamble for the mixed-structure pass.
+        title = next((line.strip() for line in preamble.splitlines() if line.strip()), "")
+        if not title:
+            title = os.path.splitext(os.path.basename(docx_file))[0]
         state["document_title"] = title
         state["document_structure"] = structure
+        state["document_structure_origin"] = "headings"
         print(json.dumps(structure, indent=2, ensure_ascii=False))
     else:
-        if not title or title.strip() == "":
-            title = os.path.splitext(os.path.basename(docx_file))[0]
-
-        state["document_title"] = title
+        # No explicit headings means the complete document is the one
+        # unstructured region. auto_structure will process plain_text as a
+        # whole and the preamble remains available as the source of truth.
+        state["document_title"] = os.path.splitext(os.path.basename(docx_file))[0]
         state["document_structure"] = []
+        state["document_structure_origin"] = "unstructured"
 
     end_time = time.time()
     print(f"Document conversion took {end_time - start_time:.2f} seconds.")

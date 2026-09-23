@@ -1,24 +1,22 @@
-"""Validate and execute the image-search portion of a slide tool plan."""
+"""Validate slide layouts and inject assets approved by the image workflow."""
 
 from __future__ import annotations
 
 import copy
-import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
-from backend.workflows.slidegen_workflow.tools.ddgs_tool import search_ddgs_images
-
-
-SEARCH_TOOL_NAME = "search_ddgs_images"
-_FALLBACK_IMAGE_URL = (
-    "https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg"
-    "?auto=compress&cs=tinysrgb&w=1600"
+from backend.application.services.slide_asset_service import (
+    SlideAssetError,
+    slide_asset_service,
 )
 
 
+class NoApprovedImageError(ValueError):
+    """Signal that the current image layout must be regenerated without images."""
+
+
 class ToolPlanError(ValueError):
-    """Raised when the generator returns an invalid ordered tool plan."""
+    """Raised when the generator returns an invalid XML tool call."""
 
 
 def _is_image_param_name(name: str) -> bool:
@@ -56,16 +54,15 @@ def _collect_runtime_image_paths(value: Any, path: list[Any]) -> list[list[Any]]
     return result
 
 
-def get_image_targets_in_order(tool, arguments: dict) -> list[dict]:
-    """
-    Return image targets in schema declaration order.
+def get_image_targets_in_order(tool, arguments: dict) -> list[dict[str, Any]]:
+    """Return image targets in schema declaration order.
 
     Top-level image fields come from the selected tool schema even when the
-    generator omits them. Nested fields are discovered recursively from the
-    generated arguments (for example team_members[0].image_url).
+    generator omits them. Nested fields are discovered from generated
+    arguments, for example ``team_members[0].image_url``.
     """
     arguments = arguments if isinstance(arguments, dict) else {}
-    targets: list[dict] = []
+    targets: list[dict[str, Any]] = []
     seen: set[str] = set()
 
     try:
@@ -97,40 +94,89 @@ def get_image_targets_in_order(tool, arguments: dict) -> list[dict]:
             continue
         for path in _collect_runtime_image_paths(arguments[name], [name]):
             path_string = _path_to_string(path)
-            if path_string not in seen:
-                targets.append(
-                    {
-                        "path": path,
-                        "path_string": path_string,
-                        "description": description,
-                    }
-                )
-                seen.add(path_string)
+            if path_string in seen:
+                continue
+            targets.append(
+                {
+                    "path": path,
+                    "path_string": path_string,
+                    "description": description,
+                }
+            )
+            seen.add(path_string)
 
-    # Fallback for lightweight/fake tools without a JSON schema.
+    # Keep lightweight test doubles and external integrations usable when they
+    # do not expose a Pydantic JSON schema.
     if not properties:
         for path in _collect_runtime_image_paths(arguments, []):
             path_string = _path_to_string(path)
-            if path_string not in seen:
-                targets.append(
-                    {
-                        "path": path,
-                        "path_string": path_string,
-                        "description": "",
-                    }
-                )
-                seen.add(path_string)
-
+            if path_string in seen:
+                continue
+            targets.append(
+                {
+                    "path": path,
+                    "path_string": path_string,
+                    "description": "",
+                }
+            )
+            seen.add(path_string)
     return targets
 
 
-def _infer_layout(description: str) -> str:
-    normalized = (description or "").lower()
-    if any(token in normalized for token in ("portrait", "tall", "vertical")):
-        return "Tall"
-    if any(token in normalized for token in ("square", "circle", "avatar")):
-        return "Square"
-    return "Wide"
+def tool_has_image_slots(tool) -> bool:
+    """Detect image fields from a tool schema, including nested list objects."""
+    try:
+        schema = tool.args_schema.model_json_schema()
+    except Exception:
+        return False
+
+    def contains_image_field(node: Any) -> bool:
+        if not isinstance(node, dict):
+            return False
+        properties = node.get("properties")
+        if isinstance(properties, dict):
+            if any(_is_image_param_name(name) for name in properties):
+                return True
+            if any(contains_image_field(child) for child in properties.values()):
+                return True
+        if contains_image_field(node.get("items")):
+            return True
+        for key in ("$defs", "definitions", "anyOf", "oneOf", "allOf"):
+            value = node.get(key)
+            if isinstance(value, dict) and any(
+                contains_image_field(child) for child in value.values()
+            ):
+                return True
+            if isinstance(value, list) and any(
+                contains_image_field(child) for child in value
+            ):
+                return True
+        return False
+
+    return contains_image_field(schema)
+
+
+def tool_image_slot_count(tool) -> int:
+    """Return the number of top-level image fields exposed by a layout schema."""
+    return len(get_image_targets_in_order(tool, {}))
+
+
+def tool_matches_image_mode(
+    tool,
+    image_mode: str,
+    approved_image_count: int | None = None,
+) -> bool:
+    """Match a layout to the planner's explicit none/semantic decision."""
+    if image_mode not in {"none", "semantic"}:
+        return True
+    has_images = tool_has_image_slots(tool)
+    if image_mode == "none":
+        return not has_images
+    if not has_images:
+        return False
+    if approved_image_count is not None:
+        return tool_image_slot_count(tool) <= max(0, approved_image_count)
+    return True
 
 
 def _set_value_at_path(root: dict, path: list[Any], value: str) -> None:
@@ -140,165 +186,83 @@ def _set_value_at_path(root: dict, path: list[Any], value: str) -> None:
     current[path[-1]] = value
 
 
-def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict, list[dict], list[dict]]:
-    """
-    Validate plan ordering and return (slide_call, search_calls, image_targets).
-
-    New order: slide XML call FIRST (index 0), search calls AFTER (index 1..N).
-    """
-    if not isinstance(tool_calls, list) or not tool_calls:
-        raise ToolPlanError("The generator did not return any tool calls.")
-
-    normalized_calls = []
-    for index, call in enumerate(tool_calls, start=1):
-        if not isinstance(call, dict) or not call.get("name"):
-            raise ToolPlanError(f"Tool call {index} is malformed.")
-        arguments = call.get("arguments", {})
-        if not isinstance(arguments, dict):
-            raise ToolPlanError(f"Arguments for tool call {index} must be an object.")
-        normalized_calls.append({"name": call["name"], "arguments": arguments})
-
-    # XML slide tool is FIRST, search calls come AFTER
-    html_call = normalized_calls[0]
-    search_calls = normalized_calls[1:]
-    html_tool_name = html_call["name"]
-
-    if html_tool_name == SEARCH_TOOL_NAME:
-        raise ToolPlanError("The first tool call must be a slide XML tool, not an image search.")
-    if html_tool_name not in tool_lookup:
-        raise ToolPlanError(
-            f"XML tool '{html_tool_name}' is not available. "
-            f"Valid slide tools are: {list(tool_lookup.keys())}"
+def _approved_image_url(
+    image: dict[str, Any],
+    asset_dir: str | None,
+) -> str | None:
+    """Resolve one verified assignment to a validated local asset."""
+    if not asset_dir:
+        # Lightweight integrations and unit tests may execute the XML tool
+        # without a workflow output directory. Preserve their verified URL;
+        # every real workflow supplies ``asset_dir`` and takes the local path.
+        return next(
+            (
+                str(image.get(key) or "").strip()
+                for key in ("source_path", "source_url", "result_url", "url")
+                if str(image.get(key) or "").strip()
+            ),
+            None,
         )
-
-    for index, call in enumerate(search_calls, start=1):
-        if call["name"] != SEARCH_TOOL_NAME:
-            raise ToolPlanError(
-                f"Tool call {index + 1} must be '{SEARCH_TOOL_NAME}'; "
-                "all image search calls must appear after the slide XML tool."
-            )
-        query = call["arguments"].get("query")
-        if not isinstance(query, str) or not query.strip():
-            raise ToolPlanError(f"Image search {index} has an empty query.")
-        layout = call["arguments"].get("layout")
-        if layout not in (None, "Wide", "Tall", "Square"):
-            raise ToolPlanError(f"Image search {index} has invalid layout '{layout}'.")
-        size = call["arguments"].get("size")
-        if size not in (None, "Large", "Medium", "Small"):
-            raise ToolPlanError(f"Image search {index} has invalid size '{size}'.")
-
-    image_targets = get_image_targets_in_order(
-        tool_lookup[html_tool_name],
-        html_call["arguments"],
-    )
-    if len(search_calls) != len(image_targets):
-        target_names = [target["path_string"] for target in image_targets]
-        raise ToolPlanError(
-            f"XML tool '{html_tool_name}' requires {len(image_targets)} image "
-            f"search call(s) for {target_names}, but the generator returned "
-            f"{len(search_calls)}."
-        )
-
-    return html_call, search_calls, image_targets
-
-
-
-def _pick_live_url(urls: list, timeout: float = 5.0) -> str | None:
-    """
-    Lần lượt gửi HEAD request đến từng URL trong danh sách.
-    Trả về URL đầu tiên trả về HTTP 2xx/3xx (còn sống).
-    Bỏ qua URL hỏng (4xx, 5xx, timeout, connection error).
-    """
-    import urllib.request
-    import urllib.error
-
-    for url in urls:
-        if not isinstance(url, str) or not url.strip():
+    for key in ("source_path", "source_url", "result_url", "url"):
+        value = str(image.get(key) or "").strip()
+        if not value:
             continue
         try:
-            req = urllib.request.Request(url, method="HEAD")
-            req.add_header("User-Agent", "Mozilla/5.0")
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                if resp.status < 400:
-                    return url
-        except Exception:
-            continue   # URL hỏng, thử cái tiếp theo
+            return slide_asset_service.materialize(value, asset_dir)
+        except (OSError, SlideAssetError):
+            continue
     return None
 
 
-def _run_one_search(index: int, call: dict, target: dict) -> tuple[int, str, dict]:
-    arguments = call["arguments"]
-    query = arguments["query"].strip()
-    layout = arguments.get("layout") or _infer_layout(target.get("description", ""))
-    size = arguments.get("size") or "Large"
+def inject_approved_images(
+    tool_call: dict[str, Any],
+    *,
+    tool,
+    approved_images: list[dict[str, Any]] | None,
+    asset_dir: str | None,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Bind only verifier-approved assets to XML fields in schema order.
 
-    try:
-        raw_result = search_ddgs_images(
-            query=query,
-            layout=layout,
-            size=size,
-            max_results=12,
-            target_description=target.get("description", ""),
-        )
-        urls = json.loads(raw_result)
-        url = _pick_live_url(urls)  # Check từng URL, bỏ qua những cái hỏng
-    except Exception as exc:
-        url = None
-        error = str(exc)
-    else:
-        error = ""
-
-    final_url = url or _FALLBACK_IMAGE_URL
-    history = {
-        "name": SEARCH_TOOL_NAME,
-        "arguments": {
-            "query": query,
-            "layout": layout,
-            "size": size,
-        },
-        "target_param": target["path_string"],
-        "result_url": final_url,
-    }
-    if error:
-        history["error"] = error
-    return index, final_url, history
-
-
-def execute_image_search_plan(
-    tool_calls: list[dict],
-    tool_lookup: dict,
-) -> tuple[dict, list[dict]]:
+    Search and relevance decisions belong to graph nodes before generation.
+    This executor never searches, downloads candidates, or trusts a raw URL
+    emitted by the generator as evidence of relevance.
     """
-    Run all LLM-provided searches, inject URLs by rule, and return the XML call.
-
-    Searches execute concurrently, while their result positions remain stable so
-    Search N always maps to image target N.
-    """
-    html_call, search_calls, image_targets = validate_tool_plan(
-        tool_calls,
-        tool_lookup,
+    final_call = copy.deepcopy(tool_call)
+    image_targets = get_image_targets_in_order(
+        tool,
+        final_call.get("arguments") or {},
     )
-    final_html_call = copy.deepcopy(html_call)
-    if not search_calls:
-        return final_html_call, []
-
-    results: list[str | None] = [None] * len(search_calls)
-    histories: list[dict | None] = [None] * len(search_calls)
-    with ThreadPoolExecutor(max_workers=len(search_calls)) as executor:
-        futures = {
-            executor.submit(_run_one_search, index, call, image_targets[index]): index
-            for index, call in enumerate(search_calls)
-        }
-        for future in as_completed(futures):
-            index, url, history = future.result()
-            results[index] = url
-            histories[index] = history
-
-    for target, url in zip(image_targets, results):
-        _set_value_at_path(
-            final_html_call["arguments"],
-            target["path"],
-            url or _FALLBACK_IMAGE_URL,
+    images = list(approved_images or [])
+    if not image_targets:
+        return final_call, []
+    if len(images) < len(image_targets):
+        raise NoApprovedImageError(
+            f"IMAGE_ASSIGNMENT_EMPTY: layout '{final_call.get('name', '')}' "
+            f"requires {len(image_targets)} approved image(s), received {len(images)}."
         )
 
-    return final_html_call, [history for history in histories if history]
+    histories: list[dict[str, Any]] = []
+    for target, image in zip(image_targets, images):
+        url = _approved_image_url(image, asset_dir)
+        if not url:
+            raise NoApprovedImageError(
+                "IMAGE_ASSIGNMENT_UNAVAILABLE: an approved image asset could "
+                "not be materialized; regenerate this slide without images."
+            )
+        _set_value_at_path(final_call["arguments"], target["path"], url)
+        histories.append(
+            {
+                "name": "approved_image",
+                "arguments": {
+                    "source_id": image.get("source_id") or image.get("image_id", ""),
+                    "role": image.get("role", "illustration"),
+                },
+                "target_param": target["path_string"],
+                "result_url": url,
+                "source": image.get("source_type", "verified"),
+                "visual_notes": image.get("visual_notes", ""),
+                "caption_hint": image.get("caption_hint", ""),
+                "placement_hint": image.get("placement_hint", ""),
+            }
+        )
+    return final_call, histories

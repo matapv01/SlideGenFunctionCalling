@@ -1,6 +1,6 @@
 # File: backend/schemas/project_schema.py
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 
@@ -32,8 +32,7 @@ class SlideResponse(SlideBase):
     project_id: int
     created_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- PROJECT SCHEMAS ---
 
@@ -46,7 +45,7 @@ class ProjectCreate(BaseModel):
     """Schema khi tạo Project mới"""
     title: str = "Untitled Project"
     description: Optional[str] = None
-    source_type: str = "manual" # idea, docx, manual
+    source_type: str = "manual" # chatbot, docx, manual
     source_data: Optional[Dict[str, Any]] = None
 
 class ProjectUpdate(BaseModel):
@@ -66,8 +65,7 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
     updated_at: Optional[datetime]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProjectDetailResponse(ProjectResponse):
     """Schema trả về chi tiết Project kèm danh sách Slides"""

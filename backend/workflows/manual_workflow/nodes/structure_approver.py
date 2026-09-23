@@ -70,6 +70,7 @@ def approve_manual_structure(state: State) -> State:
     state["document_outline"] = final_result.get("document_outline", [])
     state["slide_chunks"] = final_result.get("slide_chunks", [])
     state["slide_positions"] = final_result.get("slide_positions", [])
+    state["section_ids"] = final_result.get("section_ids", [])
     state["slide_context_maps"] = final_result.get("slide_context_maps", [])
     state["slide_types"] = final_result.get("slide_types", [])
     state["slide_options"] = {**slide_options, "output_format": output_format}
@@ -200,28 +201,42 @@ def _sort_and_format_results(
         s_chunks, s_pos, s_maps, s_types = [], [], [], []
 
     converted_chunks = []
-    for i, (text, c_type, _) in enumerate(zip(s_chunks, s_types, s_pos)):
+    section_ids = []
+    for i, (text, c_type, raw_position) in enumerate(zip(s_chunks, s_types, s_pos)):
         lines = text.strip().split("\n")
+        position_text = str(raw_position[0]) if raw_position else ""
 
         if c_type == "intro":
             position = 0
             heading = "INTRO"
+            section_id = "intro"
+            section_order = 0
         elif c_type == "transition":
             position = -1
             heading = "TRANSITION"
+            section_order = int(position_text.replace(".T", "").split(".")[0])
+            section_id = f"section_{section_order}"
         elif c_type == "thank_you":
             position = -2
             heading = "THANK_YOU"
+            section_id = "closing"
+            section_order = 999
         else:
             position = i + 1
             raw_heading = lines[0] if lines else ""
             heading = re.sub(r"^\d+(\.\d+)*\.?\s*", "", raw_heading)
+            section_order = int(position_text.replace(".T", "").split(".")[0])
+            section_id = f"section_{section_order}"
+
+        section_ids.append(section_id)
 
         converted_chunks.append(
             {
                 "position": position,
                 "heading": heading,
                 "text_content": text,
+                "section_id": section_id,
+                "section_order": section_order,
             }
         )
 
@@ -232,6 +247,7 @@ def _sort_and_format_results(
         "document_outline": outline,
         "slide_chunks": converted_chunks,
         "slide_positions": list(s_pos),
+        "section_ids": section_ids,
         "slide_context_maps": list(s_maps),
         "slide_types": list(s_types),
         "output_format": output_format,

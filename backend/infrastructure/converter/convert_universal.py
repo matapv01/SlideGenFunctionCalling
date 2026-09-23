@@ -37,6 +37,7 @@ from backend.infrastructure.converter.omml import (
     M_NS,
     latex_to_omml,
 )
+from backend.config import MATHLIVE_PACKAGE_DIR, OUTPUT_DIR, PUPPETEER_EXECUTABLE_PATH
 
 
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -97,9 +98,8 @@ class XMLSlideConverter:
                 / "Google/Chrome/Application/chrome.exe"
             )
 
-        configured_browser = os.environ.get("PUPPETEER_EXECUTABLE_PATH")
-        if configured_browser:
-            candidates.insert(0, Path(configured_browser))
+        if PUPPETEER_EXECUTABLE_PATH:
+            candidates.insert(0, Path(PUPPETEER_EXECUTABLE_PATH))
 
         return [candidate for candidate in candidates if candidate.exists()]
 
@@ -110,9 +110,8 @@ class XMLSlideConverter:
         candidates = [
             repo_root / "frontend" / "node_modules" / "mathlive",
         ]
-        configured = os.environ.get("MATHLIVE_PACKAGE_DIR")
-        if configured:
-            candidates.insert(0, Path(configured).expanduser())
+        if MATHLIVE_PACKAGE_DIR:
+            candidates.insert(0, Path(MATHLIVE_PACKAGE_DIR).expanduser())
 
         for candidate in candidates:
             if (candidate / "mathlive-ssr.min.mjs").exists():
@@ -1771,6 +1770,23 @@ if ($closed) {
             self.y(str(final_height)),
         )
 
+        # The final XML contrast guard may add an opaque textbox backplate
+        # when text sits directly on an image or another unverifiable surface.
+        # Preserve that safety layer in exported PowerPoint files as well as
+        # in the web preview.
+        textbox_fill = e.get("fill") or e.get("background")
+        if textbox_fill and textbox_fill.lower() != "none":
+            box.fill.solid()
+            box.fill.fore_color.rgb = self.rgb(textbox_fill)
+        else:
+            box.fill.background()
+
+        line_color = e.get("line_color")
+        if line_color and line_color.lower() != "none":
+            box.line.color.rgb = self.rgb(line_color)
+        else:
+            box.line.fill.background()
+
         tf = box.text_frame
         tf.clear()
 
@@ -2207,6 +2223,12 @@ if ($closed) {
             elif os.name == "nt" and path_text.startswith("/") and len(path_text) > 2 and path_text[2] == ":":
                 path_text = path_text[1:]
             image_path = Path(path_text)
+        elif value.lower().startswith("/static/output/"):
+            # Generated DOCX assets are stored under the persistent static
+            # volume.  The XML keeps this browser-readable URL so the editor
+            # can display it; export must resolve it back to the local file.
+            relative_path = unquote(value[len("/static/output/"):].lstrip("/"))
+            image_path = OUTPUT_DIR / relative_path
         else:
             image_path = Path(unquote(value))
 

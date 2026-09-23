@@ -41,9 +41,10 @@ def select_tools(sample:dict,tools_dict:dict,flat_tools:dict,seed=42,count=6):
     return selected
 
 def build_prompt(tokenizer,sample:dict,seed=42,tool_count=6,compact=True):
-    from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
-    from backend.workflows.slidegen_workflow.utils.helper import format_tool_for_qwen
-    from backend.workflows.slidegen_workflow.utils.prompts import QWEN_GENERATOR_HUMAN_TEMPLATE,QWEN_GENERATOR_SYSTEM_PROMPT
+    from rl.slidegen_adapter import (
+        TOOLS_DICT, QWEN_GENERATOR_HUMAN_TEMPLATE,
+        QWEN_GENERATOR_SYSTEM_PROMPT, format_tool_for_qwen,
+    )
     flat={t.name:t for tools in TOOLS_DICT.values() for t in tools}
     names=select_tools(sample,TOOLS_DICT,flat,seed,tool_count)
     tools=[format_tool_for_qwen(flat[name]) for name in names]

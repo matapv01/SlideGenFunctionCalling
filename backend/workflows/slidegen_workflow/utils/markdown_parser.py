@@ -1,6 +1,6 @@
 """
 Markdown to Hierarchical JSON Parser Utility
-Reusable across Manual Mode and Idea Mode workflows
+Reusable parser for generated scripts and the Structure Editor adapter
 """
 
 import re

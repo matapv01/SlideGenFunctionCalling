@@ -1,8 +1,10 @@
 # File: backend/domain/entities/user.py
 
 from dataclasses import dataclass, field
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Optional, Dict, Any
+
+USAGE_WINDOW_HOURS = 5
 
 @dataclass
 class User:
@@ -11,10 +13,29 @@ class User:
     hashed_password: str
     subscription_tier: str = "free"
     subscription_expires_at: Optional[datetime] = None
+    # Loaded from the administrator-managed subscription policy table. It is
+    # optional so lightweight domain/unit-test users remain constructible.
+    plan_limits: Optional[Dict[str, float | int]] = None
     daily_usage_reset_date: date = field(default_factory=date.today)
     idea_usage_today: int = 0
     docx_usage_today: int = 0
+    usage_window_started_at: datetime = field(default_factory=datetime.now)
+    # Chat usage is stored as weighted credits. One default Genius 3/Medium
+    # turn costs 1.0 credit; model and effort choices may cost less or more.
+    chat_usage: float = 0.0
+    chat_message_count: int = 0
+    docx_usage: int = 0
     is_active: bool = True
+    # New accounts must verify once during registration. Existing accounts
+    # are migrated as verified so a policy change does not lock them out.
+    email_verified: bool = True
+    onboarding_completed: bool = True
+    # Legacy accounts default to the current tour version; new accounts set
+    # this to 0 until they finish or skip the first-workspace tour.
+    workspace_tour_version: int = 1
+    # Authorization is persisted per account and managed through the admin
+    # console. It is not derived from deployment environment variables.
+    is_admin: bool = False
     cancel_at_period_end: bool = False
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -28,41 +49,47 @@ class User:
             return False
         return self.subscription_expires_at > datetime.now()
 
-    def get_daily_limits(self) -> Dict[str, int]:
-        """Get daily usage limits based on subscription tier"""
-        if self.subscription_tier == "free":
-            return {"idea_generation": 2, "docx_upload": 3, "max_docx_slides": 20}
-        elif self.subscription_tier == "plus":
-            return {"idea_generation": 10, "docx_upload": 10, "max_docx_slides": 20}
-        elif self.subscription_tier == "ultra":
-            return {"idea_generation": -1, "docx_upload": -1, "max_docx_slides": -1}  # -1 = unlimited
-        return {"idea_generation": 0, "docx_upload": 0, "max_docx_slides": 0}
+    def get_usage_limits(self) -> Dict[str, float | int]:
+        """Return limits loaded from the runtime subscription policy."""
+        return dict(self.plan_limits or {})
+
+    def get_daily_limits(self) -> Dict[str, float | int]:
+        """Backward-compatible name for callers that still ask for plan limits."""
+        return self.get_usage_limits()
 
     def can_use_feature(self, feature_type: str) -> bool:
-        """Check if user can use a specific feature today"""
+        """Check if user can use a feature in the current five-hour window."""
         if not self.is_subscription_active():
             return self.subscription_tier == "free"  # Only free features allowed
 
-        limits = self.get_daily_limits()
+        limits = self.get_usage_limits()
 
-        if feature_type == "idea_generation":
-            limit = limits["idea_generation"]
-            return limit == -1 or self.idea_usage_today < limit
+        if feature_type in {"chat_message", "chat_messages", "idea_generation"}:
+            limit = limits.get("chat_messages", 0)
+            return limit == -1 or self.chat_usage < limit
         elif feature_type == "docx_upload":
-            limit = limits["docx_upload"]
-            return limit == -1 or self.docx_usage_today < limit
+            limit = limits.get("docx_upload", 0)
+            return limit == -1 or self.docx_usage < limit
 
         return True
 
     def reset_daily_usage_if_needed(self) -> bool:
-        """Reset usage counters if it's a new day"""
-        today = date.today()
-        if self.daily_usage_reset_date < today:
-            self.daily_usage_reset_date = today
+        """Backward-compatible alias that resets the rolling usage window."""
+        now = datetime.now(tz=self.usage_window_started_at.tzinfo)
+        if now >= self.usage_reset_at:
+            self.usage_window_started_at = now
+            self.daily_usage_reset_date = now.date()
             self.idea_usage_today = 0
             self.docx_usage_today = 0
+            self.chat_usage = 0
+            self.chat_message_count = 0
+            self.docx_usage = 0
             return True
         return False
+
+    @property
+    def usage_reset_at(self) -> datetime:
+        return self.usage_window_started_at + timedelta(hours=USAGE_WINDOW_HOURS)
 
 @dataclass
 class UserProfile:

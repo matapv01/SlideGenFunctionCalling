@@ -15,17 +15,18 @@ def organize_chunks(state: State) -> State:
     Hàm hợp nhất xử lý đánh số lại cấu trúc tài liệu,
     nhóm nội dung vào các slide và sắp xếp chúng theo thứ tự cuối cùng đúng.
     Tạo slide giới thiệu, slide chuyển tiếp cho các tiêu đề cấp 1 và các slide nội dung.
-    BỎ QUA đánh số nếu slide_chunks đã tồn tại (từ quá trình tạo ý tưởng).    """
+    BỎ QUA đánh số nếu slide_chunks đã tồn tại từ một upstream source.    """
     print("\n---------------- Node Organizing Chunks ----------------")
 
     start_time = time.time()
 
-     # Check if slide_chunks already exists (idea-based workflow)
+     # Check if slide_chunks already exists from an upstream source.
     if state.get('slide_chunks'):
-        print("⏭️  Using pre-generated chunks from idea workflow")
+        print("⏭️  Using pre-generated canonical chunks")
         print(f"   Using {len(state['slide_chunks'])} pre-generated chunks")
 
-        # Even for idea workflows, we need to ensure transition and thank you slides are properly set up
+        # Canonical chunks are already prepared upstream; preserve their order
+        # and metadata while the renderer adds its visual treatment.
         slide_chunks = state['slide_chunks']
 
 

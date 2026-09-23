@@ -38,6 +38,37 @@ def create_app():
     # API routes - MUST be registered before the SPA catch-all
     app.include_router(create_router())
 
+    # Both production and local Docker expose the new FE at /slidegen. Keep
+    # public assets and client-side routes under that single mount point.
+    @app.get("/slidegen")
+    @app.get("/slidegen/")
+    async def serve_slidegen_root():
+        index = FRONTEND_DIST_DIR / "index.html"
+        if index.exists():
+            return FileResponse(str(index), headers={"Cache-Control": "no-store, must-revalidate"})
+        return JSONResponse({"error": "Frontend not built"}, status_code=404)
+
+    @app.get("/slidegen/{full_path:path}")
+    async def serve_slidegen(full_path: str):
+        file_path = FRONTEND_DIST_DIR / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        index = FRONTEND_DIST_DIR / "index.html"
+        if index.exists():
+            return FileResponse(str(index), headers={"Cache-Control": "no-store, must-revalidate"})
+        return JSONResponse({"error": "Frontend not built"}, status_code=404)
+
+    @app.get("/health")
+    async def health_check():
+        """Lightweight JSON health endpoint used by Docker and diagnostics."""
+        return {
+            "status": "ok",
+            "services": {
+                "api": "ok",
+                "workflow": "available",
+            },
+        }
+
     # Serve frontend SPA from dist build
     @app.get("/")
     async def serve_root():

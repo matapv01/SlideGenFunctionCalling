@@ -1,10 +1,10 @@
-"""Shared utilities for RL training scripts (SDFT + GRPO)."""
+"""Shared utilities for tool-call SFT and GRPO training scripts."""
 
 import os
 import subprocess
 
 
-def auto_select_gpu(preferred_gpu: str = "2"):
+def auto_select_gpu(preferred_gpu: str | None = None):
     gpu_override = None
     for env_name in ("TRAINING_GPU", "GPU_ID", "GPU", "PREFERRED_GPU"):
         value = os.getenv(env_name)
@@ -17,7 +17,7 @@ def auto_select_gpu(preferred_gpu: str = "2"):
         os.environ["CUDA_VISIBLE_DEVICES"] = gpu_override
         return
 
-    if "CUDA_VISIBLE_DEVICES" in os.environ:
+    if os.getenv("CUDA_VISIBLE_DEVICES", "").strip():
         return
 
     if gpu_override is None and preferred_gpu:
@@ -54,7 +54,7 @@ def setup_tokenizer(tokenizer, chat_template: str):
 
 
 
-# LoRA constants shared between SDFT and GRPO
+# LoRA constants shared between SFT and GRPO
 LORA_R = 16
 LORA_ALPHA = 32
 LORA_DROPOUT = 0

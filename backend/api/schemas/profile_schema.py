@@ -1,6 +1,6 @@
 # File: backend/schemas/profile_schema.py 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 # --- PROFILE SCHEMAS ---
@@ -18,8 +18,7 @@ class UserProfileResponse(UserProfileBase):
     """Schema trả về thông tin profile"""
     user_id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- SETTINGS SCHEMAS ---
 
@@ -34,11 +33,9 @@ class UserSettingsUpdate(BaseModel):
     notifications_enabled: bool = True
     
     # Cho phép thêm các trường khác linh động nếu cần
-    class Config:
-        extra = "allow" 
+    model_config = ConfigDict(extra="allow")
 
 class UserSettingsResponse(UserSettingsUpdate):
     user_id: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(extra="allow", from_attributes=True)

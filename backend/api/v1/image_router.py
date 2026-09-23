@@ -7,11 +7,12 @@ import mimetypes
 import socket
 import urllib.request
 from urllib.error import HTTPError, URLError
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse, Response
-from backend.config import UPLOAD_DIR
+from backend.config import OUTPUT_DIR, UPLOAD_DIR
 import logging
 
 router = APIRouter(prefix="/image-serve", tags=["IMAGE SERVING"])
@@ -98,6 +99,41 @@ def proxy_remote_image(url: str = Query(..., min_length=1, max_length=4096)):
         content=data,
         media_type=content_type,
         headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@router.get("/project-asset")
+def get_project_asset(
+    path: str = Query(..., min_length=1, max_length=2048),
+):
+    """Serve an image copied into a generated project's output assets.
+
+    The browser receives only a path relative to ``static/output``.  Resolve
+    and validate it against that directory before serving so this compatibility
+    bridge cannot expose arbitrary files from the container.
+    """
+    relative_path = Path(path.replace("\\", "/"))
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise HTTPException(status_code=400, detail="Đường dẫn asset không hợp lệ")
+
+    output_root = OUTPUT_DIR.resolve()
+    image_path = (output_root / relative_path).resolve()
+    try:
+        image_path.relative_to(output_root)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Đường dẫn asset không hợp lệ") from exc
+
+    if not image_path.is_file():
+        raise HTTPException(status_code=404, detail="Không tìm thấy asset của project")
+
+    content_type = (mimetypes.guess_type(image_path.name)[0] or "").lower()
+    if not content_type.startswith("image/"):
+        raise HTTPException(status_code=415, detail="Asset không phải là ảnh")
+
+    return FileResponse(
+        image_path,
+        media_type=content_type,
+        headers={"Cache-Control": "private, max-age=3600"},
     )
 
 

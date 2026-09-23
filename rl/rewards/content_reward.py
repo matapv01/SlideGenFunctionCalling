@@ -44,9 +44,10 @@ def content_preservation_reward(prompts: List[str], completions: List[str], **kw
             rewards.append(0.0)
             continue
 
-        prompt_content = prompt
-        if "CONTENT:" in prompt:
-            prompt_content = prompt.split("CONTENT:")[-1]
+        match = re.search(r"\[CONTENT\]\n(.+?)(?:\n\nOutput:|$)", prompt, re.DOTALL)
+        prompt_content = (
+            match.group(1).strip() if match else prompt[-1200:]
+        )
 
         original_words = clean_words(prompt_content)
         generated_words = clean_words(generated_text)

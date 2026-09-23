@@ -28,10 +28,17 @@ from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     execute_tool as execute_xml_tool,
     execute_tool_plan as execute_xml_tool_plan,
     normalize_tool_arguments,
+    normalize_tool_call,
+)
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    NoApprovedImageError,
 )
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.utils.xml_transitions import (
     apply_random_slide_transitions,
+)
+from backend.workflows.slidegen_workflow.utils.xml_fallback import (
+    fallback_xml_for_failed_tool as _fallback_xml_for_failed_tool,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,21 +58,38 @@ def _store_xml_with_random_transitions(state: State, xml_content: str) -> None:
         print(f"  Transition ngẫu nhiên: {details}")
 
 
-def _fallback_xml_for_failed_tool(tool_call: dict, reason: str) -> str:
-    """Return a valid XML slide so generation can still be finalized."""
-    from xml.sax.saxutils import escape
+def _store_best_available_fallback(
+    state: State,
+    active_execute_tool,
+    tool_call: dict,
+    reason: str,
+) -> None:
+    """Keep the last valid slide when a later regeneration response is broken."""
+    previous_xml = str(state.get("last_valid_xml_content") or "").strip()
+    previous_call = state.get("last_valid_tool_call") or {}
+    if previous_xml and previous_call:
+        print("  ⚠️ Reusing the last valid XML after regeneration failed.")
+        state["current_tool_call"] = previous_call
+        state["current_tool_plan"] = [previous_call]
+        state["current_search_history"] = []
+        state["current_xml_content"] = previous_xml
+        return
 
-    tool_name = escape(str(tool_call.get("name", "unknown_tool")))
-    safe_reason = escape(str(reason))
-    return f'''<?xml version="1.0" encoding="UTF-8"?>
-<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#F8FAFC">
-    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F8FAFC" line_color="none" />
-    <textbox x="180" y="220" width="1240" height="180" font="Arial" size="42" bold="true" color="#0F172A" align="center" vertical_align="middle">{tool_name}</textbox>
-    <textbox x="180" y="450" width="1240" height="70" font="Arial" size="28" color="#475569" align="center" vertical_align="middle">Fallback XML slide</textbox>
-    <textbox x="180" y="560" width="1240" height="220" font="Arial" size="20" color="#64748B" align="center" vertical_align="middle">{safe_reason}</textbox>
-  </slide>
-</presentation>'''
+    fallback_content = active_execute_tool(
+        tool_call,
+        source_content=state.get("current_slide_text", ""),
+    )
+    if not fallback_content:
+        fallback_content = _fallback_xml_for_failed_tool(
+            tool_call,
+            reason,
+            source_content=state.get("current_slide_text", ""),
+        )
+    fallback_call = {"name": "default_fallback", "arguments": {}}
+    state["current_tool_call"] = fallback_call
+    state["current_tool_plan"] = [fallback_call]
+    state["current_search_history"] = []
+    _store_xml_with_random_transitions(state, fallback_content)
 
 # ─── Regex patterns ───────────────────────────────────────────────────
 HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
@@ -124,6 +148,34 @@ def _build_tool_schema_lookup(tools_dict: Dict) -> Dict[str, Dict]:
     return lookup
 
 
+def _build_schema_hint(tool_name: str, schema_lookup: Dict) -> str:
+    """Return a concise, human-readable schema for *tool_name* to inject into
+    retry feedback so the model knows the EXACT valid parameter names."""
+    entry = schema_lookup.get(tool_name)
+    if not entry:
+        return ""
+    field_info = entry["field_info"]
+    required_fields = entry["required_fields"]
+    lines = [
+        f"\n--- CORRECT SCHEMA FOR '{tool_name}' ---",
+        f"Use ONLY these exact parameter names (do NOT invent others):",
+    ]
+    for fname, fspec in field_info.items():
+        ftype = fspec.get("type", "any")
+        req_tag = " (REQUIRED)" if fname in required_fields else " (optional)"
+        if ftype == "array":
+            item_spec = fspec.get("items", {})
+            if item_spec.get("type") == "object":
+                item_keys = list(item_spec.get("properties", {}).keys())
+                lines.append(f"  - {fname}: List[dict with keys {item_keys}]{req_tag}")
+            else:
+                lines.append(f"  - {fname}: List[{item_spec.get('type', 'any')}]{req_tag}")
+        else:
+            lines.append(f"  - {fname}: {ftype}{req_tag}")
+    lines.append("--- END SCHEMA ---")
+    return "\n".join(lines)
+
+
 # Module-level cache
 _TOOL_SCHEMA_LOOKUPS: Dict[str, Dict] = {}
 
@@ -132,6 +184,32 @@ def _get_schema_lookup(tools_dict: Dict = XML_TOOLS_DICT, cache_key: str = "xml"
     if cache_key not in _TOOL_SCHEMA_LOOKUPS:
         _TOOL_SCHEMA_LOOKUPS[cache_key] = _build_tool_schema_lookup(tools_dict)
     return _TOOL_SCHEMA_LOOKUPS[cache_key]
+
+
+def _normalize_plan_for_execution(tool_plan: list, tool_lookup: Dict) -> list:
+    """Normalize and schema-filter the calls that will actually be executed."""
+    if not isinstance(tool_plan, list):
+        return tool_plan
+
+    normalized_plan = []
+    for call in tool_plan:
+        if not isinstance(call, dict):
+            normalized_plan.append(call)
+            continue
+        normalized_call = normalize_tool_call(call)
+        tool_name = normalized_call.get("name")
+        schema_tool = tool_lookup.get(tool_name)
+        if schema_tool is not None:
+            known_fields = set(schema_tool.args.keys())
+            arguments = normalized_call.get("arguments", {})
+            if isinstance(arguments, dict):
+                normalized_call["arguments"] = {
+                    key: value
+                    for key, value in arguments.items()
+                    if key in known_fields
+                }
+        normalized_plan.append(normalized_call)
+    return normalized_plan
 
 
 def validate_tool_call(
@@ -151,6 +229,10 @@ def validate_tool_call(
     if not tool_call or not isinstance(tool_call, dict):
         return False, ["Tool call is empty or not a dict."]
     
+    # Preserve parser diagnostics before normalizing aliases or arguments.
+    if tool_call.get("_parse_error"):
+        return False, [tool_call["_parse_error"]]
+
     raw_tool_name = tool_call.get("name")
     tool_name = canonical_tool_name(raw_tool_name)
     arguments = normalize_tool_arguments(
@@ -159,8 +241,8 @@ def validate_tool_call(
     )
     
     # ── 1. Tool name checks ──────────────────────────────────────────
-    if not tool_name:
-        errors.append("MISSING_TOOL_NAME: 'name' field is empty or missing.")
+    if not tool_name or tool_name in ("PARSE_ERROR", "default_fallback"):
+        errors.append("MISSING_TOOL_CALL: No valid tool was generated. Pick a valid tool from available tools.")
         return False, errors
     
     if not isinstance(tool_name, str):
@@ -182,18 +264,33 @@ def validate_tool_call(
             f"Choose one of the available tools."
         )
         return False, errors
-    #Check if avaiable tools is empty
+    # Check if available tools is empty
     if tool_name not in schema_lookup:
         errors.append(
             f"UNREGISTERED_TOOL: '{tool_name}' is not a registered tool in the system."
         )
         return False, errors
-    
+
     # ── 2. Arguments basic check ─────────────────────────────────────
     if not isinstance(arguments, dict):
         errors.append(f"INVALID_ARGUMENTS_TYPE: 'arguments' should be a dict, got {type(arguments).__name__}.")
         return False, errors
-    
+
+    # ── 2b. Auto-strip extra arguments NOT in schema ──────────────────
+    # The model sometimes hallucinates parameters not defined in the tool schema.
+    # Strip them silently here so we don't burn retry budget on EXTRA_ARGUMENT errors.
+    tool_schema_pre = schema_lookup[tool_name]
+    known_fields = set(tool_schema_pre["field_info"].keys())
+    extra_keys = [k for k in arguments if k not in known_fields]
+    if extra_keys:
+        print(
+            f"  ⚠️ [executor] Auto-stripping hallucinated argument(s) for '{tool_name}': {extra_keys}"
+        )
+        arguments = {k: v for k, v in arguments.items() if k in known_fields}
+        # Propagate stripped arguments back so downstream checks use the clean dict
+        tool_call = {**tool_call, "arguments": arguments}
+
+
     tool_schema = schema_lookup[tool_name]
     required_fields = tool_schema["required_fields"]
     field_info = tool_schema["field_info"]
@@ -223,16 +320,38 @@ def validate_tool_call(
             continue
         
         if arg_name not in field_info:
-            # Extra argument not in schema — warn but don't fail
+            errors.append(
+                f"EXTRA_ARGUMENT: '{arg_name}' is not a valid parameter for tool '{tool_name}'. "
+                f"Do NOT invent extra parameters! Valid parameters for '{tool_name}' are: {list(field_info.keys())}."
+            )
             continue
         
         expected_type = field_info[arg_name].get("type", "")
         
         # Check list types
-        if expected_type == "array" and not isinstance(arg_value, list):
-            errors.append(
-                f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
-            )
+        if expected_type == "array":
+            if not isinstance(arg_value, list):
+                errors.append(
+                    f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
+                )
+            else:
+                items_spec = field_info[arg_name].get("items", {})
+                expected_item_type = items_spec.get("type", "")
+                
+                # Deep check list items
+                if expected_item_type == "object":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, dict):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be an object/dict, got {type(item).__name__}: '{str(item)[:50]}'. "
+                                f"Provide a list of structured dictionaries."
+                            )
+                elif expected_item_type == "string":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, str):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be a string, got {type(item).__name__}: '{str(item)[:50]}'."
+                            )
         
         # Check string types
         if expected_type == "string" and not isinstance(arg_value, str):
@@ -276,7 +395,37 @@ def validate_tool_call(
             errors.append(
                 f"EMPTY_LIST: '{arg_name}' is required but the list is empty."
             )
+
+    # ── 8. Deep schema validation ───────────────────────────────────
+    # The checks above intentionally produce concise feedback, but array
+    # element types also need validation before StructuredTool invocation.
+    # Otherwise a list[str] vs list[dict] mismatch passes here and only fails
+    # during execution, where it becomes a generic safe-fallback slide.
+    if not errors:
+        args_schema = getattr(tool_schema["tool_ref"], "args_schema", None)
+        if args_schema is not None:
+            try:
+                if hasattr(args_schema, "model_validate"):
+                    args_schema.model_validate(arguments)
+                else:
+                    args_schema.parse_obj(arguments)
+            except Exception as exc:
+                errors.append(
+                    f"SCHEMA_VALIDATION_ERROR: arguments for '{tool_name}' do not match "
+                    f"the nested tool schema: {str(exc)[:700]}"
+                )
     
+    # ── 8. Strict Pydantic schema-level validation ───────────────────
+    tool_ref = tool_schema.get("tool_ref")
+    if tool_ref and hasattr(tool_ref, "args_schema") and tool_ref.args_schema:
+        try:
+            if hasattr(tool_ref.args_schema, "model_validate"):
+                tool_ref.args_schema.model_validate(arguments)
+            else:
+                tool_ref.args_schema(**arguments)
+        except Exception as pydantic_err:
+            errors.append(f"SCHEMA_VALIDATION_ERROR for '{tool_name}':\n{pydantic_err}")
+
     is_valid = len(errors) == 0
     return is_valid, errors
 
@@ -290,7 +439,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
     with feedback so the graph can route back to generate_slide.
     """
     idx = state.get('current_slide_index', 0)
-    retry_count = state.get('retry_count', 0)
+    retry_count = int(state.get('executor_retry_count', 0))
     
     print(f"\n{'='*60}")
     print(f"  🔍 EXECUTOR VALIDATOR — Slide {idx + 1}, Attempt {retry_count + 1}/{EXECUTOR_MAX_RETRIES}")
@@ -303,7 +452,15 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         print("  ❌ No tool call found in state.")
         state['executor_decision'] = 'fail'
         state['executor_feedback'] = "CRITICAL: No tool call was generated. You must output a valid function call."
-        state['retry_count'] = retry_count + 1
+        state['executor_retry_count'] = retry_count + 1
+        state['retry_count'] = int(state.get('retry_count', 0)) + 1
+        if state['executor_retry_count'] >= EXECUTOR_MAX_RETRIES:
+            _store_best_available_fallback(
+                state,
+                execute_xml_tool,
+                {"name": "PARSE_ERROR", "arguments": {}},
+                state['executor_feedback'],
+            )
         return state
     
     configurable = config.get("configurable", {}) if config else {}
@@ -338,41 +495,88 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         print(f"  ✅ PASS — Tool call is valid!")
         state['executor_decision'] = 'pass'
         state['executor_feedback'] = ''
-        tool_plan = state.get("current_tool_plan") or [tool_call]
+        state['executor_retry_count'] = 0
+        tool_lookup = {
+            tool.name: tool
+            for tools in active_tools_dict.values()
+            for tool in tools
+        }
+        tool_plan = _normalize_plan_for_execution(
+            state.get("current_tool_plan") or [tool_call],
+            tool_lookup,
+        )
+        if isinstance(tool_plan, list) and tool_plan and isinstance(tool_plan[0], dict):
+            tool_call = tool_plan[0]
+            state["current_tool_call"] = tool_call
+            state["current_tool_plan"] = tool_plan
         try:
+            slide_options = state.get("slide_options") or {}
+            current_index = int(state.get("current_slide_index", -1))
+            approved_images = list(state.get("current_approved_images") or [])
+            if not approved_images:
+                approved_images = [
+                    image
+                    for image in slide_options.get("approved_image_assignments", []) or []
+                    if isinstance(image, dict)
+                    and int(image.get("slide_index", -1)) == current_index
+                ]
             slide_content, final_tool_call, search_history = active_execute_tool_plan(
                 tool_plan,
-                tool_lookup={
-                    tool.name: tool
-                    for tools in active_tools_dict.values()
-                    for tool in tools
-                },
+                tool_lookup=tool_lookup,
                 source_content=state.get("current_slide_text", ""),
+                approved_images=approved_images,
+                asset_dir=configurable.get("output_folder"),
             )
             if not slide_content:
-                raise ValueError("Slide XML tool returned empty content.")
+                raise ValueError(f"Tool '{tool_name}' returned empty XML content.")
+        except NoApprovedImageError as e:
+            # A verifier rejection is a quality decision, not a rendering
+            # failure. Keep the same slide content but ask the generator to
+            # call again with a layout that has no image slots.
+            print(f"  IMAGE VERIFICATION: {e}")
+            state["force_no_image_layout"] = True
+            state["executor_decision"] = "fail"
+            state["executor_feedback"] = (
+                f"{e}\n"
+                "Regenerate this slide with an XML layout that has no image "
+                "parameters. Do not request or invent an image on this retry. "
+                "Preserve the slide's content, hierarchy, and visual intent "
+                "using typography, shapes, tables, or charts instead."
+            )
+            state["executor_retry_count"] = retry_count + 1
+            state["retry_count"] = int(state.get("retry_count", 0)) + 1
+            if state["executor_retry_count"] >= EXECUTOR_MAX_RETRIES:
+                fallback_call = {"name": "default_fallback", "arguments": {}}
+                state["current_tool_call"] = fallback_call
+                state["current_tool_plan"] = [fallback_call]
+                state["current_search_history"] = []
+                fallback_content = _fallback_xml_for_failed_tool(
+                    tool_call,
+                    str(e),
+                    source_content=state.get("current_slide_text", ""),
+                )
+                _store_xml_with_random_transitions(state, fallback_content)
+                state["last_valid_tool_call"] = fallback_call
+                state["last_valid_xml_content"] = state["current_xml_content"]
+            return state
         except Exception as e:
             print(f"  FAIL - Tool plan execution failed: {e}")
             state['executor_decision'] = 'fail'
             state['executor_feedback'] = (
-                "EXECUTOR TOOL PLAN FAILED:\n"
+                "EXECUTOR EXECUTION FAILED:\n"
                 f"- {e}\n\n"
-                "Regenerate a valid slide-first plan: one slide XML tool first, "
-                "then one search_ddgs_images call for each image parameter."
+                "Fix ALL errors above and regenerate a valid tool call matching the parameter schema exactly.\n"
+                "Return exactly one valid slide XML tool. Approved image assets are injected by the executor; do not emit image-search calls."
             )
-            state['retry_count'] = retry_count + 1
-            if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-                fallback_content = active_execute_tool(
+            state['executor_retry_count'] = retry_count + 1
+            state['retry_count'] = int(state.get('retry_count', 0)) + 1
+            if state['executor_retry_count'] >= EXECUTOR_MAX_RETRIES:
+                _store_best_available_fallback(
+                    state,
+                    active_execute_tool,
                     tool_call,
-                    source_content=state.get("current_slide_text", ""),
+                    str(e),
                 )
-                if not fallback_content:
-                    fallback_content = (
-                        _fallback_xml_for_failed_tool(tool_call, str(e))
-                    )
-                state['current_tool_plan'] = [tool_call]
-                state['current_search_history'] = []
-                _store_xml_with_random_transitions(state, fallback_content)
             return state
 
         for key in list(state.keys()):
@@ -384,29 +588,40 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         state['current_tool_call'] = final_tool_call
         state['current_search_history'] = search_history
         _store_xml_with_random_transitions(state, slide_content)
+        state['last_valid_tool_call'] = final_tool_call
+        state['last_valid_xml_content'] = state.get('current_xml_content', '')
     else:
         error_report = "\n".join(f"  • {e}" for e in errors)
         print(f"  ❌ FAIL — {len(errors)} error(s) found:")
         print(error_report)
-        
+
+        # Determine if schema hint would help the model fix the errors.
+        # Inject full parameter schema whenever there are missing/extra/schema errors
+        # so the model knows the EXACT correct argument names on the next retry.
+        schema_hint = ""
+        needs_schema = any(
+            err.startswith(("MISSING_REQUIRED_PARAM", "EXTRA_ARGUMENT", "SCHEMA_VALIDATION_ERROR"))
+            for err in errors
+        )
+        if needs_schema:
+            schema_lookup = _get_schema_lookup(active_tools_dict, "xml")
+            schema_hint = _build_schema_hint(tool_name, schema_lookup)
+
         state['executor_decision'] = 'fail'
         state['executor_feedback'] = (
             f"EXECUTOR VALIDATION FAILED ({len(errors)} errors):\n"
             + "\n".join(f"- {e}" for e in errors)
-            + "\n\nFix ALL errors above and regenerate the tool call."
+            + schema_hint
+            + "\n\nFix ALL errors above and regenerate the tool call using ONLY the parameter names listed in the schema above."
         )
-        state['retry_count'] = retry_count + 1
-        if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-            fallback_content = active_execute_tool(
+        state['executor_retry_count'] = retry_count + 1
+        state['retry_count'] = int(state.get('retry_count', 0)) + 1
+        if state['executor_retry_count'] >= EXECUTOR_MAX_RETRIES:
+            _store_best_available_fallback(
+                state,
+                active_execute_tool,
                 tool_call,
-                source_content=state.get("current_slide_text", ""),
+                "; ".join(errors),
             )
-            if not fallback_content:
-                fallback_content = (
-                    _fallback_xml_for_failed_tool(tool_call, "; ".join(errors))
-                )
-            state['current_tool_plan'] = [tool_call]
-            state['current_search_history'] = []
-            _store_xml_with_random_transitions(state, fallback_content)
     
     return state

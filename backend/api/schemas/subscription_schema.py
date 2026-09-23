@@ -10,9 +10,14 @@ class SubscriptionInfoResponse(BaseModel):
     tier: str
     is_active: bool
     expires_at: Optional[datetime]
-    daily_limits: Dict[str, int]
-    current_usage: Dict[str, int]
-    usage_reset_date: str
+    usage_limits: Dict[str, float | int]
+    current_usage: Dict[str, float]
+    usage_window_hours: int
+    usage_window_started_at: datetime
+    usage_reset_at: datetime
+    # Transitional fields for clients that still consume the old daily shape.
+    daily_limits: Optional[Dict[str, float | int]] = None
+    usage_reset_date: Optional[str] = None
     cancel_at_period_end: bool = False
 
 

@@ -1,0 +1,338 @@
+import asyncio
+
+from backend.application.services.document_rag_service import DocumentRagService
+from backend.application.services.chatbot_service import ChatbotService
+from backend.application.services.rag_query_planner import RagQueryPlan
+from backend.domain.entities.chat import ChatSession
+from backend.domain.entities.chat_document import ChatDocumentChunk, RetrievedContext
+
+
+class _EmbeddingProvider:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        # The test only needs deterministic ranking. Lexical scoring in the
+        # service then decides which document node is the anchor.
+        return [[1.0, 0.0] for _ in texts]
+
+
+class _TopicEmbeddingProvider:
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [
+            [1.0, 0.0]
+            if "astronomy" in text.casefold()
+            else [0.0, 1.0]
+            for text in texts
+        ]
+
+
+class _DocumentRepository:
+    def __init__(self, chunks: list[ChatDocumentChunk]) -> None:
+        self.chunks = chunks
+
+    def list_session_chunks(
+        self, session_id: str, user_id: int
+    ) -> list[ChatDocumentChunk]:
+        return self.chunks
+
+    def list_session_documents(self, session_id: str, user_id: int) -> list:
+        return []
+
+
+class _Planner:
+    async def plan(self, *args, **kwargs) -> RagQueryPlan:
+        return RagQueryPlan(
+            needs_rag=True,
+            queries=("revenue",),
+            reason="document evidence",
+            source="llm",
+            mode="deck_from_document",
+            source_policy="document_preferred",
+            include_root=True,
+            include_ancestors=True,
+            include_siblings=False,
+            max_detail_nodes=4,
+        )
+
+
+class _PlannedContextProvider:
+    def __init__(self) -> None:
+        self.calls: list[dict] = []
+
+    async def retrieve_many(self, session, queries, **kwargs):
+        self.calls.append({"session": session, "queries": queries, **kwargs})
+        return RetrievedContext(context="retrieved", citations=[])
+
+
+def _session() -> ChatSession:
+    return ChatSession(
+        id="session-1",
+        user_id=7,
+        project_id=None,
+        title=None,
+        history_summary=None,
+        max_turns=5,
+        created_at="2026-01-01T00:00:00",
+        updated_at="2026-01-01T00:00:00",
+    )
+
+
+def test_build_chunks_materializes_root_sections_and_detail_nodes():
+    structure = [
+        {
+            "level": 1,
+            "title": "Finance",
+            "content": "Revenue increased year over year.",
+            "children": [
+                {
+                    "level": 2,
+                    "title": "Revenue",
+                    "content": "Revenue reached 100 million.",
+                    "children": [],
+                }
+            ],
+        }
+    ]
+
+    chunks = DocumentRagService._build_chunks(
+        structure,
+        "# Finance\nRevenue increased year over year.",
+        document_title="Annual report",
+    )
+
+    root = next(chunk for chunk in chunks if chunk["node_key"] == "root")
+    finance_summary = next(
+        chunk
+        for chunk in chunks
+        if chunk["node_key"] == "1" and chunk["node_kind"] == "section_summary"
+    )
+    revenue_detail = next(
+        chunk
+        for chunk in chunks
+        if chunk["node_key"] == "1.1" and chunk["node_kind"] == "content"
+    )
+
+    assert root["level"] == 0
+    assert root["parent_node_key"] is None
+    assert root["node_kind"] == "root_summary"
+    assert finance_summary["parent_node_key"] == "root"
+    assert revenue_detail["parent_node_key"] == "1"
+    assert "Finance" in root["content"]
+    assert "Revenue reached 100 million" in revenue_detail["content"]
+
+
+def test_targeted_retrieval_keeps_the_matching_node_in_its_tree_context():
+    logical_chunks = DocumentRagService._build_chunks(
+        [
+            {
+                "level": 1,
+                "title": "Finance",
+                "content": "Revenue increased year over year.",
+                "children": [
+                    {
+                        "level": 2,
+                        "title": "Revenue",
+                        "content": "Revenue reached 100 million.",
+                        "children": [],
+                    }
+                ],
+            },
+            {
+                "level": 1,
+                "title": "Operations",
+                "content": "Operations remained stable.",
+                "children": [],
+            },
+        ],
+        "",
+        document_title="Annual report",
+    )
+    chunks = [
+        ChatDocumentChunk(
+            id=index + 1,
+            document_id="doc-1",
+            ordinal=chunk["ordinal"],
+            title=chunk["title"],
+            section_path=chunk["section_path"],
+            content=chunk["content"],
+            level=chunk["level"],
+            embedding=[1.0, 0.0],
+            node_key=chunk["node_key"],
+            parent_node_key=chunk["parent_node_key"],
+            node_kind=chunk["node_kind"],
+        )
+        for index, chunk in enumerate(logical_chunks)
+    ]
+    service = DocumentRagService(
+        _DocumentRepository(chunks),
+        _EmbeddingProvider(),
+        preprocessing_service=None,
+    )
+
+    retrieved = asyncio.run(
+        service.retrieve_many(
+            _session(),
+            ["revenue"],
+            mode="targeted_section",
+            include_root=True,
+            include_ancestors=True,
+        )
+    )
+
+    assert "Annual report" in retrieved.context
+    assert "Finance" in retrieved.context
+    assert "Revenue reached 100 million" in retrieved.context
+    assert any(citation["role"] == "root" for citation in retrieved.citations)
+    assert any(citation["role"] == "anchor" for citation in retrieved.citations)
+
+
+def test_targeted_retrieval_honours_the_detail_node_budget():
+    logical_chunks = DocumentRagService._build_chunks(
+        [
+            {
+                "level": 1,
+                "title": "Finance",
+                "content": "Revenue increased year over year.",
+                "children": [
+                    {
+                        "level": 2,
+                        "title": "Revenue",
+                        "content": "Revenue reached 100 million.",
+                        "children": [],
+                    }
+                ],
+            }
+        ],
+        "",
+        document_title="Annual report",
+    )
+    chunks = [
+        ChatDocumentChunk(
+            id=index + 1,
+            document_id="doc-1",
+            ordinal=chunk["ordinal"],
+            title=chunk["title"],
+            section_path=chunk["section_path"],
+            content=chunk["content"],
+            level=chunk["level"],
+            embedding=[1.0, 0.0],
+            node_key=chunk["node_key"],
+            parent_node_key=chunk["parent_node_key"],
+            node_kind=chunk["node_kind"],
+        )
+        for index, chunk in enumerate(logical_chunks)
+    ]
+    service = DocumentRagService(
+        _DocumentRepository(chunks),
+        _EmbeddingProvider(),
+        preprocessing_service=None,
+    )
+
+    retrieved = asyncio.run(
+        service.retrieve_many(
+            _session(),
+            ["revenue"],
+            mode="targeted_section",
+            include_root=True,
+            max_detail_nodes=1,
+        )
+    )
+
+    assert sum(
+        citation["role"] in {"anchor", "detail"}
+        for citation in retrieved.citations
+    ) <= 1
+
+
+def test_topic_retrieval_does_not_expand_an_unrelated_document_branch():
+    logical_chunks = DocumentRagService._build_chunks(
+        [
+            {
+                "level": 1,
+                "title": "Finance",
+                "content": "Revenue increased year over year.",
+                "children": [],
+            },
+            {
+                "level": 1,
+                "title": "Operations",
+                "content": "Operations remained stable.",
+                "children": [],
+            },
+        ],
+        "",
+        document_title="Annual report",
+    )
+    chunks = [
+        ChatDocumentChunk(
+            id=index + 1,
+            document_id="doc-1",
+            ordinal=chunk["ordinal"],
+            title=chunk["title"],
+            section_path=chunk["section_path"],
+            content=chunk["content"],
+            level=chunk["level"],
+            embedding=[0.0, 1.0],
+            node_key=chunk["node_key"],
+            parent_node_key=chunk["parent_node_key"],
+            node_kind=chunk["node_kind"],
+        )
+        for index, chunk in enumerate(logical_chunks)
+    ]
+    service = DocumentRagService(
+        _DocumentRepository(chunks),
+        _TopicEmbeddingProvider(),
+        preprocessing_service=None,
+    )
+
+    retrieved = asyncio.run(
+        service.retrieve_many(
+            _session(),
+            ["astronomy"],
+            mode="topic_grounded",
+            max_detail_nodes=6,
+        )
+    )
+
+    assert [citation["role"] for citation in retrieved.citations] == ["root"]
+    assert "Revenue increased" in retrieved.context
+    assert "Revenue reached" not in retrieved.context
+
+
+def test_chatbot_forwards_the_plan_and_slide_budget_to_tree_retrieval():
+    context_provider = _PlannedContextProvider()
+    service = ChatbotService(
+        repository=object(),
+        llm_provider=object(),
+        context_provider=context_provider,
+        rag_query_planner=_Planner(),
+    )
+
+    retrieved, _ = asyncio.run(
+        service._retrieve_with_plan(
+            session=_session(),
+            query="tạo slide từ tài liệu",
+            history=[],
+            generation_config={
+                "provider_model": "test-model",
+                "max_tokens": 4096,
+                "temperature": 0.6,
+                "top_p": 1.0,
+            },
+            document_attached=True,
+            slide_request=True,
+            target_slide_count=10,
+        )
+    )
+
+    assert retrieved.context == "retrieved"
+    assert context_provider.calls == [
+        {
+            "session": _session(),
+            "queries": ["revenue"],
+            "mode": "deck_from_document",
+            "include_root": True,
+            "include_ancestors": True,
+            "include_siblings": False,
+            "max_detail_nodes": 4,
+            "target_slide_count": 10,
+        }
+    ]

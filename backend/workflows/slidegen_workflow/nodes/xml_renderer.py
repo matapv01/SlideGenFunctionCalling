@@ -8,6 +8,12 @@ import time
 import xml.etree.ElementTree as ET
 
 from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.utils.xml_contrast import (
+    enforce_xml_text_contrast,
+)
+from backend.workflows.slidegen_workflow.utils.xml_fallback import (
+    fallback_xml_for_failed_tool,
+)
 from langchain_core.runnables import RunnableConfig
 
 
@@ -25,7 +31,44 @@ async def render_xml(state: State, config: RunnableConfig) -> State:
 
     xml_content = state.get("current_xml_content", "")
     if not xml_content:
-        raise ValueError("XML tool returned empty content.")
+        # The executor normally supplies a fallback after the final retry. Keep
+        # this boundary defensive as well so one failed worker cannot abort the
+        # whole deck or leak an internal renderer error to the user.
+        xml_content = fallback_xml_for_failed_tool(
+            state.get("current_tool_call") or {},
+            "empty_xml_renderer_boundary",
+            source_content=state.get("current_slide_text", ""),
+        )
+        state["current_xml_content"] = xml_content
+
+    # This is the final boundary after tool execution and overflow rewriting.
+    # Validate the actual persisted XML rather than trusting prompt/style
+    # arguments, which may no longer match the rendered layout surface.
+    deck_style = state.get("deck_style_plan") or {}
+    preferred_colors = [
+        deck_style.get("accent_color"),
+        deck_style.get("primary_color"),
+        deck_style.get("secondary_color"),
+        deck_style.get("text_color"),
+    ]
+    xml_content, contrast_report = enforce_xml_text_contrast(
+        xml_content,
+        preferred_colors=[color for color in preferred_colors if color],
+        protect_unknown_surfaces=True,
+    )
+    state["current_xml_content"] = xml_content
+    state["current_contrast_report"] = contrast_report
+    if contrast_report:
+        color_fixes = sum(
+            item.get("kind") == "text_color" for item in contrast_report
+        )
+        backplates = sum(
+            item.get("kind") == "backplate" for item in contrast_report
+        )
+        print(
+            "Contrast guard repaired final XML: "
+            f"{color_fixes} color(s), {backplates} backplate(s)."
+        )
 
     try:
         root = ET.fromstring(xml_content)

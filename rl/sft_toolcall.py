@@ -17,7 +17,7 @@ from transformers import (AutoModelForCausalLM,AutoTokenizer,EarlyStoppingCallba
 ROOT=Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path: sys.path.insert(0,str(ROOT))
 load_dotenv()
-from backend.workflows.slidegen_workflow.utils.helper import QWEN_CHAT_TEMPLATE
+from rl.slidegen_adapter import QWEN_CHAT_TEMPLATE, TOOLS_DICT
 from rl.common import LORA_ALPHA,LORA_DROPOUT,LORA_R,LORA_TARGET_MODULES,auto_select_gpu
 from rl.run_artifacts import get_runtime_metadata,save_text_summary_image,start_run_logging,write_json
 from rl.toolcall_data import build_prompt,completion_text,split_by_doc
@@ -110,7 +110,7 @@ def build_encoded_dataset(rows,tokenizer,args):
     return Dataset.from_list([encode_sample(row,tokenizer,args) for row in rows])
 
 def generate_test(model,tokenizer,rows,args,valid_tools):
-    from rl.sdft_official.eval_tooluse import score_response,summarize
+    from rl.eval_tooluse import score_response,summarize
     model.eval();results=[]
     limit=args.test_max_samples or len(rows)
     for i,sample in enumerate(rows[:limit]):
@@ -176,7 +176,7 @@ def main():
     manifest["best_metric"]=trainer.state.best_metric;manifest["best_checkpoint"]=trainer.state.best_model_checkpoint
     manifest["final_adapter"]=str(final.resolve())
     if args.run_test_generation:
-        valid_tools={t.name for ts in __import__("backend.workflows.slidegen_workflow.tools.tool_des",fromlist=["TOOLS_DICT"]).TOOLS_DICT.values() for t in ts}
+        valid_tools={t.name for ts in TOOLS_DICT.values() for t in ts}
         test=generate_test(trainer.model,tokenizer,splits["test"],args,valid_tools)
         write_json(log_dir/"test_report.json",test["metrics"])
         with (log_dir/"test_predictions.jsonl").open("w",encoding="utf-8") as f:
