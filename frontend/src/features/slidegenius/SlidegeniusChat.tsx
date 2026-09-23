@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, ClipboardEvent, FormEvent, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -609,9 +609,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         sourceExcerpt: "Đoạn trích",
         sourceNoExcerpt: "Nguồn này chưa có đoạn trích hiển thị.",
         chatUsage: "Chat credit",
-        documentUsage: "File",
+        documentUsage: "Credit tài liệu",
         chatUsageShort: "CHAT",
-        documentUsageShort: "FILE",
+        documentUsageShort: "DOC",
         usageReset: "Reset sau",
       }
     : {
@@ -682,9 +682,9 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         sourceExcerpt: "Excerpt",
         sourceNoExcerpt: "This source has no excerpt available.",
         chatUsage: "Chat credits",
-        documentUsage: "Files",
+        documentUsage: "Document credits",
         chatUsageShort: "CHAT",
-        documentUsageShort: "FILES",
+        documentUsageShort: "DOC",
         usageReset: "Resets in",
       };
 
@@ -1476,9 +1476,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
     void sendMessageContent(cleanAnswer, { slideCount: slideCount ?? undefined });
   };
 
-  const handleDocumentSelected = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
+  const uploadDocumentFile = async (file: File) => {
     if (!file || !activeSessionId || uploading) return;
     const fileExtension = `.${file.name.split(".").pop()?.toLowerCase() || ""}`;
     if (!supportedDocumentExtensions.includes(fileExtension)) {
@@ -1552,6 +1550,31 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
         setUploadingDocument(null);
       }
     }
+  };
+
+  const handleDocumentSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) void uploadDocumentFile(file);
+  };
+
+  const handleComposerPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
+    const imageItem = Array.from(event.clipboardData.items).find(
+      (item) => item.kind === "file" && item.type.startsWith("image/"),
+    );
+    const image = imageItem?.getAsFile();
+    if (!image || !activeSessionId || uploading) return;
+
+    event.preventDefault();
+    const extension = image.type.split("/")[1]?.toLowerCase() === "jpeg"
+      ? "jpg"
+      : image.type.split("/")[1]?.toLowerCase() || "png";
+    const pastedFile = new File(
+      [image],
+      `pasted-image-${Date.now()}.${extension}`,
+      { type: image.type || "image/png" },
+    );
+    void uploadDocumentFile(pastedFile);
   };
 
   const cancelDocumentUpload = (event: MouseEvent<HTMLButtonElement>) => {
@@ -1988,6 +2011,7 @@ export default function SlidegeniusChat({ isActive = true }: { isActive?: boolea
               event.currentTarget.style.height = `${Math.min(220, Math.max(44, contentHeight))}px`;
               event.currentTarget.style.overflowY = contentHeight > 220 ? "auto" : "hidden";
             }}
+            onPaste={handleComposerPaste}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();

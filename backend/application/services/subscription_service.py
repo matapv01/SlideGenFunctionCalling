@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta, timezone
 import math
+from pathlib import Path
 from typing import Dict
 from fastapi import HTTPException
 from backend.config import (
@@ -28,6 +29,9 @@ class SlideCountLimitError(ValueError):
 
 class SubscriptionService:
     """Service for managing user subscriptions and usage limits"""
+
+    _DOCUMENT_CREDIT_UNIT_BYTES = 1024 * 1024
+    _IMAGE_DOCUMENT_CREDIT_RATIO = 0.25
 
     def __init__(
         self,
@@ -97,6 +101,30 @@ class SubscriptionService:
         model_weight = self._usage_weights("model").get(model_key, 1.0)
         effort_weight = self._usage_weights("effort").get(effort_key, 1.0)
         return round(max(0.01, model_weight * effort_weight), 2)
+
+    @classmethod
+    def get_document_usage_cost(
+        cls, filename: str | None, size_bytes: int
+    ) -> float:
+        """Return document credits from payload size.
+
+        Full documents cost one credit per started MiB. Standalone images use
+        a lower multiplier because they do not require document extraction,
+        OCR, or indexing. The result is deliberately deterministic so every
+        upload route and the clipboard path charge the same amount.
+        """
+        size = max(1, int(size_bytes or 0))
+        units = max(
+            1,
+            math.ceil(size / cls._DOCUMENT_CREDIT_UNIT_BYTES),
+        )
+        suffix = Path(str(filename or "")).suffix.lower()
+        multiplier = (
+            cls._IMAGE_DOCUMENT_CREDIT_RATIO
+            if suffix in {".png", ".jpg", ".jpeg"}
+            else 1.0
+        )
+        return round(max(0.01, units * multiplier), 2)
 
     def get_admin_usage_config(self) -> Dict:
         """Return the editable usage policy for the administrator console."""
@@ -227,7 +255,7 @@ class SubscriptionService:
                     "created_at": self._as_utc(self._parse_admin_datetime(row.get("created_at"))),
                     "chat_usage": round(float(row.get("chat_usage") or 0), 2),
                     "chat_message_count": int(row.get("chat_message_count") or 0),
-                    "docx_usage": int(row.get("docx_usage") or 0),
+                    "docx_usage": round(float(row.get("docx_usage") or 0), 2),
                     "usage_window_started_at": window_started_at,
                     "usage_reset_at": window_started_at + timedelta(hours=USAGE_WINDOW_HOURS),
                 }
@@ -316,7 +344,7 @@ class SubscriptionService:
             "current_usage": {
                 "chat_messages": round(user.chat_usage, 2),
                 "chat_message_count": user.chat_message_count,
-                "docx_upload": user.docx_usage,
+                "docx_upload": round(user.docx_usage, 2),
                 "idea_generation": round(user.chat_usage, 2),
             },
             "usage_window_hours": USAGE_WINDOW_HOURS,
@@ -413,13 +441,18 @@ class SubscriptionService:
         elif feature_type == "docx_upload":
             slide_count = kwargs.get("slide_count", 0)
             docx_limit = limits["docx_upload"]
+            try:
+                usage_cost = max(0.01, float(kwargs.get("usage_cost", 1.0)))
+            except (TypeError, ValueError):
+                usage_cost = 1.0
 
-            if docx_limit != -1 and user.docx_usage >= docx_limit:
+            if docx_limit != -1 and user.docx_usage + usage_cost > docx_limit + 1e-9:
                 raise HTTPException(
                     status_code=429,
                     detail=(
-                        f"Gói {user.subscription_tier.title()} đã đạt giới hạn tài liệu "
-                        f"({docx_limit} file trong {USAGE_WINDOW_HOURS} giờ). "
+                        f"Gói {user.subscription_tier.title()} đã đạt giới hạn credit tài liệu "
+                        f"({docx_limit} credit trong {USAGE_WINDOW_HOURS} giờ; "
+                        f"lần này cần {usage_cost:g} credit). "
                         "Vui lòng chờ reset hoặc nâng cấp gói."
                     ),
                 )

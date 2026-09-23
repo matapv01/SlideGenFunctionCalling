@@ -486,6 +486,10 @@ class ChatbotService:
             document_attached=document_attached,
             slide_request=False,
         )
+        retrieved = self._merge_attached_image_refs(
+            retrieved,
+            self._attached_standalone_image_refs(session, normalized_document_ids),
+        )
 
         prompt_messages = self._build_prompt(
             session.history_summary,
@@ -888,6 +892,66 @@ class ChatbotService:
                 if isinstance(image, dict):
                     images.append(dict(image))
         return images
+
+    def _attached_standalone_image_refs(
+        self,
+        session: ChatSession,
+        document_ids: list[str] | None,
+    ) -> list[dict[str, Any]]:
+        """Expose an explicitly uploaded image even without text retrieval.
+
+        Embedded DOCX/PDF assets must come only from retrieved chunk
+        placeholders. This narrow exception is for a standalone PNG/JPEG the
+        user pasted or uploaded as the message attachment itself.
+        """
+        normalized_ids = set(self._normalize_document_ids(document_ids))
+        if not normalized_ids or self.context_provider is None:
+            return []
+        list_documents = getattr(self.context_provider, "list_session_documents", None)
+        if not callable(list_documents):
+            return []
+        refs: list[dict[str, Any]] = []
+        for document in list_documents(session.id, session.user_id):
+            if str(getattr(document, "id", "")) not in normalized_ids:
+                continue
+            if str(getattr(document, "status", "")).lower() != "ready":
+                continue
+            filename = str(getattr(document, "original_filename", ""))
+            if not filename.lower().endswith((".png", ".jpg", ".jpeg")):
+                continue
+            for image in getattr(document, "images", []) or []:
+                if not isinstance(image, dict):
+                    continue
+                if not str(image.get("image_id") or "").strip():
+                    continue
+                refs.append(
+                    {
+                        key: image.get(key)
+                        for key in (
+                            "document_id",
+                            "image_id",
+                            "filename",
+                            "section_path",
+                            "nearby_text",
+                            "alt_text",
+                        )
+                    }
+                )
+        return refs
+
+    @staticmethod
+    def _merge_attached_image_refs(
+        retrieved: RetrievedContext,
+        attached_refs: list[dict[str, Any]],
+    ) -> RetrievedContext:
+        if not attached_refs:
+            return retrieved
+        return ChatbotService._merge_retrieved_contexts(
+            [
+                retrieved,
+                RetrievedContext(context="", citations=[], image_refs=attached_refs),
+            ]
+        )
 
     @staticmethod
     def _generation_metadata(
@@ -1804,6 +1868,8 @@ class ChatbotService:
         ):
             return await self._complete(prompt_messages, generation_config)
 
+        result: dict[str, Any] | None = None
+        tool_protocol_failed = False
         try:
             result = await asyncio.to_thread(
                 generate_tool_calls,
@@ -1815,14 +1881,23 @@ class ChatbotService:
                 top_p=float(generation_config["top_p"]),
             )
         except Exception:
-            logger.exception("Document image tool call failed; using text-only answer")
-            return await self._complete(prompt_messages, generation_config)
+            logger.exception(
+                "Document image tool call failed; using scoped image references"
+            )
+            tool_protocol_failed = True
 
         if not isinstance(result, dict):
-            return await self._complete(prompt_messages, generation_config)
+            result = {}
+            tool_protocol_failed = True
         tool_calls = result.get("tool_calls")
-        if not isinstance(tool_calls, list) or not tool_calls:
-            return str(result.get("content") or "").strip() or await self._complete(
+        if not isinstance(tool_calls, list):
+            tool_calls = []
+        first_content = str(result.get("content") or "").strip()
+        pseudo_tool_call = bool(
+            first_content and self.document_image_tool.name in first_content
+        )
+        if not tool_calls and not tool_protocol_failed and not pseudo_tool_call:
+            return first_content or await self._complete(
                 prompt_messages, generation_config
             )
 
@@ -1850,10 +1925,43 @@ class ChatbotService:
             if image and image.get("data_uri"):
                 loaded_images.append(image)
 
+        # Some OpenAI-compatible endpoints ignore native tool metadata and
+        # emit a textual pseudo-call, or truncate/corrupt an image id. The
+        # references here have already been selected by retrieval and remain
+        # ownership/session checked by DocumentImageTool, so they form a safe
+        # protocol-level recovery path. This is not an intent classifier.
+        if not loaded_images and (tool_calls or pseudo_tool_call or tool_protocol_failed):
+            for image_ref in retrieved.image_refs[:3]:
+                document_id = str(image_ref.get("document_id") or "").strip()
+                image_id = str(image_ref.get("image_id") or "").strip()
+                key = (document_id, image_id)
+                if not document_id or not image_id or key in seen_image_ids:
+                    continue
+                seen_image_ids.add(key)
+                image = await asyncio.to_thread(
+                    self.document_image_tool.get_document_image,
+                    session_id=session.id,
+                    user_id=user_id,
+                    document_id=document_id,
+                    image_id=image_id,
+                )
+                if image and image.get("data_uri"):
+                    loaded_images.append(image)
+
         if not loaded_images:
-            # A malformed or unauthorized tool call must never leak an error
-            # into the UI. Give the model one normal text-only completion.
-            return await self._complete(prompt_messages, generation_config)
+            # A malformed or unauthorized tool call must never leak an
+            # internal invocation into the UI.
+            clean_messages = [
+                *prompt_messages,
+                {
+                    "role": "system",
+                    "content": (
+                        "The image could not be loaded. Answer without exposing "
+                        "tool names, function calls, ids, or filesystem paths."
+                    ),
+                },
+            ]
+            return await self._complete(clean_messages, generation_config)
 
         image_content: list[dict[str, Any]] = [
             {

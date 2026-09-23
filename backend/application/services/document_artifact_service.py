@@ -129,6 +129,23 @@ class DocumentArtifactService:
             for index, line in enumerate(lines):
                 if anchor.casefold() in line.casefold():
                     return index
+            # OCR and PDF text layers often differ only in whitespace or a
+            # small punctuation/token error. Locate the strongest generic
+            # token overlap instead of relying on figure-specific wording.
+            anchor_terms = set(re.findall(r"\w{3,}", anchor.casefold()))
+            if anchor_terms:
+                best_index = -1
+                best_score = 0.0
+                for index, line in enumerate(lines):
+                    line_terms = set(re.findall(r"\w{3,}", line.casefold()))
+                    if not line_terms:
+                        continue
+                    score = len(anchor_terms & line_terms) / len(anchor_terms)
+                    if score > best_score:
+                        best_index = index
+                        best_score = score
+                if best_index >= 0 and best_score >= 0.6:
+                    return best_index
         if section:
             for index, line in enumerate(lines):
                 clean = re.sub(r"^#+\s*", "", line).strip()

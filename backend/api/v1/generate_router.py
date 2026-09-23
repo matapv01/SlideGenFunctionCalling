@@ -250,9 +250,6 @@ async def generate_from_docx_normal(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check subscription limits for docx upload
-    subscription_service.check_feature_access(user, "docx_upload")
-
     # 1. Setup paths
     original_filename = Path(file.filename).name
     project_name = normalize_project_name(os.path.splitext(original_filename)[0])
@@ -261,6 +258,12 @@ async def generate_from_docx_normal(
     upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
     content = await file.read(upload_limits["max_file_bytes"] + 1)
     _validate_docx_upload_size(len(content), upload_limits)
+    usage_cost = subscription_service.get_document_usage_cost(
+        file.filename, len(content)
+    )
+    subscription_service.check_feature_access(
+        user, "docx_upload", usage_cost=usage_cost
+    )
 
     temp_path = _new_temp_docx_path(original_filename)
     with open(temp_path, "wb") as f:
@@ -272,7 +275,11 @@ async def generate_from_docx_normal(
         _check_docx_slide_limit(temp_path, subscription_service, user)
 
         # Increment usage counter
-        subscription_service.increment_usage(current_user.id, "docx_upload")
+        subscription_service.increment_usage(
+            current_user.id,
+            "docx_upload",
+            usage_cost=usage_cost,
+        )
 
         # 2. Run Workflow
         logger.info(f"🤖 Processing DOCX: {file.filename}")
@@ -352,9 +359,6 @@ async def prepare_docx_stream(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check subscription limits for docx upload
-    subscription_service.check_feature_access(user, "docx_upload")
-
     _cleanup_temp_dir()
 
     original_filename = Path(file.filename).name
@@ -362,6 +366,12 @@ async def prepare_docx_stream(
     upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
     content = await file.read(upload_limits["max_file_bytes"] + 1)
     _validate_docx_upload_size(len(content), upload_limits)
+    usage_cost = subscription_service.get_document_usage_cost(
+        file.filename, len(content)
+    )
+    subscription_service.check_feature_access(
+        user, "docx_upload", usage_cost=usage_cost
+    )
     with open(temp_path, "wb") as f:
         f.write(content)
 
@@ -382,6 +392,7 @@ async def prepare_docx_stream(
         "output_format": normalized_output_format,
         "max_docx_slides": subscription_service.get_plan_limits_for_user(user)["max_docx_slides"],
         "original_filename": original_filename,
+        "usage_cost": usage_cost,
     }
     stored_filename = temp_path.name
     with open(TEMP_DIR / f"{stored_filename}.options.json", "w") as f:
@@ -457,14 +468,19 @@ async def stream_docx_generation(
     temp_path = TEMP_DIR / filename
     if not temp_path.exists(): raise HTTPException(400, "Tệp không tồn tại hoặc đã hết hạn")
 
-    # Increment usage counter (actual processing starts here)
-    subscription_service.increment_usage(current_user.id, "docx_upload")
-
     # Load options
     options_path = TEMP_DIR / f"{filename}.options.json"
     slide_options = {}
     if options_path.exists():
         with open(options_path, "r") as f: slide_options = json.load(f)
+
+    # The prepare endpoint only preflights this upload. Charge the actual
+    # document credit once the generation stream starts.
+    subscription_service.consume_feature(
+        current_user.id,
+        "docx_upload",
+        usage_cost=float(slide_options.get("usage_cost", 1.0)),
+    )
 
     original_filename = Path(slide_options.get("original_filename", filename)).name
     project_name = normalize_project_name(os.path.splitext(original_filename)[0])
@@ -554,14 +570,17 @@ async def create_manual_session_from_docx(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check subscription limits for docx upload
-    subscription_service.check_feature_access(user, "docx_upload")
-
     original_filename = Path(file.filename).name
     temp_path = _new_temp_docx_path(original_filename)
     upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
     content = await file.read(upload_limits["max_file_bytes"] + 1)
     _validate_docx_upload_size(len(content), upload_limits)
+    usage_cost = subscription_service.get_document_usage_cost(
+        file.filename, len(content)
+    )
+    subscription_service.check_feature_access(
+        user, "docx_upload", usage_cost=usage_cost
+    )
     with open(temp_path, "wb") as f:
         f.write(content)
 
@@ -577,7 +596,11 @@ async def create_manual_session_from_docx(
             raise HTTPException(400, "This workflow is XML-only; output_format must be xml")
 
         # Increment usage counter
-        subscription_service.increment_usage(current_user.id, "docx_upload")
+        subscription_service.increment_usage(
+            current_user.id,
+            "docx_upload",
+            usage_cost=usage_cost,
+        )
 
         from docx import Document
         doc = Document(temp_path)

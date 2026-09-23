@@ -81,7 +81,11 @@ class GeminiLLMProvider(LLMProvider):
             overrides["model"] = model
         llm = self.llm_client.bind(**overrides).bind_tools(
             tools,
-            tool_choice="auto",
+            # This method is called only after the application has selected
+            # relevant, ownership-scoped image references. Requiring a native
+            # call prevents OpenAI-compatible Qwen endpoints from printing a
+            # Python-like tool invocation into normal assistant text.
+            tool_choice="required",
             parallel_tool_calls=True,
         )
         if self.request_limiter is None:

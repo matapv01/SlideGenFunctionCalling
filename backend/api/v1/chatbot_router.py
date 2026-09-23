@@ -192,9 +192,20 @@ async def upload_chat_document(
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên chat")
     upload_limits = subscription_service.get_upload_limits_for_user(current_user.id)
     content = await file.read(upload_limits["max_file_bytes"] + 1)
-    # Uploading only stores the source document; it still consumes one
-    # document unit in the shared five-hour window.
-    subscription_service.check_feature_access_for_user(current_user.id, "docx_upload")
+    if len(content) > upload_limits["max_file_bytes"]:
+        limit_mb = upload_limits["max_file_bytes"] / (1024 * 1024)
+        raise HTTPException(
+            status_code=413,
+            detail=f"Tệp tài liệu vượt quá giới hạn {limit_mb:g} MB của gói hiện tại.",
+        )
+    usage_cost = subscription_service.get_document_usage_cost(
+        file.filename, len(content)
+    )
+    subscription_service.check_feature_access_for_user(
+        current_user.id,
+        "docx_upload",
+        usage_cost=usage_cost,
+    )
     try:
         document = await rag.create_pending_document(
             session=session,
@@ -203,7 +214,11 @@ async def upload_chat_document(
             max_file_bytes=upload_limits["max_file_bytes"],
             max_total_bytes=upload_limits["max_total_bytes"],
         )
-        subscription_service.increment_usage(current_user.id, "docx_upload")
+        subscription_service.increment_usage(
+            current_user.id,
+            "docx_upload",
+            usage_cost=usage_cost,
+        )
     except DocumentUploadLimitError as exc:
         raise HTTPException(status_code=413, detail=str(exc))
     except ValueError as exc:

@@ -18,13 +18,13 @@ class User:
     plan_limits: Optional[Dict[str, float | int]] = None
     daily_usage_reset_date: date = field(default_factory=date.today)
     idea_usage_today: int = 0
-    docx_usage_today: int = 0
+    docx_usage_today: float = 0.0
     usage_window_started_at: datetime = field(default_factory=datetime.now)
     # Chat usage is stored as weighted credits. One default Genius 3/Medium
     # turn costs 1.0 credit; model and effort choices may cost less or more.
     chat_usage: float = 0.0
     chat_message_count: int = 0
-    docx_usage: int = 0
+    docx_usage: float = 0.0
     is_active: bool = True
     # New accounts must verify once during registration. Existing accounts
     # are migrated as verified so a policy change does not lock them out.

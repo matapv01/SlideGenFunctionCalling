@@ -1,4 +1,5 @@
 import asyncio
+from types import SimpleNamespace
 
 from backend.application.services.document_rag_service import DocumentRagService
 from backend.application.services.chatbot_service import ChatbotService
@@ -25,8 +26,9 @@ class _TopicEmbeddingProvider:
 
 
 class _DocumentRepository:
-    def __init__(self, chunks: list[ChatDocumentChunk]) -> None:
+    def __init__(self, chunks: list[ChatDocumentChunk], documents=None) -> None:
         self.chunks = chunks
+        self.documents = list(documents or [])
 
     def list_session_chunks(
         self, session_id: str, user_id: int
@@ -34,7 +36,7 @@ class _DocumentRepository:
         return self.chunks
 
     def list_session_documents(self, session_id: str, user_id: int) -> list:
-        return []
+        return self.documents
 
 
 class _Planner:
@@ -143,11 +145,166 @@ def test_build_chunks_keeps_searchable_image_handles_without_local_paths():
     )
 
     architecture = next(
-        chunk for chunk in chunks if chunk["node_key"] == "1"
+        chunk
+        for chunk in chunks
+        if chunk["node_key"] == "1" and chunk["node_kind"] == "content"
     )
     assert "doc-1:0" in architecture["content"]
     assert "architecture.png" in architecture["content"]
     assert "/private/static" not in architecture["content"]
+
+
+def test_build_chunks_places_an_image_only_in_its_matching_text_chunk():
+    chunks = DocumentRagService._build_chunks(
+        [
+            {
+                "level": 1,
+                "title": "Method",
+                "content": "Figure 1 shows the complete GRACE processing pipeline.",
+                "children": [],
+            },
+            {
+                "level": 1,
+                "title": "Results",
+                "content": "Accuracy improves on the evaluation benchmark.",
+                "children": [],
+            },
+        ],
+        "",
+        document_title="Paper",
+        images=[
+            {
+                "image_id": "doc-1:figure-1",
+                "filename": "figure-1.png",
+                "anchor_text": "Figure 1 shows the complete GRACE processing pipeline.",
+                "nearby_text": "Figure 1 shows the complete GRACE processing pipeline.",
+                "ordinal": 0,
+            }
+        ],
+    )
+
+    method_chunks = [chunk for chunk in chunks if chunk["node_key"] == "1"]
+    results_chunks = [chunk for chunk in chunks if chunk["node_key"] == "2"]
+    assert any(
+        "document-image://doc-1:figure-1" in chunk["content"]
+        for chunk in method_chunks
+    )
+    assert all(
+        "document-image://doc-1:figure-1" not in chunk["content"]
+        for chunk in results_chunks
+    )
+
+
+def test_structural_references_normalize_visual_and_table_coordinates():
+    assert DocumentRagService._structural_references(
+        "Giải thích fig1, Hình 2a và Bảng 4"
+    ) == {"visual:1", "visual:2a", "table:4"}
+
+
+def test_normalized_text_span_maps_compact_ocr_caption_to_source_offsets():
+    text = "Before\nFig.1.GRACEconstructionpipeline.Thequestion remains fixed\nAfter"
+    fragment = "Fig. 1. GRACE construction pipeline. The question remains fixed"
+
+    span = DocumentRagService._normalized_text_span(text, fragment)
+
+    assert span is not None
+    assert text[span[0] : span[1]].startswith("Fig.1.GRACE")
+
+
+def test_explicit_figure_reference_outweighs_unrelated_semantic_match():
+    matching = ChatDocumentChunk(
+        id=1,
+        document_id="doc-1",
+        ordinal=0,
+        title="Method",
+        section_path="Method",
+        content="Fig. 1. GRACE construction pipeline.",
+        level=1,
+        embedding=[0.0, 1.0],
+        node_key="1",
+        parent_node_key="root",
+        node_kind="content",
+    )
+    unrelated = ChatDocumentChunk(
+        id=2,
+        document_id="doc-1",
+        ordinal=1,
+        title="References",
+        section_path="References",
+        content="Other material",
+        level=1,
+        embedding=[1.0, 0.0],
+        node_key="2",
+        parent_node_key="root",
+        node_kind="content",
+    )
+    service = DocumentRagService(
+        _DocumentRepository([]),
+        _EmbeddingProvider(),
+        preprocessing_service=None,
+    )
+    refs, _, _ = service._build_tree_index([matching, unrelated])
+    scores = {
+        ref.chunk.id: service._score_ref("giải thích fig1", [1.0, 0.0], ref)
+        for ref in refs
+    }
+
+    assert scores[1] > scores[2]
+
+
+def test_retrieved_chunk_exposes_only_images_present_in_that_chunk():
+    chunks = [
+        ChatDocumentChunk(
+            id=1,
+            document_id="doc-1",
+            ordinal=0,
+            title="Figure 1",
+            section_path="Method",
+            content=(
+                "Figure 1 shows the pipeline.\n"
+                "![Pipeline](document-image://doc-1:figure-1)"
+            ),
+            level=1,
+            embedding=[1.0, 0.0],
+            node_key="1",
+            parent_node_key="root",
+            node_kind="content",
+        ),
+        ChatDocumentChunk(
+            id=2,
+            document_id="doc-1",
+            ordinal=1,
+            title="Figure 2",
+            section_path="Results",
+            content="![Chart](document-image://doc-1:figure-2)",
+            level=1,
+            embedding=[0.0, 1.0],
+            node_key="2",
+            parent_node_key="root",
+            node_kind="content",
+        ),
+    ]
+    document = SimpleNamespace(
+        id="doc-1",
+        status="ready",
+        images=[
+            {"image_id": "doc-1:figure-1", "filename": "figure-1.png"},
+            {"image_id": "doc-1:figure-2", "filename": "figure-2.png"},
+        ],
+    )
+    service = DocumentRagService(
+        _DocumentRepository(chunks, [document]),
+        _EmbeddingProvider(),
+        preprocessing_service=None,
+    )
+
+    refs = service._image_refs_for_citations(
+        session=_session(),
+        citations=[{"chunk_id": 1, "document_id": "doc-1"}],
+        chunks=chunks,
+    )
+
+    assert [ref["image_id"] for ref in refs] == ["doc-1:figure-1"]
 
 
 def test_targeted_retrieval_keeps_the_matching_node_in_its_tree_context():
@@ -367,3 +524,35 @@ def test_chatbot_forwards_the_plan_and_slide_budget_to_tree_retrieval():
             "target_slide_count": 10,
         }
     ]
+
+
+def test_chatbot_attachment_fallback_exposes_only_standalone_images():
+    class _ContextProvider:
+        def list_session_documents(self, session_id, user_id):
+            return [
+                SimpleNamespace(
+                    id="paper",
+                    status="ready",
+                    original_filename="paper.pdf",
+                    images=[{"document_id": "paper", "image_id": "paper:fig-1"}],
+                ),
+                SimpleNamespace(
+                    id="paste",
+                    status="ready",
+                    original_filename="pasted.png",
+                    images=[{"document_id": "paste", "image_id": "paste:source"}],
+                ),
+            ]
+
+    service = ChatbotService(
+        repository=object(),
+        llm_provider=object(),
+        context_provider=_ContextProvider(),
+    )
+
+    refs = service._attached_standalone_image_refs(
+        _session(),
+        ["paper", "paste"],
+    )
+
+    assert [ref["image_id"] for ref in refs] == ["paste:source"]

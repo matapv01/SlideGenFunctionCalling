@@ -157,3 +157,54 @@ def test_chatbot_sends_image_only_after_the_model_calls_the_tool():
 
     assert answer == "Đây là nội dung nhìn thấy trong ảnh."
     assert provider.multimodal_messages[-1]["content"][-1]["type"] == "image_url"
+
+
+class _TextualToolCallProvider(_AnswerProvider):
+    def generate_tool_calls(self, messages, tools, **kwargs):
+        return {
+            "content": (
+                'get_document_image(document_id="doc-1", image_id="doc-1")'
+            ),
+            "tool_calls": [],
+        }
+
+
+def test_chatbot_recovers_textual_tool_call_without_leaking_it_to_the_ui():
+    provider = _TextualToolCallProvider()
+    service = ChatbotService(
+        repository=object(),
+        llm_provider=provider,
+        document_image_tool=_Tool(),
+    )
+
+    answer = asyncio.run(
+        service._complete_with_document_images(
+            prompt_messages=[{"role": "user", "content": "ảnh này là ảnh gì?"}],
+            retrieved=RetrievedContext(
+                context="",
+                citations=[],
+                image_refs=[{"document_id": "doc-1", "image_id": "doc-1:0"}],
+            ),
+            session=ChatSession(
+                id="session-1",
+                user_id=7,
+                project_id=None,
+                title=None,
+                history_summary=None,
+                max_turns=5,
+                created_at="now",
+                updated_at="now",
+            ),
+            user_id=7,
+            generation_config={
+                "provider_model": "qwen",
+                "max_tokens": 100,
+                "temperature": 0.5,
+                "top_p": 1.0,
+            },
+        )
+    )
+
+    assert answer == "Đây là nội dung nhìn thấy trong ảnh."
+    assert "get_document_image" not in answer
+    assert provider.multimodal_messages[-1]["content"][-1]["type"] == "image_url"

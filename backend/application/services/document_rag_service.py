@@ -44,10 +44,18 @@ from backend.infrastructure.document_ai.document_ai_client import (
 logger = logging.getLogger(__name__)
 
 _SENTENCE_END_RE = re.compile(r'''[.!?。！？](?:["'”’»)\]}]*)?(?=\s|$)''')
-_PDF_IMAGE_METADATA_RE = re.compile(
-    r"##\s+Embedded images\s+"
-    r"The PDF contains exactly\s+(\d+)\s+embedded image occurrences\.",
+_LEGACY_PDF_IMAGE_METADATA_RE = re.compile(
+    r"(?:\n{0,2})##\s+Embedded images\s+"
+    r"The PDF contains exactly\s+\d+\s+embedded image occurrences\.\s*",
     re.IGNORECASE | re.DOTALL,
+)
+_PDF_IMAGE_INDEX_MARKER = "<!-- slidegen:image-index:v3 -->"
+_OLD_PDF_IMAGE_INDEX_MARKERS = (
+    "<!-- slidegen:image-index:v2 -->",
+)
+_IMAGE_PLACEHOLDER_RE = re.compile(r"document-image://([^\s)]+)")
+_IMAGE_MARKDOWN_PLACEHOLDER_RE = re.compile(
+    r"!\[[^]]*\]\(document-image://[^\s)]+\)"
 )
 
 
@@ -238,7 +246,7 @@ class DocumentRagService:
         suffix = Path(safe_filename).suffix.lower()
         if suffix not in _SUPPORTED_DOCUMENT_SUFFIXES:
             raise ValueError("Chỉ hỗ trợ DOCX, PDF, PNG, JPG hoặc JPEG")
-        if suffix != ".docx" and (
+        if suffix not in {".docx", ".png", ".jpg", ".jpeg"} and (
             self.document_ai_client is None or not self.document_ai_client.enabled
         ):
             raise ValueError(
@@ -347,33 +355,29 @@ class DocumentRagService:
 
     @classmethod
     def _pdf_needs_image_metadata(cls, document) -> bool:
-        """Detect ready PDFs indexed before deterministic image inspection."""
+        """Detect PDFs indexed before image blocks were linked to chunks."""
         if Path(str(document.original_filename or "")).suffix.lower() != ".pdf":
             return False
         source_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.pdf"
         if not source_path.is_file():
             return False
         markdown = cls._read_markdown(document.markdown_path)
-        return cls._pdf_image_count(markdown) is None
+        return _PDF_IMAGE_INDEX_MARKER not in markdown
 
     @staticmethod
-    def _pdf_image_count(markdown: str) -> int | None:
-        match = _PDF_IMAGE_METADATA_RE.search(str(markdown or ""))
-        if match is None:
-            return None
-        try:
-            return max(0, int(match.group(1)))
-        except (TypeError, ValueError):
-            return None
+    def _strip_legacy_pdf_image_metadata(markdown: str) -> str:
+        cleaned = _LEGACY_PDF_IMAGE_METADATA_RE.sub("\n", str(markdown or ""))
+        for marker in _OLD_PDF_IMAGE_INDEX_MARKERS:
+            cleaned = cleaned.replace(marker, "")
+        return cleaned.strip()
 
     async def _refresh_legacy_pdf_image_index(self, *, document, user_id: int) -> None:
         """Upgrade an already-ready PDF without rerunning external OCR.
 
-        Earlier versions indexed OCR text but did not inspect PDF page image
-        objects. The migration is local and best-effort: it adds the exact
-        occurrence count, extracts image handles for the image tool, and
-        rebuilds only this document's chunks. A failure leaves the existing
-        ready index usable.
+        Earlier versions stored a synthetic image-count section and detached
+        image catalog. The migration is local and best-effort: it extracts
+        spatial image context, inserts image blocks beside their source text,
+        and rebuilds only this document's chunks.
         """
         source_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.pdf"
         if not source_path.is_file():
@@ -388,15 +392,12 @@ class DocumentRagService:
                 output_root=CHATBOT_DOCUMENTS_DIR,
             )
             extracted_images = list(extraction.assets)
-            markdown = self._read_markdown(document.markdown_path)
+            markdown = self._strip_legacy_pdf_image_metadata(
+                self._read_markdown(document.markdown_path)
+            )
             if not markdown:
                 DocumentImageExtractor.remove_assets(extracted_images)
                 return
-            markdown = (
-                f"{markdown}\n\n## Embedded images\n"
-                f"The PDF contains exactly {extraction.image_count} "
-                "embedded image occurrences."
-            )
             title = str(
                 document.title or Path(document.original_filename).stem or "Document"
             ).strip()
@@ -423,7 +424,10 @@ class DocumentRagService:
             if len(embeddings) != len(logical_chunks):
                 raise RuntimeError("Embedding provider returned an invalid result")
             markdown_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.md"
-            markdown_path.write_text(artifact.markdown, encoding="utf-8")
+            markdown_path.write_text(
+                f"{artifact.markdown}\n\n{_PDF_IMAGE_INDEX_MARKER}",
+                encoding="utf-8",
+            )
             self.repository.set_document_ready(
                 document.id,
                 user_id,
@@ -437,9 +441,9 @@ class DocumentRagService:
                 images=artifact.assets,
             )
             logger.info(
-                "Migrated PDF image metadata for document %s: %d occurrences",
+                "Migrated PDF image blocks for document %s: %d extracted assets",
                 document.id,
-                extraction.image_count,
+                len(extracted_images),
             )
         except Exception:
             DocumentImageExtractor.remove_assets(extracted_images)
@@ -486,7 +490,12 @@ class DocumentRagService:
             markdown = artifact.markdown
             extracted_images = artifact.assets
 
-            markdown_path.write_text(markdown, encoding="utf-8")
+            persisted_markdown = (
+                f"{markdown}\n\n{_PDF_IMAGE_INDEX_MARKER}"
+                if suffix == ".pdf"
+                else markdown
+            )
+            markdown_path.write_text(persisted_markdown, encoding="utf-8")
             logical_chunks = self._build_chunks(
                 structure if isinstance(structure, list) else [],
                 markdown,
@@ -522,11 +531,49 @@ class DocumentRagService:
             raise
 
     async def _preprocess_with_ocr(self, *, document, source_path: Path):
+        if source_path.suffix.lower() in {".png", ".jpg", ".jpeg"}:
+            title = Path(document.original_filename).stem or "Image attachment"
+            asset = {
+                "image_id": f"{document.id}:source",
+                "document_id": document.id,
+                "ordinal": 0,
+                "source_path": str(source_path),
+                "relative_path": source_path.name,
+                "filename": document.original_filename,
+                "mime_type": _image_mime(source_path.suffix),
+                "anchor_text": "",
+                "section_title": "Image attachment",
+                "nearby_text": "",
+                "alt_text": document.original_filename,
+            }
+            return (
+                {
+                    "document_title": title,
+                    "plain_text": (
+                        f"# {title}\n\n"
+                        "## Image attachment\n"
+                        f"Visual content from {document.original_filename}. "
+                        "Use the document image tool when the user's question "
+                        "requires inspecting this image."
+                    ),
+                    "document_structure": [
+                        {
+                            "level": 1,
+                            "title": "Image attachment",
+                            "content": "Visual content is stored as an image attachment.",
+                            "children": [],
+                            "atomic": True,
+                            "content_kind": "image",
+                        }
+                    ],
+                },
+                [asset],
+            )
+
         if self.document_ai_client is None or not self.document_ai_client.enabled:
             raise DocumentAiError(
                 "Tài liệu này cần Document AI OCR nhưng OCR service chưa được cấu hình"
             )
-        pdf_image_count: int | None = None
         extracted_assets: list[dict[str, Any]] = []
         if source_path.suffix.lower() == ".pdf":
             try:
@@ -536,7 +583,6 @@ class DocumentRagService:
                     document_id=document.id,
                     output_root=CHATBOT_DOCUMENTS_DIR,
                 )
-                pdf_image_count = extraction.image_count
                 extracted_assets = list(extraction.assets)
             except Exception:
                 logger.exception("Unable to inspect PDF image objects for %s", document.id)
@@ -545,7 +591,6 @@ class DocumentRagService:
         ocr_markdown, atomic_section_titles = self._ocr_markdown_with_metadata(
             result,
             document_title=Path(document.original_filename).stem,
-            pdf_image_count=pdf_image_count,
         )
         ocr_path = CHATBOT_DOCUMENTS_DIR / f"{document.id}.ocr.txt"
         ocr_path.write_text(ocr_markdown, encoding="utf-8")
@@ -582,7 +627,6 @@ class DocumentRagService:
         result: OcrResult,
         *,
         document_title: str = "Document",
-        pdf_image_count: int | None = None,
     ) -> tuple[str, list[str]]:
         safe_title = " ".join(str(document_title or "Document").split()).strip()
         sections = [
@@ -594,13 +638,6 @@ class DocumentRagService:
         # external parser. Keep them atomic; the RAG layer can chunk them
         # without asking an LLM to rewrite noisy OCR/table output.
         atomic_section_titles: list[str] = ["OCR content"]
-        if pdf_image_count is not None:
-            sections.append(
-                "## Embedded images\n"
-                f"The PDF contains exactly {max(0, int(pdf_image_count))} "
-                "embedded image occurrences."
-            )
-            atomic_section_titles.append("Embedded images")
         for index, table in enumerate(result.tables, start=1):
             rows = table.get("rows") if isinstance(table, dict) else None
             if not isinstance(rows, list) or not rows:
@@ -711,7 +748,7 @@ class DocumentRagService:
         indexed_image_document_ids = {
             str(chunk.document_id)
             for chunk in chunks
-            if "image_id=" in str(chunk.content or "")
+            if _IMAGE_PLACEHOLDER_RE.search(str(chunk.content or ""))
         }
         needs_tree_upgrade = any(not (chunk.node_key or "").strip() for chunk in chunks)
         needs_image_upgrade = bool(
@@ -788,6 +825,7 @@ class DocumentRagService:
         image_refs = self._image_refs_for_citations(
             session=session,
             citations=retrieved.citations,
+            chunks=chunks,
         )
         return RetrievedContext(
             context=retrieved.context,
@@ -800,19 +838,29 @@ class DocumentRagService:
         *,
         session: ChatSession,
         citations: list[dict[str, Any]],
+        chunks: list[ChatDocumentChunk],
     ) -> list[dict[str, Any]]:
-        """Expose safe image handles for documents actually in the context.
+        """Expose safe image handles that occur in retrieved chunks.
 
-        Retrieval may select several nodes from one document. Deduplicate by
-        image id and keep only descriptive metadata; the private source path
-        stays inside ``DocumentImageTool``.
+        A document-level match is insufficient because it gives the answer
+        model unrelated images. Chunk placeholders are the source of truth:
+        when a selected chunk contains an image block, that exact image is
+        made available through ``DocumentImageTool``.
         """
-        document_ids = {
-            str(item.get("document_id") or "").strip()
+        selected_chunk_ids = {
+            int(item.get("chunk_id"))
             for item in citations
-            if str(item.get("document_id") or "").strip()
+            if str(item.get("chunk_id") or "").isdigit()
         }
-        if not document_ids:
+        selected_images: set[tuple[str, str]] = set()
+        for chunk in chunks:
+            if chunk.id not in selected_chunk_ids:
+                continue
+            for image_id in _IMAGE_PLACEHOLDER_RE.findall(str(chunk.content or "")):
+                clean_image_id = str(image_id).strip()
+                if clean_image_id:
+                    selected_images.add((str(chunk.document_id), clean_image_id))
+        if not selected_images:
             return []
         image_refs: list[dict[str, Any]] = []
         seen: set[tuple[str, str]] = set()
@@ -821,17 +869,16 @@ class DocumentRagService:
         )
         for document in documents:
             document_id = str(document.id)
-            if document_id not in document_ids:
-                continue
             if str(document.status).lower() != "ready":
                 continue
             for image in getattr(document, "images", []) or []:
                 if not isinstance(image, dict):
                     continue
                 image_id = str(image.get("image_id") or "").strip()
-                if not image_id or (document_id, image_id) in seen:
+                image_key = (document_id, image_id)
+                if image_key not in selected_images or image_key in seen:
                     continue
-                seen.add((document_id, image_id))
+                seen.add(image_key)
                 image_refs.append(
                     {
                         "document_id": document_id,
@@ -872,7 +919,7 @@ class DocumentRagService:
         indexed_image_document_ids = {
             str(chunk.document_id)
             for chunk in chunks
-            if "image_id=" in str(chunk.content or "")
+            if _IMAGE_PLACEHOLDER_RE.search(str(chunk.content or ""))
         }
         candidate_ids.update(
             str(document.id)
@@ -907,7 +954,10 @@ class DocumentRagService:
                         if isinstance(document.structure, list)
                         else []
                     )
-                    markdown = self._read_markdown(document.markdown_path)
+                    markdown = self._read_markdown(document.markdown_path).replace(
+                        _PDF_IMAGE_INDEX_MARKER,
+                        "",
+                    ).strip()
                     if not markdown and not structure:
                         markdown = "\n\n".join(
                             chunk.content
@@ -1041,6 +1091,17 @@ class DocumentRagService:
     ) -> float:
         score = self._cosine(query_vector, ref.chunk.embedding)
         score += self._lexical_bonus(query, ref.chunk) * 0.08
+        query_refs = self._structural_references(query)
+        if query_refs:
+            chunk_refs = self._structural_references(
+                f"{ref.chunk.title}\n{ref.chunk.section_path}\n{ref.chunk.content}"
+            )
+            matched_refs = query_refs & chunk_refs
+            if matched_refs:
+                # Explicit source coordinates (Figure 2, Table 4, etc.) are
+                # stronger evidence than embedding proximity. This is generic
+                # document addressing, not a topic or intent classifier.
+                score += 1.25 * (len(matched_refs) / len(query_refs))
         # Summary nodes are intentionally slightly favored for broad queries;
         # detail nodes still win when their semantic/lexical match is stronger.
         if ref.node_kind in {"root_summary", "section_summary"}:
@@ -1621,7 +1682,7 @@ class DocumentRagService:
                     # Image handles are useful to the answer model but are
                     # implementation metadata, not citation text for the UI.
                     "excerpt": DocumentRagService._sentence_bounded_excerpt(
-                        content.split("\nAvailable document images:", 1)[0].strip()
+                        _IMAGE_MARKDOWN_PLACEHOLDER_RE.sub("", content).strip()
                     ),
                     "level": chunk.level,
                     "node_key": selection.ref.node_key,
@@ -1681,6 +1742,53 @@ class DocumentRagService:
             return 0.0
         return len(query_terms & section_terms) / len(query_terms)
 
+    @staticmethod
+    def _structural_references(value: str) -> set[str]:
+        """Canonicalize explicit visual/table coordinates for retrieval."""
+        references: set[str] = set()
+        pattern = re.compile(
+            r"(?i)\b(fig(?:ure)?|hình|image|ảnh|diagram|chart|biểu\s*đồ|"
+            r"table|bảng)\s*\.?\s*(\d+(?:[.\-]\d+)*(?:[a-z])?)\b"
+        )
+        for match in pattern.finditer(str(value or "")):
+            label = match.group(1).casefold()
+            kind = "table" if label in {"table", "bảng"} else "visual"
+            references.add(f"{kind}:{match.group(2).casefold()}")
+        return references
+
+    @staticmethod
+    def _normalized_text_span(
+        text: str,
+        fragment: str,
+    ) -> tuple[int, int] | None:
+        """Find a fragment despite OCR whitespace/punctuation differences.
+
+        The returned offsets refer to the original text, allowing an image
+        placeholder to be inserted at the real source position rather than
+        merely appended to a section.
+        """
+        normalized_text: list[str] = []
+        source_offsets: list[int] = []
+        for source_index, character in enumerate(str(text or "")):
+            for folded in character.casefold():
+                if folded.isalnum():
+                    normalized_text.append(folded)
+                    source_offsets.append(source_index)
+        normalized_fragment = "".join(
+            character
+            for character in str(fragment or "").casefold()
+            if character.isalnum()
+        )
+        if len(normalized_fragment) < 12 or not source_offsets:
+            return None
+        start = "".join(normalized_text).find(normalized_fragment)
+        if start < 0:
+            return None
+        end = start + len(normalized_fragment) - 1
+        if end >= len(source_offsets):
+            return None
+        return source_offsets[start], source_offsets[end] + 1
+
     @classmethod
     def _build_chunks(
         cls,
@@ -1728,20 +1836,60 @@ class DocumentRagService:
         normalized_images = [
             image for image in (images or []) if isinstance(image, dict)
         ]
+        claimed_image_ids: set[str] = set()
 
-        def image_context(section_path: str, node_title: str) -> str:
-            """Make image handles searchable without storing filesystem paths."""
-            if not normalized_images:
-                return ""
+        def image_placeholder(image: dict[str, Any]) -> str:
+            image_id = str(image.get("image_id") or "").strip()
+            alt_text = " ".join(
+                str(
+                    image.get("alt_text")
+                    or image.get("anchor_text")
+                    or image.get("filename")
+                    or "Document image"
+                ).split()
+            )[:300]
+            return f"![{alt_text}](document-image://{image_id})"
+
+        def normalized_terms(value: Any) -> set[str]:
+            return set(re.findall(r"\w{3,}", str(value or "").casefold()))
+
+        def images_for_content(
+            section_path: str,
+            node_title: str,
+            content: str,
+        ) -> list[dict[str, Any]]:
+            """Associate image blocks using source position and text context.
+
+            No figure naming convention is assumed. Exact anchor placement is
+            preferred, then generic nearby-text overlap and section location.
+            """
             current = str(section_path or "").casefold()
             title_key = str(node_title or "").strip().casefold()
-            matches: list[str] = []
+            content_key = " ".join(str(content or "").split()).casefold()
+            content_terms = normalized_terms(content)
+            matches: list[dict[str, Any]] = []
             for image in normalized_images:
                 image_id = str(image.get("image_id") or "").strip()
-                if not image_id:
+                if not image_id or image_id in claimed_image_ids:
                     continue
+                anchor = " ".join(str(image.get("anchor_text") or "").split())
+                nearby = str(image.get("nearby_text") or "")
+                local_path = str(image.get("markdown_path") or "").strip()
                 image_section = str(image.get("section_path") or "").strip()
                 image_title = str(image.get("section_title") or "").strip()
+                anchor_match = bool(
+                    anchor
+                    and (
+                        anchor.casefold() in content_key
+                        or cls._normalized_text_span(content, anchor) is not None
+                    )
+                )
+                nearby_terms = normalized_terms(nearby)
+                overlap = (
+                    len(content_terms & nearby_terms) / len(nearby_terms)
+                    if nearby_terms
+                    else 0.0
+                )
                 section_match = bool(
                     image_section
                     and (
@@ -1754,24 +1902,87 @@ class DocumentRagService:
                     and title_key
                     and image_title.casefold() == title_key
                 )
-                if section_match or title_match or node_title == title:
-                    matches.append(
-                        "image_id={image_id}; path={path}; filename={filename}; "
-                        "section={section}; nearby={nearby}".format(
-                            image_id=image_id,
-                            path=str(
-                                image.get("markdown_path")
-                                or image.get("relative_path")
-                                or ""
-                            )[:300],
-                            filename=str(image.get("filename") or "")[:160],
-                            section=image_section[:300],
-                            nearby=str(image.get("nearby_text") or "")[:700],
-                        )
+                local_link_match = bool(local_path and f"]({local_path})" in content)
+                if (
+                    local_link_match
+                    or anchor_match
+                    or overlap >= 0.6
+                    or section_match
+                    or title_match
+                ):
+                    matches.append(image)
+            return sorted(
+                matches,
+                key=lambda image: (
+                    int(image.get("block_index", 0) or 0),
+                    int(image.get("ordinal", 0) or 0),
+                ),
+            )
+
+        def inject_image_blocks(
+            content: str,
+            selected_images: list[dict[str, Any]],
+        ) -> str:
+            rendered = str(content or "")
+            for image in selected_images:
+                image_id = str(image.get("image_id") or "").strip()
+                if not image_id:
+                    continue
+                placeholder = image_placeholder(image)
+                local_path = str(image.get("markdown_path") or "").strip()
+                if local_path:
+                    rendered, replacements = re.subn(
+                        rf"!\[([^]]*)\]\({re.escape(local_path)}\)",
+                        lambda match: (
+                            f"![{match.group(1) or str(image.get('alt_text') or 'Document image')}]"
+                            f"(document-image://{image_id})"
+                        ),
+                        rendered,
+                        count=1,
                     )
-            if not matches:
-                return ""
-            return "\nAvailable document images:\n- " + "\n- ".join(matches[:8])
+                    if replacements:
+                        claimed_image_ids.add(image_id)
+                        continue
+
+                anchor = " ".join(str(image.get("anchor_text") or "").split())
+                normalized_rendered = " ".join(rendered.split())
+                anchor_index = (
+                    normalized_rendered.casefold().find(anchor.casefold())
+                    if anchor
+                    else -1
+                )
+                # Normalizing whitespace changes offsets, so use a flexible
+                # whitespace expression against the original content.
+                if anchor_index >= 0:
+                    pattern = re.compile(
+                        r"\s+".join(re.escape(part) for part in anchor.split()),
+                        re.IGNORECASE,
+                    )
+                    rendered, replacements = pattern.subn(
+                        lambda match: f"{placeholder}\n{match.group(0)}",
+                        rendered,
+                        count=1,
+                    )
+                else:
+                    replacements = 0
+                if not replacements:
+                    normalized_span = cls._normalized_text_span(rendered, anchor)
+                    if normalized_span is not None:
+                        start, _ = normalized_span
+                        rendered = (
+                            f"{rendered[:start]}{placeholder}\n{rendered[start:]}"
+                        )
+                        replacements = 1
+                if not replacements:
+                    nearby = " ".join(
+                        str(image.get("nearby_text") or "").split()
+                    )[:1000]
+                    rendered = (
+                        f"{rendered.rstrip()}\n\n{placeholder}"
+                        + (f"\nImage context: {nearby}" if nearby else "")
+                    ).strip()
+                claimed_image_ids.add(image_id)
+            return rendered
 
         def add_piece(
             *,
@@ -1783,12 +1994,18 @@ class DocumentRagService:
             parent_node_key: str | None,
             node_kind: str,
             max_chars: int = CHATBOT_RAG_CHUNK_CHARS,
+            attach_images: bool = False,
         ) -> None:
             text = str(content or "").strip()
             if not text and not node_title.strip():
                 return
 
             section_path = " / ".join([*path, node_title] if node_title else path)
+            if attach_images:
+                text = inject_image_blocks(
+                    text,
+                    images_for_content(section_path, node_title, text),
+                )
             if node_kind in {"root_summary", "section_summary"}:
                 summary = text or f"Section: {node_title or title}"
                 pieces = [summary[:max_chars].rstrip()]
@@ -1799,7 +2016,6 @@ class DocumentRagService:
 
             for piece in pieces:
                 embedding_text = f"{section_path}\n{piece}".strip()
-                embedding_text += image_context(section_path, node_title)
                 chunks.append(
                     {
                         "ordinal": len(chunks),
@@ -1841,22 +2057,6 @@ class DocumentRagService:
             preview = compact_preview(markdown, 2400)
             if preview:
                 root_lines.append(f"Overview: {preview}")
-        if normalized_images:
-            image_catalog = "; ".join(
-                f"{str(image.get('image_id') or '')} "
-                f"({str(image.get('filename') or 'image')[:120]})"
-                for image in normalized_images[:24]
-                if str(image.get("image_id") or "").strip()
-            )
-            if image_catalog:
-                root_lines.append("Available document images: " + image_catalog)
-        pdf_image_count = cls._pdf_image_count(markdown)
-        if pdf_image_count is not None:
-            root_lines.append(
-                "Embedded images: the PDF contains exactly "
-                f"{pdf_image_count} image occurrences."
-            )
-
         add_piece(
             node_title=title,
             path=[],
@@ -1924,6 +2124,7 @@ class DocumentRagService:
                         node_key=node_key,
                         parent_node_key=parent_node_key,
                         node_kind="content",
+                        attach_images=True,
                     )
 
                 visit(
@@ -1950,6 +2151,44 @@ class DocumentRagService:
                 content=markdown,
                 level=1,
                 node_key="root-content",
+                parent_node_key="root",
+                node_kind="content",
+                attach_images=True,
+            )
+
+        # Images without a reliable textual/section anchor remain first-class
+        # retrievable blocks. They are not copied into root or every section,
+        # which prevents unrelated images from leaking into a matched chunk.
+        for image in sorted(
+            normalized_images,
+            key=lambda item: (
+                int(item.get("block_index", 0) or 0),
+                int(item.get("ordinal", 0) or 0),
+            ),
+        ):
+            image_id = str(image.get("image_id") or "").strip()
+            if not image_id or image_id in claimed_image_ids:
+                continue
+            page_or_section = str(
+                image.get("section_path")
+                or image.get("section_title")
+                or (
+                    f"Page {image.get('page')}"
+                    if image.get("page")
+                    else "Document image"
+                )
+            ).strip()
+            nearby = " ".join(str(image.get("nearby_text") or "").split())[:1200]
+            content = image_placeholder(image)
+            if nearby:
+                content += f"\nImage context: {nearby}"
+            claimed_image_ids.add(image_id)
+            add_piece(
+                node_title=page_or_section or "Document image",
+                path=[],
+                content=content,
+                level=1,
+                node_key=f"image-{int(image.get('ordinal', 0) or 0) + 1}",
                 parent_node_key="root",
                 node_kind="content",
             )
