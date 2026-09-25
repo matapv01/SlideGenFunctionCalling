@@ -38,6 +38,7 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
     configurable = config.get("configurable", {}) if config else {}
     tools_dict = configurable.get("tools_dict", {})
     tool_retriever = configurable.get("tool_retriever")
+    strict_tool_retrieval = configurable.get("strict_tool_retrieval", False)
     jobs = deepcopy(state.get("slide_jobs") or [])
     usage: Counter[str] = Counter()
     last_global_tool = None
@@ -100,7 +101,15 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
                     if tool.name in {candidate.name for candidate in compatible_tools}
                 ]
             except Exception as exc:
+                if strict_tool_retrieval:
+                    raise RuntimeError(
+                        f"Strict layout retrieval failed for category {category!r}"
+                    ) from exc
                 print(f"Warning: layout pre-assignment retrieval failed: {exc}")
+            if strict_tool_retrieval and not candidates:
+                raise RuntimeError(
+                    f"Strict layout retrieval returned no candidates for {category!r}"
+                )
 
         # Keep semantic retrieval order, then append every category fallback so
         # local duplicate retries always have another layout available.

@@ -15,21 +15,74 @@ def split_by_doc(samples:list[dict],eval_ratio=.1,test_ratio=.1,seed=42):
         out[key].extend(rows)
     return out
 
-def _compact_value(value:Any):
-    if isinstance(value,dict):
-        keep={}
-        for key in ("type","anyOf","enum","items","properties","required","default"):
-            if key in value: keep[key]=_compact_value(value[key])
-        return keep
-    if isinstance(value,list): return [_compact_value(x) for x in value]
-    return value
+_SCHEMA_MAPPING_KEYS = {
+    "$defs",
+    "definitions",
+    "dependentSchemas",
+    "patternProperties",
+    "properties",
+}
+_SCHEMA_LIST_KEYS = {"allOf", "anyOf", "oneOf", "prefixItems"}
+_SCHEMA_SINGLE_KEYS = {
+    "additionalProperties",
+    "contentSchema",
+    "contains",
+    "else",
+    "if",
+    "items",
+    "not",
+    "propertyNames",
+    "then",
+    "unevaluatedItems",
+    "unevaluatedProperties",
+}
 
-def compact_tool(tool:dict)->dict:
-    fn=tool["function"]
-    return {"type":"function","function":{
-        "name":fn["name"],
-        "parameters":{name:_compact_value(schema) for name,schema in fn.get("parameters",{}).items()},
-    }}
+
+def _compact_schema(schema: Any) -> Any:
+    """Drop verbose schema annotations without deleting user-defined field names."""
+    if not isinstance(schema, dict):
+        return schema
+
+    compacted = {}
+    for key, value in schema.items():
+        if key in {"description", "title"}:
+            continue
+        if key in _SCHEMA_MAPPING_KEYS and isinstance(value, dict):
+            compacted[key] = {
+                name: _compact_schema(child) for name, child in value.items()
+            }
+        elif key in _SCHEMA_LIST_KEYS and isinstance(value, list):
+            compacted[key] = [_compact_schema(child) for child in value]
+        elif key in _SCHEMA_SINGLE_KEYS:
+            if isinstance(value, list):
+                compacted[key] = [_compact_schema(child) for child in value]
+            else:
+                compacted[key] = _compact_schema(value)
+        elif key == "dependencies" and isinstance(value, dict):
+            compacted[key] = {
+                name: _compact_schema(child) if isinstance(child, dict) else child
+                for name, child in value.items()
+            }
+        else:
+            # Defaults/examples and extension data are values, not schemas.
+            compacted[key] = value
+    return compacted
+
+
+def _compact_value(value: Any):
+    """Backward-compatible name for schema-aware compaction."""
+    return _compact_schema(value)
+
+def compact_tool(tool: dict) -> dict:
+    function = tool["function"]
+    parameters = function.get("parameters", {})
+    return {
+        "type": "function",
+        "function": {
+            "name": function["name"],
+            "parameters": _compact_schema(parameters),
+        },
+    }
 
 def select_tools(sample:dict,tools_dict:dict,flat_tools:dict,seed=42,count=6):
     """Always include gold tool; choose deterministic same-category distractors."""
@@ -42,20 +95,39 @@ def select_tools(sample:dict,tools_dict:dict,flat_tools:dict,seed=42,count=6):
 
 def build_prompt(tokenizer,sample:dict,seed=42,tool_count=6,compact=True):
     from rl.slidegen_adapter import (
-        TOOLS_DICT, QWEN_GENERATOR_HUMAN_TEMPLATE,
-        QWEN_GENERATOR_SYSTEM_PROMPT, format_tool_for_qwen,
+        TOOLS_DICT,
+        QWEN_GENERATOR_SYSTEM_PROMPT,
+        build_generator_human_prompt,
+        format_tool_for_qwen,
     )
     flat={t.name:t for tools in TOOLS_DICT.values() for t in tools}
+    correct=sample["tool_call"]["name"]
     names=select_tools(sample,TOOLS_DICT,flat,seed,tool_count)
     tools=[format_tool_for_qwen(flat[name]) for name in names]
     if compact: tools=[compact_tool(tool) for tool in tools]
-    user=QWEN_GENERATOR_HUMAN_TEMPLATE.format(
-        style_context=(sample.get("style_context") or "")[:500],
-        design_instruction=(sample.get("design_instruction") or "")[:600],
-        slide_content=(sample.get("slide_content") or sample.get("content",""))[:1200])
-    messages=[{"role":"system","content":QWEN_GENERATOR_SYSTEM_PROMPT},{"role":"user","content":user}]
-    prompt=tokenizer.apply_chat_template(messages,tools=tools,tokenize=False,add_generation_prompt=True)
-    return prompt,names
+    design = (sample.get("design_instruction") or "")[:600]
+    user = build_generator_human_prompt(
+        deck_style_contract=(sample.get("style_context") or "")[:500],
+        slide_topic=(sample.get("slide_topic") or sample.get("content") or "")[:160],
+        slide_plan=design,
+        design_instruction=design,
+        slide_content=(sample.get("slide_content") or sample.get("content", ""))[:1200],
+        assigned_tool_name=correct,
+        slide_index=int(sample.get("slide_index", 0)),
+        deck_length=int(sample.get("deck_length", 1)),
+    )
+    messages = [
+        {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
+        {"role": "user", "content": user},
+    ]
+    prompt = tokenizer.apply_chat_template(
+        messages,
+        tools=tools,
+        tokenize=False,
+        add_generation_prompt=True,
+        enable_thinking=False,
+    )
+    return prompt, names
 
 def completion_text(sample:dict)->str:
     return f"<tool_call>{json.dumps(sample['tool_call'],ensure_ascii=False,separators=(',',':'))}</tool_call>"

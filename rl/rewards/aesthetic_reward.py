@@ -38,7 +38,19 @@ def _get_model() -> ViTAestheticProvider:
                         "ViT-small checkpoint."
                     )
                 payload = torch.load(path, map_location="cpu", weights_only=True)
-                state_dict = payload.get("model_state_dict", payload)
+                expected_criteria = ["mau_nen", "mau_chu", "size_chu", "de_nhau", "tran_chu"]
+                if not isinstance(payload, dict):
+                    raise ValueError(f"Invalid aesthetic checkpoint payload: {path}")
+                if payload.get("label_semantics") != "1=error,0=no_error":
+                    raise ValueError(
+                        "ViT checkpoint must declare label_semantics="
+                        "'1=error,0=no_error' so the GRPO reward direction is known"
+                    )
+                if payload.get("criteria") != expected_criteria:
+                    raise ValueError(
+                        f"Unexpected ViT criteria/order: {payload.get('criteria')!r}"
+                    )
+                state_dict = payload.get("model_state_dict")
                 if not isinstance(state_dict, dict):
                     raise ValueError(
                         f"Invalid aesthetic checkpoint state_dict: {path}"
@@ -109,8 +121,11 @@ def _evaluate_batch(model: ViTAestheticProvider, image_paths: list[Path]) -> lis
     pixel_values = torch.stack(tensors).to(model.device)
     with torch.no_grad():
         logits = model.model(pixel_values=pixel_values).logits
-        probabilities = torch.sigmoid(logits)
-    return probabilities.mean(dim=1).detach().cpu().tolist()
+        error_probabilities = torch.sigmoid(logits)
+    # The checkpoint labels 1 as an error. GRPO maximizes reward, so reward
+    # should be the probability of a clean slide, not the probability of error.
+    quality = 1.0 - error_probabilities.mean(dim=1)
+    return quality.detach().cpu().tolist()
 
 
 def slide_aesthetics_reward(prompts, completions, **kwargs):

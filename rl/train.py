@@ -26,7 +26,6 @@ from rl.common import (
     LORA_R,
     LORA_TARGET_MODULES,
     auto_select_gpu,
-    setup_tokenizer,
 )
 
 auto_select_gpu()
@@ -48,8 +47,7 @@ from backend.workflows.slidegen_workflow.nodes.section_batch_orchestrator import
     assign_layouts,
 )
 from rl.grpo_trainer import (
-    HistoricalBaselineGRPOTrainer,
-    HistoricalRewardBaseline,
+    DapoAccumulationGRPOTrainer,
 )
 from rl.rewards.composite_reward import (
     preflight_reward_runtime,
@@ -64,7 +62,6 @@ from rl.run_artifacts import (
     write_json,
 )
 from rl.slidegen_adapter import (
-    QWEN_CHAT_TEMPLATE,
     QWEN_GENERATOR_SYSTEM_PROMPT,
     TOOLS_DICT,
     build_generator_human_prompt,
@@ -76,8 +73,8 @@ from scripts.generate_challenge_dataset import (
 )
 
 
-MODEL_ID = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen3-4B-Instruct-2507")
-OUTPUT_DIR = Path(os.getenv("GRPO_OUTPUT_DIR", "./qwen_slidegen_grpo"))
+MODEL_ID = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen3-8B")
+OUTPUT_DIR = Path(os.getenv("GRPO_OUTPUT_DIR", "./qwen3_8b_slidegen_grpo"))
 RETRIEVER_INDEX_DIR = Path(
     os.getenv("GRPO_FAISS_INDEX_PATH", str(OUTPUT_DIR / "tool_retriever_index"))
 )
@@ -88,6 +85,7 @@ GRAD_ACCUMULATION = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16"))
 NUM_GENERATIONS = int(os.getenv("NUM_GENERATIONS", "4"))
 GENERATION_BATCH_SIZE = int(os.getenv("GRPO_GENERATION_BATCH_SIZE", "4"))
 MAX_COMPLETION_LENGTH = int(os.getenv("MAX_COMPLETION_LENGTH", "512"))
+LOSS_TYPE = os.getenv("GRPO_LOSS_TYPE", "dapo")
 SAVE_STEPS = int(os.getenv("GRPO_SAVE_STEPS", "25"))
 EVAL_STEPS = int(os.getenv("GRPO_EVAL_STEPS", "50"))
 EVAL_DOCS = int(os.getenv("GRPO_EVAL_DOCS", "5"))
@@ -145,8 +143,26 @@ def _lora_config() -> LoraConfig:
     )
 
 
-def _checkpoint_complete(path: Path) -> bool:
-    if not (path / "historical_reward_baseline.json").is_file():
+def _checkpoint_complete(
+    path: Path,
+    model_id: str,
+    loss_type: str,
+    dapo_accumulation_factor: int,
+) -> bool:
+    metadata_path = path / "rl_checkpoint_metadata.json"
+    if not metadata_path.is_file():
+        return False
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(metadata, dict):
+        return False
+    if metadata.get("model_id") != model_id:
+        return False
+    if metadata.get("loss_type") != loss_type:
+        return False
+    if metadata.get("dapo_accumulation_factor") != dapo_accumulation_factor:
         return False
     model_exists = any(
         (path / filename).is_file()
@@ -164,7 +180,11 @@ def _checkpoint_complete(path: Path) -> bool:
     return model_exists and state_exists
 
 
-def _latest_checkpoint() -> Path | None:
+def _latest_checkpoint(
+    model_id: str,
+    loss_type: str,
+    dapo_accumulation_factor: int,
+) -> Path | None:
     if not RESUME or not OUTPUT_DIR.is_dir():
         return None
     candidates = []
@@ -173,7 +193,9 @@ def _latest_checkpoint() -> Path | None:
             step = int(path.name.rsplit("-", 1)[1])
         except (IndexError, ValueError):
             continue
-        if _checkpoint_complete(path):
+        if _checkpoint_complete(
+            path, model_id, loss_type, dapo_accumulation_factor
+        ):
             candidates.append((step, path))
     return max(candidates, default=(0, None))[1]
 
@@ -240,7 +262,13 @@ def _normalise_jobs(document: list[dict]) -> list[dict]:
     return jobs
 
 
-def _prepare_document(document: list[dict], tokenizer, tool_retriever) -> list[dict]:
+def _prepare_document(
+    document: list[dict],
+    tokenizer,
+    tool_retriever,
+    *,
+    strict_tool_retrieval: bool = False,
+) -> list[dict]:
     jobs = _normalise_jobs(document)
     assigned = assign_layouts(
         {"slide_jobs": jobs},
@@ -248,6 +276,7 @@ def _prepare_document(document: list[dict], tokenizer, tool_retriever) -> list[d
             "configurable": {
                 "tools_dict": TOOLS_DICT,
                 "tool_retriever": tool_retriever,
+                "strict_tool_retrieval": strict_tool_retrieval,
             }
         },
     )["slide_jobs"]
@@ -292,6 +321,7 @@ def _prepare_document(document: list[dict], tokenizer, tool_retriever) -> list[d
             tools=[format_tool_for_qwen(tool)],
             tokenize=False,
             add_generation_prompt=True,
+            enable_thinking=False,
         )
         samples.append(
             {
@@ -342,7 +372,7 @@ def _load_model():
     model.config.use_cache = False
     if device == "cuda":
         model = model.to(device)
-    setup_tokenizer(tokenizer, QWEN_CHAT_TEMPLATE)
+    tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
     return model, tokenizer, device, dtype
 
 
@@ -388,12 +418,22 @@ def main() -> None:
     train_rows = [
         sample
         for document in train_documents
-        for sample in _prepare_document(document, tokenizer, tool_retriever)
+        for sample in _prepare_document(
+            document,
+            tokenizer,
+            tool_retriever,
+            strict_tool_retrieval=tool_retriever is not None,
+        )
     ]
     eval_rows = [
         sample
         for document in eval_documents
-        for sample in _prepare_document(document, tokenizer, tool_retriever)
+        for sample in _prepare_document(
+            document,
+            tokenizer,
+            tool_retriever,
+            strict_tool_retrieval=tool_retriever is not None,
+        )
     ]
     if not train_rows or not eval_rows:
         raise RuntimeError("Prepared GRPO train/eval data is empty")
@@ -426,13 +466,14 @@ def main() -> None:
         num_generations=NUM_GENERATIONS,
         num_generations_eval=NUM_GENERATIONS,
         max_completion_length=MAX_COMPLETION_LENGTH,
-        temperature=float(os.getenv("GRPO_TEMPERATURE", "0.9")),
-        top_p=float(os.getenv("GRPO_TOP_P", "0.95")),
+        temperature=float(os.getenv("GRPO_TEMPERATURE", "0.7")),
+        top_p=float(os.getenv("GRPO_TOP_P", "0.8")),
+        top_k=int(os.getenv("GRPO_TOP_K", "20")),
         beta=float(os.getenv("GRPO_BETA", "0.0")),
         epsilon=float(os.getenv("GRPO_EPSILON", "0.2")),
         epsilon_high=float(os.getenv("GRPO_EPSILON_HIGH", "0.28")),
         mask_truncated_completions=True,
-        loss_type=os.getenv("GRPO_LOSS_TYPE", "dapo"),
+        loss_type=LOSS_TYPE,
         scale_rewards="group",
         use_cpu=device == "cpu",
         bf16=dtype == torch.bfloat16,
@@ -444,11 +485,19 @@ def main() -> None:
         remove_unused_columns=False,
     )
 
-    baseline = HistoricalRewardBaseline(
-        decay=float(os.getenv("GRPO_BASELINE_DECAY", "0.99")),
-        sigma_floor=float(os.getenv("GRPO_BASELINE_SIGMA_FLOOR", "0.05")),
-    )
-    trainer = HistoricalBaselineGRPOTrainer(
+    if training_args.loss_type in {"dapo", "cispo", "vespo"}:
+        if training_args.gradient_accumulation_steps % training_args.steps_per_generation:
+            raise ValueError(
+                "For token-normalized losses, gradient_accumulation_steps must be "
+                "divisible by steps_per_generation"
+            )
+        dapo_accumulation_factor = (
+            training_args.gradient_accumulation_steps // training_args.steps_per_generation
+        )
+    else:
+        dapo_accumulation_factor = 1
+
+    trainer = DapoAccumulationGRPOTrainer(
         model=model,
         processing_class=tokenizer,
         reward_funcs=[slidegen_composite_reward],
@@ -456,8 +505,11 @@ def main() -> None:
         train_dataset=train_dataset,
         eval_dataset=eval_dataset if eval_enabled else None,
     )
-    trainer.historical_baseline = baseline
-    checkpoint = _latest_checkpoint()
+    trainer.model_id = MODEL_ID
+    trainer.dapo_accumulation_factor = dapo_accumulation_factor
+    checkpoint = _latest_checkpoint(
+        MODEL_ID, training_args.loss_type, dapo_accumulation_factor
+    )
 
     manifest = get_runtime_metadata(
         {
@@ -476,6 +528,8 @@ def main() -> None:
             "gradient_accumulation_steps": GRAD_ACCUMULATION,
             "max_completion_length": MAX_COMPLETION_LENGTH,
             "loss_type": training_args.loss_type,
+            "dapo_accumulation_factor": dapo_accumulation_factor,
+            "steps_per_generation": training_args.steps_per_generation,
             "epsilon": training_args.epsilon,
             "epsilon_high": training_args.epsilon_high,
             "mask_truncated_completions": True,

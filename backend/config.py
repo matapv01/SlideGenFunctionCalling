@@ -341,10 +341,14 @@ BROWSER_VIEWPORT_HEIGHT = 1080
 BROWSER_DEVICE_SCALE_FACTOR = 2.0
 # URL of the frontend route used by Playwright for XML slide previews.
 # Use Vite when the production bundle is absent; otherwise use the backend SPA.
-BROWSER_PREVIEW_URL = (
+_DEFAULT_BROWSER_PREVIEW_URL = (
     "http://127.0.0.1:12008/render/xml-preview"
     if (FRONTEND_DIST_DIR / "index.html").exists()
     else "http://127.0.0.1:5173/render/xml-preview"
+)
+BROWSER_PREVIEW_URL = (
+    os.getenv("BROWSER_PREVIEW_URL", "").strip()
+    or _DEFAULT_BROWSER_PREVIEW_URL
 )
 
 # --- Local asset/provider configuration ---

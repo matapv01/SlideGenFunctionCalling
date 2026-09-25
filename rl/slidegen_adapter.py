@@ -6,11 +6,13 @@ backend, which remains aligned with minh_dep.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from copy import deepcopy
 from pathlib import Path
 
+from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     TOOLS_DICT,
     execute_tool as _execute_xml_tool,
@@ -21,7 +23,6 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     MATH_EQUATION_RULES,
     XML_CONTENT_PROMPT,
 )
-from backend.workflows.slidegen_workflow.utils.xml_preview import build_xml_preview_html
 
 
 def execute_tool(tool_call: dict) -> str:
@@ -29,100 +30,161 @@ def execute_tool(tool_call: dict) -> str:
     return _execute_xml_tool(tool_call, raise_on_error=True)
 
 
-def render_xml_to_png(xml_content: str, output_path: str) -> None:
-    """Render XML locally and fail loudly instead of scoring a fallback image."""
-    from playwright.sync_api import sync_playwright
-
-    html_content = build_xml_preview_html(xml_content)
-    destination = Path(output_path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    configured_browser = os.getenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
-    system_browser = Path("/usr/bin/google-chrome")
-    launch_options = {
-        "headless": True,
-        "args": ["--disable-gpu", "--disable-software-rasterizer"],
+_DOM_METRICS_SCRIPT = r"""() => {
+  const canvas = document.querySelector('[data-xml-slide-canvas="true"]');
+  if (!canvas) throw new Error("XML slide canvas was not found in frontend preview");
+  const canvasRect = canvas.getBoundingClientRect();
+  const logicalWidth = canvas.offsetWidth || canvasRect.width || 1;
+  const logicalHeight = canvas.offsetHeight || canvasRect.height || 1;
+  const scaleX = canvasRect.width / logicalWidth || 1;
+  const scaleY = canvasRect.height / logicalHeight || 1;
+  const toX = value => value / scaleX;
+  const toY = value => value / scaleY;
+  const tolerance = 1.5;
+  const union = rects => rects.length ? rects.reduce((result, rect) => ({
+    left: Math.min(result.left, rect.left), top: Math.min(result.top, rect.top),
+    right: Math.max(result.right, rect.right), bottom: Math.max(result.bottom, rect.bottom),
+  }), {left: rects[0].left, top: rects[0].top,
+      right: rects[0].right, bottom: rects[0].bottom}) : null;
+  const lineCount = rects => {
+    const tops = [];
+    for (const rect of rects) {
+      if (!tops.some(top => Math.abs(top - rect.top) <= 2)) tops.push(rect.top);
     }
-    if configured_browser:
-        launch_options["executable_path"] = configured_browser
-    elif system_browser.is_file():
-        launch_options["executable_path"] = str(system_browser)
-
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(**launch_options)
-        try:
-            page = browser.new_page(viewport={"width": 1600, "height": 900})
-            page.set_content(html_content, wait_until="load")
-            page.evaluate("() => document.fonts && document.fonts.ready")
-            page.screenshot(path=str(destination), full_page=False)
-        finally:
-            browser.close()
+    return tops.length;
+  };
+  const boxes = Array.from(document.querySelectorAll('[data-xml-textbox="true"]'))
+    .map(box => {
+      const content = box.querySelector('[data-xml-text-content="true"]');
+      if (!content || !content.textContent?.trim()) return null;
+      const rect = box.getBoundingClientRect();
+      const textRects = [];
+      const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        if (node.textContent?.trim()) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          textRects.push(...Array.from(range.getClientRects()));
+        }
+        node = walker.nextNode();
+      }
+      const visibleRects = textRects.filter(item => item.width > 0 && item.height > 0);
+      const textRect = union(visibleRects);
+      const reasons = [];
+      if (rect.left < canvasRect.left - tolerance || rect.top < canvasRect.top - tolerance ||
+          rect.right > canvasRect.right + tolerance || rect.bottom > canvasRect.bottom + tolerance) {
+        reasons.push('slide_boundary');
+      }
+      if (textRect && (textRect.left < rect.left - tolerance || textRect.right > rect.right + tolerance)) {
+        reasons.push('text_width');
+      }
+      if (textRect && (textRect.top < rect.top - tolerance || textRect.bottom > rect.bottom + tolerance)) {
+        reasons.push('text_height');
+      }
+      const maxLinesValue = box.getAttribute('data-xml-max-lines');
+      const maxLines = maxLinesValue ? Number(maxLinesValue) : null;
+      const lines = lineCount(visibleRects);
+      if (maxLines && lines > maxLines) reasons.push('max_lines');
+      return {
+        id: box.getAttribute('data-xml-element-id') || 'textbox',
+        text: content.innerText || content.textContent || '',
+        x: toX(rect.left - canvasRect.left), y: toY(rect.top - canvasRect.top),
+        width: toX(rect.width), height: toY(rect.height), reasons,
+      };
+    }).filter(Boolean);
+  const issues = boxes.flatMap(box => box.reasons.map(type => ({type, textbox: box.id})));
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i], b = boxes[j];
+      const width = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+      const height = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      const smaller = Math.min(a.width * a.height, b.width * b.height);
+      if (width > 0 && height > 0 && smaller > 0 && width * height / smaller > 0.05) {
+        issues.push({type: 'bbox_collision', textbox: a.id, other: b.id});
+      }
+    }
+  }
+  const accessibleText = Array.from(
+    document.querySelectorAll('[role="img"][aria-label], math-span[aria-label]')
+  ).map(node => node.getAttribute('aria-label') || '').filter(Boolean);
+  return {
+    visible_text: [...boxes.map(box => box.text).filter(Boolean), ...accessibleText].join(' '),
+    issues,
+  };
+}"""
 
 
 def render_xml_batch_to_png(
     xml_contents: list[str],
     output_paths: list[str],
     max_concurrency: int = 4,
-) -> None:
-    """Render a rollout batch concurrently through one Chromium process."""
+) -> list[dict]:
+    """Render and measure slides through the same frontend route used by BE."""
     if len(xml_contents) != len(output_paths):
         raise ValueError("xml_contents and output_paths must have equal length")
     if not xml_contents:
-        return
+        return []
 
-    import asyncio
     from playwright.async_api import async_playwright
 
-    async def run() -> None:
-        configured_browser = os.getenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
-        system_browser = Path("/usr/bin/google-chrome")
-        launch_options = {
+    capture = PlaywrightCaptureProvider()
+
+    async def run() -> list[dict]:
+        executable = os.getenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+        options = {
             "headless": True,
             "args": ["--disable-gpu", "--disable-software-rasterizer"],
         }
-        if configured_browser:
-            launch_options["executable_path"] = configured_browser
-        elif system_browser.is_file():
-            launch_options["executable_path"] = str(system_browser)
-
+        if executable:
+            path = Path(executable).expanduser()
+            if not path.is_file():
+                raise FileNotFoundError(f"Configured Chromium not found: {path}")
+            options["executable_path"] = str(path)
         semaphore = asyncio.Semaphore(max(1, max_concurrency))
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(**launch_options)
+            browser = await playwright.chromium.launch(**options)
 
-            async def render_one(xml_content: str, output_path: str) -> None:
+            async def render_one(xml_content: str, output_path: str) -> dict:
                 async with semaphore:
                     destination = Path(output_path)
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     page = await browser.new_page(
-                        viewport={"width": 1600, "height": 900}
+                        viewport=capture.viewport,
+                        device_scale_factor=capture.device_scale_factor,
                     )
                     try:
-                        await page.set_content(
-                            build_xml_preview_html(xml_content),
-                            wait_until="load",
+                        await capture._prepare_xml_preview_page(
+                            page, xml_content, 0, wait_images=False
                         )
-                        await page.evaluate(
-                            "() => document.fonts && document.fonts.ready"
-                        )
+                        metrics = await page.evaluate(_DOM_METRICS_SCRIPT)
                         await page.screenshot(
-                            path=str(destination),
-                            full_page=False,
+                            path=str(destination), full_page=False,
+                            clip={
+                                "x": 0, "y": 0,
+                                "width": capture.viewport["width"],
+                                "height": capture.viewport["height"],
+                            },
                         )
+                        return metrics
                     finally:
                         await page.close()
 
             try:
-                await asyncio.gather(
-                    *[
-                        render_one(xml_content, output_path)
-                        for xml_content, output_path in zip(
-                            xml_contents, output_paths, strict=True
-                        )
-                    ]
-                )
+                return await asyncio.gather(*(
+                    render_one(xml, output)
+                    for xml, output in zip(xml_contents, output_paths, strict=True)
+                ))
             finally:
                 await browser.close()
 
-    asyncio.run(run())
+    return asyncio.run(run())
+
+
+def render_xml_to_png(xml_content: str, output_path: str) -> None:
+    """Render one slide using the production frontend XML preview."""
+    render_xml_batch_to_png([xml_content], [output_path], max_concurrency=1)
+
 
 def format_tool_for_qwen(tool) -> dict:
     return {
