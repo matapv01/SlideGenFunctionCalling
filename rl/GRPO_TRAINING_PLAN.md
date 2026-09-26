@@ -144,16 +144,28 @@ tool riêng, nhờ đó thay đổi schema production sẽ được phản ánh 
 
 ### 5.2. Image mode
 
-Corpus hiện tại không có approved image assets, vì vậy mỗi slide được đặt:
+Corpus GRPO mới được dựng từ nội dung slide trong JSON hiện có; category,
+design instruction, ảnh và tool call cũ không được dùng làm nhãn. Chạy:
 
-    image_mode = none
-    approved_images = []
+    export GRPO_REBUILD_PLANNER_BASE_URL=http://127.0.0.1:8080/v1
+    export GRPO_IMAGE_VLM_BASE_URL=http://127.0.0.1:8080/v1
+    export GRPO_IMAGE_VLM_MODEL=<vision-capable-model>
+    uv run --locked python scripts/rebuild_grpo_corpus.py --max-docs 1 --max-slides 2 --output /tmp/grpo_replanned_smoke.json --allow-external-search
+    uv run --locked python scripts/rebuild_grpo_corpus.py --allow-external-search
 
-Các tool có image slot bị loại bằng tool_matches_image_mode. Nếu category nguồn
-không có layout no-image tương thích, slide được fallback về CONTENT_TOOLS.
+Builder gọi lại production deck style planner, slide planner, image search và
+Qwen-VL verifier. Chỉ ảnh được duyệt mới được tải vào `static/output/grpo_image_cache/`;
+phase-two planner nhận visual notes/caption từ VL để tạo final content và layout
+brief. Kết quả được ghi thành `rl/data/grpo_replanned_dataset.json` và có thể
+resume theo document sau khi gián đoạn. Qwen3-8B là text-only; nó không thể làm
+vision verifier.
 
-Đây là quyết định có chủ đích: model không được học cách bịa URL hoặc image path
-khi pipeline không cung cấp approved asset.
+Khi train, assign_layouts dùng cùng RAG retrieval production nhưng query gồm
+retrieval query, topic, final content, layout brief và mô tả ảnh đã duyệt. Tool
+được chọn trước mỗi rollout; Qwen3-8B sinh function call trong rollout để GRPO
+tối ưu. Ảnh thiếu hoặc không đạt ngưỡng confidence chuyển slide sang no-image.
+Loader chỉ chấp nhận ảnh rebuilt có file local dưới static/output và confidence
+>= 0.5.
 
 ### 5.3. Deck-wide layout assignment
 
@@ -346,6 +358,7 @@ Công thức mặc định:
         + 0.3 * format
         + 0.8 * dom
         + 1.0 * aesthetic
+        + 0.4 * image_loaded
 
 Các thành phần:
 
@@ -357,9 +370,10 @@ Các thành phần:
 | format | 0 hoặc 1 | Chỉ có một exact serialized tool call |
 | dom | -1 đến 1 | Phạt overflow, boundary và textbox collision |
 | aesthetic | 0 đến 1 | Chất lượng hình ảnh từ ViT 5 nhãn |
+| image_loaded | 0 đến 1 | Tỷ lệ approved assets thực sự tải được trong preview |
 
-Với weights mặc định, valid reward nằm xấp xỉ từ 0.7 đến 5.1. Khoảng này tách
-rõ khỏi invalid reward -2.0.
+Với weights mặc định, valid reward có trần 5.5 và tách rõ khỏi invalid reward
+-2.0; điểm thấp hơn xảy ra khi DOM lỗi hoặc approved image không tải được.
 
 Semantic reward chia cả source content và text thực sự render trên frontend thành
 các chunk theo tokenizer của embedder. Điểm là harmonic mean giữa source coverage
@@ -374,6 +388,7 @@ Weights có thể override bằng:
 - RL_REWARD_FORMAT_WEIGHT
 - RL_REWARD_DOM_WEIGHT
 - RL_REWARD_AESTHETIC_WEIGHT
+- RL_REWARD_IMAGE_LOADED_WEIGHT
 
 ### 8.3. Content preservation
 
@@ -411,6 +426,7 @@ Mức phạt theo loại lỗi:
 | text_width | 0.20 |
 | text_height | 0.25 |
 | max_lines | 0.20 |
+| image_load | 0.40 |
 | slide_boundary | 0.40 |
 | bbox_collision | 0.25 |
 
@@ -424,6 +440,7 @@ Các XML hợp lệ trong rollout được render bằng:
 - Nhiều page chạy đồng thời.
 - Concurrency mặc định bằng RL_REWARD_RENDER_WORKERS=4.
 - Dùng cùng `BROWSER_PREVIEW_URL`, viewport và device scale factor với BE production.
+- Chờ image elements load/error trước screenshot và ghi reward image_loaded.
 - Temporary images tự động bị xóa sau khi chấm.
 
 Cách này tránh khởi động một browser process cho từng completion.
@@ -568,6 +585,19 @@ Bắt buộc:
 - Chromium/Playwright hoạt động và `BROWSER_PREVIEW_URL` trỏ đúng route XML preview
   đang chạy trên host.
 - Dataset offline tồn tại.
+- Planner endpoint và Qwen-VL endpoint sẵn sàng. Chạy corpus rebuild từ nội
+  dung JSON; lệnh smoke dùng hai slide, lệnh kế tiếp xử lý toàn corpus:
+
+      export GRPO_REBUILD_PLANNER_BASE_URL=http://127.0.0.1:8080/v1
+      export GRPO_IMAGE_VLM_BASE_URL=http://127.0.0.1:8080/v1
+      export GRPO_IMAGE_VLM_MODEL=<vision-capable-model>
+      uv run --locked python scripts/rebuild_grpo_corpus.py --max-docs 1 --max-slides 2 --output /tmp/grpo_replanned_smoke.json
+      uv run --locked python scripts/rebuild_grpo_corpus.py
+
+  Chép `rl/data/grpo_replanned_dataset.json` và
+  `static/output/grpo_image_cache/` sang H100; đặt `GRPO_OFFLINE_DATASET`
+  tới corpus mới. `TRAINING_MODEL_ID=Qwen/Qwen3-8B` chỉ sinh function call,
+  không làm vision verifier.
 - Đủ disk cho model, FAISS cache, checkpoints và logs.
 
 Ví dụ:
@@ -577,6 +607,7 @@ Ví dụ:
     export BROWSER_PREVIEW_URL=http://127.0.0.1:12008/render/xml-preview
     export GRPO_OUTPUT_DIR=/data/checkpoints/slidegen-grpo
     export GRPO_FAISS_INDEX_PATH=/data/checkpoints/slidegen-grpo/tool_retriever_index
+    export GRPO_REQUIRE_IMAGE_ASSETS=true
 
 ### Giai đoạn 1: infrastructure smoke test
 
@@ -712,11 +743,11 @@ Một run được xem là đủ tốt để tiếp tục khi:
 overfit. Evaluation document split và checkpoint selection phải được dùng để
 phát hiện sớm.
 
-### No-image training
+### Legacy image provenance
 
-Corpus hiện chỉ train no-image layouts. Model chưa được GRPO cho semantic image
-tool arguments. Muốn mở rộng cần corpus có approved assets và reward kiểm tra
-image injection thực tế.
+Image URL cũ chỉ là provenance/candidate. Manifest v2 lưu candidate thực tế,
+confidence và lý do Qwen-VL theo từng slot. Search vẫn phụ thuộc chất lượng nguồn;
+cần kiểm tra mẫu render, còn slot hỏng/bị reject sẽ đưa cả slide về no-image.
 
 ### Serialized versus native transport
 
@@ -738,7 +769,7 @@ multi-GPU vẫn cần pilot để kiểm tra VRAM và throughput.
 
 ## 18. Trạng thái verification
 
-### Đã xác minh với code hiện tại
+### Kết quả verification trước image-cache changes
 
 - Bộ test regression GRPO/eval/tool-call/SFT helper: 24 tests passed.
 - Checkpoint ViT local load strict thành công; classifier shape là 5 x 384.
@@ -751,6 +782,8 @@ multi-GPU vẫn cần pilot để kiểm tra VRAM và throughput.
   đang trỏ `127.0.0.1:5173`, nhưng frontend service chưa chạy và
   `frontend/node_modules` chưa được cài. Cần bật frontend route trước khi train;
   preflight mặc định sẽ fail-fast nếu endpoint chưa sẵn sàng.
+- Image-cache flow đã được thêm nhưng chưa chạy migration toàn corpus trên H100;
+  cần cache asset và kiểm tra số image-backed prompts trước pilot.
 - Chưa chạy pilot trên H100, chưa xác nhận VRAM/throughput của Qwen3-8B, và chưa
   tạo/resume checkpoint từ một optimizer step thực tế.
 
@@ -758,7 +791,8 @@ multi-GPU vẫn cần pilot để kiểm tra VRAM và throughput.
 
 - Full corpus preparation: 414 trên 414 slides thành công.
 - Train/eval split: 372 và 42 prompts, không leakage theo document.
-- Layout coverage: 13 trên 13 no-image layouts.
+- Dry-run cũ phủ 13 trên 13 no-image layouts; image-layout coverage cần đo lại
+  sau khi cache legacy assets.
 - Toàn bộ backend và RL suite từng đạt 162 tests; đây là kết quả trước các sửa
   đổi reward/renderer hiện tại, không thay thế preflight mới.
 - Backend production không bị sửa trong lượt này.
@@ -772,6 +806,8 @@ multi-GPU vẫn cần pilot để kiểm tra VRAM và throughput.
 - [ ] Pilot 1 step tạo checkpoint hoàn chỉnh.
 - [ ] Resume từ checkpoint pilot thành công.
 - [ ] Pilot 10 steps không OOM/NaN.
+- [ ] Cache manifest có asset hợp lệ và train/eval snapshots có image_mode=semantic
+      cho các slide đã cache.
 - [ ] Invalid rate không chiếm toàn bộ rollout.
 - [ ] Eval reward không giảm liên tục.
 - [ ] Kiểm tra thủ công một batch slide render.

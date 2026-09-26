@@ -96,6 +96,8 @@ markdown, or a manually serialized JSON object.
         style["body_font_max"] = min(28, int(style.get("body_font_max", 28)))
         state["deck_style_plan"] = style
     except Exception as exc:
+        if configurable.get("strict_grpo_preprocessing"):
+            raise RuntimeError("Deck-style planning failed during GRPO corpus rebuild") from exc
         print(f"Warning: deck style planner failed, using defaults: {exc}")
         state["deck_style_plan"] = _default_style(title)
     return state

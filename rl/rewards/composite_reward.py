@@ -13,6 +13,10 @@ import numpy as np
 
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 from backend.workflows.slidegen_workflow.utils.deck_style import apply_deck_style_to_tool_call
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    inject_approved_images,
+    tool_matches_image_mode,
+)
 from rl.rewards.aesthetic_reward import _evaluate_batch, _get_model
 from rl.rewards.content_reward import clean_words
 from rl.rewards.dom_overflow_reward import _PENALTY_WEIGHTS
@@ -26,7 +30,9 @@ _TOOL_BY_NAME = {
 }
 _TEXT_EMBEDDER = None
 _TEXT_EMBEDDER_LOCK = Lock()
-_COMPONENT_NAMES = ("valid", "lexical", "semantic", "format", "dom", "aesthetic")
+_COMPONENT_NAMES = (
+    "valid", "lexical", "semantic", "format", "dom", "aesthetic", "image_loaded"
+)
 
 
 def set_text_embedder(model) -> None:
@@ -242,14 +248,33 @@ def slidegen_composite_reward(
     assigned_tool_name=None,
     source_content=None,
     deck_style=None,
+    approved_images=None,
+    image_mode=None,
     log_metric=None,
     **kwargs,
 ):
     del prompts, kwargs
     expected = list(assigned_tool_name) if assigned_tool_name is not None else []
+    assets_by_sample = (
+        list(approved_images)
+        if approved_images is not None
+        else [[] for _ in completions]
+    )
+    modes_by_sample = (
+        list(image_mode)
+        if image_mode is not None
+        else ["none"] * len(completions)
+    )
     sources = list(source_content) if source_content is not None else []
     styles = list(deck_style) if deck_style is not None else []
-    if not (len(expected) == len(sources) == len(styles) == len(completions)):
+    if not (
+        len(expected)
+        == len(sources)
+        == len(styles)
+        == len(assets_by_sample)
+        == len(modes_by_sample)
+        == len(completions)
+    ):
         raise ValueError("GRPO reward metadata does not match completion batch size")
 
     invalid_reward = float(os.getenv("RL_INVALID_REWARD", "-2.0"))
@@ -263,6 +288,14 @@ def slidegen_composite_reward(
             tool = _TOOL_BY_NAME.get(expected[index])
             if tool is None:
                 continue
+            mode = str(modes_by_sample[index] or "none")
+            sample_images = list(assets_by_sample[index] or [])
+            if mode not in {"none", "semantic"}:
+                continue
+            if mode == "semantic" and not sample_images:
+                continue
+            if not tool_matches_image_mode(tool, mode, len(sample_images)):
+                continue
             arguments = _validate_tool_arguments(tool, parsed["arguments"])
             if arguments is None:
                 continue
@@ -270,10 +303,17 @@ def slidegen_composite_reward(
             styled_call = apply_deck_style_to_tool_call(
                 validated_call, [tool], styles[index] or {}
             )
-            # Validate again after style injection so execution never receives
-            # fields or values outside the selected tool's schema.
+            injected_call, injection_history = inject_approved_images(
+                styled_call,
+                tool=tool,
+                approved_images=sample_images if mode == "semantic" else [],
+                asset_dir=None,
+            )
+            if mode == "semantic" and not injection_history:
+                continue
+            # Validate the final styled and image-injected call before execution.
             styled_arguments = _validate_tool_arguments(
-                tool, styled_call.get("arguments", {})
+                tool, injected_call.get("arguments", {})
             )
             if styled_arguments is None:
                 continue
@@ -285,6 +325,8 @@ def slidegen_composite_reward(
                     "index": index,
                     "source": str(sources[index]),
                     "xml": xml_content,
+                    "image_mode": mode,
+                    "injected_image_count": len(injection_history),
                     "format": 1.0,
                 }
             )
@@ -306,6 +348,19 @@ def slidegen_composite_reward(
             [row["xml"] for row in rows], [str(path) for path in paths],
             max_concurrency=workers,
         )
+        for row, frontend in zip(rows, frontend_results, strict=True):
+            image_status = list(frontend.get("image_status") or [])
+            expected_count = int(row["injected_image_count"])
+            loaded_count = sum(bool(image.get("loaded")) for image in image_status)
+            missing_count = max(0, expected_count - len(image_status))
+            failed_count = len(image_status) - loaded_count
+            for _ in range(failed_count + missing_count):
+                frontend.setdefault("issues", []).append({"type": "image_load"})
+            row["image_loaded"] = (
+                min(1.0, loaded_count / expected_count)
+                if expected_count
+                else 1.0
+            )
         aesthetic_scores = _evaluate_batch(_get_model(), paths)
 
     if len(frontend_results) != len(rows) or len(aesthetic_scores) != len(rows):
@@ -323,6 +378,7 @@ def slidegen_composite_reward(
         "format": float(os.getenv("RL_REWARD_FORMAT_WEIGHT", "0.3")),
         "dom": float(os.getenv("RL_REWARD_DOM_WEIGHT", "0.8")),
         "aesthetic": float(os.getenv("RL_REWARD_AESTHETIC_WEIGHT", "1.0")),
+        "image_loaded": float(os.getenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0.4")),
     }
     component_values = defaultdict(list)
     for row, frontend, semantic, aesthetic in zip(
@@ -334,6 +390,7 @@ def slidegen_composite_reward(
             "valid": 1.0,
             "lexical": lexical,
             "semantic": semantic,
+            "image_loaded": float(row["image_loaded"]),
             "format": row["format"],
             "dom": dom,
             "aesthetic": float(aesthetic),

@@ -91,7 +91,11 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
                 candidates = list(
                     tool_retriever.get_relevant_tools(
                         category=category,
-                        query=plan.get("slide_topic") or plan.get("thought", ""),
+                        query=(
+                            plan.get("retrieval_query")
+                            or plan.get("slide_topic")
+                            or plan.get("thought", "")
+                        ),
                         top_k=max(TOOL_RETRIEVER_TOP_K, len(category_tools)),
                         current_slide_index=int(job.get("index", 0)),
                     ) or []

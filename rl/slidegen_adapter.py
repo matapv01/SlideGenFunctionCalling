@@ -108,9 +108,13 @@ _DOM_METRICS_SCRIPT = r"""() => {
   const accessibleText = Array.from(
     document.querySelectorAll('[role="img"][aria-label], math-span[aria-label]')
   ).map(node => node.getAttribute('aria-label') || '').filter(Boolean);
+  const imageStatus = Array.from(canvas.querySelectorAll('img')).map(image => ({
+    loaded: image.complete && image.naturalWidth > 0,
+  }));
   return {
     visible_text: [...boxes.map(box => box.text).filter(Boolean), ...accessibleText].join(' '),
     issues,
+    image_status: imageStatus,
   };
 }"""
 
@@ -155,7 +159,7 @@ def render_xml_batch_to_png(
                     )
                     try:
                         await capture._prepare_xml_preview_page(
-                            page, xml_content, 0, wait_images=False
+                            page, xml_content, 0, wait_images=True
                         )
                         metrics = await page.evaluate(_DOM_METRICS_SCRIPT)
                         await page.screenshot(
@@ -242,6 +246,8 @@ def build_generator_human_prompt(
     assigned_tool_name: str,
     slide_index: int,
     deck_length: int,
+    image_mode: str = "none",
+    approved_images: list[dict] | None = None,
 ) -> str:
     """Mirror production prompt semantics; only the tool transport differs."""
     return HUMAN_PROMPT_TEMPLATE.format(
@@ -249,9 +255,13 @@ def build_generator_human_prompt(
         deck_style_contract=deck_style_contract,
         slide_topic=slide_topic,
         presentation_instruction="",
-        image_mode="none",
+        image_mode=image_mode,
         visual_layout_request=design_instruction,
-        approved_images="None — use a layout with no image fields.",
+        approved_images=(
+            json.dumps(approved_images or [], ensure_ascii=False)
+            if image_mode == "semantic"
+            else "None — use a layout with no image fields."
+        ),
         recent_tools=(
             f"Use only the assigned XML layout tool: {assigned_tool_name}"
         ),

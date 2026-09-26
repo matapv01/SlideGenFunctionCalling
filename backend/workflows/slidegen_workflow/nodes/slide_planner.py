@@ -573,6 +573,8 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             })
 
     except Exception as e:
+        if (config or {}).get("configurable", {}).get("strict_grpo_preprocessing"):
+            raise RuntimeError("Slide planning failed during GRPO corpus rebuild") from e
         print(f"  -> FAILED during batch planning. Error: {e}")
         # As a fallback, create default plans for all slides.
         state['slide_plans'] = []

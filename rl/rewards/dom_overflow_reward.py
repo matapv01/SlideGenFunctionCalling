@@ -14,6 +14,7 @@ _PENALTY_WEIGHTS = {
     "text_width": 0.20,
     "text_height": 0.25,
     "max_lines": 0.20,
+    "image_load": 0.40,
     "slide_boundary": 0.40,
     "bbox_collision": 0.25,
 }

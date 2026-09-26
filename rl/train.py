@@ -49,6 +49,7 @@ from backend.workflows.slidegen_workflow.nodes.section_batch_orchestrator import
 from rl.grpo_trainer import (
     DapoAccumulationGRPOTrainer,
 )
+from rl.image_assets import image_cache_dir
 from rl.rewards.composite_reward import (
     preflight_reward_runtime,
     set_text_embedder,
@@ -104,6 +105,9 @@ RUN_PREFLIGHT = os.getenv("GRPO_PREFLIGHT", "true").lower() in {
     "true",
     "yes",
     "on",
+}
+REQUIRE_IMAGE_ASSETS = os.getenv("GRPO_REQUIRE_IMAGE_ASSETS", "true").lower() in {
+    "1", "true", "yes", "on",
 }
 
 
@@ -231,20 +235,55 @@ def _normalise_jobs(document: list[dict]) -> list[dict]:
         if index == 0:
             plan["action"] = "INTRO_TOOLS"
         action = str(plan.get("action") or "CONTENT_TOOLS")
+        image_assets = list(slide.get("approved_images") or [])
+        image_mode = "semantic" if image_assets else "none"
         compatible = [
             tool
             for tool in TOOLS_DICT.get(action, [])
-            if tool_matches_image_mode(tool, "none", 0)
+            if tool_matches_image_mode(tool, image_mode, len(image_assets))
         ]
+        if image_mode == "semantic" and not compatible:
+            image_mode = "none"
+            image_assets = []
+            compatible = [
+                tool
+                for tool in TOOLS_DICT.get(action, [])
+                if tool_matches_image_mode(tool, image_mode, 0)
+            ]
         if not compatible:
             action = "CONTENT_TOOLS"
         content = str(slide.get("user_prompt") or "").strip()
         design = str(plan.get("thought") or slide.get("design_instruction") or "")
+        topic = str(
+            plan.get("slide_topic")
+            or slide.get("heading")
+            or content.splitlines()[0][:160]
+        ).strip()
+        image_descriptions = [
+            " ".join(
+                str(image.get(key) or "").strip()
+                for key in ("visual_notes", "caption_hint", "placement_hint")
+            ).strip()
+            for image in image_assets
+        ]
+        retrieval_query = " ".join(
+            part
+            for part in [
+                str(plan.get("retrieval_query") or "").strip(),
+                topic,
+                str(plan.get("slide_purpose") or "").strip(),
+                content[:700],
+                design[:400],
+                *image_descriptions,
+            ]
+            if part
+        )[:1600]
         plan.update(
             {
                 "action": action,
-                "image_mode": "none",
-                "slide_topic": content.splitlines()[0][:160],
+                "image_mode": image_mode,
+                "slide_topic": topic,
+                "retrieval_query": retrieval_query,
                 "visual_layout_request": design,
             }
         )
@@ -255,7 +294,7 @@ def _normalise_jobs(document: list[dict]) -> list[dict]:
                 "section_id": f"document-{slide.get('source_doc_id', 'unknown')}",
                 "plan": plan,
                 "content": content,
-                "approved_images": [],
+                "approved_images": image_assets,
                 "source_slide": slide,
             }
         )
@@ -287,7 +326,8 @@ def _prepare_document(
         tool_name = str(job.get("preferred_tool_name") or "")
         if not tool_name:
             raise RuntimeError(
-                f"No compatible no-image layout for slide {job.get('index')}"
+                f"No compatible {job['plan'].get('image_mode', 'none')} layout "
+                f"for slide {job.get('index')}"
             )
         category = job["plan"]["action"]
         tool = next(
@@ -312,6 +352,8 @@ def _prepare_document(
             assigned_tool_name=tool_name,
             slide_index=int(job["index"]),
             deck_length=len(jobs),
+            image_mode=str(job["plan"].get("image_mode") or "none"),
+            approved_images=job.get("approved_images") or [],
         )
         prompt = tokenizer.apply_chat_template(
             [
@@ -331,6 +373,8 @@ def _prepare_document(
                 "deck_style": deck_style,
                 "source_doc_id": str(source.get("source_doc_id", "")),
                 "slide_index": int(source.get("slide_index", job["index"])),
+                "image_mode": str(job["plan"].get("image_mode") or "none"),
+                "approved_images": job.get("approved_images") or [],
             }
         )
     return samples
@@ -378,6 +422,23 @@ def _load_model():
 
 def main() -> None:
     _validate_config()
+    corpus_path = os.getenv("GRPO_OFFLINE_DATASET") or str(DEFAULT_DATASET_PATH)
+    documents = load_offline_documents(corpus_path)
+    image_prompts = sum(
+        bool(slide.get("approved_images"))
+        for document in documents
+        for slide in document
+    )
+    if REQUIRE_IMAGE_ASSETS and image_prompts == 0:
+        raise RuntimeError(
+            f"No VLM-approved image prompts were found in {corpus_path}. "
+            "Run scripts/rebuild_grpo_corpus.py, point GRPO_OFFLINE_DATASET at "
+            "the rebuilt corpus, or set GRPO_REQUIRE_IMAGE_ASSETS=false for "
+            "a deliberate no-image run."
+        )
+    print(
+        f"GRPO corpus: {image_prompts} image-backed slides; cache={image_cache_dir()}"
+    )
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_log_dir = PROJECT_ROOT / "rl" / "log" / "grpo" / f"run_{run_id}"
@@ -408,8 +469,6 @@ def main() -> None:
     if tool_retriever is not None:
         set_text_embedder(tool_retriever.embeddings.model)
 
-    corpus_path = os.getenv("GRPO_OFFLINE_DATASET") or str(DEFAULT_DATASET_PATH)
-    documents = load_offline_documents(corpus_path)
     train_documents, eval_documents = _split_documents(documents)
     print(
         f"Preparing {len(train_documents)} train docs and "
@@ -437,6 +496,20 @@ def main() -> None:
     ]
     if not train_rows or not eval_rows:
         raise RuntimeError("Prepared GRPO train/eval data is empty")
+    train_image_prompts = sum(
+        row["image_mode"] == "semantic" for row in train_rows
+    )
+    eval_image_prompts = sum(
+        row["image_mode"] == "semantic" for row in eval_rows
+    )
+    if REQUIRE_IMAGE_ASSETS and (
+        not train_image_prompts or not eval_image_prompts
+    ):
+        raise RuntimeError(
+            "Image assets were found in the corpus, but image-compatible layouts "
+            "were not assigned to both train and eval splits. Inspect image-cache "
+            "coverage and category/layout compatibility before training."
+        )
 
     snapshots = OUTPUT_DIR / "dataset_snapshots"
     snapshots.mkdir(parents=True, exist_ok=True)
@@ -523,6 +596,9 @@ def main() -> None:
             "eval_documents": len(eval_documents),
             "train_prompts": len(train_rows),
             "eval_prompts": len(eval_rows),
+            "image_cache_dir": str(image_cache_dir()),
+            "train_image_prompts": train_image_prompts,
+            "eval_image_prompts": eval_image_prompts,
             "num_generations": NUM_GENERATIONS,
             "generation_batch_size": GENERATION_BATCH_SIZE,
             "gradient_accumulation_steps": GRAD_ACCUMULATION,

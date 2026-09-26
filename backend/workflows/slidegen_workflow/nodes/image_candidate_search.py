@@ -99,8 +99,31 @@ def search_image_candidates(state: State, config: RunnableConfig) -> State:
     print("\n---------------- Executing Node: image_candidate_search ----------------")
     started = time.perf_counter()
     options = dict(state.get("slide_options") or {})
-    verifier = (config or {}).get("configurable", {}).get("image_relevance_verifier")
+    configurable = (config or {}).get("configurable", {})
+    verifier = configurable.get("image_relevance_verifier")
     plans = list(state.get("slide_plans") or [])
+    if configurable.get("disable_external_image_search"):
+        disabled = [
+            {
+                "slide_index": index,
+                "intent_index": intent_index,
+                "query": str(intent.get("query") or ""),
+                "role": str(intent.get("role") or "illustration"),
+                "layout": intent.get("layout"),
+                "required": bool(intent.get("required", False)),
+                "candidates": [],
+                "status": "external_search_disabled",
+            }
+            for index, plan in enumerate(plans)
+            if isinstance(plan, dict)
+            for intent_index, intent in enumerate(plan.get("image_search_intents") or [])
+            if isinstance(intent, dict)
+        ]
+        state["image_search_candidates"] = disabled
+        options["image_search_candidates"] = disabled
+        state["slide_options"] = options
+        return state
+
     if verifier is None or not plans:
         state["image_search_candidates"] = []
         options["image_search_candidates"] = []

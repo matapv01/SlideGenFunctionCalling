@@ -261,6 +261,8 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
             for batch_refinements in executor.map(invoke_payload, batch_payloads):
                 refinements.extend(batch_refinements)
     except Exception as exc:
+        if configurable.get("strict_grpo_preprocessing"):
+            raise RuntimeError("Slide refinement failed during GRPO corpus rebuild") from exc
         logger.warning("Phase-two planner failed; preserving phase-one plans: %s", exc)
         logger.info("Phase-two planner fallback completed in %.2fs", time.perf_counter() - started)
         return _apply_refinements(state, fallback, grouped_images)

@@ -10,8 +10,7 @@ Tài liệu thiết kế, rollout plan, reward plan và checklist vận hành ch
 
 1. Load the tracked offline corpus once and split it by document into train and
    held-out evaluation sets.
-2. Reuse the production backend no-image filtering and deck-wide layout
-   assignment.
+2. Reuse production image/no-image filtering and deck-wide layout assignment.
 3. Give each sample exactly one assigned XML tool and the same deck-style,
    planning, and content contract used by production.
 4. Generate bounded rollout batches, execute each valid XML call once, render
@@ -22,8 +21,8 @@ Tài liệu thiết kế, rollout plan, reward plan và checklist vận hành ch
 
 The composite reward validates the assigned tool, then combines validity,
 content overlap, multilingual semantic similarity, exact serialization, XML
-overflow/collision, and ViT aesthetics. Production deck style is applied before
-XML execution and rendering.
+overflow/collision, approved-image loading, and ViT aesthetics. Production deck
+style is applied before approved assets are injected and XML is rendered.
 
 ## Run on the H100 host
 
@@ -38,6 +37,27 @@ Choose an unused output directory for a fresh run. When restarting an interrupte
 run, use that exact directory and set `GRPO_RESUME=true` with the same model,
 dataset, and training configuration.
 
+The GRPO corpus is rebuilt from the slide text in the existing JSON.
+This reruns the production deck planner, image search, Qwen-VL verification,
+phase-two refinement, and then stores verified images under
+`static/output/grpo_image_cache/`. Start both planner and vision endpoints:
+
+    export GRPO_REBUILD_PLANNER_BASE_URL=http://127.0.0.1:8080/v1
+    export GRPO_IMAGE_VLM_BASE_URL=http://127.0.0.1:8080/v1
+    export GRPO_IMAGE_VLM_MODEL=<vision-capable-model>
+
+Smoke-check two slides into a separate file, then build the full corpus:
+
+    uv run --locked python scripts/rebuild_grpo_corpus.py --max-docs 1 --max-slides 2 --output /tmp/grpo_replanned_smoke.json --allow-external-search
+    uv run --locked python scripts/rebuild_grpo_corpus.py --allow-external-search
+    export GRPO_OFFLINE_DATASET=rl/data/grpo_replanned_dataset.json
+
+Search sends short queries derived from slide text to DuckDuckGo. Copy the rebuilt
+JSON corpus and `static/output/grpo_image_cache/` to the H100 host at the same
+paths. `TRAINING_MODEL_ID=Qwen/Qwen3-8B` remains the text model that learns to
+emit the function calls; `GRPO_IMAGE_VLM_MODEL` must be vision-capable and is
+used only while rebuilding the corpus.
+
 TRAINING_GPU is optional. If unset, the script selects the GPU with the most
 free memory. Set it explicitly only when the host exposes multiple GPUs.
 
@@ -45,6 +65,12 @@ Important defaults:
 
 | Variable | Default | Meaning |
 |---|---:|---|
+| GRPO_REBUILD_PLANNER_BASE_URL | backend `LLM_BASE_URL` | Endpoint for fresh deck/slide planning and image-aware refinement |
+| GRPO_IMAGE_VLM_BASE_URL | backend `VLM_BASE_URL` | OpenAI-compatible vision endpoint used during corpus rebuilding |
+| GRPO_IMAGE_VLM_MODEL | backend `VLM_MODEL` | Vision-capable model used to approve and describe images |
+| GRPO_IMAGE_CACHE_DIR | static/output/grpo_image_cache | Locally cached images approved by Qwen-VL |
+| GRPO_OFFLINE_DATASET | rl/data/sft_function_call_dataset.json | Corpus path; point it to `grpo_replanned_dataset.json` after rebuilding |
+| GRPO_REQUIRE_IMAGE_ASSETS | true | Fail fast unless both train and eval have image-backed prompts |
 | TRAINING_MODEL_ID | Qwen/Qwen3-8B | Base model ID/path; use the matching 8B checkpoint on H100 |
 | GRPO_OUTPUT_DIR | ./qwen3_8b_slidegen_grpo | Isolated 8B checkpoints and final adapter |
 | GRPO_FAISS_INDEX_PATH | GRPO_OUTPUT_DIR/tool_retriever_index | RL-only FAISS cache |

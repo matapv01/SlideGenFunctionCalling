@@ -6,11 +6,17 @@ import argparse
 import json
 import os
 import random
+import sys
 from collections import defaultdict
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from rl.image_assets import approved_images_for_row, read_image_manifest
+
+
 DEFAULT_DATASET_PATH = PROJECT_ROOT / "rl" / "data" / "sft_function_call_dataset.json"
 REQUIRED_FIELDS = {"category", "slide_content", "doc_id", "slide_index"}
 
@@ -136,27 +142,47 @@ def load_offline_documents(
 ) -> list[list[dict]]:
     """Load the complete corpus once while preserving source document IDs."""
     documents = _group_documents(_load_rows(dataset_path))
+    has_legacy_rows = any(
+        int(row.get("corpus_version") or 0) < 2
+        for document in documents
+        for row in document
+    )
+    image_manifest = read_image_manifest() if has_legacy_rows else {}
     result = []
     for source_slides in documents:
         source_doc_id = source_slides[0]["doc_id"]
         slides = []
         for slide_index, row in enumerate(source_slides):
+            source_plan = dict(row.get("plan") or {})
             content = str(row.get("slide_content") or "").strip()
             if not content:
                 continue
+            approved_images = approved_images_for_row(row, image_manifest)
             slides.append(
                 {
                     "doc_id": source_doc_id,
                     "source_doc_id": source_doc_id,
-                    "slide_index": slide_index,
-                    "heading": "",
+                    "slide_index": int(row.get("slide_index", slide_index)),
+                    "heading": str(source_plan.get("slide_topic") or ""),
                     "user_prompt": content,
                     "plan": {
-                        "action": str(row.get("category") or "CONTENT_TOOLS"),
+                        **source_plan,
+                        "action": str(
+                            source_plan.get("action")
+                            or row.get("category")
+                            or "CONTENT_TOOLS"
+                        ),
                         "thought": str(
-                            row.get("design_instruction") or ""
+                            source_plan.get("visual_layout_request")
+                            or row.get("design_instruction")
+                            or ""
                         ).strip(),
+                        "slide_topic": str(source_plan.get("slide_topic") or ""),
+                        "slide_purpose": str(source_plan.get("slide_purpose") or ""),
+                        "retrieval_query": str(source_plan.get("retrieval_query") or ""),
+                        "image_mode": "semantic" if approved_images else "none",
                     },
+                    "approved_images": approved_images,
                 }
             )
         if slides:
