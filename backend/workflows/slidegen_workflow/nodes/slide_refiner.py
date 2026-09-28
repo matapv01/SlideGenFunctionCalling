@@ -1,4 +1,4 @@
-"""Phase-two slide planner that reconciles approved visual evidence."""
+"""Refine a slide layout brief after visual assets are approved."""
 
 from __future__ import annotations
 
@@ -20,20 +20,16 @@ from backend.workflows.slidegen_workflow.graph.stage import (
 logger = logging.getLogger(__name__)
 
 _REFINER_SYSTEM_PROMPT = """
-You are the final presentation-content planner. Reconcile an existing slide
-plan with zero or more verified visual assets.
+You refine the visual layout brief after image verification.
 
 Rules:
-- Preserve facts, names, dates, claims, and the user's intended meaning from the
-  source content. Never invent a fact from an image.
-- Use visual notes only to explain how an approved image supports the slide,
-  how it may be captioned, or where it belongs.
-- If no image is approved, produce a clear no-image composition request. Do not
-  request another image and do not mention a search provider.
-- If an image is approved, adapt only the wording or hierarchy needed to make
-  the image and message coherent. Do not turn a decorative image into evidence.
-- Keep the final content concise and presentation-ready while retaining the
-  source meaning. Return one refinement for each input slide, in order.
+- Never modify or summarize source_content. Copy it exactly into final_content.
+- Never infer facts from an image. Use visual notes only for image placement,
+  caption guidance, and how approved visual evidence supports the slide.
+- Refine visual_layout_request only when an image is approved. If none is
+  approved, leave the phase-one layout brief unchanged.
+- Refine retrieval_query only when useful for retrieving a layout.
+- Return one refinement for each input slide and preserve each slide_index.
 - `retrieval_query` is a short factual query for a final document retrieval
   pass. Use an empty string when the supplied slide content is already enough.
 - Return only the structured response; do not return markdown or commentary.
@@ -66,8 +62,22 @@ def _content_text(content: Any) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, dict):
+        # Slide chunks carry both source text and orchestration metadata. Only
+        # return the actual text field so positions and duplicate headings do
+        # not leak into the training target.
+        for key in ("content", "text"):
+            value = content.get(key)
+            if isinstance(value, (str, list)):
+                return _content_text(value)
+        title = str(content.get("title") or content.get("heading") or "").strip()
+        body = str(content.get("body") or "").strip()
+        if title or body:
+            return "\n".join(part for part in (title, body) if part)
         values: list[str] = []
-        for value in content.values():
+        metadata = {"position", "index", "slide_index", "section_index"}
+        for key, value in content.items():
+            if key in metadata:
+                continue
             if isinstance(value, (str, int, float)):
                 values.append(str(value))
             elif isinstance(value, list):
@@ -106,17 +116,21 @@ def _fallback_refinement(
     plan: dict[str, Any],
     approved_images: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    if approved_images:
+        layout_request = (
+            str(plan.get("visual_layout_request") or "").strip()
+            or "Use the approved visual as supporting evidence with a concise caption."
+        )
+    else:
+        # When verification approves no image, retain phase one's design brief.
+        # The explicit no-image mode is carried separately to the generator.
+        layout_request = str(
+            plan.get("visual_layout_request") or plan.get("thought") or ""
+        ).strip()
     return {
         "slide_index": index,
         "final_content": _content_text(content),
-        "visual_layout_request": (
-            (
-                str(plan.get("visual_layout_request") or "").strip()
-                or "Use the approved visual as supporting evidence with a concise caption."
-            )
-            if approved_images
-            else "Use a clear no-image composition with readable hierarchy."
-        )[:500],
+        "visual_layout_request": layout_request[:500],
         "retrieval_query": (
             str(plan.get("slide_topic") or "").strip()[:300]
             if approved_images
@@ -170,6 +184,10 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
         )
         return _apply_refinements(state, fallback, grouped_images)
     if llm is None:
+        if configurable.get("strict_grpo_preprocessing"):
+            raise RuntimeError(
+                "Image-backed slide refinement requires a planner provider"
+            )
         logger.info(
             "Phase-two planner skipped: no planner provider (%.2fs)",
             time.perf_counter() - started,
@@ -242,12 +260,27 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
             raw = _as_dict(result).get("refinements")
             if not isinstance(raw, list) or len(raw) != len(batch_indices):
                 raise ValueError("phase-two planner returned an incomplete batch")
-            normalized: list[dict[str, Any]] = []
-            for fallback_index, refinement in zip(batch_indices, raw):
+            by_index: dict[int, dict[str, Any]] = {}
+            for refinement in raw:
                 item_dict = _as_dict(refinement)
-                item_dict.setdefault("slide_index", fallback_index)
-                normalized.append(item_dict)
-            return normalized
+                raw_index = item_dict.get("slide_index")
+                if isinstance(raw_index, bool):
+                    raise ValueError("phase-two planner returned an invalid slide_index")
+                try:
+                    slide_index = int(raw_index)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        "phase-two planner omitted or returned an invalid slide_index"
+                    ) from exc
+                if slide_index not in batch_indices or slide_index in by_index:
+                    raise ValueError(
+                        "phase-two planner returned an unexpected or duplicate slide_index"
+                    )
+                item_dict["slide_index"] = slide_index
+                by_index[slide_index] = item_dict
+            if set(by_index) != set(batch_indices):
+                raise ValueError("phase-two planner returned mismatched slide indices")
+            return [by_index[index] for index in batch_indices]
 
         # The shared request limiter still caps total LLM pressure. Running
         # independent phase-two batches concurrently removes an avoidable
@@ -282,7 +315,9 @@ def refine_slide_plans(state: State, config: RunnableConfig) -> State:
         item = dict(fallback_item)
         candidate = by_index.get(index) or {}
         item["slide_index"] = index
-        item["final_content"] = str(candidate.get("final_content") or item["final_content"]).strip()
+        # Keep the exact source content used by the reward target. The planner
+        # may shape the visual brief, but cannot silently change training facts.
+        item["final_content"] = _content_text(chunks[index])
         item["visual_layout_request"] = str(
             candidate.get("visual_layout_request") or item["visual_layout_request"]
         ).strip()[:500]

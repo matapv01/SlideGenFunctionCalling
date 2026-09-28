@@ -520,6 +520,8 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                     if isinstance(image, dict)
                     and int(image.get("slide_index", -1)) == current_index
                 ]
+            if state.get("force_no_image_layout"):
+                approved_images = []
             slide_content, final_tool_call, search_history = active_execute_tool_plan(
                 tool_plan,
                 tool_lookup=tool_lookup,

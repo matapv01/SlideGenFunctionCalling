@@ -13,20 +13,28 @@ class DapoAccumulationGRPOTrainer(GRPOTrainer):
 
     model_id: str | None = None
     dapo_accumulation_factor: int = 1
+    training_contract: str | None = None
 
     def _compute_loss(self, model, inputs):
         loss = super()._compute_loss(model, inputs)
         if self.loss_type in {"dapo", "cispo", "vespo"} and model.training:
             steps_per_generation = self.args.steps_per_generation
             accumulated_steps = self.current_gradient_accumulation_steps
-            update_factor = accumulated_steps / steps_per_generation
-            loss = loss / max(1.0, update_factor)
+            if accumulated_steps % steps_per_generation:
+                raise RuntimeError(
+                    "Token-normalized loss requires each optimizer update to contain "
+                    "whole generation windows; check the GRPO sampler and accumulation settings"
+                )
+            generation_windows = accumulated_steps // steps_per_generation
+            loss = loss / generation_windows
         return loss
 
     def _checkpoint_metadata_path(self, checkpoint: str | Path) -> Path:
         return Path(checkpoint) / "rl_checkpoint_metadata.json"
 
     def _save_checkpoint(self, model, trial):
+        if not self.training_contract:
+            raise ValueError("Cannot save GRPO checkpoint without a training contract")
         super()._save_checkpoint(model, trial)
         if not self.is_world_process_zero():
             return
@@ -36,10 +44,12 @@ class DapoAccumulationGRPOTrainer(GRPOTrainer):
             "model_id": self.model_id,
             "loss_type": self.loss_type,
             "dapo_accumulation_factor": self.dapo_accumulation_factor,
+            "training_contract": self.training_contract,
         }
-        self._checkpoint_metadata_path(checkpoint).write_text(
-            json.dumps(metadata, indent=2), encoding="utf-8"
-        )
+        path = self._checkpoint_metadata_path(checkpoint)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+        temporary.replace(path)
 
     def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
         metadata_path = self._checkpoint_metadata_path(resume_from_checkpoint)
@@ -51,6 +61,8 @@ class DapoAccumulationGRPOTrainer(GRPOTrainer):
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         if not isinstance(metadata, dict):
             raise ValueError("Checkpoint RL metadata must be a JSON object")
+        if not self.training_contract or metadata.get("training_contract") != self.training_contract:
+            raise ValueError("Checkpoint data, reward, code, or training settings do not match this run")
         if metadata.get("model_id") != self.model_id:
             raise ValueError(
                 f"Checkpoint base model {metadata.get('model_id')!r} does not match "

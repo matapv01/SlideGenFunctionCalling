@@ -175,7 +175,7 @@ def tool_matches_image_mode(
     if not has_images:
         return False
     if approved_image_count is not None:
-        return tool_image_slot_count(tool) <= max(0, approved_image_count)
+        return approved_image_count > 0 and tool_image_slot_count(tool) == approved_image_count
     return True
 
 
@@ -233,9 +233,9 @@ def inject_approved_images(
         final_call.get("arguments") or {},
     )
     images = list(approved_images or [])
-    if not image_targets:
+    if not image_targets and not images:
         return final_call, []
-    if len(images) < len(image_targets):
+    if len(images) != len(image_targets):
         raise NoApprovedImageError(
             f"IMAGE_ASSIGNMENT_EMPTY: layout '{final_call.get('name', '')}' "
             f"requires {len(image_targets)} approved image(s), received {len(images)}."

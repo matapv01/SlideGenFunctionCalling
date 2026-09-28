@@ -8,6 +8,7 @@ from backend.application.services.document_rag_service import (
     DocumentRagService,
     DocumentUploadLimitError,
 )
+from backend.application.services.subscription_service import SubscriptionService
 from backend.domain.entities.chat import ChatSession
 
 
@@ -95,3 +96,45 @@ def test_docx_upload_rejects_when_conversation_total_would_be_exceeded(
         )
 
     assert len(repository.documents) == 1
+
+
+def test_non_docx_upload_requires_configured_ocr_service(tmp_path, monkeypatch):
+    monkeypatch.setattr(document_rag_module, "CHATBOT_DOCUMENTS_DIR", tmp_path)
+    service = _service(_DocumentRepository())
+
+    with pytest.raises(ValueError, match="OCR"):
+        asyncio.run(
+            service.create_pending_document(
+                session=_session(),
+                original_filename="scan.pdf",
+                content=b"pdf",
+                max_file_bytes=10 * MEGABYTE,
+                max_total_bytes=50 * MEGABYTE,
+            )
+        )
+
+
+def test_standalone_image_upload_does_not_require_ocr(tmp_path, monkeypatch):
+    monkeypatch.setattr(document_rag_module, "CHATBOT_DOCUMENTS_DIR", tmp_path)
+    repository = _DocumentRepository()
+    service = _service(repository)
+
+    document = asyncio.run(
+        service.create_pending_document(
+            session=_session(),
+            original_filename="pasted.png",
+            content=b"image-bytes",
+            max_file_bytes=10 * MEGABYTE,
+            max_total_bytes=50 * MEGABYTE,
+        )
+    )
+
+    assert document.original_filename == "pasted.png"
+    assert (tmp_path / f"{document.id}.png").read_bytes() == b"image-bytes"
+
+
+def test_document_credits_scale_by_size_and_images_cost_less():
+    assert SubscriptionService.get_document_usage_cost("notes.docx", 1) == 1
+    assert SubscriptionService.get_document_usage_cost("notes.pdf", MEGABYTE + 1) == 2
+    assert SubscriptionService.get_document_usage_cost("pasted.png", 1) == 0.25
+    assert SubscriptionService.get_document_usage_cost("pasted.jpg", 2 * MEGABYTE + 1) == 0.75

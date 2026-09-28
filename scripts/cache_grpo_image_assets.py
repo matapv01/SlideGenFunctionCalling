@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -44,9 +43,6 @@ from rl.image_assets import (
 from scripts.generate_challenge_dataset import DEFAULT_DATASET_PATH, _load_rows
 
 
-GRPO_IMAGE_VLM_BASE_URL = os.getenv("GRPO_IMAGE_VLM_BASE_URL", VLM_BASE_URL)
-GRPO_IMAGE_VLM_MODEL = os.getenv("GRPO_IMAGE_VLM_MODEL", VLM_MODEL)
-
 
 def _read_previous_manifest(path: Path) -> dict:
     if not path.is_file():
@@ -71,16 +67,16 @@ def _build_verifier() -> ImageRelevanceService:
         max(1, int(VLM_REQUEST_MAX_CONCURRENCY))
     )
     provider = GeminiLLMProvider(
-        api_keys=[VLM_API_KEY or "local-openai-compatible"],
-        model=GRPO_IMAGE_VLM_MODEL,
-        base_url=GRPO_IMAGE_VLM_BASE_URL,
+        api_keys=[VLM_API_KEY] if VLM_API_KEY else [],
+        model=VLM_MODEL,
+        base_url=VLM_BASE_URL,
         temperature=LLM_TEMPERATURE,
         max_tokens=LLM_MAX_TOKENS,
         top_p=LLM_TOP_P,
         request_limiter=limiter,
         request_timeout=VLM_REQUEST_TIMEOUT_SECONDS,
     )
-    return ImageRelevanceService(provider, model=GRPO_IMAGE_VLM_MODEL)
+    return ImageRelevanceService(provider, model=VLM_MODEL)
 
 
 def _search_query(row: dict, candidate: dict[str, str]) -> str:
@@ -178,7 +174,7 @@ def cache_corpus_images(
             if not verification.get("available"):
                 if getattr(verifier, "_vision_available", None) is False:
                     raise RuntimeError(
-                        f"Qwen-VL verifier is unavailable at {GRPO_IMAGE_VLM_BASE_URL}; "
+                        f"Qwen-VL verifier is unavailable at {VLM_BASE_URL}; "
                         "no image was approved"
                     )
                 raise ValueError("no candidate image could be loaded and verified")

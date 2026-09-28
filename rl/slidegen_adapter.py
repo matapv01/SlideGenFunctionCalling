@@ -6,18 +6,12 @@ backend, which remains aligned with minh_dep.
 
 from __future__ import annotations
 
-import asyncio
 import json
-import os
-from copy import deepcopy
-from pathlib import Path
 
-from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     TOOLS_DICT,
     execute_tool as _execute_xml_tool,
 )
-from backend.workflows.slidegen_workflow.utils.helper import parse_tool_call_json
 from backend.workflows.slidegen_workflow.utils.prompts import (
     HUMAN_PROMPT_TEMPLATE,
     MATH_EQUATION_RULES,
@@ -71,6 +65,17 @@ _DOM_METRICS_SCRIPT = r"""() => {
       }
       const visibleRects = textRects.filter(item => item.width > 0 && item.height > 0);
       const textRect = union(visibleRects);
+      const collisionRects = [
+        ...visibleRects,
+        ...Array.from(content.querySelectorAll('math-field, math-span'))
+          .map(field => field.getBoundingClientRect())
+          .filter(rect => rect.width > 0 && rect.height > 0),
+      ].map(item => ({
+        x: toX(item.left - canvasRect.left),
+        y: toY(item.top - canvasRect.top),
+        width: toX(item.width),
+        height: toY(item.height),
+      }));
       const reasons = [];
       if (rect.left < canvasRect.left - tolerance || rect.top < canvasRect.top - tolerance ||
           rect.right > canvasRect.right + tolerance || rect.bottom > canvasRect.bottom + tolerance) {
@@ -91,32 +96,62 @@ _DOM_METRICS_SCRIPT = r"""() => {
         text: content.innerText || content.textContent || '',
         x: toX(rect.left - canvasRect.left), y: toY(rect.top - canvasRect.top),
         width: toX(rect.width), height: toY(rect.height), reasons,
+        collision_rects: collisionRects,
       };
     }).filter(Boolean);
   const issues = boxes.flatMap(box => box.reasons.map(type => ({type, textbox: box.id})));
-  for (let i = 0; i < boxes.length; i++) {
-    for (let j = i + 1; j < boxes.length; j++) {
-      const a = boxes[i], b = boxes[j];
-      const width = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
-      const height = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
-      const smaller = Math.min(a.width * a.height, b.width * b.height);
-      if (width > 0 && height > 0 && smaller > 0 && width * height / smaller > 0.05) {
-        issues.push({type: 'bbox_collision', textbox: a.id, other: b.id});
-      }
-    }
-  }
   const accessibleText = Array.from(
     document.querySelectorAll('[role="img"][aria-label], math-span[aria-label]')
   ).map(node => node.getAttribute('aria-label') || '').filter(Boolean);
   const imageStatus = Array.from(canvas.querySelectorAll('img')).map(image => ({
+    src: image.currentSrc || image.src,
     loaded: image.complete && image.naturalWidth > 0,
   }));
   return {
     visible_text: [...boxes.map(box => box.text).filter(Boolean), ...accessibleText].join(' '),
     issues,
     image_status: imageStatus,
+    collision_boxes: boxes.map(box => ({id: box.id, rects: box.collision_rects})),
   };
 }"""
+
+
+def _attach_bbox_collision_issues(metrics: dict) -> dict:
+    """Score visible glyph/math bounds, not the frontend's expanded hitboxes."""
+    boxes = metrics.pop("collision_boxes", [])
+    issues = metrics.setdefault("issues", [])
+
+    def visibly_overlaps(first: dict, second: dict) -> bool:
+        width = min(
+            first["x"] + first["width"], second["x"] + second["width"]
+        ) - max(first["x"], second["x"])
+        height = min(
+            first["y"] + first["height"], second["y"] + second["height"]
+        ) - max(first["y"], second["y"])
+        smaller_area = min(
+            first["width"] * first["height"],
+            second["width"] * second["height"],
+        )
+        return (
+            width > 1.5
+            and height > 1.5
+            and smaller_area > 0
+            and width * height / smaller_area > 0.05
+        )
+
+    for index, first in enumerate(boxes):
+        for second in boxes[index + 1 :]:
+            if any(
+                visibly_overlaps(first_rect, second_rect)
+                for first_rect in first.get("rects", [])
+                for second_rect in second.get("rects", [])
+            ):
+                issues.append({
+                    "type": "bbox_collision",
+                    "textbox": first.get("id", "textbox"),
+                    "other": second.get("id", "textbox"),
+                })
+    return metrics
 
 
 def render_xml_batch_to_png(
@@ -130,59 +165,9 @@ def render_xml_batch_to_png(
     if not xml_contents:
         return []
 
-    from playwright.async_api import async_playwright
-
-    capture = PlaywrightCaptureProvider()
-
-    async def run() -> list[dict]:
-        executable = os.getenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
-        options = {
-            "headless": True,
-            "args": ["--disable-gpu", "--disable-software-rasterizer"],
-        }
-        if executable:
-            path = Path(executable).expanduser()
-            if not path.is_file():
-                raise FileNotFoundError(f"Configured Chromium not found: {path}")
-            options["executable_path"] = str(path)
-        semaphore = asyncio.Semaphore(max(1, max_concurrency))
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(**options)
-
-            async def render_one(xml_content: str, output_path: str) -> dict:
-                async with semaphore:
-                    destination = Path(output_path)
-                    destination.parent.mkdir(parents=True, exist_ok=True)
-                    page = await browser.new_page(
-                        viewport=capture.viewport,
-                        device_scale_factor=capture.device_scale_factor,
-                    )
-                    try:
-                        await capture._prepare_xml_preview_page(
-                            page, xml_content, 0, wait_images=True
-                        )
-                        metrics = await page.evaluate(_DOM_METRICS_SCRIPT)
-                        await page.screenshot(
-                            path=str(destination), full_page=False,
-                            clip={
-                                "x": 0, "y": 0,
-                                "width": capture.viewport["width"],
-                                "height": capture.viewport["height"],
-                            },
-                        )
-                        return metrics
-                    finally:
-                        await page.close()
-
-            try:
-                return await asyncio.gather(*(
-                    render_one(xml, output)
-                    for xml, output in zip(xml_contents, output_paths, strict=True)
-                ))
-            finally:
-                await browser.close()
-
-    return asyncio.run(run())
+    from rl.render_runtime import render_batch
+    results = render_batch(xml_contents, output_paths, _DOM_METRICS_SCRIPT, max_concurrency)
+    return [_attach_bbox_collision_issues(result) for result in results]
 
 
 def render_xml_to_png(xml_content: str, output_path: str) -> None:
@@ -199,27 +184,6 @@ def format_tool_for_qwen(tool) -> dict:
             "parameters": tool.args_schema.model_json_schema(),
         },
     }
-
-
-QWEN_CHAT_TEMPLATE = """{%- if messages and messages[0].role == 'system' %}
-<|im_start|>system
-{{ messages[0].content }}
-{%- if tools is defined and tools %}
-
-Available tools:
-<tools>
-{% for tool in tools %}{{ tool | tojson }}
-{% endfor %}</tools>
-{% endif %}<|im_end|>
-{% endif %}
-{%- for message in messages %}
-{%- if message.role != 'system' %}
-<|im_start|>{{ message.role }}
-{{ message.content }}<|im_end|>
-{% endif %}
-{%- endfor %}
-{%- if add_generation_prompt %}<|im_start|>assistant
-{% endif %}"""
 
 
 QWEN_GENERATOR_SYSTEM_PROMPT = (
@@ -273,47 +237,3 @@ def build_generator_human_prompt(
         previous_function_call="None — this is the first attempt for this slide.",
         previous_evaluation="None — this is the first attempt for this slide.",
     ) + "\n\nOutput exactly one serialized <tool_call> JSON object."
-
-
-_CONTENT_KEYS = {
-    "title", "subtitle", "headline", "description", "intro_text", "footer_text",
-    "content", "content_text", "main_content", "left_text", "right_text", "quote",
-    "items", "bullet_items", "list_items", "steps", "topics", "cards", "labels",
-    "values", "series", "categories", "names", "roles", "bios",
-}
-
-
-def sanitize_to_placeholders(tool_call: dict) -> dict:
-    """Remove content/image identity while preserving layout and visual style."""
-    sanitized = deepcopy(tool_call)
-    args = sanitized.get("arguments") or sanitized.get("args") or {}
-    for key, value in list(args.items()):
-        lowered = key.lower()
-        if "image" in lowered or lowered.endswith(("_url", "_path")):
-            args[key] = ""
-        elif key in _CONTENT_KEYS:
-            if isinstance(value, list):
-                args[key] = ["Text" for _ in value]
-            elif isinstance(value, dict):
-                args[key] = {k: "Text" for k in value}
-            elif isinstance(value, str):
-                args[key] = "Text"
-    sanitized["arguments"] = args
-    sanitized.pop("args", None)
-    return sanitized
-
-
-def get_slide_style_context(tool_call: dict | None) -> str:
-    if not tool_call:
-        return ""
-    args = tool_call.get("arguments") or tool_call.get("args") or {}
-    style = {
-        key: value
-        for key, value in args.items()
-        if key not in _CONTENT_KEYS
-        and not ("image" in key.lower() or key.lower().endswith(("_url", "_path")))
-    }
-    return json.dumps(
-        {"previous_layout": tool_call.get("name"), "style": style},
-        ensure_ascii=False,
-    )

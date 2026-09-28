@@ -156,6 +156,8 @@ def search_ddgs_images(
     license_image: str = None,
     max_results: int = 5,
     target_description: str = None,
+    raise_on_error: bool = False,
+    backend: str | None = None,
 ):
     """
     Search and return a JSON list of real image URLs from DuckDuckGo.
@@ -172,12 +174,14 @@ def search_ddgs_images(
         license_image,
         max_results,
         target_description,
+        backend,
     )
     cached = _get_cached_images(cache_key)
     if cached is not None:
         logger.info(f"⚡ [CACHE HIT] '{query}'")
         return cached
 
+    search_succeeded = False
     try:
         with DDGS() as ddgs:
             results = list(ddgs.images(
@@ -191,6 +195,7 @@ def search_ddgs_images(
                 layout=layout,
                 license_image=license_image,
                 max_results=max_results,
+                **({"backend": backend} if backend else {}),
             ))
 
         logger.info(f"DDGS search: '{query}' - Found {len(results)} images")
@@ -210,12 +215,17 @@ def search_ddgs_images(
                 res_json = json.dumps(urls[:10], ensure_ascii=False)
                 _cache_images(cache_key, res_json)
                 return res_json
+        search_succeeded = True
 
     except Exception as e:
         logger.error(f"Lỗi khi gọi DDGS API cho query '{query}': {e}")
+        if raise_on_error:
+            raise
 
-    # An empty result is intentional. The workflow will choose a no-image
-    # layout instead of inserting an unrelated stock image.
+    # Do not cache transport failures as genuine empty results. Corpus rebuilds
+    # request propagation so infrastructure failures cannot silently become
+    # no-image training examples.
     empty_result = json.dumps([], ensure_ascii=False)
-    _cache_images(cache_key, empty_result)
+    if search_succeeded:
+        _cache_images(cache_key, empty_result)
     return empty_result

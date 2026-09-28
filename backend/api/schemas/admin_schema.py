@@ -48,7 +48,7 @@ class AdminUser(BaseModel):
     created_at: datetime
     chat_usage: float
     chat_message_count: int
-    docx_usage: int
+    docx_usage: float
     usage_window_started_at: datetime
     usage_reset_at: datetime
 

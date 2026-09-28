@@ -53,6 +53,8 @@ def _verify_search_group(
     verifier,
     group: dict[str, Any],
     state: State,
+    *,
+    strict: bool = False,
 ) -> list[dict[str, Any]]:
     slide_index = int(group.get("slide_index", -1))
     candidates = [
@@ -77,7 +79,12 @@ def _verify_search_group(
         deck_outline=deck["deck_outline"],
         rendered_slide_content=slide["slide_content"],
     )
-    if not result or not result.get("available"):
+    if not result or not result.get("available") or not result.get("decisions"):
+        if strict:
+            raise RuntimeError(
+                f"Vision verification was unavailable or incomplete for slide "
+                f"{slide_index}, image intent {group.get('intent_index', '?')}"
+            )
         return []
 
     by_url = {str(item["source_url"]): item for item in candidates}
@@ -157,13 +164,20 @@ def verify_slide_images(state: State, config: RunnableConfig) -> State:
     print("\n---------------- Executing Node: image_verifier ----------------")
     started = time.perf_counter()
     options = dict(state.get("slide_options") or {})
-    verifier = (config or {}).get("configurable", {}).get("image_relevance_verifier")
+    configurable = (config or {}).get("configurable", {})
+    verifier = configurable.get("image_relevance_verifier")
+    strict = bool(configurable.get("strict_grpo_preprocessing"))
     candidates = list(
         state.get("image_search_candidates")
         or options.get("image_search_candidates")
         or []
     )
     if verifier is None:
+        if strict and any(
+            isinstance(group, dict) and group.get("candidates")
+            for group in candidates
+        ):
+            raise RuntimeError("Strict GRPO preprocessing requires a vision verifier")
         assignments: list[dict[str, Any]] = []
     else:
         jobs = [
@@ -171,19 +185,39 @@ def verify_slide_images(state: State, config: RunnableConfig) -> State:
             if isinstance(group, dict) and group.get("candidates")
         ]
         assignments = []
+        # Corpus rebuilding treats an unavailable judgment as fatal. Keep
+        # multimodal requests below the interactive BE fan-out so one transient
+        # endpoint failure does not trip the shared vision circuit breaker for
+        # every queued candidate group.
+        request_limit = min(
+            VLM_REQUEST_MAX_CONCURRENCY,
+            2 if strict else VLM_REQUEST_MAX_CONCURRENCY,
+        )
         with ThreadPoolExecutor(
-            max_workers=min(VLM_REQUEST_MAX_CONCURRENCY, max(1, len(jobs) + 1))
+            max_workers=min(request_limit, max(1, len(jobs) + 1))
         ) as executor:
             futures = [
-                executor.submit(_verify_search_group, verifier, group, state)
+                executor.submit(
+                    _verify_search_group,
+                    verifier,
+                    group,
+                    state,
+                    strict=strict,
+                )
                 for group in jobs
             ]
             document_future = executor.submit(_verify_document_images, verifier, state)
+            failures = []
             for future in as_completed([*futures, document_future]):
                 try:
                     assignments.extend(future.result())
-                except Exception:
+                except Exception as exc:
                     logger.exception("Image verification worker failed")
+                    failures.append(exc)
+            if strict and failures:
+                raise RuntimeError(
+                    "Image verification failed during strict GRPO preprocessing"
+                ) from failures[0]
 
     assignments.sort(
         key=lambda item: (

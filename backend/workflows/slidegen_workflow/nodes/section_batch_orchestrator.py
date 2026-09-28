@@ -33,6 +33,29 @@ def prepare_section_batches(state: State) -> Dict[str, Any]:
     }
 
 
+def _compatible_category(
+    tools_dict: Dict[str, list],
+    preferred_category: str,
+    image_mode: str,
+    approved_image_count: int,
+) -> tuple[str | None, list, list]:
+    """Find a category containing layouts compatible with the approved assets."""
+    categories = [preferred_category]
+    if preferred_category != "CONTENT_TOOLS" and "CONTENT_TOOLS" in tools_dict:
+        categories.append("CONTENT_TOOLS")
+    categories.extend(category for category in tools_dict if category not in categories)
+    for category in categories:
+        category_tools = list(tools_dict.get(category, []))
+        compatible = [
+            tool
+            for tool in category_tools
+            if tool_matches_image_mode(tool, image_mode, approved_image_count)
+        ]
+        if compatible:
+            return category, category_tools, compatible
+    return None, [], []
+
+
 def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
     """Reserve layout tools before fan-out to keep parallel choices diverse."""
     configurable = config.get("configurable", {}) if config else {}
@@ -49,42 +72,45 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
     for job in sorted(jobs, key=lambda item: int(item.get("index", 0))):
         plan = job.get("plan") or {}
         category = plan.get("action", "CONTENT_TOOLS")
-        category_tools = list(tools_dict.get(category, []))
         image_mode = str(plan.get("image_mode") or "").lower()
-        approved_image_count = len(job.get("approved_images") or [])
+        approved_images = list(job.get("approved_images") or [])
         if image_mode not in {"none", "semantic"}:
-            image_mode = ""
-        compatible_tools = (
-            [
-                tool
-                for tool in category_tools
-                if tool_matches_image_mode(
-                    tool,
-                    image_mode,
-                    approved_image_count,
-                )
-            ]
-            if image_mode
-            else category_tools
-        )
-        if (
-            image_mode == "semantic"
-            and category_tools
-            and not compatible_tools
-            and all(
-                not tool_matches_image_mode(
-                    tool,
-                    "semantic",
-                    approved_image_count,
-                )
-                for tool in category_tools
-            )
-        ):
-            # Some categories, notably charts, are intentionally text/vector
-            # only. Do not force the generator to invent an image layout.
+            image_mode = "semantic" if approved_images else "none"
+        if image_mode == "semantic" and not approved_images:
             image_mode = "none"
-            plan["image_mode"] = image_mode
-            compatible_tools = category_tools
+        selected_category, category_tools, compatible_tools = _compatible_category(
+            tools_dict, category, image_mode, len(approved_images)
+        )
+        if image_mode == "semantic" and selected_category is None:
+            if configurable.get("strict_image_layouts"):
+                raise RuntimeError(
+                    f"Slide {job.get('index')} has {len(approved_images)} approved images "
+                    "but no layout with exactly that many image slots. Replan the slide."
+                )
+            # No registered XML layout can represent these assets; convert the
+            # job completely to no-image before any prompt or reward is built.
+            image_mode = "none"
+            approved_images = []
+            plan["approved_image_ids"] = []
+            plan["image_search_intents"] = []
+            plan["visual_layout_request"] = (
+                "Use a clear no-image composition with readable hierarchy."
+            )
+            selected_category, category_tools, compatible_tools = _compatible_category(
+                tools_dict, category, image_mode, 0
+            )
+        if selected_category is None:
+            raise RuntimeError(
+                f"No {image_mode} XML layout is available for category {category!r}"
+            )
+        category = selected_category
+        plan["action"] = category
+        plan["image_mode"] = image_mode
+        if image_mode == "none":
+            approved_images = []
+            plan["approved_image_ids"] = []
+            plan["image_search_intents"] = []
+        job["approved_images"] = approved_images
         candidates = []
         if tool_retriever and compatible_tools:
             try:

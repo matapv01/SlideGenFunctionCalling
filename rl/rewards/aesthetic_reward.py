@@ -1,6 +1,4 @@
-import concurrent.futures
 import os
-import uuid
 from pathlib import Path
 from threading import Lock
 
@@ -10,7 +8,6 @@ from PIL import Image
 from torchvision import transforms
 from transformers import ViTConfig, ViTForImageClassification
 from backend.infrastructure.aesthetic.vit_aesthetic_provider import ViTAestheticProvider
-from rl.slidegen_adapter import execute_tool, parse_tool_call_json, render_xml_to_png
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -76,6 +73,7 @@ def _get_model() -> ViTAestheticProvider:
                     )
                 )
                 provider.model.load_state_dict(state_dict, strict=True)
+                provider.model.requires_grad_(False)
                 provider.model.to(provider.device)
                 provider.model.eval()
                 provider.transform = transforms.Compose(
@@ -99,75 +97,24 @@ def _get_model() -> ViTAestheticProvider:
     return _MODEL
 
 
-def _render_completion(task: tuple[int, str, Path]) -> tuple[int, Path, str | None]:
-    idx, completion, temp_dir = task
-    temp_img_path = temp_dir / f"aesthetic_{os.getpid()}_{uuid.uuid4().hex}.png"
-    try:
-        tool_call = parse_tool_call_json(completion)
-        if not tool_call:
-            return idx, temp_img_path, "invalid tool call"
-        xml_content = execute_tool(tool_call)
-        render_xml_to_png(xml_content, str(temp_img_path))
-        return idx, temp_img_path, None
-    except Exception as exc:
-        return idx, temp_img_path, str(exc)
-
-
 def _evaluate_batch(model: ViTAestheticProvider, image_paths: list[Path]) -> list[float]:
+    """Return mean clean-slide probability for each rendered image."""
+    if not image_paths:
+        return []
+
     tensors = []
     for image_path in image_paths:
         with Image.open(image_path) as image:
             tensors.append(model.transform(image.convert("RGB")))
     pixel_values = torch.stack(tensors).to(model.device)
-    with torch.no_grad():
+    with torch.inference_mode():
         logits = model.model(pixel_values=pixel_values).logits
         error_probabilities = torch.sigmoid(logits)
-    # The checkpoint labels 1 as an error. GRPO maximizes reward, so reward
-    # should be the probability of a clean slide, not the probability of error.
+    if error_probabilities.shape != (len(image_paths), 5):
+        raise RuntimeError(
+            "Aesthetic ViT must return one five-label error vector per image"
+        )
     quality = 1.0 - error_probabilities.mean(dim=1)
-    return quality.detach().cpu().tolist()
-
-
-def slide_aesthetics_reward(prompts, completions, **kwargs):
-    del prompts, kwargs
-    rewards = [-1.0] * len(completions)
-    temp_dir = PROJECT_ROOT / "rl" / "temp_rl_renders"
-    temp_dir.mkdir(parents=True, exist_ok=True)
-    sample_errors = []
-    render_workers = max(
-        1,
-        min(int(os.getenv("RL_REWARD_RENDER_WORKERS", "4")), len(completions) or 1),
-    )
-    tasks = [(idx, completion, temp_dir) for idx, completion in enumerate(completions)]
-
-    if tasks:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=render_workers) as executor:
-            rendered = list(executor.map(_render_completion, tasks))
-    else:
-        rendered = []
-
-    valid = []
-    try:
-        for idx, image_path, error in rendered:
-            if error is None:
-                valid.append((idx, image_path))
-            elif len(sample_errors) < 3:
-                sample_errors.append(f"Gen {idx}: {error}")
-
-        if valid:
-            try:
-                scores = _evaluate_batch(_get_model(), [path for _, path in valid])
-                for (idx, _), score in zip(valid, scores):
-                    rewards[idx] = float(score)
-            except Exception as exc:
-                sample_errors.append(f"ViT batch: {exc}")
-    finally:
-        for _, image_path, _ in rendered:
-            image_path.unlink(missing_ok=True)
-
-    print(
-        f"  [Aesthetic Reward] workers={render_workers} "
-        f"scores=[{' '.join(f'{score:.3f}' for score in rewards)}]"
-        + (f" errors={sample_errors[:3]}" if sample_errors else "")
-    )
-    return rewards
+    if not torch.isfinite(quality).all():
+        raise RuntimeError("Aesthetic ViT returned non-finite reward scores")
+    return quality.clamp(0.0, 1.0).cpu().tolist()

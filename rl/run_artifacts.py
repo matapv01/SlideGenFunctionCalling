@@ -11,9 +11,9 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Sequence
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont
 
 
 PALETTE = {
@@ -79,6 +79,7 @@ class TeeStream:
     def __getattr__(self, name):
         return getattr(self._primary, name)
 
+
 def ensure_dir(path: str | Path) -> Path:
     p = Path(path)
     p.mkdir(parents=True, exist_ok=True)
@@ -111,7 +112,9 @@ def start_run_logging(log_dir: str | Path, filename: str = "run.log") -> Path:
 
 def _run_command(cmd: Sequence[str], timeout: int = 3) -> str | None:
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout, check=False
+        )
     except Exception:
         return None
     output = (result.stdout or result.stderr or "").strip()
@@ -175,7 +178,9 @@ def get_runtime_metadata(extra: dict[str, Any] | None = None) -> dict[str, Any]:
         meta["torch"] = {
             "version": torch.__version__,
             "cuda_available": torch.cuda.is_available(),
-            "cuda_device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+            "cuda_device_count": (
+                torch.cuda.device_count() if torch.cuda.is_available() else 0
+            ),
         }
         if torch.cuda.is_available():
             meta["torch"]["device_name"] = torch.cuda.get_device_name(0)
@@ -196,39 +201,20 @@ def write_json(path: str | Path, data: Any) -> Path:
     return path
 
 
-def append_jsonl(path: str | Path, rows: Iterable[dict[str, Any]]) -> Path:
-    path = Path(path)
-    ensure_dir(path.parent)
-    with open(path, "a", encoding="utf-8") as f:
-        for row in rows:
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
-    return path
-
-
-def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
-    path = Path(path)
-    if not path.exists():
-        return []
-    rows: list[dict[str, Any]] = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rows.append(json.loads(line))
-            except Exception:
-                continue
-    return rows
-
-
 def _load_font(size: int, bold: bool = False):
-    candidates = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
-        "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf",
-        "Arial Bold.ttf" if bold else "Arial.ttf",
-    ]
+    system_fonts = (
+        (
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        ),
+        (
+            "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
+        ),
+        ("DejaVuSans.ttf", "DejaVuSans-Bold.ttf"),
+        ("Arial.ttf", "Arial Bold.ttf"),
+    )
+    candidates = [font_pair[bool(bold)] for font_pair in system_fonts]
     for candidate in candidates:
         try:
             return ImageFont.truetype(candidate, size=size)
@@ -370,9 +356,21 @@ def save_text_summary_image(
         top = y
         bottom = top + sec["panel_h"]
         fill = PALETTE["panel"] if idx % 2 == 0 else PALETTE["panel_alt"]
-        draw.rounded_rectangle([left, top, right, bottom], radius=18, fill=fill, outline=PALETTE["border"], width=2)
-        draw.rectangle([left, top, left + 8, bottom], fill=PALETTE["accent_2"] if idx % 2 == 0 else PALETTE["accent_3"])
-        draw.text((left + 28, top + 18), sec["title"], fill=PALETTE["text"], font=section_font)
+        draw.rounded_rectangle(
+            [left, top, right, bottom],
+            radius=18,
+            fill=fill,
+            outline=PALETTE["border"],
+            width=2,
+        )
+        accent = PALETTE["accent_2"] if idx % 2 == 0 else PALETTE["accent_3"]
+        draw.rectangle([left, top, left + 8, bottom], fill=accent)
+        draw.text(
+            (left + 28, top + 18),
+            sec["title"],
+            fill=PALETTE["text"],
+            font=section_font,
+        )
         body_y = top + 18 + sec["header_h"] + 6
         for line in sec["body_lines"]:
             draw.text((left + 28, body_y), line, fill=PALETTE["text"], font=body_font)
@@ -388,73 +386,6 @@ def save_text_summary_image(
     return path
 
 
-def save_contact_sheet(
-    image_paths: Sequence[str | Path],
-    out_path: str | Path,
-    title: str,
-    subtitle: str | None = None,
-    columns: int = 4,
-    thumb_size: tuple[int, int] = (420, 236),
-    caption_map: dict[str, str] | None = None,
-) -> Path:
-    loaded: list[tuple[Path, Image.Image]] = []
-    for raw_path in image_paths:
-        path = Path(raw_path)
-        if not path.exists():
-            continue
-        try:
-            img = Image.open(path).convert("RGB")
-        except Exception:
-            continue
-        loaded.append((path, img))
-
-    if not loaded:
-        return save_text_summary_image(out_path, title, [{"title": "No images", "body": "No renderable images were found for this summary."}], subtitle=subtitle)
-
-    columns = max(1, columns)
-    rows = math.ceil(len(loaded) / columns)
-    pad = 24
-    header_h = 140 if subtitle else 112
-    caption_h = 42
-    cell_w = thumb_size[0] + pad * 2
-    cell_h = thumb_size[1] + caption_h + pad * 2
-    width = columns * cell_w + pad
-    height = header_h + rows * cell_h + pad
-
-    canvas = Image.new("RGB", (width, height), PALETTE["bg"])
-    draw = ImageDraw.Draw(canvas)
-    title_font = _load_font(40, bold=True)
-    subtitle_font = _load_font(22, bold=False)
-    caption_font = _load_font(18, bold=False)
-
-    draw.rectangle([0, 0, width, 12], fill=PALETTE["accent"])
-    draw.text((pad, 30), title, fill=PALETTE["text"], font=title_font)
-    if subtitle:
-        draw.text((pad, 82), subtitle, fill=PALETTE["muted"], font=subtitle_font)
-
-    for idx, (path, img) in enumerate(loaded):
-        col = idx % columns
-        row = idx // columns
-        x0 = pad + col * cell_w
-        y0 = header_h + row * cell_h
-        tile_right = x0 + cell_w - pad
-        tile_bottom = y0 + cell_h - pad
-        draw.rounded_rectangle([x0, y0, tile_right, tile_bottom], radius=18, fill=PALETTE["panel"], outline=PALETTE["border"], width=2)
-        thumb = ImageOps.contain(img, thumb_size, Image.Resampling.LANCZOS)
-        thumb_x = x0 + (cell_w - pad - thumb.width) // 2
-        thumb_y = y0 + pad
-        canvas.paste(thumb, (thumb_x, thumb_y))
-        label = caption_map.get(str(path), path.stem) if caption_map else path.stem
-        label = label.replace("_", " ")
-        label = label if len(label) <= 52 else label[:49] + "..."
-        draw.text((x0 + 20, y0 + pad + thumb_size[1] + 10), label, fill=PALETTE["muted"], font=caption_font)
-
-    out_path = Path(out_path)
-    ensure_dir(out_path.parent)
-    canvas.save(out_path)
-    return out_path
-
-
 def save_metric_trend_image(
     rows: Sequence[dict[str, Any]],
     out_path: str | Path,
@@ -465,10 +396,18 @@ def save_metric_trend_image(
 ) -> Path:
     numeric_rows = [row for row in rows if isinstance(row, dict)]
     if not numeric_rows:
-        return save_text_summary_image(out_path, title, [{"title": "No metrics", "body": "No numeric metric rows were available."}])
+        return save_text_summary_image(
+            out_path,
+            title,
+            [{"title": "No metrics", "body": "No numeric metric rows were available."}],
+        )
 
     if preferred_keys:
-        keys = [key for key in preferred_keys if any(isinstance(row.get(key), (int, float)) for row in numeric_rows)]
+        keys = [
+            key
+            for key in preferred_keys
+            if any(isinstance(row.get(key), (int, float)) for row in numeric_rows)
+        ]
     else:
         counts: dict[str, int] = {}
         for row in numeric_rows:
@@ -477,10 +416,19 @@ def save_metric_trend_image(
                     if key.lower() in {"step", "epoch", "global_step", "step_num", "iteration"}:
                         continue
                     counts[key] = counts.get(key, 0) + 1
-        keys = [key for key, _ in sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:4]]
+        keys = [
+            key
+            for key, _ in sorted(
+                counts.items(), key=lambda item: (-item[1], item[0])
+            )[:4]
+        ]
 
     if not keys:
-        return save_text_summary_image(out_path, title, [{"title": "No plottable metrics", "body": "No numeric metrics could be selected for plotting."}])
+        return save_text_summary_image(
+            out_path,
+            title,
+            [{"title": "No plottable metrics", "body": "No numeric metrics could be selected for plotting."}],
+        )
 
     series: dict[str, list[float | None]] = {key: [] for key in keys}
     x_labels: list[str] = []
@@ -488,11 +436,20 @@ def save_metric_trend_image(
         x_labels.append(str(row.get("step", row.get("global_step", idx + 1))))
         for key in keys:
             value = row.get(key)
-            series[key].append(float(value) if isinstance(value, numbers.Number) and not isinstance(value, bool) else None)
+            numeric_value = (
+                float(value)
+                if isinstance(value, numbers.Number) and not isinstance(value, bool)
+                else None
+            )
+            series[key].append(numeric_value)
 
     values = [value for values in series.values() for value in values if value is not None]
     if not values:
-        return save_text_summary_image(out_path, title, [{"title": "No plottable metrics", "body": "The selected metrics did not contain numeric values."}])
+        return save_text_summary_image(
+            out_path,
+            title,
+            [{"title": "No plottable metrics", "body": "The selected metrics did not contain numeric values."}],
+        )
 
     min_v = min(values)
     max_v = max(values)
@@ -512,7 +469,12 @@ def save_metric_trend_image(
 
     draw.rectangle([0, 0, width, 12], fill=PALETTE["accent"])
     draw.text((64, 30), title, fill=PALETTE["text"], font=title_font)
-    draw.text((64, 78), f"Selected metrics: {', '.join(keys)}", fill=PALETTE["muted"], font=legend_font)
+    draw.text(
+        (64, 78),
+        f"Selected metrics: {', '.join(keys)}",
+        fill=PALETTE["muted"],
+        font=legend_font,
+    )
 
     left = margin_left
     top = margin_top
@@ -526,7 +488,12 @@ def save_metric_trend_image(
         value = max_v - span * grid_idx / 5
         label = f"{value:.3f}" if abs(value) < 1000 else f"{value:.1f}"
         tw, th = _measure_text(draw, label, axis_font)
-        draw.text((left - tw - 14, gy - th / 2), label, fill=PALETTE["muted"], font=axis_font)
+        draw.text(
+            (left - tw - 14, gy - th / 2),
+            label,
+            fill=PALETTE["muted"],
+            font=axis_font,
+        )
 
     colors = [PALETTE["accent"], PALETTE["accent_2"], PALETTE["accent_3"], "#DC2626"]
     count = max(len(x_labels) - 1, 1)
@@ -547,12 +514,26 @@ def save_metric_trend_image(
     legend_y = bottom + 18
     for idx, key in enumerate(keys):
         color = colors[idx % len(colors)]
-        draw.rectangle([legend_x, legend_y + idx * 32, legend_x + 18, legend_y + idx * 32 + 18], fill=color)
-        draw.text((legend_x + 28, legend_y + idx * 32 - 1), key, fill=PALETTE["text"], font=legend_font)
+        draw.rectangle(
+            [legend_x, legend_y + idx * 32, legend_x + 18, legend_y + idx * 32 + 18],
+            fill=color,
+        )
+        draw.text(
+            (legend_x + 28, legend_y + idx * 32 - 1),
+            key,
+            fill=PALETTE["text"],
+            font=legend_font,
+        )
 
     if x_labels:
         draw.text((left, bottom + 48), f"first: {x_labels[0]}", fill=PALETTE["muted"], font=axis_font)
-        draw.text((left + plot_w / 2 - 50, bottom + 48), f"mid: {x_labels[len(x_labels)//2]}", fill=PALETTE["muted"], font=axis_font)
+        middle_label = x_labels[len(x_labels) // 2]
+        draw.text(
+            (left + plot_w / 2 - 50, bottom + 48),
+            f"mid: {middle_label}",
+            fill=PALETTE["muted"],
+            font=axis_font,
+        )
         draw.text((right - 130, bottom + 48), f"last: {x_labels[-1]}", fill=PALETTE["muted"], font=axis_font)
 
     out_path = Path(out_path)

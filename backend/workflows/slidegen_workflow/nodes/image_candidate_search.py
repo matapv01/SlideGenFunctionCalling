@@ -35,7 +35,13 @@ def _parse_urls(raw_result: Any) -> list[str]:
     return urls[:IMAGE_SEARCH_MAX_RESULTS]
 
 
-def _search_one(index: int, intent_index: int, intent: dict[str, Any]) -> dict[str, Any]:
+def _search_one(
+    index: int,
+    intent_index: int,
+    intent: dict[str, Any],
+    *,
+    strict: bool = False,
+) -> dict[str, Any]:
     query = " ".join(str(intent.get("query") or "").split())[:240]
     if not query:
         return {
@@ -55,6 +61,10 @@ def _search_one(index: int, intent_index: int, intent: dict[str, Any]) -> dict[s
             layout=intent.get("layout"),
             size="Large",
             max_results=IMAGE_SEARCH_MAX_RESULTS,
+            raise_on_error=strict,
+            # Strict corpus rebuild uses one known reachable DDGS engine. The
+            # interactive BE keeps DDGS auto-selection and its normal fallback.
+            backend="bing" if strict else None,
         )
         urls = _parse_urls(raw)
         return {
@@ -144,7 +154,8 @@ def search_image_candidates(state: State, config: RunnableConfig) -> State:
         state["slide_options"] = options
         return state
 
-    stream_callback = (config or {}).get("configurable", {}).get("stream_callback")
+    strict = bool(configurable.get("strict_grpo_preprocessing"))
+    stream_callback = configurable.get("stream_callback")
     if stream_callback:
         stream_callback(
             "status",
@@ -161,7 +172,13 @@ def search_image_candidates(state: State, config: RunnableConfig) -> State:
         max_workers=min(IMAGE_SEARCH_MAX_CONCURRENCY, len(jobs))
     ) as executor:
         futures = [
-            executor.submit(_search_one, slide_index, intent_index, intent)
+            executor.submit(
+                _search_one,
+                slide_index,
+                intent_index,
+                intent,
+                strict=strict,
+            )
             for slide_index, intent_index, intent in jobs
         ]
         for future in as_completed(futures):

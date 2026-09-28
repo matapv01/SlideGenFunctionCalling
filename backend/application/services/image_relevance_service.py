@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 import logging
+import math
 import mimetypes
 import threading
 import time
@@ -125,7 +126,9 @@ class ImageRelevanceService:
                     '{"candidates":[{"index":0,"use":true,"confidence":0.0,'
                     '"reason":"...","caption_hint":"...",'
                     '"placement_hint":"..."}]}.'
-                    " Candidate indexes are zero-based.\n\n"
+                    " Candidate indexes are zero-based. Return exactly one decision "
+                    "for EVERY supplied candidate, including rejected images. "
+                    "Keep reasons and hints concise.\n\n"
                     f"Deck topic: {str(deck_topic or '')[:800]}\n"
                     f"Deck outline: {str(deck_outline or '')[:2200]}\n"
                     f"Slide topic: {str(slide_topic or '')[:500]}\n"
@@ -158,6 +161,10 @@ class ImageRelevanceService:
             loaded.append((index, url, data_uri))
 
         if not loaded:
+            logger.warning(
+                "VLM image review had no downloadable candidates (requested=%d)",
+                len(urls),
+            )
             return {"available": False, "approved": [], "decisions": []}
 
         cache_key = self._cache_key(
@@ -181,39 +188,97 @@ class ImageRelevanceService:
             len(loaded),
             sum(len(data_uri) for _, _, data_uri in loaded) / 1024,
         )
-        raw = self._invoke(parts, max_tokens=700)
+        raw = self._invoke(parts, max_tokens=max(700, 400 * len(loaded)))
         if raw is None:
+            logger.warning("VLM returned no response for image candidate review")
             return {"available": False, "approved": [], "decisions": []}
         parsed = self._parse_json(raw)
         decisions = parsed.get("candidates") if isinstance(parsed, dict) else None
         if not isinstance(decisions, list):
+            logger.warning(
+                "VLM image review did not return a parseable candidates array (response_chars=%d)",
+                len(raw),
+            )
             return {"available": False, "approved": [], "decisions": []}
 
         normalized: list[dict[str, Any]] = []
         by_index = {index: url for index, url, _ in loaded}
+        seen_indices: set[int] = set()
+        invalid_indices: set[int] = set()
         for item in decisions:
             if not isinstance(item, dict):
                 continue
-            try:
-                index = int(item.get("index"))
-            except (TypeError, ValueError):
+            raw_index = item.get("index")
+            if isinstance(raw_index, bool):
+                continue
+            if isinstance(raw_index, int):
+                index = raw_index
+            elif isinstance(raw_index, str) and raw_index.strip().lstrip("-").isdigit():
+                index = int(raw_index)
+            else:
                 continue
             if index not in by_index:
                 continue
+            if index in seen_indices:
+                invalid_indices.add(index)
+                continue
+            seen_indices.add(index)
+            raw_use = item.get("use")
+            if isinstance(raw_use, bool):
+                use = raw_use
+            elif str(raw_use or "").strip().lower() in {"1", "true", "yes", "y"}:
+                use = True
+            elif str(raw_use or "").strip().lower() in {"0", "false", "no", "n"}:
+                use = False
+            else:
+                invalid_indices.add(index)
+                continue
+            raw_confidence = item.get("confidence")
+            if isinstance(raw_confidence, bool):
+                invalid_indices.add(index)
+                continue
             try:
-                confidence = max(0.0, min(1.0, float(item.get("confidence", 0))))
+                confidence = float(raw_confidence)
             except (TypeError, ValueError):
-                confidence = 0.0
+                invalid_indices.add(index)
+                continue
+            if not math.isfinite(confidence) or not 0.0 <= confidence <= 1.0:
+                invalid_indices.add(index)
+                continue
             normalized.append(
                 {
                     "index": index,
                     "url": by_index[index],
-                    "use": _as_bool(item.get("use")),
+                    "use": use,
                     "confidence": confidence,
                     "reason": str(item.get("reason") or "")[:500],
                     "caption_hint": str(item.get("caption_hint") or "")[:300],
                     "placement_hint": str(item.get("placement_hint") or "")[:300],
                 }
+            )
+        if invalid_indices:
+            normalized = [
+                item for item in normalized if item["index"] not in invalid_indices
+            ]
+            seen_indices.difference_update(invalid_indices)
+        missing_indices = set(by_index).difference(seen_indices)
+        if missing_indices:
+            logger.warning(
+                "VLM omitted %d/%d image decisions; omitted candidates are rejected",
+                len(missing_indices),
+                len(by_index),
+            )
+            normalized.extend(
+                {
+                    "index": index,
+                    "url": by_index[index],
+                    "use": False,
+                    "confidence": 0.0,
+                    "reason": "VLM omitted a decision; rejected by default",
+                    "caption_hint": "",
+                    "placement_hint": "",
+                }
+                for index in sorted(missing_indices)
             )
         approved = [
             item["url"]

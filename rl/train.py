@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
-import random
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,12 +14,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from dotenv import load_dotenv
 
-load_dotenv()
-os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "300")
-os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "300")
-os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
-os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
-
 from rl.common import (
     LORA_ALPHA,
     LORA_DROPOUT,
@@ -28,23 +22,23 @@ from rl.common import (
     auto_select_gpu,
 )
 
-auto_select_gpu()
+# Environment loading and device selection belong to the CLI, not module import.
+if __name__ == "__main__":
+    load_dotenv()
+    os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "300")
+    os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "300")
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+    os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
+    auto_select_gpu()
 
 import torch
 from datasets import Dataset
 from peft import LoraConfig, TaskType, get_peft_model
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOConfig
 
 from backend.infrastructure.rag.gemini_provider import (
     LocalEmbeddingToolRetrieveProvider,
-)
-from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
-    tool_matches_image_mode,
-)
-from backend.workflows.slidegen_workflow.graph.stage import DeckStylePlan
-from backend.workflows.slidegen_workflow.nodes.section_batch_orchestrator import (
-    assign_layouts,
 )
 from rl.grpo_trainer import (
     DapoAccumulationGRPOTrainer,
@@ -52,9 +46,9 @@ from rl.grpo_trainer import (
 from rl.image_assets import image_cache_dir
 from rl.rewards.composite_reward import (
     preflight_reward_runtime,
-    set_text_embedder,
     slidegen_composite_reward,
 )
+from rl.rewards.content_reward import set_text_embedder
 from rl.run_artifacts import (
     get_runtime_metadata,
     save_metric_trend_image,
@@ -62,19 +56,15 @@ from rl.run_artifacts import (
     start_run_logging,
     write_json,
 )
-from rl.slidegen_adapter import (
-    QWEN_GENERATOR_SYSTEM_PROMPT,
-    TOOLS_DICT,
-    build_generator_human_prompt,
-    format_tool_for_qwen,
-)
-from scripts.generate_challenge_dataset import (
-    DEFAULT_DATASET_PATH,
-    load_offline_documents,
-)
+from scripts.generate_challenge_dataset import load_offline_documents
+from rl.training_contract import build_training_contract, contract_digest
+from rl.render_runtime import close_render_runtime
+from rl.slidegen_adapter import TOOLS_DICT
+from rl.train_data import prepare_document, split_documents
 
 
 MODEL_ID = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen3-8B")
+MODEL_REVISION = os.getenv("TRAINING_MODEL_REVISION") or None
 OUTPUT_DIR = Path(os.getenv("GRPO_OUTPUT_DIR", "./qwen3_8b_slidegen_grpo"))
 RETRIEVER_INDEX_DIR = Path(
     os.getenv("GRPO_FAISS_INDEX_PATH", str(OUTPUT_DIR / "tool_retriever_index"))
@@ -85,7 +75,7 @@ TRAIN_BATCH_SIZE = int(os.getenv("PER_DEVICE_TRAIN_BATCH_SIZE", "1"))
 GRAD_ACCUMULATION = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16"))
 NUM_GENERATIONS = int(os.getenv("NUM_GENERATIONS", "4"))
 GENERATION_BATCH_SIZE = int(os.getenv("GRPO_GENERATION_BATCH_SIZE", "4"))
-MAX_COMPLETION_LENGTH = int(os.getenv("MAX_COMPLETION_LENGTH", "512"))
+MAX_COMPLETION_LENGTH = int(os.getenv("MAX_COMPLETION_LENGTH", "3072"))
 LOSS_TYPE = os.getenv("GRPO_LOSS_TYPE", "dapo")
 SAVE_STEPS = int(os.getenv("GRPO_SAVE_STEPS", "25"))
 EVAL_STEPS = int(os.getenv("GRPO_EVAL_STEPS", "50"))
@@ -114,6 +104,8 @@ REQUIRE_IMAGE_ASSETS = os.getenv("GRPO_REQUIRE_IMAGE_ASSETS", "true").lower() in
 def _validate_config() -> None:
     if TOTAL_STEPS < 1:
         raise ValueError("TOTAL_STEPS must be positive")
+    if min(TRAIN_BATCH_SIZE, GRAD_ACCUMULATION, GENERATION_BATCH_SIZE, SAVE_STEPS) < 1:
+        raise ValueError("Batch sizes, accumulation and save steps must be positive")
     if NUM_GENERATIONS < 2:
         raise ValueError("NUM_GENERATIONS must be >= 2 for GRPO")
     if GENERATION_BATCH_SIZE % NUM_GENERATIONS:
@@ -152,6 +144,7 @@ def _checkpoint_complete(
     model_id: str,
     loss_type: str,
     dapo_accumulation_factor: int,
+    training_contract: str | None = None,
 ) -> bool:
     metadata_path = path / "rl_checkpoint_metadata.json"
     if not metadata_path.is_file():
@@ -168,6 +161,12 @@ def _checkpoint_complete(
         return False
     if metadata.get("dapo_accumulation_factor") != dapo_accumulation_factor:
         return False
+    if training_contract is not None and metadata.get("training_contract") != training_contract:
+        return False
+    return _checkpoint_files_present(path)
+
+
+def _checkpoint_files_present(path: Path) -> bool:
     model_exists = any(
         (path / filename).is_file()
         for filename in (
@@ -188,228 +187,58 @@ def _latest_checkpoint(
     model_id: str,
     loss_type: str,
     dapo_accumulation_factor: int,
+    training_contract: str | None = None,
 ) -> Path | None:
     if not RESUME or not OUTPUT_DIR.is_dir():
         return None
+    paths = list(OUTPUT_DIR.glob("checkpoint-*"))
     candidates = []
-    for path in OUTPUT_DIR.glob("checkpoint-*"):
+    for path in paths:
         try:
             step = int(path.name.rsplit("-", 1)[1])
         except (IndexError, ValueError):
             continue
-        if _checkpoint_complete(
-            path, model_id, loss_type, dapo_accumulation_factor
-        ):
+        if _checkpoint_files_present(path):
             candidates.append((step, path))
-    return max(candidates, default=(0, None))[1]
-
-
-_PALETTES = (
-    ("#F8FAFC", "#0F172A", "#475569", "#0D9488", "#1F2937"),
-    ("#FFF7ED", "#431407", "#9A3412", "#EA580C", "#292524"),
-    ("#F5F3FF", "#2E1065", "#6D28D9", "#7C3AED", "#1F2937"),
-    ("#F0FDF4", "#052E16", "#166534", "#16A34A", "#14532D"),
-)
-
-
-def _deck_style(document: list[dict]) -> dict:
-    source_id = str(document[0].get("source_doc_id", "0"))
-    palette = _PALETTES[sum(source_id.encode("utf-8")) % len(_PALETTES)]
-    topic = str(document[0].get("user_prompt") or "Untitled presentation")
-    topic = topic.splitlines()[0][:120]
-    style = DeckStylePlan(deck_topic=topic).model_dump()
-    (
-        style["background_color"],
-        style["primary_color"],
-        style["secondary_color"],
-        style["accent_color"],
-        style["text_color"],
-    ) = palette
-    return style
-
-
-def _normalise_jobs(document: list[dict]) -> list[dict]:
-    jobs = []
-    for index, slide in enumerate(document):
-        plan = dict(slide.get("plan") or {})
-        if index == 0:
-            plan["action"] = "INTRO_TOOLS"
-        action = str(plan.get("action") or "CONTENT_TOOLS")
-        image_assets = list(slide.get("approved_images") or [])
-        image_mode = "semantic" if image_assets else "none"
-        compatible = [
-            tool
-            for tool in TOOLS_DICT.get(action, [])
-            if tool_matches_image_mode(tool, image_mode, len(image_assets))
-        ]
-        if image_mode == "semantic" and not compatible:
-            image_mode = "none"
-            image_assets = []
-            compatible = [
-                tool
-                for tool in TOOLS_DICT.get(action, [])
-                if tool_matches_image_mode(tool, image_mode, 0)
-            ]
-        if not compatible:
-            action = "CONTENT_TOOLS"
-        content = str(slide.get("user_prompt") or "").strip()
-        design = str(plan.get("thought") or slide.get("design_instruction") or "")
-        topic = str(
-            plan.get("slide_topic")
-            or slide.get("heading")
-            or content.splitlines()[0][:160]
-        ).strip()
-        image_descriptions = [
-            " ".join(
-                str(image.get(key) or "").strip()
-                for key in ("visual_notes", "caption_hint", "placement_hint")
-            ).strip()
-            for image in image_assets
-        ]
-        retrieval_query = " ".join(
-            part
-            for part in [
-                str(plan.get("retrieval_query") or "").strip(),
-                topic,
-                str(plan.get("slide_purpose") or "").strip(),
-                content[:700],
-                design[:400],
-                *image_descriptions,
-            ]
-            if part
-        )[:1600]
-        plan.update(
-            {
-                "action": action,
-                "image_mode": image_mode,
-                "slide_topic": topic,
-                "retrieval_query": retrieval_query,
-                "visual_layout_request": design,
-            }
-        )
-        jobs.append(
-            {
-                "index": index,
-                "batch_id": f"document-{slide.get('source_doc_id', 'unknown')}",
-                "section_id": f"document-{slide.get('source_doc_id', 'unknown')}",
-                "plan": plan,
-                "content": content,
-                "approved_images": image_assets,
-                "source_slide": slide,
-            }
-        )
-    return jobs
-
-
-def _prepare_document(
-    document: list[dict],
-    tokenizer,
-    tool_retriever,
-    *,
-    strict_tool_retrieval: bool = False,
-) -> list[dict]:
-    jobs = _normalise_jobs(document)
-    assigned = assign_layouts(
-        {"slide_jobs": jobs},
-        {
-            "configurable": {
-                "tools_dict": TOOLS_DICT,
-                "tool_retriever": tool_retriever,
-                "strict_tool_retrieval": strict_tool_retrieval,
-            }
-        },
-    )["slide_jobs"]
-    deck_style = _deck_style(document)
-    style_json = json.dumps(deck_style, ensure_ascii=False, indent=2)
-    samples = []
-    for job in assigned:
-        tool_name = str(job.get("preferred_tool_name") or "")
-        if not tool_name:
-            raise RuntimeError(
-                f"No compatible {job['plan'].get('image_mode', 'none')} layout "
-                f"for slide {job.get('index')}"
-            )
-        category = job["plan"]["action"]
-        tool = next(
-            (
-                candidate
-                for candidate in TOOLS_DICT[category]
-                if candidate.name == tool_name
-            ),
-            None,
-        )
-        if tool is None:
-            raise RuntimeError(f"Assigned layout is unavailable: {tool_name}")
-        source = job["source_slide"]
-        content = str(job.get("content") or "")
-        design = str(job["plan"].get("visual_layout_request") or "")
-        human_prompt = build_generator_human_prompt(
-            deck_style_contract=style_json,
-            slide_topic=str(job["plan"].get("slide_topic") or ""),
-            slide_plan=json.dumps(job["plan"], ensure_ascii=False, indent=2),
-            design_instruction=design,
-            slide_content=content,
-            assigned_tool_name=tool_name,
-            slide_index=int(job["index"]),
-            deck_length=len(jobs),
-            image_mode=str(job["plan"].get("image_mode") or "none"),
-            approved_images=job.get("approved_images") or [],
-        )
-        prompt = tokenizer.apply_chat_template(
-            [
-                {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
-                {"role": "user", "content": human_prompt},
-            ],
-            tools=[format_tool_for_qwen(tool)],
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
-        )
-        samples.append(
-            {
-                "prompt": prompt,
-                "assigned_tool_name": tool_name,
-                "source_content": content,
-                "deck_style": deck_style,
-                "source_doc_id": str(source.get("source_doc_id", "")),
-                "slide_index": int(source.get("slide_index", job["index"])),
-                "image_mode": str(job["plan"].get("image_mode") or "none"),
-                "approved_images": job.get("approved_images") or [],
-            }
-        )
-    return samples
-
-
-def _split_documents(documents: list[list[dict]]) -> tuple[list, list]:
-    if len(documents) <= EVAL_DOCS:
+    if not candidates:
+        if paths or (OUTPUT_DIR / "final_adapter").exists():
+            raise ValueError("No complete resumable checkpoint in output directory; use a new directory")
+        return None
+    checkpoint = max(candidates)[1]
+    if not _checkpoint_complete(checkpoint, model_id, loss_type, dapo_accumulation_factor, training_contract):
         raise ValueError(
-            f"Corpus has {len(documents)} documents but GRPO_EVAL_DOCS={EVAL_DOCS}"
+            f"Latest complete checkpoint {checkpoint} is incompatible with the current "
+            "data, reward, code, or training configuration. Use a new output directory."
         )
-    shuffled = list(documents)
-    random.Random(DATA_SEED).shuffle(shuffled)
-    eval_documents = shuffled[:EVAL_DOCS]
-    return shuffled[EVAL_DOCS:], eval_documents
+    return checkpoint
 
 
-def _load_model():
-    device = "cuda" if torch.cuda.is_available() and not USE_CPU else "cpu"
-    if device == "cuda" and torch.cuda.is_bf16_supported():
-        dtype = torch.bfloat16
-    elif device == "cuda":
-        dtype = torch.float16
-    else:
-        dtype = torch.float32
+def _model_runtime():
+    if USE_CPU:
+        return "cpu", torch.float32
+    if not torch.cuda.is_available():
+        raise RuntimeError(
+            "CUDA is unavailable. GRPO is configured for GPU training; "
+            "set USE_CPU=true only for small diagnostic runs."
+        )
+    device = "cuda"
+    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    return device, dtype
 
+
+def _load_model(tokenizer=None, revision=None):
+    device, dtype = _model_runtime()
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         torch_dtype=dtype,
         trust_remote_code=True,
         low_cpu_mem_usage=True,
+        revision=revision,
     )
-    tokenizer = AutoTokenizer.from_pretrained(
-        MODEL_ID,
-        trust_remote_code=True,
-    )
+    if tokenizer is None:
+        tokenizer = AutoTokenizer.from_pretrained(
+            MODEL_ID, trust_remote_code=True, revision=revision
+        )
     model = get_peft_model(model, _lora_config())
     if USE_GRAD_CHECKPOINT and device == "cuda":
         model.gradient_checkpointing_enable()
@@ -420,9 +249,16 @@ def _load_model():
     return model, tokenizer, device, dtype
 
 
-def main() -> None:
+def _train_main(*, preflight_only: bool = False) -> None:
     _validate_config()
-    corpus_path = os.getenv("GRPO_OFFLINE_DATASET") or str(DEFAULT_DATASET_PATH)
+    device, dtype = _model_runtime()
+    print(f"Training device: {device} ({dtype})")
+    if not RESUME and OUTPUT_DIR.exists() and (
+        any(OUTPUT_DIR.glob("checkpoint-*")) or (OUTPUT_DIR / "final_adapter").exists()
+    ):
+        raise FileExistsError("Fresh training requires an unused checkpoint output directory")
+    default_grpo_corpus = PROJECT_ROOT / "rl" / "data" / "grpo_replanned_dataset.json"
+    corpus_path = os.getenv("GRPO_OFFLINE_DATASET") or str(default_grpo_corpus)
     documents = load_offline_documents(corpus_path)
     image_prompts = sum(
         bool(slide.get("approved_images"))
@@ -444,12 +280,14 @@ def main() -> None:
     run_log_dir = PROJECT_ROOT / "rl" / "log" / "grpo" / f"run_{run_id}"
     run_log_dir.mkdir(parents=True, exist_ok=True)
     run_log_path = start_run_logging(run_log_dir)
-    if RUN_PREFLIGHT:
-        print("Running reward infrastructure preflight...")
-        preflight_reward_runtime()
-
-    print(f"Loading base model for direct GRPO: {MODEL_ID}")
-    model, tokenizer, device, dtype = _load_model()
+    model_config = AutoConfig.from_pretrained(
+        MODEL_ID, trust_remote_code=True, revision=MODEL_REVISION
+    )
+    model_revision = getattr(model_config, "_commit_hash", None) or MODEL_REVISION
+    tokenizer = AutoTokenizer.from_pretrained(
+        MODEL_ID, trust_remote_code=True, revision=model_revision
+    )
+    tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
 
     print(f"Initializing local XML tool retriever at {RETRIEVER_INDEX_DIR}")
     try:
@@ -469,7 +307,7 @@ def main() -> None:
     if tool_retriever is not None:
         set_text_embedder(tool_retriever.embeddings.model)
 
-    train_documents, eval_documents = _split_documents(documents)
+    train_documents, eval_documents = split_documents(documents, EVAL_DOCS, DATA_SEED)
     print(
         f"Preparing {len(train_documents)} train docs and "
         f"{len(eval_documents)} held-out eval docs..."
@@ -477,7 +315,7 @@ def main() -> None:
     train_rows = [
         sample
         for document in train_documents
-        for sample in _prepare_document(
+        for sample in prepare_document(
             document,
             tokenizer,
             tool_retriever,
@@ -487,7 +325,7 @@ def main() -> None:
     eval_rows = [
         sample
         for document in eval_documents
-        for sample in _prepare_document(
+        for sample in prepare_document(
             document,
             tokenizer,
             tool_retriever,
@@ -511,12 +349,15 @@ def main() -> None:
             "coverage and category/layout compatibility before training."
         )
 
-    snapshots = OUTPUT_DIR / "dataset_snapshots"
-    snapshots.mkdir(parents=True, exist_ok=True)
-    write_json(snapshots / "train.json", train_rows)
-    write_json(snapshots / "eval.json", eval_rows)
-    train_dataset = Dataset.from_list(train_rows)
-    eval_dataset = Dataset.from_list(eval_rows)
+    context_limit = getattr(model_config, "max_position_embeddings", None)
+    prompt_lengths = [len(tokenizer.encode(row["prompt"], add_special_tokens=False))
+                      for row in [*train_rows, *eval_rows]]
+    if context_limit and max(prompt_lengths) + MAX_COMPLETION_LENGTH > context_limit:
+        raise ValueError(
+            f"Longest prompt ({max(prompt_lengths)}) plus completion budget "
+            f"({MAX_COMPLETION_LENGTH}) exceeds model context ({context_limit})"
+        )
+    print(f"Prompt token lengths: min={min(prompt_lengths)}, max={max(prompt_lengths)}")
 
     eval_enabled = EVAL_STEPS > 0
     training_args = GRPOConfig(
@@ -570,6 +411,55 @@ def main() -> None:
     else:
         dapo_accumulation_factor = 1
 
+    contract = build_training_contract(
+        train_rows, eval_rows, training_args, MODEL_ID, _lora_config(), corpus_path,
+        model_revision=model_revision,
+    )
+    fingerprint = contract_digest(contract)
+    checkpoint = _latest_checkpoint(
+        MODEL_ID, training_args.loss_type, dapo_accumulation_factor, fingerprint,
+    )
+    if RUN_PREFLIGHT or preflight_only:
+        print("Running frontend/ViT preflight and checking corpus image URLs...")
+        preflight_reward_runtime([
+            asset for row in [*train_rows, *eval_rows]
+            for asset in row.get("approved_images") or []
+        ])
+    write_json(run_log_dir / "training_contract.json", contract)
+    if preflight_only:
+        report = {
+            "mode": "preflight_only",
+            "status": "passed",
+            "device": device,
+            "model_id": MODEL_ID,
+            "training_contract": fingerprint,
+            "train_prompts": len(train_rows),
+            "eval_prompts": len(eval_rows),
+            "train_image_prompts": train_image_prompts,
+            "eval_image_prompts": eval_image_prompts,
+            "min_prompt_tokens": min(prompt_lengths),
+            "max_prompt_tokens": max(prompt_lengths),
+            "max_completion_length": MAX_COMPLETION_LENGTH,
+            "model_context_limit": context_limit,
+            "max_prompt_plus_completion_tokens": max(prompt_lengths) + MAX_COMPLETION_LENGTH,
+            "resume_checkpoint": str(checkpoint) if checkpoint else None,
+            "policy_loaded": False,
+            "optimizer_step_tested": False,
+        }
+        write_json(run_log_dir / "preflight.json", report)
+        print(f"Preflight passed; policy was not loaded. Report: {run_log_dir / 'preflight.json'}")
+        print("This does not verify GPU memory, generation or an optimizer step.")
+        return
+    snapshots = OUTPUT_DIR / "dataset_snapshots"
+    snapshots.mkdir(parents=True, exist_ok=True)
+    write_json(snapshots / "train.json", train_rows)
+    write_json(snapshots / "eval.json", eval_rows)
+    train_dataset = Dataset.from_list(train_rows)
+    eval_dataset = Dataset.from_list(eval_rows)
+
+    print(f"Loading base model for direct GRPO: {MODEL_ID}")
+    model, tokenizer, device, dtype = _load_model(tokenizer, model_revision)
+
     trainer = DapoAccumulationGRPOTrainer(
         model=model,
         processing_class=tokenizer,
@@ -580,15 +470,14 @@ def main() -> None:
     )
     trainer.model_id = MODEL_ID
     trainer.dapo_accumulation_factor = dapo_accumulation_factor
-    checkpoint = _latest_checkpoint(
-        MODEL_ID, training_args.loss_type, dapo_accumulation_factor
-    )
+    trainer.training_contract = fingerprint
 
     manifest = get_runtime_metadata(
         {
             "run_name": "direct_grpo",
             "run_id": run_id,
             "model_id": MODEL_ID,
+            "training_contract": fingerprint,
             "output_dir": str(OUTPUT_DIR),
             "resume_checkpoint": str(checkpoint) if checkpoint else None,
             "total_steps": TOTAL_STEPS,
@@ -684,6 +573,19 @@ def main() -> None:
         footer=f"Log: {run_log_path.name}",
     )
     print(f"Training complete. Final adapter: {final_adapter}")
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--preflight-only", action="store_true",
+        help="Validate data, config, RAG, renderer and rewards without loading policy weights",
+    )
+    args = parser.parse_args(argv)
+    try:
+        _train_main(preflight_only=args.preflight_only)
+    finally:
+        close_render_runtime()
 
 
 if __name__ == "__main__":

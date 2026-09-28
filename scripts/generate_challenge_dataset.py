@@ -109,7 +109,10 @@ def generate_docs(
         for slide_index, row in enumerate(source_slides):
             content = str(row.get("slide_content") or "").strip()
             if not content:
-                continue
+                raise ValueError(
+                    f"Empty slide_content in doc {source_doc_id!r}, "
+                    f"slide {row.get('slide_index', slide_index)!r}"
+                )
             category = str(row.get("category") or "CONTENT_TOOLS")
             design_instruction = str(row.get("design_instruction") or "").strip()
             slides.append(
@@ -140,7 +143,7 @@ def generate_docs(
 def load_offline_documents(
     dataset_path: str | os.PathLike[str] | None = None,
 ) -> list[list[dict]]:
-    """Load the complete corpus once while preserving source document IDs."""
+    """Load rebuilt content, its original source, planned style, and assets."""
     documents = _group_documents(_load_rows(dataset_path))
     has_legacy_rows = any(
         int(row.get("corpus_version") or 0) < 2
@@ -153,18 +156,81 @@ def load_offline_documents(
         source_doc_id = source_slides[0]["doc_id"]
         slides = []
         for slide_index, row in enumerate(source_slides):
+            corpus_version = int(row.get("corpus_version") or 0)
             source_plan = dict(row.get("plan") or {})
             content = str(row.get("slide_content") or "").strip()
             if not content:
-                continue
+                raise ValueError(
+                    f"Empty slide_content in doc {source_doc_id!r}, "
+                    f"slide {row.get('slide_index', slide_index)!r}"
+                )
             approved_images = approved_images_for_row(row, image_manifest)
+            if corpus_version >= 2:
+                raw_style = row.get("style_context")
+                try:
+                    style_context = (
+                        json.loads(raw_style) if isinstance(raw_style, str) else raw_style
+                    )
+                except json.JSONDecodeError as exc:
+                    raise ValueError(
+                        f"Invalid style_context for doc {source_doc_id!r}, "
+                        f"slide {row.get('slide_index')!r}"
+                    ) from exc
+                if not isinstance(style_context, dict) or not style_context:
+                    raise ValueError(
+                        f"Missing style_context for doc {source_doc_id!r}, "
+                        f"slide {row.get('slide_index')!r}"
+                    )
+                if "source_slide_content" not in row:
+                    raise ValueError(
+                        f"Missing source_slide_content for doc {source_doc_id!r}, "
+                        f"slide {row.get('slide_index')!r}"
+                    )
+                source_content = str(row.get("source_slide_content") or "").strip()
+                if not source_content:
+                    raise ValueError(
+                        f"Empty source_slide_content for doc {source_doc_id!r}, "
+                        f"slide {row.get('slide_index')!r}"
+                    )
+                image_mode = str(source_plan.get("image_mode") or "none")
+                if image_mode not in {"none", "semantic"}:
+                    raise ValueError(
+                        f"Invalid image_mode for doc {source_doc_id!r}, "
+                        f"slide {row.get('slide_index')!r}: {image_mode!r}"
+                    )
+                expected_image_ids = {
+                    str(image_id) for image_id in source_plan.get("approved_image_ids") or []
+                }
+                actual_image_ids = {str(image.get("source_id") or "") for image in approved_images}
+                if image_mode == "semantic" and not approved_images:
+                    raise ValueError(
+                        f"Semantic image sample has no usable asset for doc "
+                        f"{source_doc_id!r}, slide {row.get('slide_index')!r}"
+                    )
+                if image_mode == "none" and approved_images:
+                    raise ValueError(
+                        f"No-image sample unexpectedly contains approved assets for doc "
+                        f"{source_doc_id!r}, slide {row.get('slide_index')!r}"
+                    )
+                if expected_image_ids != actual_image_ids:
+                    raise ValueError(
+                        f"Approved image IDs do not match cached assets for doc "
+                        f"{source_doc_id!r}, slide {row.get('slide_index')!r}"
+                    )
+            else:
+                style_context = {}
+                source_content = content
             slides.append(
                 {
                     "doc_id": source_doc_id,
                     "source_doc_id": source_doc_id,
                     "slide_index": int(row.get("slide_index", slide_index)),
                     "heading": str(source_plan.get("slide_topic") or ""),
-                    "user_prompt": content,
+                    # Train and reward against the same immutable source text,
+                    # including when loading an older corpus with rewritten targets.
+                    "user_prompt": source_content,
+                    "source_content": source_content,
+                    "style_context": style_context,
                     "plan": {
                         **source_plan,
                         "action": str(
@@ -186,6 +252,10 @@ def load_offline_documents(
                 }
             )
         if slides:
+            if any(slide["style_context"] != slides[0]["style_context"] for slide in slides[1:]):
+                raise ValueError(
+                    f"Inconsistent style_context within document {source_doc_id!r}"
+                )
             result.append(slides)
     return result
 

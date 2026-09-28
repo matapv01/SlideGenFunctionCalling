@@ -18,25 +18,31 @@ from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 import rl.rewards.aesthetic_reward as aesthetic_reward
 import rl.slidegen_adapter as slidegen_adapter
 import rl.rewards.composite_reward as composite_reward
+import rl.rewards.content_reward as content_reward
 from rl.grpo_trainer import DapoAccumulationGRPOTrainer
 from rl.rewards.composite_reward import slidegen_composite_reward
-from rl.train import _checkpoint_complete, _normalise_jobs, _split_documents
-from rl.toolcall_data import _compact_value, build_prompt, compact_tool
+from rl.train import _checkpoint_complete
+from rl.train_data import deck_style_for_document, normalize_jobs, split_documents
 from scripts.generate_challenge_dataset import load_offline_documents
 
 
 def test_offline_split_is_document_grouped():
     documents = load_offline_documents()
-    train_documents, eval_documents = _split_documents(documents)
+    train_documents, eval_documents = split_documents(documents, eval_docs=2, seed=42)
     train_ids = {doc[0]["source_doc_id"] for doc in train_documents}
     eval_ids = {doc[0]["source_doc_id"] for doc in eval_documents}
     assert train_ids.isdisjoint(eval_ids)
     assert len(train_documents) + len(eval_documents) == len(documents)
 
 
+def test_training_refuses_to_invent_missing_production_deck_style():
+    with pytest.raises(ValueError, match="requires style_context"):
+        deck_style_for_document([{"source_doc_id": "legacy"}])
+
+
 def test_layout_assignment_uses_only_no_image_tools():
     document = load_offline_documents()[0]
-    jobs = _normalise_jobs(document)
+    jobs = normalize_jobs(document)
     assigned = assign_layouts(
         {"slide_jobs": jobs},
         {"configurable": {"tools_dict": TOOLS_DICT, "tool_retriever": None}},
@@ -55,7 +61,7 @@ def test_layout_assignment_uses_only_no_image_tools():
 
 def test_strict_layout_retrieval_fails_on_errors_and_empty_results():
     document = load_offline_documents()[0]
-    jobs = _normalise_jobs(document)
+    jobs = normalize_jobs(document)
 
     class BrokenRetriever:
         def get_relevant_tools(self, **kwargs):
@@ -80,90 +86,6 @@ def test_strict_layout_retrieval_fails_on_errors_and_empty_results():
                     }
                 },
             )
-
-
-def test_tool_prompt_build_preserves_schema_and_includes_gold_tool():
-    category, tool = next(
-        (category, tools[0]) for category, tools in TOOLS_DICT.items() if tools
-    )
-
-    class PromptTokenizer:
-        def apply_chat_template(self, messages, **kwargs):
-            self.messages = messages
-            self.tools = kwargs["tools"]
-            return "rendered prompt"
-
-    tokenizer = PromptTokenizer()
-    prompt, names = build_prompt(
-        tokenizer,
-        {
-            "category": category,
-            "tool_call": {"name": tool.name},
-            "content": "A concise slide topic",
-            "slide_index": 0,
-            "deck_length": 1,
-        },
-    )
-    assert prompt == "rendered prompt"
-    assert names[0] == tool.name
-    assert tokenizer.tools[0]["function"]["name"] == tool.name
-
-    compacted = _compact_value(
-        {
-            "title": "verbose root",
-            "$defs": {"Item": {"type": "string", "description": "verbose"}},
-            "properties": {"item": {"$ref": "#/$defs/Item"}},
-            "additionalProperties": False,
-        }
-    )
-    assert compacted == {
-        "$defs": {"Item": {"type": "string"}},
-        "properties": {"item": {"$ref": "#/$defs/Item"}},
-        "additionalProperties": False,
-    }
-
-
-def test_compact_tool_keeps_properties_and_required_fields_for_all_real_tools():
-    for tools in TOOLS_DICT.values():
-        for tool in tools:
-            original = slidegen_adapter.format_tool_for_qwen(tool)
-            before = original["function"]["parameters"]
-            after = compact_tool(original)["function"]["parameters"]
-            assert set(after.get("properties", {})) == set(
-                before.get("properties", {})
-            ), tool.name
-            assert after.get("required") == before.get("required"), tool.name
-
-
-def test_compact_tool_preserves_named_definitions_and_literal_defaults():
-    literal = {"title": "Slide title", "description": "Slide description"}
-    schema = {
-        "type": "object",
-        "title": "Root annotation",
-        "$defs": {
-            "title": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string", "description": "Annotation"},
-                    "description": {"type": "string"},
-                },
-                "required": ["title", "description"],
-                "default": literal,
-            }
-        },
-        "properties": {"title": {"$ref": "#/$defs/title"}},
-    }
-    tool = {"type": "function", "function": {"name": "slide", "parameters": schema}}
-    result = compact_tool(tool)["function"]["parameters"]
-    assert "title" not in result
-    assert result["properties"]["title"] == {"$ref": "#/$defs/title"}
-    definition = result["$defs"]["title"]
-    assert definition["properties"] == {
-        "title": {"type": "string"}, "description": {"type": "string"}
-    }
-    assert definition["required"] == ["title", "description"]
-    assert definition["default"] == literal
-    assert schema["$defs"]["title"]["properties"]["title"]["description"] == "Annotation"
 
 
 def test_wrong_assigned_tool_is_rejected_before_rendering():
@@ -245,6 +167,8 @@ def test_content_reward_uses_frontend_rendered_text_not_tool_arguments(monkeypat
     for name in ("VALID", "SEMANTIC", "FORMAT", "DOM", "AESTHETIC"):
         monkeypatch.setenv(f"RL_REWARD_{name}_WEIGHT", "0")
     monkeypatch.setenv("RL_REWARD_LEXICAL_WEIGHT", "1")
+    monkeypatch.setenv("RL_REWARD_NUMERIC_FACT_WEIGHT", "0")
+    monkeypatch.setenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0")
 
     source = "quantum quasar neutron"
     completion = (
@@ -260,6 +184,8 @@ def test_content_reward_uses_frontend_rendered_text_not_tool_arguments(monkeypat
         deck_style=[{}],
     )
     assert reward == [0.0]
+    assert composite_reward._lexical_score(source, "frontend output has no matching words") == 0.0
+    assert composite_reward._lexical_score(source, source) == 1.0
 
 
 @pytest.mark.parametrize(
@@ -285,6 +211,20 @@ def test_dapo_accumulation_scaling_uses_actual_optimizer_window(
     trainer.current_gradient_accumulation_steps = accumulated_steps
     actual = trainer._compute_loss(SimpleNamespace(training=training), {})
     assert actual.item() == expected
+
+
+def test_dapo_scaling_rejects_partial_generation_window(monkeypatch):
+    monkeypatch.setattr(
+        GRPOTrainer,
+        "_compute_loss",
+        lambda self, model, inputs: torch.tensor(8.0),
+    )
+    trainer = object.__new__(DapoAccumulationGRPOTrainer)
+    trainer.loss_type = "dapo"
+    trainer.args = SimpleNamespace(steps_per_generation=4)
+    trainer.current_gradient_accumulation_steps = 2
+    with pytest.raises(RuntimeError, match="whole generation windows"):
+        trainer._compute_loss(SimpleNamespace(training=True), {})
 
 
 def test_semantic_reward_scores_content_after_embedding_context_limit():
@@ -319,7 +259,7 @@ def test_semantic_reward_scores_content_after_embedding_context_limit():
     source = " ".join(["context"] * 16 + ["profit", "increase"])
     faithful = source
     contradictory_tail = " ".join(["context"] * 16 + ["profit", "decline"])
-    faithful_score, contradictory_score = composite_reward._semantic_reward_scores(
+    faithful_score, contradictory_score = content_reward._semantic_reward_scores(
         [source, source], [faithful, contradictory_tail], TinyEmbedder()
     )
     assert faithful_score == pytest.approx(1.0)

@@ -10,6 +10,26 @@ from markitdown import MarkItDown
 from backend.workflows.doc_workflow.graph.stage import State
 
 
+def _normalise_heading(value: Any) -> str:
+    return " ".join(str(value or "").split()).strip().casefold()
+
+
+def _mark_atomic_sections(
+    nodes: List[Dict[str, Any]],
+    atomic_section_titles: set[str],
+) -> None:
+    """Mark parser-created sections that must not be rewritten by an LLM."""
+    if not atomic_section_titles:
+        return
+    for node in nodes:
+        if _normalise_heading(node.get("title")) in atomic_section_titles:
+            node["content_kind"] = "atomic"
+            node["atomic"] = True
+        children = node.get("children")
+        if isinstance(children, list):
+            _mark_atomic_sections(children, atomic_section_titles)
+
+
 def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[Dict[str, Any]]]:
     """Parse markdown into hierarchical sections by heading levels."""
     lines = markdown_text.strip().split("\n")
@@ -97,6 +117,12 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
     markdown_text = converter.convert(docx_file).text_content
 
     preamble, structure = parse_markdown_to_hierarchical_json(markdown_text)
+    atomic_section_titles = {
+        _normalise_heading(title)
+        for title in state.get("atomic_section_titles", [])
+        if _normalise_heading(title)
+    }
+    _mark_atomic_sections(structure, atomic_section_titles)
 
     state["plain_text"] = markdown_text
     state["document_preamble"] = preamble

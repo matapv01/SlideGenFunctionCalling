@@ -129,9 +129,9 @@ class SqliteUserRepository(UserRepository):
 
         docx_usage = 0
         try:
-            docx_usage = int(row['docx_usage_5h'] or 0)
+            docx_usage = float(row['docx_usage_5h'] or 0)
         except (KeyError, TypeError, IndexError):
-            docx_usage = int(docx_usage_today)
+            docx_usage = float(docx_usage_today)
 
         cancel_at_period_end = False
         try:
@@ -669,7 +669,7 @@ class SqliteUserRepository(UserRepository):
                         docx_usage_5h = docx_usage_5h + ?,
                         docx_usage_today = docx_usage_today + ?
                     WHERE id = ?
-                """, (increment, increment, user_id))
+                """, (usage_cost, usage_cost, user_id))
 
             if feature_type != "reset":
                 cursor.execute("""

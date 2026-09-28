@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-import os
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,11 +27,10 @@ from backend.config import (
     LLM_TEMPERATURE,
     LLM_TOP_P,
     OUTPUT_DIR,
-    PLANNER_MAX_CONCURRENCY,
+    LLM_REQUEST_MAX_CONCURRENCY,
     VLM_API_KEY,
     VLM_BASE_URL,
     VLM_MODEL,
-    VLM_REQUEST_MAX_CONCURRENCY,
     VLM_REQUEST_TIMEOUT_SECONDS,
 )
 from backend.infrastructure.llm.gemini_provider import GeminiLLMProvider
@@ -48,6 +48,7 @@ from scripts.generate_challenge_dataset import DEFAULT_DATASET_PATH, _group_docu
 
 DEFAULT_OUTPUT_PATH = PROJECT_ROOT / "rl" / "data" / "grpo_replanned_dataset.json"
 DEFAULT_ASSET_DIR = OUTPUT_DIR / "grpo_image_cache"
+MANIFEST_VERSION = 3
 
 
 def _write_json_atomic(path: Path, value: Any) -> None:
@@ -66,29 +67,57 @@ def _read_json(path: Path, default: Any) -> Any:
         return json.load(handle)
 
 
+def _document_key(doc_id: Any) -> str:
+    return json.dumps(
+        [type(doc_id).__name__, doc_id],
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _resume_signature(source_path: Path, asset_dir: Path, allow_external_search: bool) -> dict:
+    source_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    pipeline_settings = {
+        "planner_model": LLM_MODEL,
+        "planner_base_url": LLM_BASE_URL,
+        "vision_model": VLM_MODEL,
+        "vision_base_url": VLM_BASE_URL,
+        "allow_external_search": bool(allow_external_search),
+    }
+    pipeline_hash = hashlib.sha256(
+        json.dumps(pipeline_settings, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+    return {
+        "source_path": str(source_path.resolve()),
+        "source_sha256": source_hash,
+        "asset_dir": str(asset_dir.resolve()),
+        "pipeline_sha256": pipeline_hash,
+    }
+
+
 def _build_pipeline_config(
     allow_external_search: bool,
 ) -> tuple[dict, ImageRelevanceService]:
     planner_limiter = LLMRequestLimiter(
-        max(1, int(PLANNER_MAX_CONCURRENCY))
+        max(1, int(LLM_REQUEST_MAX_CONCURRENCY))
     )
     planner_provider = GeminiLLMProvider(
-        api_keys=[LLM_API_KEY or "local-openai-compatible"],
-        model=os.getenv("GRPO_REBUILD_PLANNER_MODEL", LLM_MODEL),
-        base_url=os.getenv("GRPO_REBUILD_PLANNER_BASE_URL", LLM_BASE_URL),
+        api_keys=[LLM_API_KEY] if LLM_API_KEY else [],
+        model=LLM_MODEL,
+        base_url=LLM_BASE_URL,
         temperature=LLM_TEMPERATURE,
         max_tokens=LLM_MAX_TOKENS,
         top_p=LLM_TOP_P,
         request_limiter=planner_limiter,
         request_timeout=LLM_REQUEST_TIMEOUT_SECONDS,
     )
-    vision_limiter = LLMRequestLimiter(
-        max(1, int(VLM_REQUEST_MAX_CONCURRENCY))
-    )
+    # Match BE: planner and vision share the same endpoint capacity.
+    vision_limiter = planner_limiter
     vision_provider = GeminiLLMProvider(
-        api_keys=[VLM_API_KEY or "local-openai-compatible"],
-        model=os.getenv("GRPO_IMAGE_VLM_MODEL", VLM_MODEL),
-        base_url=os.getenv("GRPO_IMAGE_VLM_BASE_URL", VLM_BASE_URL),
+        api_keys=[VLM_API_KEY] if VLM_API_KEY else [],
+        model=VLM_MODEL,
+        base_url=VLM_BASE_URL,
         temperature=LLM_TEMPERATURE,
         max_tokens=LLM_MAX_TOKENS,
         top_p=LLM_TOP_P,
@@ -97,7 +126,7 @@ def _build_pipeline_config(
     )
     verifier = ImageRelevanceService(
         vision_provider,
-        model=os.getenv("GRPO_IMAGE_VLM_MODEL", VLM_MODEL),
+        model=VLM_MODEL,
     )
     config = {
         "configurable": {
@@ -150,29 +179,38 @@ def _materialize_assignments(
     by_slide: dict[int, list[dict]] = {}
     for item in assignments:
         try:
+            if not isinstance(item, dict):
+                raise ValueError("assignment is not an object")
             slide_index = int(item.get("slide_index", -1))
             source_url = str(item.get("source_url") or "").strip()
             confidence = float(item.get("confidence") or 0.0)
-            if slide_index < 0 or not source_url or confidence < 0.5:
-                continue
+            if (
+                slide_index < 0
+                or not source_url
+                or not math.isfinite(confidence)
+                or confidence < 0.5
+            ):
+                raise ValueError("approved assignment has invalid metadata")
             source_path = slide_asset_service.materialize(source_url, asset_dir)
             if not source_path.startswith("/static/output/"):
-                continue
+                raise ValueError("materialized image is outside static/output")
             local_path = (
                 OUTPUT_DIR / source_path.removeprefix("/static/output/")
             ).resolve()
             local_path.relative_to(OUTPUT_DIR.resolve())
             if not local_path.is_file():
-                continue
+                raise FileNotFoundError(local_path)
         except Exception as exc:
-            print(
-                f"  Image rejected after VLM approval "
-                f"({item.get('source_id', '?')}): {exc}"
-            )
-            continue
+            source_id = item.get("source_id", "?") if isinstance(item, dict) else "?"
+            raise RuntimeError(
+                f"Could not materialize VLM-approved image {source_id!r}; "
+                "refusing to downgrade the slide to no-image"
+            ) from exc
         record = {
             "source_id": str(item.get("source_id") or ""),
             "source_type": "vlm_verified_search",
+            "slide_index": slide_index,
+            "source_url": source_url,
             "selected_source_url": source_url,
             "source_path": source_path,
             "local_path": str(local_path),
@@ -200,23 +238,40 @@ def _rebuild_document(
     if len(state.get("slide_plans") or []) != len(source_rows):
         raise RuntimeError(f"Planner returned an incomplete document {doc_id}")
 
+    configurable = config.get("configurable", {})
+    strict = bool(configurable.get("strict_grpo_preprocessing"))
+    planned_image_intents = any(
+        isinstance(plan, dict) and plan.get("image_search_intents")
+        for plan in state.get("slide_plans") or []
+    )
+    if strict and planned_image_intents and verifier is None:
+        raise RuntimeError("Strict GRPO preprocessing requires image search and verification services")
     search_image_candidates(state, config)
+    search_groups = list(state.get("image_search_candidates") or [])
+    if strict:
+        failed_searches = [
+            item for item in search_groups if item.get("status") == "search_failed"
+        ]
+        if failed_searches:
+            first = failed_searches[0]
+            raise RuntimeError(
+                "Image search failed during strict GRPO preprocessing "
+                f"(slide={first.get('slide_index')}, query={first.get('query')!r}): "
+                f"{first.get('error', 'unknown error')}"
+            )
+        # Empty results are a normal no-image decision. Transport/search errors
+        # remain fatal above so an outage cannot masquerade as image rejection.
     verify_slide_images(state, config)
-    candidates = [
-        item
-        for item in state.get("image_search_candidates") or []
-        if item.get("candidates")
-    ]
-    if candidates and getattr(verifier, "_vision_available", None) is False:
-        raise RuntimeError(
-            "Qwen-VL image verification is unavailable. Set "
-            "GRPO_IMAGE_VLM_BASE_URL and GRPO_IMAGE_VLM_MODEL to a live vision endpoint."
-        )
-    refine_slide_plans(state, config)
     materialized = _materialize_assignments(
         list(state.get("approved_image_assignments") or []),
         asset_dir,
     )
+    # Phase two must only describe assets that were successfully cached and
+    # will actually be available to the H100 training process.
+    state["approved_image_assignments"] = [
+        item for items in materialized.values() for item in items
+    ]
+    refine_slide_plans(state, config)
     plans = state.get("slide_plans") or []
     refinements = state.get("slide_refinements") or []
     rows = []
@@ -286,10 +341,15 @@ def rebuild_corpus(
     max_docs: int | None = None,
     max_slides: int | None = None,
     resume: bool = True,
-    allow_external_search: bool = False,
+    allow_external_search: bool = True,
 ) -> list[dict]:
     source_rows = _load_rows(source_path)
-    documents = _group_documents(source_rows)
+    all_documents = _group_documents(source_rows)
+    expected_by_key = {
+        _document_key(document[0]["doc_id"]): document
+        for document in all_documents
+    }
+    documents = all_documents
     if max_docs is not None:
         if max_docs < 1:
             raise ValueError("--max-docs must be positive")
@@ -313,44 +373,94 @@ def rebuild_corpus(
             f"Output exists without a resume manifest: {output_path}. "
             "Choose a new --output path."
         )
-    manifest = _read_json(
-        manifest_path,
-        {"version": 1, "completed_docs": [], "source": str(source_path.resolve())},
-    )
     if not resume:
-        manifest = {
-            "version": 1,
-            "completed_docs": [],
-            "source": str(source_path.resolve()),
-        }
-    if manifest.get("version") != 1:
+        if output_path.exists() or manifest_path.exists():
+            raise FileExistsError(
+                "Refusing to overwrite an existing corpus or manifest; choose a new output path."
+            )
+        manifest = {"version": MANIFEST_VERSION, "completed_docs": []}
+    else:
+        manifest = _read_json(
+            manifest_path,
+            {"version": MANIFEST_VERSION, "completed_docs": []},
+        )
+    if not isinstance(manifest, dict):
+        raise ValueError(f"Invalid rebuild manifest: {manifest_path}")
+    if manifest.get("version") != MANIFEST_VERSION:
         raise ValueError(f"Unsupported rebuild manifest version: {manifest_path}")
-    completed = (
-        set(str(value) for value in manifest.get("completed_docs", []))
-        if resume
-        else set()
-    )
+
+    signature = _resume_signature(source_path, asset_dir, allow_external_search)
+    if manifest.get("signature") not in (None, signature):
+        raise ValueError(
+            "Resume inputs differ from the existing corpus build (source, image "
+            "cache path, search setting, or planner/VLM endpoint). Choose a new "
+            "output path to rebuild from scratch."
+        )
+    if manifest.get("signature") is None and manifest.get("completed_docs"):
+        raise ValueError(
+            "Existing manifest has no input signature; choose a new output path "
+            "to avoid mixing corpora."
+        )
+    manifest["signature"] = signature
+    raw_completed = manifest.get("completed_docs", []) if resume else []
+    if not isinstance(raw_completed, list) or any(not isinstance(key, str) for key in raw_completed):
+        raise ValueError(f"Invalid completed_docs in manifest: {manifest_path}")
+    completed = set(raw_completed)
+    if resume and manifest_path.exists() and not output_path.is_file():
+        raise FileNotFoundError(
+            f"Resume manifest exists but corpus output is missing: {output_path}. "
+            "Restore the output or choose a new path."
+        )
     output_rows = _read_json(output_path, []) if resume else []
-    if not isinstance(output_rows, list):
+    if not isinstance(output_rows, list) or any(not isinstance(row, dict) for row in output_rows):
         raise ValueError(f"Rebuilt corpus must be a JSON list: {output_path}")
     output_rows = [
         row for row in output_rows
-        if str(row.get("doc_id")) in completed
+        if _document_key(row.get("doc_id")) in completed
     ]
+    rows_by_doc: dict[str, list[dict]] = {}
+    for row in output_rows:
+        rows_by_doc.setdefault(_document_key(row.get("doc_id")), []).append(row)
+    for key in completed:
+        source_document = expected_by_key.get(key)
+        if source_document is None:
+            raise ValueError("Completed document is missing from the current source corpus")
+        expected_indices = {
+            int(row.get("slide_index", index))
+            for index, row in enumerate(source_document)
+        }
+        complete_rows = rows_by_doc.get(key, [])
+        actual_indices = {
+            int(row["slide_index"])
+            for row in complete_rows
+            if "slide_index" in row
+        }
+        if actual_indices != expected_indices or len(complete_rows) != len(expected_indices):
+            raise ValueError(
+                f"Manifest marks document {source_document[0]['doc_id']!r} complete "
+                "but its output rows are incomplete or duplicated."
+            )
+
     config, verifier = _build_pipeline_config(allow_external_search)
     try:
         for document in documents:
             doc_id = document[0]["doc_id"]
-            key = str(doc_id)
+            key = _document_key(doc_id)
             if key in completed:
                 continue
             print(f"Rebuilding document {doc_id} ({len(document)} slides)")
             rebuilt = _rebuild_document(document, config, verifier, asset_dir)
+            if len(rebuilt) != len(document):
+                raise RuntimeError(
+                    f"Rebuilder returned {len(rebuilt)} of {len(document)} slides "
+                    f"for document {doc_id!r}"
+                )
             output_rows.extend(rebuilt)
-            completed.add(key)
+            if len(document) == len(expected_by_key[key]):
+                completed.add(key)
             manifest.update(
                 {
-                    "version": 1,
+                    "version": MANIFEST_VERSION,
                     "updated_at": datetime.now(timezone.utc).isoformat(),
                     "source": str(source_path.resolve()),
                     "output": str(output_path.resolve()),
@@ -362,13 +472,13 @@ def rebuild_corpus(
                         for row in output_rows
                     ),
                     "external_search_enabled": allow_external_search,
+                    "signature": signature,
                 }
             )
             _write_json_atomic(output_path, output_rows)
             _write_json_atomic(manifest_path, manifest)
             print(
-                f"Saved {len(rebuilt)} slides; "
-                f"approved images={sum(bool(row['approved_images']) for row in rebuilt)}"
+                f"Saved {len(rebuilt)} slides; approved images={sum(bool(row['approved_images']) for row in rebuilt)}"
             )
     finally:
         del verifier
@@ -393,8 +503,9 @@ def main() -> None:
     parser.add_argument("--max-slides", type=int, default=None)
     parser.add_argument(
         "--allow-external-search",
-        action="store_true",
-        help="Send queries derived from slide text to DuckDuckGo image search",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Search DuckDuckGo for slide images (enabled by default)",
     )
     parser.add_argument(
         "--no-resume",

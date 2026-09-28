@@ -1,4 +1,4 @@
-"""Shared utilities for tool-call SFT and GRPO training scripts."""
+"""Shared GPU and LoRA settings for direct GRPO training."""
 
 import os
 import subprocess
@@ -40,21 +40,7 @@ def auto_select_gpu(preferred_gpu: str | None = None):
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
-def build_flat_tools(tooldict: dict) -> dict:
-    flat = {}
-    for cat, tools in tooldict.items():
-        for t in tools:
-            flat[t.name] = t
-    return flat
-
-
-def setup_tokenizer(tokenizer, chat_template: str):
-    tokenizer.chat_template = chat_template
-    tokenizer.pad_token = tokenizer.eos_token
-
-
-
-# LoRA constants shared between SFT and GRPO
+# LoRA configuration used by direct GRPO
 LORA_R = 16
 LORA_ALPHA = 32
 LORA_DROPOUT = 0

@@ -1,9 +1,10 @@
-"""Offline image-asset cache for GRPO data recovered from legacy tool calls."""
+"""Offline image cache and provenance validation for GRPO corpora."""
 
 from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -183,12 +184,25 @@ def approved_images_for_row(
     )
     if int(row.get("corpus_version") or 0) >= 2:
         resolved = []
-        for asset in row.get("approved_images") or []:
+        assets = row.get("approved_images") or []
+        if not isinstance(assets, list):
+            raise ValueError(
+                f"Invalid approved_images for doc {row.get('doc_id')!r}, "
+                f"slide {row.get('slide_index')!r}"
+            )
+        for asset in assets:
             if not isinstance(asset, dict):
-                return []
+                raise ValueError(
+                    f"Invalid approved image record for doc {row.get('doc_id')!r}, "
+                    f"slide {row.get('slide_index')!r}"
+                )
             source_path = str(asset.get("source_path") or "").strip()
             if not source_path.startswith("/static/output/"):
-                return []
+                raise ValueError(
+                    f"Approved image has a non-portable path for doc "
+                    f"{row.get('doc_id')!r}, slide {row.get('slide_index')!r}: "
+                    f"{source_path!r}"
+                )
             local_path = (
                 OUTPUT_DIR / source_path.removeprefix("/static/output/")
             ).resolve()
@@ -196,13 +210,21 @@ def approved_images_for_row(
                 local_path.relative_to(OUTPUT_DIR.resolve())
                 confidence = float(asset.get("confidence") or 0.0)
             except (ValueError, TypeError):
-                return []
+                raise ValueError(
+                    f"Invalid approved image metadata for doc {row.get('doc_id')!r}, "
+                    f"slide {row.get('slide_index')!r}"
+                ) from None
             if (
                 not local_path.is_file()
+                or not math.isfinite(confidence)
                 or confidence < 0.5
                 or not asset.get("selected_source_url")
             ):
-                return []
+                raise FileNotFoundError(
+                    f"Approved image is missing or invalid for doc {row.get('doc_id')!r}, "
+                    f"slide {row.get('slide_index')!r}: {source_path}. Copy the "
+                    "corpus image cache to the H100 host before training."
+                )
             resolved.append(
                 {
                     **asset,

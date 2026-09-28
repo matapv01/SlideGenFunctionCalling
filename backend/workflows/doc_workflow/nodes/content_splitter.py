@@ -142,6 +142,13 @@ def split_content(state: State, config: RunnableConfig) -> State:
         if id(node) in protected_node_ids:
             return
 
+        # OCR tables are already a meaningful atomic unit. They can be split
+        # mechanically by the RAG chunker later, but asking the LLM to invent
+        # a hierarchy for a large table is both lossy and prone to invalid
+        # JSON responses.
+        if node.get("atomic") is True or node.get("content_kind") == "table":
+            return
+
         current_heading = node.get("numbered_title", node.get("title", ""))
 
         # A node with explicit children already has an internal structure.

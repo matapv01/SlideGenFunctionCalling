@@ -88,14 +88,9 @@ AUTH_OTP_MAX_ATTEMPTS = int(os.getenv("AUTH_OTP_MAX_ATTEMPTS", "5"))
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
 LLM_MODEL = "qwen"
-# Qwen chạy trên host: dùng localhost khi backend chạy trực tiếp,
-# và host.docker.internal khi backend chạy trong Docker. Cho phép từng môi
-# trường ghi đè rõ ràng, vì Qwen cũng có thể chạy ở container/service riêng.
-_DEFAULT_LLM_BASE_URL = (
-    "http://171.226.10.154:8080/v1"
-    if RUNNING_IN_DOCKER
-    else "http://127.0.0.1:8080/v1"
-)
+# Shared remote Qwen deployment for both host scripts and Docker.
+# Configure URLs here; credentials belong in .env.
+_DEFAULT_LLM_BASE_URL = "http://171.226.10.154:8080/v1"
 LLM_BASE_URL = _DEFAULT_LLM_BASE_URL
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
 LLM_TEMPERATURE = 0.5
@@ -108,6 +103,14 @@ LLM_TOP_P = 1.0
 # leaving a workflow blocked indefinitely.
 LLM_REQUEST_TIMEOUT_SECONDS = 180
 VLM_REQUEST_TIMEOUT_SECONDS = 180
+
+# OCR service configuration. Native DOCX parsing remains local; this endpoint
+# is used for PDF/image documents or documents that contain no readable text.
+# Keep deployment-specific service settings here so every environment uses the
+# same application contract. Secrets and provider credentials remain in env.
+DOCUMENT_AI_BASE_URL = "http://171.226.10.153:12006"
+DOCUMENT_AI_TIMEOUT_SECONDS = 60.0
+DOCUMENT_AI_MAX_RESPONSE_BYTES = 20 * 1024 * 1024
 
 # --- VLM Configuration ---
 # Image relevance verification has a dedicated provider/configuration boundary.
@@ -341,14 +344,10 @@ BROWSER_VIEWPORT_HEIGHT = 1080
 BROWSER_DEVICE_SCALE_FACTOR = 2.0
 # URL of the frontend route used by Playwright for XML slide previews.
 # Use Vite when the production bundle is absent; otherwise use the backend SPA.
-_DEFAULT_BROWSER_PREVIEW_URL = (
+BROWSER_PREVIEW_URL = (
     "http://127.0.0.1:12008/render/xml-preview"
     if (FRONTEND_DIST_DIR / "index.html").exists()
     else "http://127.0.0.1:5173/render/xml-preview"
-)
-BROWSER_PREVIEW_URL = (
-    os.getenv("BROWSER_PREVIEW_URL", "").strip()
-    or _DEFAULT_BROWSER_PREVIEW_URL
 )
 
 # --- Local asset/provider configuration ---

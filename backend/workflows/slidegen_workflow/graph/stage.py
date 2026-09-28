@@ -97,22 +97,25 @@ class SlidePlanBatch(BaseModel):
 
 
 class SlideRefinement(BaseModel):
-    """Final slide brief after image verification and visual reconciliation."""
+    """Visual layout refinement after verified image selection."""
 
-    slide_index: int = Field(default=0, ge=0)
+    slide_index: int = Field(
+        ge=0,
+        strict=True,
+        description="Original zero-based slide index from the input batch.",
+    )
     final_content: str = Field(
         default="",
         description=(
-            "Presentation-ready content that preserves the source facts and "
-            "meaning while incorporating only grounded visual notes."
+            "Exact copy of source_content. Keep all source wording and facts; "
+            "do not rewrite or summarize it."
         ),
     )
     visual_layout_request: str = Field(
         default="",
         description=(
-            "A concise layout request. If no approved image exists, describe a "
-            "clear no-image composition; otherwise explain how the approved image "
-            "supports the slide."
+            "A concise visual layout request for the approved image. Do not alter "
+            "the source slide content."
         ),
     )
     retrieval_query: str = Field(

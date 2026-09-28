@@ -39,4 +39,5 @@ dependencies = [
     "peft>=0.19.1",
     "vllm>=0.14,<0.24",
     "sentence-transformers>=5.6.0",
+    "pypdfium2>=4.30.0",
 ]

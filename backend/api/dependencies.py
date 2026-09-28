@@ -7,6 +7,8 @@ from backend.config import (
     VLM_API_KEY, VLM_MODEL, VLM_BASE_URL,
     LLM_REQUEST_MAX_CONCURRENCY,
     LLM_REQUEST_TIMEOUT_SECONDS, VLM_REQUEST_TIMEOUT_SECONDS,
+    DOCUMENT_AI_BASE_URL, DOCUMENT_AI_TIMEOUT_SECONDS,
+    DOCUMENT_AI_MAX_RESPONSE_BYTES,
     CHATBOT_MAX_HISTORY_TURNS,
     FAISS_INDEX_PATH,
 )
@@ -33,6 +35,7 @@ from backend.infrastructure.rag.gemini_provider import LocalEmbeddingToolRetriev
 from backend.infrastructure.database.repositories.sqlite_chat_repo import SqliteChatRepository
 from backend.infrastructure.database.repositories.sqlite_chat_document_repo import SqliteChatDocumentRepository
 from backend.infrastructure.database.repositories.sqlite_usage_config_repo import SqliteUsageConfigRepository
+from backend.infrastructure.document_ai.document_ai_client import DocumentAiClient
 
 # --- 3. Imports Services (Application) ---
 from backend.application.services.auth_service import AuthService
@@ -56,6 +59,7 @@ from backend.application.services.document_rag_service import DocumentRagService
 from backend.application.services.rag_query_planner import RagQueryPlanner
 from backend.application.services.slide_generation_service import SlideGenerationService
 from backend.application.services.image_relevance_service import ImageRelevanceService
+from backend.application.services.document_image_tool import DocumentImageTool
 
 from backend.api.schemas.auth_schema import UserResponse
 
@@ -116,6 +120,12 @@ _document_preprocessing_service = DocumentPreprocessingService(
     llm_request_limiter=_qwen_request_limiter,
 )
 
+_document_ai_client = DocumentAiClient(
+    DOCUMENT_AI_BASE_URL,
+    timeout_seconds=DOCUMENT_AI_TIMEOUT_SECONDS,
+    max_response_bytes=DOCUMENT_AI_MAX_RESPONSE_BYTES,
+)
+
 _slidegen_workflow_service = SlideGenWorkflowService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
@@ -142,7 +152,9 @@ _document_rag_service = DocumentRagService(
     repository=_chat_document_repo,
     embedding_provider=_retriever_infra.embeddings,
     preprocessing_service=_document_preprocessing_service,
+    document_ai_client=_document_ai_client,
 )
+_document_image_tool = DocumentImageTool(_chat_document_repo)
 _chat_project_service = ProjectService(SqliteProjectRepository())
 _chatbot_user_repository = SqliteUserRepository()
 _chatbot_usage_config_repository = SqliteUsageConfigRepository()
@@ -168,6 +180,7 @@ _chatbot_service = ChatbotService(
     rag_query_planner=_rag_query_planner,
     user_repository=_chatbot_user_repository,
     subscription_service=_chatbot_subscription_service,
+    document_image_tool=_document_image_tool,
     default_max_turns=CHATBOT_MAX_HISTORY_TURNS,
 )
 

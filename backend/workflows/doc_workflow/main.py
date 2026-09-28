@@ -10,6 +10,7 @@ async def run_doc_workflow(
     slide_options: Optional[Dict[str, Any]] = None,
     graph_config: Optional[Dict[str, Any]] = None,
     include_slide_chunks: bool = True,
+    atomic_section_titles: Optional[list[str]] = None,
 ) -> State:
     """Run canonical document preprocessing.
 
@@ -24,6 +25,7 @@ async def run_doc_workflow(
         "docx_file": docx_file,
         "workflow_mode": workflow_mode,
         "slide_options": slide_options or {},
+        "atomic_section_titles": atomic_section_titles or [],
     }
 
     final_state: State = await app.ainvoke(initial_input, config=graph_config or {})

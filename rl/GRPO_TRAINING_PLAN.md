@@ -15,8 +15,9 @@ Policy được huấn luyện để:
 - Hoạt động tương thích với pipeline SlideGen song song ở backend.
 - Có thể resume đầy đủ sau khi job H100 bị ngắt.
 
-Training không sử dụng Gemini hoặc một model preparer bên ngoài. Toàn bộ dữ
-liệu, retrieval, render và reward đều chạy local.
+Trong lúc train, policy, retrieval, render và reward chạy local; không gọi
+planner API. Riêng bước rebuild corpus trước khi train có thể gọi planner/VLM
+qua endpoint trong `backend/config.py`, với credential provider ở `.env`.
 
 ## 2. Phạm vi đã triển khai
 
@@ -29,7 +30,7 @@ Luồng đã được triển khai trong các file chính:
 | Prompt, tool schema và batch renderer | rl/slidegen_adapter.py |
 | Composite reward | rl/rewards/composite_reward.py |
 | ViT aesthetic reward | rl/rewards/aesthetic_reward.py |
-| XML overflow/collision reward | rl/rewards/dom_overflow_reward.py |
+| XML overflow/collision checks | BE renderer/analyzer; điểm phạt được tính trong `rl/rewards/composite_reward.py` |
 | Offline corpus loader | scripts/generate_challenge_dataset.py |
 | Regression tests | rl/test_grpo_pipeline.py |
 
@@ -86,14 +87,16 @@ và dataloader state không bị reset.
 
 ### 4.1. Nguồn dữ liệu
 
-Nguồn mặc định:
+Corpus mặc định của `rl/train.py`:
 
-    rl/data/sft_function_call_dataset.json
+    rl/data/grpo_replanned_dataset.json
 
-GRPO chỉ sử dụng phần nội dung và metadata của corpus để tạo bài toán rollout.
+`scripts/rebuild_grpo_corpus.py` lấy nội dung nguồn từ
+`rl/data/sft_function_call_dataset.json` để dựng corpus trên qua pipeline BE.
+GRPO dùng nội dung nguồn, plan/style mới và ảnh đã duyệt để tạo bài toán rollout.
 Ground-truth tool call cũ không được dùng làm target supervised.
 
-Corpus hiện tại đã được kiểm tra gồm:
+Số liệu tham chiếu từ corpus nguồn (không xác nhận corpus rebuilt đã được tạo):
 
 - 49 documents.
 - 414 slides.
@@ -147,13 +150,16 @@ tool riêng, nhờ đó thay đổi schema production sẽ được phản ánh 
 Corpus GRPO mới được dựng từ nội dung slide trong JSON hiện có; category,
 design instruction, ảnh và tool call cũ không được dùng làm nhãn. Chạy:
 
-    export GRPO_REBUILD_PLANNER_BASE_URL=http://127.0.0.1:8080/v1
-    export GRPO_IMAGE_VLM_BASE_URL=http://127.0.0.1:8080/v1
-    export GRPO_IMAGE_VLM_MODEL=<vision-capable-model>
-    uv run --locked python scripts/rebuild_grpo_corpus.py --max-docs 1 --max-slides 2 --output /tmp/grpo_replanned_smoke.json --allow-external-search
-    uv run --locked python scripts/rebuild_grpo_corpus.py --allow-external-search
+    uv run --locked python scripts/rebuild_grpo_corpus.py --max-docs 1 --max-slides 2 --output /tmp/grpo_replanned_smoke.json
+    uv run --locked python scripts/rebuild_grpo_corpus.py
 
-Builder gọi lại production deck style planner, slide planner, image search và
+Tìm ảnh bên ngoài bật mặc định. Dùng `--no-allow-external-search` để chủ động
+không tìm ảnh; cờ `--allow-external-search` cũ vẫn dùng được. Manifest kiểm tra
+chế độ tìm ảnh: dùng output mới khi đổi chế độ, hoặc giữ chế độ cũ để resume.
+
+Planner/VLM model names và base URLs được đặt trong `backend/config.py`; `.env`
+chỉ chứa API credentials. Builder gọi lại production deck style planner, slide
+planner, image search và
 Qwen-VL verifier. Chỉ ảnh được duyệt mới được tải vào `static/output/grpo_image_cache/`;
 phase-two planner nhận visual notes/caption từ VL để tạo final content và layout
 brief. Kết quả được ghi thành `rl/data/grpo_replanned_dataset.json` và có thể
@@ -289,7 +295,7 @@ Cấu hình mặc định:
 | GRADIENT_ACCUMULATION_STEPS | 16 |
 | NUM_GENERATIONS | 4 |
 | GRPO_GENERATION_BATCH_SIZE | 4 completions mỗi generation window |
-| MAX_COMPLETION_LENGTH | 512 |
+| MAX_COMPLETION_LENGTH | 3072 |
 | GRPO_TEMPERATURE | 0.7 |
 | GRPO_TOP_P | 0.8 |
 | GRPO_TOP_K | 20 |
@@ -298,6 +304,14 @@ Cấu hình mặc định:
 | GRPO_EPSILON_HIGH | 0.28 |
 | GRPO_LOSS_TYPE | dapo |
 | scale_rewards | group |
+
+Audit bằng tokenizer của Qwen3 trên 414 `tool_call` tham chiếu trong corpus nguồn:
+p50=289, p90=849, p95=1.136, p99=1.706, max=2.419 token sau khi bọc đúng
+`<tool_call>…</tool_call>`. Giới hạn 512 sẽ cắt 92/414 (22,2%) mẫu tham chiếu;
+3.072 bao phủ giá trị lớn nhất và thêm khoảng đệm. Prompt dài nhất đã chuẩn bị là
+4.389 token, nên prompt cộng completion cap bằng 7.461/40.960 token context.
+Đây là phép đo trên tool call tham chiếu, không dự đoán chắc chắn độ dài rollout;
+pilot vẫn phải theo dõi `completions/clipped_ratio`.
 | mask_truncated_completions | true |
 
 ### 7.1. Ý nghĩa batch configuration
@@ -315,9 +329,9 @@ Với một process GPU và per-device batch bằng 1:
   `gradient_accumulation_steps / steps_per_generation` (mặc định bằng 4), để
   optimizer update đầy đủ lấy trung bình qua bốn windows.
 - Nếu epoch kết thúc bằng một optimizer update ngắn hơn, trainer dùng số micro-step
-  thực tế của update cuối; loss không bị chia như thể đã tích lũy đủ 16 bước.
+  thực tế của update cuối, nhưng chỉ khi số đó vẫn là bội của `steps_per_generation`.
 - Trainer từ chối cấu hình accumulation không chia hết cho `steps_per_generation`
-  thay vì âm thầm đổi scale.
+  và dừng nếu optimizer update thực tế bị cắt giữa generation window.
 
 ### 7.2. DAPO controls
 
@@ -350,30 +364,45 @@ Invalid completion không được render và không được đưa qua ViT.
 
 ### 8.2. Reward cho completion hợp lệ
 
-Công thức mặc định:
+Validity và canonical format là hard gate: completion lỗi nhận riêng
+`RL_INVALID_REWARD=-2.0`, không render. Với completion hợp lệ, mỗi tín hiệu reward
+nằm trong `[0,1]` và chỉ xuất hiện một lần trong tổng có trọng số:
 
-    R = 1.5
-        + 0.7 * lexical
-        + 0.8 * semantic
-        + 0.3 * format
-        + 0.8 * dom
-        + 1.0 * aesthetic
-        + 0.4 * image_loaded
+    R = w_lexical * lexical
+      + w_semantic * semantic
+      + w_numeric_fact * numeric_fact
+      + w_dom * dom
+      + w_aesthetic * aesthetic
+      + w_image_loaded * image_loaded
 
-Các thành phần:
+Giá trị mặc định:
 
-| Thành phần | Range | Mục đích |
+    R = 0.7 * lexical
+      + 0.8 * semantic
+      + 1.5 * numeric_fact
+      + 0.8 * dom
+      + 1.0 * aesthetic
+      + 0.4 * image_loaded
+
+| Thành phần | Range | Ý nghĩa |
 |---|---:|---|
-| valid | hằng 1.5 | Tách completion executable khỏi invalid output |
-| lexical | 0 đến 1 | Bảo toàn keyword và đủ lượng nội dung |
-| semantic | 0 đến 1 | So khớp ngữ nghĩa đa ngôn ngữ trên toàn bộ nội dung |
-| format | 0 hoặc 1 | Chỉ có một exact serialized tool call |
-| dom | -1 đến 1 | Phạt overflow, boundary và textbox collision |
-| aesthetic | 0 đến 1 | Chất lượng hình ảnh từ ViT 5 nhãn |
-| image_loaded | 0 đến 1 | Tỷ lệ approved assets thực sự tải được trong preview |
+| lexical | 0 đến 1 | Tỷ lệ keyword nguồn xuất hiện trong text thực sự được frontend render, có điều chỉnh theo độ dài |
+| semantic | 0 đến 1 | Mức tương đồng ngữ nghĩa đa ngôn ngữ trên toàn bộ nội dung đã chia chunk |
+| numeric_fact | 0 đến 1 | Tỷ lệ số liệu được giữ nguyên và gắn với ngữ cảnh/chỉ tiêu gần đúng |
+| dom | 0 đến 1 | Điểm layout chuẩn hóa từ overflow, boundary và textbox collision |
+| aesthetic | 0 đến 1 | Điểm thẩm mỹ từ ViT 5 nhãn đã train |
+| image_loaded | 0 đến 1 | Tỷ lệ ảnh được yêu cầu và tải đúng URL trong preview; bằng 1 nếu sample không yêu cầu ảnh |
 
-Với weights mặc định, valid reward có trần 5.5 và tách rõ khỏi invalid reward
--2.0; điểm thấp hơn xảy ra khi DOM lỗi hoặc approved image không tải được.
+Canonical format/tool/schema là cổng validity, không phải component hằng số được
+cộng thêm vào mọi valid completion. Numeric literal được loại khỏi lexical token overlap và được mask khỏi semantic
+embedding; vì vậy việc giữ số chỉ thuộc `numeric_fact`. Không còn penalty shaping
+trừ lần hai sau tổng reward. Thiếu số liệu chỉ tác động
+`numeric_fact`; layout chỉ tác động `dom`; ảnh lỗi chỉ tác động `image_loaded`;
+thiếu nội dung được biểu diễn bởi lexical và semantic. Các tín hiệu nội dung vẫn
+có thể tương quan. ViT 5 nhãn là checkpoint đã train; “chưa hiệu chuẩn” chỉ nói
+về các hệ số ghép component hiện đặt thủ công, không phải ViT. Các hệ số này chưa
+được fit trên preference pairwise có nhãn. Cần đánh giá phân phối, pairwise ranking
+và ablation trên tập held-out trước khi chạy dài trên H100.
 
 Semantic reward chia cả source content và text thực sự render trên frontend thành
 các chunk theo tokenizer của embedder. Điểm là harmonic mean giữa source coverage
@@ -382,10 +411,9 @@ và generated-text precision: phần nội dung phía sau context limit vẫn đ
 
 Weights có thể override bằng:
 
-- RL_REWARD_VALID_WEIGHT
 - RL_REWARD_LEXICAL_WEIGHT
 - RL_REWARD_SEMANTIC_WEIGHT
-- RL_REWARD_FORMAT_WEIGHT
+- RL_REWARD_NUMERIC_FACT_WEIGHT
 - RL_REWARD_DOM_WEIGHT
 - RL_REWARD_AESTHETIC_WEIGHT
 - RL_REWARD_IMAGE_LOADED_WEIGHT
@@ -394,22 +422,36 @@ Weights có thể override bằng:
 
 Lexical score:
 
-1. Lowercase và tokenize từ có ít nhất hai ký tự.
+1. Lowercase và tokenize từ, gồm cả số và từ một ký tự.
 2. Loại một tập stopword tiếng Việt phổ biến.
 3. Tính tỷ lệ keyword nguồn xuất hiện trong text thực tế do frontend render.
-4. Phạt completion có lượng text dưới 30 phần trăm source.
+4. Điều chỉnh theo độ dài; lượng text dưới 30% source không thể đạt điểm lexical cao.
 
 Semantic score:
 
 1. Trích text từ textbox, chart accessibility labels và math labels sau khi frontend render.
 2. Encode source và generated text bằng multilingual MiniLM.
 3. Normalize embeddings.
-4. Dùng cosine similarity và clamp về 0 đến 1.
+4. Chia text quá dài thành chunk không mất phần cuối; dùng harmonic mean giữa source coverage và generated-text precision.
 
 SentenceTransformer được chia sẻ với tool retriever, tránh load hai model giống
-nhau trong cùng process.
+nhau trong cùng process. Lexical và semantic là hai tín hiệu khác nhau nhưng có
+thể tương quan; không xem đây là hai đánh giá độc lập tuyệt đối.
 
-### 8.4. XML overflow và collision
+### 8.4. Numeric-fact heuristic
+
+Source number/context records được trích một lần khi chuẩn bị sample. Runtime
+đối chiếu số literal theo mệnh đề (dấu câu/liên từ), bỏ qua số thứ tự bullet,
+và dùng cue tăng/giảm cùng từ ngữ lân cận để phát hiện một số trường hợp gán sai.
+Điểm số được đưa vào `numeric_fact` đúng một lần.
+
+Đây là heuristic cục bộ, không phải kiểm chứng entailment tổng quát. Nó có thể
+bỏ sót phủ định phức tạp, đảo quan hệ nhân quả, quy đổi đơn vị và số viết bằng
+chữ. `reward_component/numeric_fact` là metric cần audit cùng ví dụ được gán
+nhãn; unit test chỉ xác nhận invariant của heuristic, không chứng minh độ chính
+xác trên corpus.
+
+### 8.5. XML overflow và collision
 
 XML được execute đúng một lần. DOM reward kiểm tra:
 
@@ -417,22 +459,16 @@ XML được execute đúng một lần. DOM reward kiểm tra:
 - Text height overflow.
 - Vượt max lines.
 - Ra ngoài slide boundary.
-- Textbox bounding-box collision.
+- Va chạm giữa vùng chữ/công thức thực sự render; bỏ qua phần khung textbox
+  được FE nới rộng nếu nội dung không chồng nhau.
 
-Mức phạt theo loại lỗi:
+DOM penalty weights là mức vi phạm tương đối (`text_width=0.20`,
+`text_height=0.25`, `max_lines=0.20`, `slide_boundary=0.40`,
+`bbox_collision=0.25`). Các issue trùng `(type, textbox, other)` chỉ tính một lần;
+tổng bị cap tại 2.0 rồi đổi sang score `[0,1]` theo `1 - min(2, penalty)/2`.
+`image_load` bị loại khỏi DOM vì đã có component `image_loaded` riêng.
 
-| Lỗi | Penalty |
-|---|---:|
-| text_width | 0.20 |
-| text_height | 0.25 |
-| max_lines | 0.20 |
-| image_load | 0.40 |
-| slide_boundary | 0.40 |
-| bbox_collision | 0.25 |
-
-Tổng penalty được cap ở 2.0 và DOM score được clamp về -1 đến 1.
-
-### 8.5. Parallel rendering
+### 8.6. Parallel rendering
 
 Các XML hợp lệ trong rollout được render bằng:
 
@@ -445,7 +481,7 @@ Các XML hợp lệ trong rollout được render bằng:
 
 Cách này tránh khởi động một browser process cho từng completion.
 
-### 8.6. ViT aesthetic reward
+### 8.7. ViT aesthetic reward
 
 ViT-small 5-label được load từ checkpoint local. Loader RL:
 
@@ -502,7 +538,7 @@ Các dấu hiệu cần theo dõi:
 
 - Train reward tăng nhưng eval reward giảm: có nguy cơ overfit.
 - Eval invalid rate không giảm: policy chưa học được schema/tool contract.
-- Eval completion length thường xuyên đạt 512: output bị truncate.
+- Eval completion length thường xuyên chạm cap 3.072 hoặc `completions/clipped_ratio` tăng: output bị truncate.
 - DOM reward giảm trong khi aesthetics tăng: model đang đánh đổi readability.
 - `frac_reward_zero_std` cao: reward thiếu độ phân giải hoặc generations chưa đa dạng.
 
@@ -588,9 +624,6 @@ Bắt buộc:
 - Planner endpoint và Qwen-VL endpoint sẵn sàng. Chạy corpus rebuild từ nội
   dung JSON; lệnh smoke dùng hai slide, lệnh kế tiếp xử lý toàn corpus:
 
-      export GRPO_REBUILD_PLANNER_BASE_URL=http://127.0.0.1:8080/v1
-      export GRPO_IMAGE_VLM_BASE_URL=http://127.0.0.1:8080/v1
-      export GRPO_IMAGE_VLM_MODEL=<vision-capable-model>
       uv run --locked python scripts/rebuild_grpo_corpus.py --max-docs 1 --max-slides 2 --output /tmp/grpo_replanned_smoke.json
       uv run --locked python scripts/rebuild_grpo_corpus.py
 
@@ -604,7 +637,7 @@ Ví dụ:
 
     export TRAINING_MODEL_ID=/models/Qwen3-8B
     export REWARD_MODEL_PATH=/models/slidegen-vit-small/best.pt
-    export BROWSER_PREVIEW_URL=http://127.0.0.1:12008/render/xml-preview
+    # Configure BROWSER_PREVIEW_URL in backend/config.py, not .env.
     export GRPO_OUTPUT_DIR=/data/checkpoints/slidegen-grpo
     export GRPO_FAISS_INDEX_PATH=/data/checkpoints/slidegen-grpo/tool_retriever_index
     export GRPO_REQUIRE_IMAGE_ASSETS=true
@@ -655,7 +688,7 @@ Pass criteria:
 - Không có NaN/Inf ở loss, reward và grad norm.
 - Không phải toàn bộ completion nhận -2.
 - Tỷ lệ exact tool-call tăng hoặc ổn định.
-- Completion length không thường xuyên chạm 512.
+- Completion length không thường xuyên chạm cap 3.072; `completions/clipped_ratio` thấp.
 - Eval reward không sụt liên tục.
 - Resume từ checkpoint-5 hoặc checkpoint-10 thành công.
 
@@ -699,7 +732,7 @@ Thứ tự giảm tài nguyên khuyến nghị:
 
 1. Giảm GRPO_GENERATION_BATCH_SIZE từ 4 xuống 2.
 2. Đồng thời giảm NUM_GENERATIONS từ 4 xuống 2.
-3. Giảm MAX_COMPLETION_LENGTH từ 512 xuống 384 hoặc 256.
+3. Nếu vẫn OOM, giảm MAX_COMPLETION_LENGTH từ 3.072 xuống 2.048 và theo dõi tỷ lệ bị cắt (3/414 tool call tham chiếu vượt 2.048).
 4. Giữ PER_DEVICE_TRAIN_BATCH_SIZE=1.
 5. Tăng gradient accumulation nếu cần giữ effective update size.
 6. Giảm RL_REWARD_RENDER_WORKERS nếu RAM CPU hoặc Chrome không ổn định.
@@ -716,7 +749,7 @@ Cấu hình OOM-safe:
 
     NUM_GENERATIONS=2
     GRPO_GENERATION_BATCH_SIZE=2
-    MAX_COMPLETION_LENGTH=384
+    MAX_COMPLETION_LENGTH=2048
     PER_DEVICE_TRAIN_BATCH_SIZE=1
     GRADIENT_ACCUMULATION_STEPS=16
 
@@ -769,33 +802,22 @@ multi-GPU vẫn cần pilot để kiểm tra VRAM và throughput.
 
 ## 18. Trạng thái verification
 
-### Kết quả verification trước image-cache changes
+### Đã xác minh trong worktree hiện tại
 
-- Bộ test regression GRPO/eval/tool-call/SFT helper: 24 tests passed.
-- Checkpoint ViT local load strict thành công; classifier shape là 5 x 384.
-- `git diff --check` không phát hiện whitespace errors.
-- Resume giờ chỉ nhận checkpoint khớp model ID, loss type và accumulation factor.
+- API Qwen thật trả lời text, structured output, vision và native tool call thành công.
+- Rebuild smoke hai slide đã chạy planner, tìm ảnh, duyệt ảnh, lưu cache và refine; loader đọc được corpus, giữ nguyên nội dung nguồn, với hai ảnh đã duyệt. Smoke corpus nằm ở `/tmp/grpo_be_synced_smoke.json`, không phải corpus train mặc định.
+- 236 test backend và RL đã đạt trước lần thêm guard CUDA cuối; guard và tài liệu ở lượt này chưa chạy lại test suite.
+- FE preview, Chromium và ViT preflight đã chạy thành công trên máy phát triển trong vòng kiểm tra trước. Điều này không thay thế preflight trên H100 vì endpoint FE, browser và file ViT ở đó có thể khác.
+- Source loader trước đó đọc được 49 tài liệu và 414 slide. Đây là kích thước corpus nguồn; corpus GRPO mới đầy đủ chưa được rebuild.
 
-### Còn phải xác minh trên host có frontend và H100
+### Còn phải hoàn tất trước full run
 
-- Playwright preflight chưa chạy end-to-end tại môi trường hiện tại: `BROWSER_PREVIEW_URL`
-  đang trỏ `127.0.0.1:5173`, nhưng frontend service chưa chạy và
-  `frontend/node_modules` chưa được cài. Cần bật frontend route trước khi train;
-  preflight mặc định sẽ fail-fast nếu endpoint chưa sẵn sàng.
-- Image-cache flow đã được thêm nhưng chưa chạy migration toàn corpus trên H100;
-  cần cache asset và kiểm tra số image-backed prompts trước pilot.
-- Chưa chạy pilot trên H100, chưa xác nhận VRAM/throughput của Qwen3-8B, và chưa
-  tạo/resume checkpoint từ một optimizer step thực tế.
+- Rebuild đủ corpus GRPO mới và chuyển JSON cùng `static/output/grpo_image_cache/` lên H100.
+- Trên H100, xác nhận đường dẫn local của Qwen3-8B và ViT, FE preview/Chromium, retriever và cache ảnh qua preflight mặc định.
+- Chạy một optimizer step, xác nhận loss/reward/grad hữu hạn, checkpoint lưu và resume được; sau đó chạy pilot 10 bước và calibration 50 bước như kế hoạch. VRAM/throughput chưa được đo trên H100.
+- Trainer hiện dừng sớm nếu CUDA không khả dụng; chỉ chạy CPU khi đặt `USE_CPU=true` tường minh cho chẩn đoán nhỏ.
 
-### Kết quả đã ghi nhận từ các vòng kiểm tra trước
-
-- Full corpus preparation: 414 trên 414 slides thành công.
-- Train/eval split: 372 và 42 prompts, không leakage theo document.
-- Dry-run cũ phủ 13 trên 13 no-image layouts; image-layout coverage cần đo lại
-  sau khi cache legacy assets.
-- Toàn bộ backend và RL suite từng đạt 162 tests; đây là kết quả trước các sửa
-  đổi reward/renderer hiện tại, không thay thế preflight mới.
-- Backend production không bị sửa trong lượt này.
+Không khởi chạy job 500 bước trước khi các mục trên đạt.
 
 ## 19. Checklist trước full run
 

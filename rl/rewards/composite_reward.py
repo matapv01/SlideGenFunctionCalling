@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import time
+from html import escape
 import tempfile
-from collections import defaultdict
+from collections import defaultdict, Counter
 from pathlib import Path
-from threading import Lock
+from urllib.parse import urlsplit, unquote
 
 import numpy as np
 
@@ -18,8 +20,12 @@ from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
     tool_matches_image_mode,
 )
 from rl.rewards.aesthetic_reward import _evaluate_batch, _get_model
-from rl.rewards.content_reward import clean_words
-from rl.rewards.dom_overflow_reward import _PENALTY_WEIGHTS
+from rl.rewards.content_reward import (
+    _get_text_embedder,
+    _lexical_score,
+    _numeric_fact_coverage,
+    _semantic_reward_scores,
+)
 from rl.slidegen_adapter import execute_tool, render_xml_batch_to_png
 
 
@@ -28,33 +34,18 @@ _TOOL_BY_NAME = {
     for tools in TOOLS_DICT.values()
     for tool in tools
 }
-_TEXT_EMBEDDER = None
-_TEXT_EMBEDDER_LOCK = Lock()
 _COMPONENT_NAMES = (
-    "valid", "lexical", "semantic", "format", "dom", "aesthetic", "image_loaded"
+    "lexical", "semantic", "numeric_fact", "dom", "aesthetic", "image_loaded"
 )
+_DOM_PENALTY_WEIGHTS = {
+    "text_width": 0.20,
+    "text_height": 0.25,
+    "max_lines": 0.20,
+    "slide_boundary": 0.40,
+    "bbox_collision": 0.25,
+}
 
-
-def set_text_embedder(model) -> None:
-    """Share the retriever's SentenceTransformer instead of loading it twice."""
-    global _TEXT_EMBEDDER
-    _TEXT_EMBEDDER = model
-
-
-def _get_text_embedder():
-    global _TEXT_EMBEDDER
-    if _TEXT_EMBEDDER is None:
-        with _TEXT_EMBEDDER_LOCK:
-            if _TEXT_EMBEDDER is None:
-                from sentence_transformers import SentenceTransformer
-                from backend import config
-
-                _TEXT_EMBEDDER = SentenceTransformer(
-                    config.EMBEDDING_MODEL_NAME,
-                    device=config.EMBEDDING_DEVICE,
-                    cache_folder=config.EMBEDDING_CACHE_DIR,
-                )
-    return _TEXT_EMBEDDER
+_DOM_PENALTY_CAP = 2.0
 
 
 def _reject_duplicate_keys(pairs):
@@ -100,126 +91,54 @@ def _validate_tool_arguments(tool, arguments: dict) -> dict | None:
     return validated.model_dump(exclude_unset=True)
 
 
-def _lexical_score(source: str, generated: str) -> float:
-    source_words = clean_words(source)
-    generated_words = clean_words(generated)
-    if not source_words:
-        return 1.0
-    overlap = len(set(source_words).intersection(generated_words)) / len(set(source_words))
-    length_ratio = len(generated_words) / max(1, len(source_words))
-    return float(max(0.0, min(1.0, overlap * min(1.0, length_ratio / 0.3))))
-
-
 def _dom_score(issues: list[dict]) -> float:
-    penalty = min(
-        2.0,
-        sum(_PENALTY_WEIGHTS.get(issue["type"], 0.10) for issue in issues),
+    """Return a normalized layout score; image availability has its own component."""
+    unique_issues = {
+        (
+            issue.get("type"),
+            str(issue.get("textbox", "")),
+            str(issue.get("other", "")),
+        )
+        for issue in issues
+        if issue.get("type") and issue.get("type") != "image_load"
+    }
+    penalty = sum(
+        _DOM_PENALTY_WEIGHTS.get(issue_type, 0.10)
+        for issue_type, _, _ in unique_issues
     )
-    return max(-1.0, 1.0 - penalty)
+    return 1.0 - min(_DOM_PENALTY_CAP, penalty) / _DOM_PENALTY_CAP
 
 
-def _chunk_semantic_text(
-    text: str, tokenizer, max_seq_length: int
-) -> tuple[list[str], list[int]]:
-    """Split text by model tokens so embedding never truncates slide content."""
-    value = str(text).strip() or "."
-    if tokenizer is None:
-        tokens = value.split()
-        chunk_size = max(1, min(96, max_seq_length - 2))
-        overlap = min(12, chunk_size // 8)
-        chunks, weights = [], []
-        start = 0
-        while start < len(tokens):
-            end = min(len(tokens), start + chunk_size)
-            chunks.append(" ".join(tokens[start:end]))
-            weights.append(end - start)
-            if end == len(tokens):
-                break
-            start = end - overlap
-        return chunks, weights
-
-    token_ids = tokenizer.encode(value, add_special_tokens=False)
-    if not token_ids:
-        token_ids = tokenizer.encode(".", add_special_tokens=False)
-    chunk_size = max(1, max_seq_length - tokenizer.num_special_tokens_to_add(pair=False))
-    overlap = min(16, chunk_size // 8)
-    chunks, weights = [], []
-    start = 0
-    while start < len(token_ids):
-        end = min(len(token_ids), start + chunk_size)
-        chunk = tokenizer.decode(token_ids[start:end], skip_special_tokens=True).strip()
-        chunks.append(chunk or ".")
-        weights.append(end - start)
-        if end == len(token_ids):
-            break
-        start = end - overlap
-    return chunks, weights
+def _weighted_reward(components: dict[str, float], weights: dict[str, float]) -> float:
+    """Combine independent, bounded reward signals with explicit configured weights."""
+    if components.keys() != weights.keys():
+        raise ValueError("Reward components and weights must have identical keys")
+    if any(not np.isfinite(value) or not 0.0 <= value <= 1.0 for value in components.values()):
+        raise ValueError("Every reward component must be finite and in [0, 1]")
+    return float(sum(weights[name] * value for name, value in components.items()))
 
 
-def _semantic_reward_scores(
-    sources: list[str], generated: list[str], embedder
-) -> list[float]:
-    tokenizer = getattr(embedder, "tokenizer", None)
-    max_seq_length = int(getattr(embedder, "max_seq_length", 128) or 128)
-    grouped_chunks = []
-    all_chunks = []
-    for source, output in zip(sources, generated, strict=True):
-        source_chunks, source_weights = _chunk_semantic_text(
-            source, tokenizer, max_seq_length
-        )
-        generated_chunks, generated_weights = _chunk_semantic_text(
-            output, tokenizer, max_seq_length
-        )
-        source_start = len(all_chunks)
-        all_chunks.extend(source_chunks)
-        generated_start = len(all_chunks)
-        all_chunks.extend(generated_chunks)
-        grouped_chunks.append(
-            (
-                source_start,
-                len(source_chunks),
-                source_weights,
-                generated_start,
-                len(generated_chunks),
-                generated_weights,
-            )
-        )
-
-    embeddings = np.asarray(
-        embedder.encode(
-            all_chunks,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-        )
-    )
-    scores = []
-    for (
-        source_start,
-        source_count,
-        source_weights,
-        generated_start,
-        generated_count,
-        generated_weights,
-    ) in grouped_chunks:
-        source_vectors = embeddings[source_start : source_start + source_count]
-        generated_vectors = embeddings[generated_start : generated_start + generated_count]
-        similarities = np.clip(source_vectors @ generated_vectors.T, 0.0, 1.0)
-        source_coverage = np.average(
-            similarities.max(axis=1), weights=source_weights
-        )
-        generated_precision = np.average(
-            similarities.max(axis=0), weights=generated_weights
-        )
-        denominator = source_coverage + generated_precision
-        scores.append(
-            float(2.0 * source_coverage * generated_precision / denominator)
-            if denominator > 0
-            else 0.0
-        )
-    return scores
+def _asset_key(url: str) -> str:
+    parsed = urlsplit(str(url))
+    path = unquote(parsed.path)
+    # The FE can resolve a portable static path against a separate BE origin.
+    return path if path.startswith("/static/output/") else parsed._replace(fragment="").geturl()
 
 
-def preflight_reward_runtime() -> None:
+def _image_loading_score(expected_urls: list[str], image_status: list[dict]) -> float:
+    if not expected_urls:
+        return 1.0
+    loaded = Counter(_asset_key(image.get("src", "")) for image in image_status if image.get("loaded"))
+    matched = 0
+    for url in expected_urls:
+        key = _asset_key(url)
+        if loaded[key] > 0:
+            matched += 1
+            loaded[key] -= 1
+    return matched / len(expected_urls)
+
+
+def preflight_reward_runtime(approved_images=None) -> None:
     """Load and execute the reward model against the real BE frontend render."""
     model = _get_model()
     from rl.slidegen_adapter import render_xml_to_png
@@ -242,6 +161,48 @@ def preflight_reward_runtime() -> None:
             )
 
 
+    # Exercise each distinct corpus image through the same FE path as rewards.
+    # Local decoding catches corrupt files; URL matching catches broken serving.
+    from PIL import Image
+    unique_assets = {}
+    for asset in approved_images or []:
+        url = str(asset.get("source_path") or "")
+        if not url.startswith("/static/output/"):
+            raise ValueError("Reward preflight requires locally cached corpus images")
+        unique_assets.setdefault(url, asset)
+    for asset in unique_assets.values():
+        with Image.open(asset["local_path"]) as image:
+            image.verify()
+    urls = list(unique_assets)
+    with tempfile.TemporaryDirectory(prefix="slidegen_image_preflight_") as directory:
+        for start in range(0, len(urls), 16):
+            batch = urls[start:start + 16]
+            xmls = [
+                '<presentation width="1600" height="900"><slide background="#ffffff">'
+                f'<image src="{escape(url, quote=True)}" x="80" y="80" width="600" height="450" />'
+                '</slide></presentation>' for url in batch
+            ]
+            paths = [str(Path(directory) / f"asset-{start + i}.png") for i in range(len(batch))]
+            results = render_xml_batch_to_png(xmls, paths, max_concurrency=4)
+            for url, result in zip(batch, results, strict=True):
+                if _image_loading_score([url], result.get("image_status") or []) != 1.0:
+                    raise RuntimeError(f"Corpus image cannot be loaded by the frontend: {url}")
+
+
+def reward_weights() -> dict[str, float]:
+    weights = {
+        "lexical": float(os.getenv("RL_REWARD_LEXICAL_WEIGHT", "0.7")),
+        "semantic": float(os.getenv("RL_REWARD_SEMANTIC_WEIGHT", "0.8")),
+        "numeric_fact": float(os.getenv("RL_REWARD_NUMERIC_FACT_WEIGHT", "1.5")),
+        "dom": float(os.getenv("RL_REWARD_DOM_WEIGHT", "0.8")),
+        "aesthetic": float(os.getenv("RL_REWARD_AESTHETIC_WEIGHT", "1.0")),
+        "image_loaded": float(os.getenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0.4")),
+    }
+    if any(not np.isfinite(value) or value < 0 for value in weights.values()):
+        raise ValueError("Reward weights must be finite and nonnegative")
+    return weights
+
+
 def slidegen_composite_reward(
     prompts,
     completions,
@@ -250,6 +211,7 @@ def slidegen_composite_reward(
     deck_style=None,
     approved_images=None,
     image_mode=None,
+    numeric_facts=None,
     log_metric=None,
     **kwargs,
 ):
@@ -267,12 +229,14 @@ def slidegen_composite_reward(
     )
     sources = list(source_content) if source_content is not None else []
     styles = list(deck_style) if deck_style is not None else []
+    fact_rows = list(numeric_facts) if numeric_facts is not None else [None] * len(completions)
     if not (
         len(expected)
         == len(sources)
         == len(styles)
         == len(assets_by_sample)
         == len(modes_by_sample)
+        == len(fact_rows)
         == len(completions)
     ):
         raise ValueError("GRPO reward metadata does not match completion batch size")
@@ -309,7 +273,7 @@ def slidegen_composite_reward(
                 approved_images=sample_images if mode == "semantic" else [],
                 asset_dir=None,
             )
-            if mode == "semantic" and not injection_history:
+            if len(injection_history) != len(sample_images):
                 continue
             # Validate the final styled and image-injected call before execution.
             styled_arguments = _validate_tool_arguments(
@@ -326,8 +290,8 @@ def slidegen_composite_reward(
                     "source": str(sources[index]),
                     "xml": xml_content,
                     "image_mode": mode,
-                    "injected_image_count": len(injection_history),
-                    "format": 1.0,
+                    "injected_image_count": len(sample_images),
+                    "expected_image_urls": [item["result_url"] for item in injection_history],
                 }
             )
         except (TypeError, ValueError, KeyError):
@@ -344,60 +308,59 @@ def slidegen_composite_reward(
     workers = max(1, min(int(os.getenv("RL_REWARD_RENDER_WORKERS", "4")), len(rows)))
     with tempfile.TemporaryDirectory(prefix="slidegen_reward_") as directory:
         paths = [Path(directory) / f"reward_{row['index']}.png" for row in rows]
+        render_started = time.perf_counter()
         frontend_results = render_xml_batch_to_png(
             [row["xml"] for row in rows], [str(path) for path in paths],
             max_concurrency=workers,
         )
+        render_seconds = time.perf_counter() - render_started
         for row, frontend in zip(rows, frontend_results, strict=True):
             image_status = list(frontend.get("image_status") or [])
             expected_count = int(row["injected_image_count"])
-            loaded_count = sum(bool(image.get("loaded")) for image in image_status)
-            missing_count = max(0, expected_count - len(image_status))
-            failed_count = len(image_status) - loaded_count
-            for _ in range(failed_count + missing_count):
+            score = _image_loading_score(row["expected_image_urls"], image_status)
+            failed_count = sum(not image.get("loaded") for image in image_status)
+            missing_count = round(expected_count * (1.0 - score))
+            for _ in range(max(failed_count, missing_count)):
                 frontend.setdefault("issues", []).append({"type": "image_load"})
-            row["image_loaded"] = (
-                min(1.0, loaded_count / expected_count)
-                if expected_count
-                else 1.0
-            )
+            row["image_loaded"] = score
+        vit_started = time.perf_counter()
         aesthetic_scores = _evaluate_batch(_get_model(), paths)
+        vit_seconds = time.perf_counter() - vit_started
 
     if len(frontend_results) != len(rows) or len(aesthetic_scores) != len(rows):
         raise RuntimeError("Renderer or ViT returned a different number of scores")
 
     generated_texts = [result["visible_text"] for result in frontend_results]
     embedder = _get_text_embedder()
+    semantic_started = time.perf_counter()
     semantic_scores = _semantic_reward_scores(
-        [row["source"] for row in rows], generated_texts, embedder
+        [row["source"] for row in rows], generated_texts, embedder,
     )
-    weights = {
-        "valid": float(os.getenv("RL_REWARD_VALID_WEIGHT", "1.5")),
-        "lexical": float(os.getenv("RL_REWARD_LEXICAL_WEIGHT", "0.7")),
-        "semantic": float(os.getenv("RL_REWARD_SEMANTIC_WEIGHT", "0.8")),
-        "format": float(os.getenv("RL_REWARD_FORMAT_WEIGHT", "0.3")),
-        "dom": float(os.getenv("RL_REWARD_DOM_WEIGHT", "0.8")),
-        "aesthetic": float(os.getenv("RL_REWARD_AESTHETIC_WEIGHT", "1.0")),
-        "image_loaded": float(os.getenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0.4")),
-    }
+    semantic_seconds = time.perf_counter() - semantic_started
+    if log_metric is not None:
+        log_metric("reward_time/render_seconds", render_seconds)
+        log_metric("reward_time/vit_seconds", vit_seconds)
+        log_metric("reward_time/semantic_seconds", semantic_seconds)
+    weights = reward_weights()
     component_values = defaultdict(list)
     for row, frontend, semantic, aesthetic in zip(
         rows, frontend_results, semantic_scores, aesthetic_scores, strict=True,
     ):
+        source_facts = fact_rows[row["index"]]
         lexical = _lexical_score(row["source"], frontend["visible_text"])
+        fact_coverage = _numeric_fact_coverage(
+            row["source"], frontend["visible_text"], source_facts,
+        )
         dom = _dom_score(frontend["issues"])
         components = {
-            "valid": 1.0,
             "lexical": lexical,
             "semantic": semantic,
-            "image_loaded": float(row["image_loaded"]),
-            "format": row["format"],
+            "numeric_fact": fact_coverage,
             "dom": dom,
             "aesthetic": float(aesthetic),
+            "image_loaded": float(row["image_loaded"]),
         }
-        rewards[row["index"]] = float(
-            sum(weights[name] * value for name, value in components.items())
-        )
+        rewards[row["index"]] = _weighted_reward(components, weights)
         for name, value in components.items():
             component_values[name].append(value)
 
@@ -409,6 +372,7 @@ def slidegen_composite_reward(
                 f"reward_component/{name}",
                 float(np.mean(values)) if values else 0.0,
             )
+
 
     print(
         "  [Composite Reward] "

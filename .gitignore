@@ -27,6 +27,8 @@ frontend/dist/
 Thumbs.db
 
 # Runtime / generated caches
+/.cache/
+backend/infrastructure/faiss_tool_retriever_index_multilingual_minilm/
 context/
 web/
 **/context

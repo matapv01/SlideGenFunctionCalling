@@ -8,6 +8,10 @@ from typing import Any
 class RetrievedContext:
     context: str
     citations: list[dict[str, Any]]
+    # Private server-side references that an image-capable answer model may
+    # inspect through the document-image tool.  These are deliberately kept
+    # outside the public citation response and never contain filesystem paths.
+    image_refs: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
