@@ -9,11 +9,13 @@ import os
 import platform
 import subprocess
 import sys
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
 from PIL import Image, ImageDraw, ImageFont
+from transformers import TrainerCallback
 
 
 PALETTE = {
@@ -540,3 +542,178 @@ def save_metric_trend_image(
     ensure_dir(out_path.parent)
     img.save(out_path)
     return out_path
+
+
+class DetailedTrainingLogCallback(TrainerCallback):
+    """Write live, parseable and readable records for every trainer event."""
+
+    def __init__(self, log_dir: str | Path, run_id: str):
+        self.log_dir = ensure_dir(log_dir)
+        self.run_id = run_id
+        self.jsonl_path = self.log_dir / "training_metrics.jsonl"
+        self.readable_path = self.log_dir / "training_readable.log"
+        self._lock = threading.Lock()
+        self._epoch_updates: list[dict[str, float]] = []
+
+    @staticmethod
+    def _clean(value: Any) -> Any:
+        if value is None or isinstance(value, (str, bool, int)):
+            return value
+        if isinstance(value, numbers.Real):
+            numeric = float(value)
+            return numeric if math.isfinite(numeric) else None
+        if isinstance(value, dict):
+            return {
+                str(key): DetailedTrainingLogCallback._clean(item)
+                for key, item in value.items()
+            }
+        if isinstance(value, (list, tuple)):
+            return [DetailedTrainingLogCallback._clean(item) for item in value]
+        if hasattr(value, "item"):
+            try:
+                return DetailedTrainingLogCallback._clean(value.item())
+            except (TypeError, ValueError, RuntimeError):
+                pass
+        return str(value)
+
+    @staticmethod
+    def _number(value: Any) -> float | None:
+        if isinstance(value, numbers.Real) and not isinstance(value, bool):
+            numeric = float(value)
+            return numeric if math.isfinite(numeric) else None
+        return None
+
+    def _write(self, event: str, args, state, *, metrics=None, details=None) -> None:
+        if hasattr(args, "should_save") and not args.should_save:
+            return
+        timestamp = datetime.now(timezone.utc).isoformat()
+        row = {
+            "timestamp_utc": timestamp,
+            "run_id": self.run_id,
+            "event": event,
+            "global_step": int(state.global_step),
+            "max_steps": int(args.max_steps),
+            "epoch": self._clean(state.epoch),
+        }
+        if metrics is not None:
+            row["metrics"] = self._clean(metrics)
+        if details is not None:
+            row["details"] = self._clean(details)
+
+        safe_row = json.dumps(
+            row, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        )
+        metric_values = row.get("metrics") or {}
+        metric_text = " | ".join(
+            f"{key}={json.dumps(value, ensure_ascii=False, allow_nan=False)}"
+            for key, value in sorted(metric_values.items())
+        )
+        detail_text = ""
+        if row.get("details"):
+            detail_text = " | details=" + json.dumps(
+                row["details"], ensure_ascii=False, allow_nan=False, sort_keys=True
+            )
+        readable = (
+            f"{timestamp} | {event.upper()} | run={self.run_id} | "
+            f"step={state.global_step}/{args.max_steps} | epoch={row['epoch']}"
+        )
+        if metric_text:
+            readable += " | " + metric_text
+        readable += detail_text + "\n"
+
+        with self._lock:
+            with self.jsonl_path.open("a", encoding="utf-8") as stream:
+                stream.write(safe_row + "\n")
+                stream.flush()
+            with self.readable_path.open("a", encoding="utf-8") as stream:
+                stream.write(readable)
+                stream.flush()
+
+    def on_train_begin(self, args, state, control, **kwargs):
+        config_keys = (
+            "learning_rate", "warmup_steps", "lr_scheduler_type", "lr_scheduler_kwargs",
+            "metric_for_best_model", "greater_is_better", "load_best_model_at_end",
+            "eval_seed", "max_steps",
+            "per_device_train_batch_size", "gradient_accumulation_steps",
+            "generation_batch_size", "num_generations", "max_completion_length",
+            "loss_type", "temperature", "top_p", "top_k", "beta", "epsilon",
+            "epsilon_high", "save_strategy", "save_steps", "save_total_limit",
+            "eval_strategy", "eval_steps", "logging_steps", "weight_decay",
+            "adam_beta1", "adam_beta2", "adam_epsilon", "max_grad_norm",
+            "optim", "num_iterations", "scale_rewards", "mask_truncated_completions",
+            "seed", "data_seed", "bf16", "fp16",
+        )
+        config = {key: getattr(args, key, None) for key in config_keys}
+        config["output_dir"] = str(args.output_dir)
+        self._write("train_start", args, state, details=config)
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        logs = dict(logs or {})
+        is_eval = any(key.startswith("eval_") for key in logs)
+        self._write("evaluation" if is_eval else "train_update", args, state, metrics=logs)
+        if not is_eval and ("loss" in logs or "reward" in logs):
+            numeric = {
+                key: value
+                for key, raw_value in logs.items()
+                if (value := self._number(raw_value)) is not None
+            }
+            self._epoch_updates.append(numeric)
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        if self._epoch_updates:
+            keys = sorted({key for row in self._epoch_updates for key in row})
+            averages = {
+                key: sum(row[key] for row in self._epoch_updates if key in row)
+                / sum(key in row for row in self._epoch_updates)
+                for key in keys
+            }
+        else:
+            averages = {}
+        epoch_value = self._number(state.epoch)
+        is_full_boundary = (
+            epoch_value is not None
+            and abs(epoch_value - round(epoch_value)) < 1e-8
+        )
+        self._write(
+            "epoch_summary" if is_full_boundary else "epoch_partial_summary",
+            args,
+            state,
+            details={
+                "updates_since_previous_boundary": len(self._epoch_updates),
+                "mean_metrics": averages,
+                "completed_full_epoch": is_full_boundary,
+            },
+        )
+        self._epoch_updates.clear()
+
+    def on_save(self, args, state, control, **kwargs):
+        self._write(
+            "checkpoint_saved",
+            args,
+            state,
+            details={
+                "checkpoint": str(
+                    Path(args.output_dir) / f"checkpoint-{state.global_step}"
+                )
+            },
+        )
+
+    def on_train_end(self, args, state, control, **kwargs):
+        if self._epoch_updates:
+            keys = sorted({key for row in self._epoch_updates for key in row})
+            averages = {
+                key: sum(row[key] for row in self._epoch_updates if key in row)
+                / sum(key in row for row in self._epoch_updates)
+                for key in keys
+            }
+            self._write(
+                "epoch_partial_summary",
+                args,
+                state,
+                details={
+                    "updates_in_partial_epoch": len(self._epoch_updates),
+                    "mean_metrics": averages,
+                },
+            )
+            self._epoch_updates.clear()
+        self._write("train_end", args, state)

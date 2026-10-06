@@ -12,23 +12,19 @@ DEFAULT_HIGHLIGHT_COLOR = "#2563EB"
 MAX_HIGHLIGHTS_PER_SLIDE = 3
 
 HEX_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
-HIGHLIGHT_MARKER_RE = re.compile(
-    r"\[\[hl\s+color=\"(?P<color>[^\"]+)\"\]\]"
-    r"(?P<text>.*?)"
-    # Accept the canonical ``[[/hl]]`` and the legacy malformed ``[[/hl]``
-    # form emitted by some model responses. Both forms are consumed before
-    # XML reaches the browser so marker syntax can never appear as visible text.
-    r"\[\[/hl\]\]?",
-    flags=re.IGNORECASE | re.DOTALL,
+# Parse tags independently so nested or incomplete markers can be stripped
+# without leaking their control syntax into visible text.
+_HIGHLIGHT_TOKEN_RE = re.compile(
+    r"\[\[hl\b[^\]]*\]\]|\[\[?/hl\]\]?",
+    flags=re.IGNORECASE,
 )
-# Accept the earlier marker during migration, but only retain its foreground
-# color. New generation is instructed to use ``color=`` exclusively.
-LEGACY_HIGHLIGHT_MARKER_RE = re.compile(
-    r"\[\[hl\s+bg=\"(?P<background>[^\"]+)\"\s+"
-    r"fg=\"(?P<foreground>[^\"]+)\"\]\]"
-    r"(?P<text>.*?)"
-    r"\[\[/hl\]\]?",
-    flags=re.IGNORECASE | re.DOTALL,
+_CANONICAL_HIGHLIGHT_OPEN_RE = re.compile(
+    r'^\[\[hl\s+color="(?P<color>[^\"]+)"\]\]$',
+    flags=re.IGNORECASE,
+)
+_LEGACY_HIGHLIGHT_OPEN_RE = re.compile(
+    r'^\[\[hl\s+bg="[^\"]+"\s+fg="(?P<color>[^\"]+)"\]\]$',
+    flags=re.IGNORECASE,
 )
 LITERAL_MATH_FIELD_RE = re.compile(
     r"<math-field(?:\s+value=\"(?P<value>[^\"]*)\")?\s*>"
@@ -426,19 +422,58 @@ def extract_highlight_markers(
                 )
             return marked_text
 
-        def replace(match: re.Match[str]) -> str:
-            marked_text = match.group("text")
-            return record(marked_text, match.group("color"))
+        def strip_and_record_markers() -> str:
+            output: list[str] = []
+            marked_parts: list[str] = []
+            active_color: str | None = None
+            depth = 0
+            nested = False
+            cursor = 0
 
-        def replace_legacy(match: re.Match[str]) -> str:
-            marked_text = match.group("text")
-            return record(marked_text, match.group("foreground"))
+            for match in _HIGHLIGHT_TOKEN_RE.finditer(value):
+                segment = value[cursor:match.start()]
+                if depth:
+                    marked_parts.append(segment)
+                else:
+                    output.append(segment)
 
-        without_legacy_markers = LEGACY_HIGHLIGHT_MARKER_RE.sub(
-            replace_legacy,
-            value,
-        )
-        return HIGHLIGHT_MARKER_RE.sub(replace, without_legacy_markers)
+                token = match.group(0)
+                if token.lstrip("[").lower().startswith("/hl"):
+                    if depth:
+                        depth -= 1
+                        if depth == 0:
+                            phrase = "".join(marked_parts)
+                            if not nested and active_color is not None:
+                                output.append(record(phrase, active_color))
+                            else:
+                                # Malformed nested markers are never promoted
+                                # to styling; preserve the phrase as plain text.
+                                output.append(phrase)
+                            marked_parts = []
+                            active_color = None
+                            nested = False
+                elif depth == 0:
+                    canonical = _CANONICAL_HIGHLIGHT_OPEN_RE.fullmatch(token)
+                    legacy = _LEGACY_HIGHLIGHT_OPEN_RE.fullmatch(token)
+                    active_color = (
+                        canonical.group("color") if canonical else
+                        legacy.group("color") if legacy else None
+                    )
+                    depth = 1
+                else:
+                    depth += 1
+                    nested = True
+                cursor = match.end()
+
+            tail = value[cursor:]
+            if depth:
+                marked_parts.append(tail)
+                output.append("".join(marked_parts))
+            else:
+                output.append(tail)
+            return "".join(output)
+
+        return strip_and_record_markers()
 
     source = arguments if isinstance(arguments, dict) else {}
     return clean(source, ""), highlights

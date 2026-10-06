@@ -40,3 +40,13 @@ static/
 models/vit/*.pt
 models/vit/*.bin
 models/vit/*.safetensors
+
+# Kaggle slide pair dataset (3.6 GB), downloaded locally
+slidegen_data/
+
+# Local tool binaries, training run outputs (checkpoints live on Hugging Face), run logs
+/.uv/
+/qwen3_*/
+rl/log/grpo/run_*/
+annotation_web/node_modules/
+annotation_web/.vercel/

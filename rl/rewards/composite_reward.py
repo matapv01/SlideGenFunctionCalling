@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import time
 from html import escape
 import tempfile
@@ -16,15 +18,21 @@ import numpy as np
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 from backend.workflows.slidegen_workflow.utils.deck_style import apply_deck_style_to_tool_call
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+    NoApprovedImageError,
     inject_approved_images,
     tool_matches_image_mode,
 )
-from rl.rewards.aesthetic_reward import _evaluate_batch, _get_model
+from rl.rewards.aesthetic_reward import _evaluate_batch, _get_model, reward_model_settings
 from rl.rewards.content_reward import (
     _get_text_embedder,
+    _language_consistency,
     _lexical_score,
     _numeric_fact_coverage,
     _semantic_reward_scores,
+    _unsupported_number_fraction,
+    _is_checkable_number,
+    _number_support_key,
+    _numeric_occurrences,
 )
 from rl.slidegen_adapter import execute_tool, render_xml_batch_to_png
 
@@ -35,7 +43,7 @@ _TOOL_BY_NAME = {
     for tool in tools
 }
 _COMPONENT_NAMES = (
-    "lexical", "semantic", "numeric_fact", "dom", "aesthetic", "image_loaded"
+    "lexical", "semantic", "numeric_fact", "language", "dom", "aesthetic", "image_loaded"
 )
 _DOM_PENALTY_WEIGHTS = {
     "text_width": 0.20,
@@ -43,9 +51,13 @@ _DOM_PENALTY_WEIGHTS = {
     "max_lines": 0.20,
     "slide_boundary": 0.40,
     "bbox_collision": 0.25,
+    "markup_leak": 0.5,
 }
+# Rich-text markup the frontend failed to parse shows up verbatim on the slide.
+_MARKUP_LEAK = re.compile(r"\[\[|\]\]|\[/?hl\b", re.IGNORECASE)
 
-_DOM_PENALTY_CAP = 2.0
+# One clipped textbox costs 0.2-0.4; about three distinct failures zero the component.
+_DOM_PENALTY_CAP = 1.0
 
 
 def _reject_duplicate_keys(pairs):
@@ -55,6 +67,57 @@ def _reject_duplicate_keys(pairs):
             raise ValueError(f"Duplicate JSON key: {key}")
         result[key] = value
     return result
+
+
+def _parse_qwen_native_tool_call(body: str) -> dict | None:
+    match = re.fullmatch(
+        r"<function=([A-Za-z_][A-Za-z0-9_]*)>\s*(.*?)\s*</function>",
+        body,
+        flags=re.DOTALL,
+    )
+    if match is None:
+        return None
+    name, arguments_body = match.groups()
+    parameter_pattern = re.compile(
+        r"<parameter=([A-Za-z_][A-Za-z0-9_]*)>(.*?)</parameter>",
+        flags=re.DOTALL,
+    )
+    parameters = list(parameter_pattern.finditer(arguments_body))
+    if not parameters or parameter_pattern.sub("", arguments_body).strip():
+        return None
+
+    tool = _TOOL_BY_NAME.get(name)
+    try:
+        properties = (
+            tool.args_schema.model_json_schema().get("properties", {})
+            if tool is not None
+            else {}
+        )
+    except (AttributeError, TypeError, ValueError):
+        properties = {}
+
+    arguments = {}
+    for parameter in parameters:
+        key, raw_value = parameter.groups()
+        if key in arguments:
+            return None
+        value = raw_value.strip()
+        expected_type = (properties.get(key) or {}).get("type")
+        if expected_type in {"array", "object", "integer", "number", "boolean"}:
+            try:
+                value = json.loads(value, object_pairs_hook=_reject_duplicate_keys)
+            except (json.JSONDecodeError, ValueError):
+                # Structured and non-text parameters must parse as JSON. Never
+                # pass malformed structured data to the compatibility executor.
+                return None
+            if expected_type == "array" and not isinstance(value, list):
+                return None
+            if expected_type == "object" and not isinstance(value, dict):
+                return None
+            if expected_type == "boolean" and not isinstance(value, bool):
+                return None
+        arguments[key] = value
+    return {"name": name, "arguments": arguments}
 
 
 def _parse_canonical_completion(completion: str) -> dict | None:
@@ -69,7 +132,13 @@ def _parse_canonical_completion(completion: str) -> dict | None:
     ):
         return None
     body = stripped[len("<tool_call>") : -len("</tool_call>")].strip()
-    parsed = json.loads(body, object_pairs_hook=_reject_duplicate_keys)
+    if body.startswith("<function="):
+        return _parse_qwen_native_tool_call(body)
+
+    try:
+        parsed = json.loads(body, object_pairs_hook=_reject_duplicate_keys)
+    except (json.JSONDecodeError, ValueError):
+        return None
     if (
         not isinstance(parsed, dict)
         or set(parsed) != {"name", "arguments"}
@@ -87,12 +156,15 @@ def _validate_tool_arguments(tool, arguments: dict) -> dict | None:
     fields = getattr(schema, "model_fields", None)
     if fields is None or set(arguments) - set(fields):
         return None
-    validated = schema.model_validate(arguments)
+    try:
+        validated = schema.model_validate(arguments)
+    except (TypeError, ValueError):
+        return None
     return validated.model_dump(exclude_unset=True)
 
 
 def _dom_score(issues: list[dict]) -> float:
-    """Return a normalized layout score; image availability has its own component."""
+    """Graded layout integrity so each removed overflow/collision still earns signal."""
     unique_issues = {
         (
             issue.get("type"),
@@ -155,6 +227,9 @@ def preflight_reward_runtime(approved_images=None) -> None:
         if not output.is_file() or output.stat().st_size == 0:
             raise RuntimeError("BE XML frontend preview produced no image")
         aesthetic_score = _evaluate_batch(model, [output])[0]
+        print(f"Pairwise ViT preflight: score={aesthetic_score:.6f} "
+              f"settings={reward_model_settings()} "
+              f"metrics={getattr(model, 'last_metrics', {})}")
         if not np.isfinite(aesthetic_score) or not 0.0 <= aesthetic_score <= 1.0:
             raise RuntimeError(
                 f"ViT preflight returned an invalid aesthetic score: {aesthetic_score}"
@@ -189,14 +264,56 @@ def preflight_reward_runtime(approved_images=None) -> None:
                     raise RuntimeError(f"Corpus image cannot be loaded by the frontend: {url}")
 
 
+_SAMPLE_DUMP = {"dir": None, "keys": frozenset()}
+
+
+def configure_sample_dump(directory, keys) -> None:
+    """Save the first completion of each watched (doc_id, slide_index) at every step it is scored."""
+    _SAMPLE_DUMP["dir"] = Path(directory) if directory else None
+    _SAMPLE_DUMP["keys"] = frozenset((str(doc), int(index)) for doc, index in keys)
+
+
+def _watched_indices(doc_ids, slide_indices, count) -> dict[int, tuple[str, int]]:
+    if _SAMPLE_DUMP["dir"] is None or doc_ids is None or slide_indices is None:
+        return {}
+    watched = {}
+    for index, key in enumerate(zip(map(str, doc_ids), map(int, slide_indices))):
+        if index < count and key in _SAMPLE_DUMP["keys"] and key not in watched.values():
+            watched[index] = key
+    return watched
+
+
+def _sample_path(step: int, key: tuple[str, int], suffix: str) -> Path:
+    directory = _SAMPLE_DUMP["dir"] / f"step_{step:04d}"
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / f"{key[0]}_slide{key[1]:02d}{suffix}"
+
+
+def _log_unsupported_numbers(step: int, source: str, visible_text: str) -> None:
+    """Record figures absent from the source so fabrication can be told apart from rounding/units."""
+    source_numbers = [number for number, _ in _numeric_occurrences(source)]
+    supported = {_number_support_key(number) for number in source_numbers}
+    flagged = [
+        {"value": number, "context": sorted(context)}
+        for number, context in _numeric_occurrences(visible_text)
+        if _is_checkable_number(number) and _number_support_key(number) not in supported
+    ]
+    _SAMPLE_DUMP["dir"].mkdir(parents=True, exist_ok=True)
+    with open(_SAMPLE_DUMP["dir"] / "unsupported_numbers.jsonl", "a", encoding="utf-8") as handle:
+        handle.write(json.dumps({
+            "step": step, "flagged": flagged, "source_numbers": source_numbers,
+            "visible_text": visible_text[:600],
+        }, ensure_ascii=False) + "\n")
+
+
 def reward_weights() -> dict[str, float]:
     weights = {
-        "lexical": float(os.getenv("RL_REWARD_LEXICAL_WEIGHT", "0.7")),
-        "semantic": float(os.getenv("RL_REWARD_SEMANTIC_WEIGHT", "0.8")),
-        "numeric_fact": float(os.getenv("RL_REWARD_NUMERIC_FACT_WEIGHT", "1.5")),
-        "dom": float(os.getenv("RL_REWARD_DOM_WEIGHT", "0.8")),
+        "lexical": float(os.getenv("RL_REWARD_LEXICAL_WEIGHT", "0.5")),
+        "semantic": float(os.getenv("RL_REWARD_SEMANTIC_WEIGHT", "0.7")),
+        "numeric_fact": float(os.getenv("RL_REWARD_NUMERIC_FACT_WEIGHT", "1.0")),
+        "dom": float(os.getenv("RL_REWARD_DOM_WEIGHT", "1.5")),
         "aesthetic": float(os.getenv("RL_REWARD_AESTHETIC_WEIGHT", "1.0")),
-        "image_loaded": float(os.getenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0.4")),
+        "image_loaded": float(os.getenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0.25")),
     }
     if any(not np.isfinite(value) or value < 0 for value in weights.values()):
         raise ValueError("Reward weights must be finite and nonnegative")
@@ -215,6 +332,9 @@ def slidegen_composite_reward(
     log_metric=None,
     **kwargs,
 ):
+    trainer_state = kwargs.get("trainer_state")
+    step = int(getattr(trainer_state, "global_step", 0) or 0)
+    watched = _watched_indices(kwargs.get("source_doc_id"), kwargs.get("slide_index"), len(completions))
     del prompts, kwargs
     expected = list(assigned_tool_name) if assigned_tool_name is not None else []
     assets_by_sample = (
@@ -244,24 +364,35 @@ def slidegen_composite_reward(
     invalid_reward = float(os.getenv("RL_INVALID_REWARD", "-2.0"))
     rewards = [invalid_reward] * len(completions)
     rows = []
+    invalid_reasons = Counter()
     for index, completion in enumerate(completions):
+        reason = "tool_input"
         try:
             parsed = _parse_canonical_completion(completion)
-            if parsed is None or parsed["name"] != expected[index]:
+            if parsed is None:
+                invalid_reasons["format"] += 1
+                continue
+            if parsed["name"] != expected[index]:
+                invalid_reasons["wrong_tool"] += 1
                 continue
             tool = _TOOL_BY_NAME.get(expected[index])
             if tool is None:
+                invalid_reasons["unknown_expected_tool"] += 1
                 continue
             mode = str(modes_by_sample[index] or "none")
             sample_images = list(assets_by_sample[index] or [])
             if mode not in {"none", "semantic"}:
+                invalid_reasons["image_mode"] += 1
                 continue
             if mode == "semantic" and not sample_images:
+                invalid_reasons["missing_images"] += 1
                 continue
             if not tool_matches_image_mode(tool, mode, len(sample_images)):
+                invalid_reasons["tool_image_compatibility"] += 1
                 continue
             arguments = _validate_tool_arguments(tool, parsed["arguments"])
             if arguments is None:
+                invalid_reasons["schema"] += 1
                 continue
             validated_call = {"name": tool.name, "arguments": arguments}
             styled_call = apply_deck_style_to_tool_call(
@@ -274,16 +405,22 @@ def slidegen_composite_reward(
                 asset_dir=None,
             )
             if len(injection_history) != len(sample_images):
+                invalid_reasons["image_injection"] += 1
                 continue
-            # Validate the final styled and image-injected call before execution.
             styled_arguments = _validate_tool_arguments(
                 tool, injected_call.get("arguments", {})
             )
             if styled_arguments is None:
+                invalid_reasons["styled_schema"] += 1
                 continue
-            xml_content = execute_tool(
-                {"name": tool.name, "arguments": styled_arguments}
-            )
+            try:
+                xml_content = execute_tool(
+                    {"name": tool.name, "arguments": styled_arguments}
+                )
+            except Exception:
+                # Policy text reaches layout code (e.g. control chars break minidom); never kill training.
+                invalid_reasons["tool_execution"] += 1
+                continue
             rows.append(
                 {
                     "index": index,
@@ -294,15 +431,25 @@ def slidegen_composite_reward(
                     "expected_image_urls": [item["result_url"] for item in injection_history],
                 }
             )
+        except NoApprovedImageError:
+            invalid_reasons["image_injection"] += 1
         except (TypeError, ValueError, KeyError):
-            # Schema and tool-input failures make this completion invalid.
-            continue
+            invalid_reasons[reason] += 1
 
     if not rows:
+        for index, key in watched.items():
+            _sample_path(step, key, ".json").write_text(json.dumps({
+                "step": step, "doc_id": key[0], "slide_index": key[1], "reward": rewards[index],
+                "valid": False, "completion": completions[index],
+            }, ensure_ascii=False, indent=2), encoding="utf-8")
         if log_metric is not None:
             log_metric("reward/valid_fraction", 0.0)
             for name in _COMPONENT_NAMES:
                 log_metric(f"reward_component/{name}", 0.0)
+            for name in ("format", "wrong_tool", "unknown_expected_tool", "image_mode",
+                         "missing_images", "tool_image_compatibility", "schema",
+                         "image_injection", "styled_schema", "tool_execution", "tool_input"):
+                log_metric(f"reward/invalid_{name}_fraction", invalid_reasons[name] / len(completions))
         return rewards
 
     workers = max(1, min(int(os.getenv("RL_REWARD_RENDER_WORKERS", "4")), len(rows)))
@@ -323,9 +470,18 @@ def slidegen_composite_reward(
             for _ in range(max(failed_count, missing_count)):
                 frontend.setdefault("issues", []).append({"type": "image_load"})
             row["image_loaded"] = score
+            if _MARKUP_LEAK.search(frontend.get("visible_text") or ""):
+                frontend.setdefault("issues", []).append({"type": "markup_leak"})
         vit_started = time.perf_counter()
-        aesthetic_scores = _evaluate_batch(_get_model(), paths)
+        vit_model = _get_model()
+        aesthetic_scores = _evaluate_batch(vit_model, paths)
+        if log_metric is not None:
+            for name, value in getattr(vit_model, "last_metrics", {}).items():
+                log_metric(f"reward_pairwise/{name}", value)
         vit_seconds = time.perf_counter() - vit_started
+        for row, path in zip(rows, paths, strict=True):
+            if row["index"] in watched and path.is_file():
+                shutil.copyfile(path, _sample_path(step, watched[row["index"]], ".png"))
 
     if len(frontend_results) != len(rows) or len(aesthetic_scores) != len(rows):
         raise RuntimeError("Renderer or ViT returned a different number of scores")
@@ -343,6 +499,9 @@ def slidegen_composite_reward(
         log_metric("reward_time/semantic_seconds", semantic_seconds)
     weights = reward_weights()
     component_values = defaultdict(list)
+    unsupported_numbers = []
+    row_components = {}
+    dom_issue_slides = Counter()
     for row, frontend, semantic, aesthetic in zip(
         rows, frontend_results, semantic_scores, aesthetic_scores, strict=True,
     ):
@@ -352,32 +511,62 @@ def slidegen_composite_reward(
             row["source"], frontend["visible_text"], source_facts,
         )
         dom = _dom_score(frontend["issues"])
+        dom_issue_slides.update({issue.get("type") for issue in frontend["issues"]} - {None})
         components = {
             "lexical": lexical,
             "semantic": semantic,
             "numeric_fact": fact_coverage,
+            "language": _language_consistency(row["source"], frontend["visible_text"]),
             "dom": dom,
             "aesthetic": float(aesthetic),
             "image_loaded": float(row["image_loaded"]),
         }
-        rewards[row["index"]] = _weighted_reward(components, weights)
+        # A slide in the wrong language is useless however well it scores otherwise.
+        rewards[row["index"]] = _weighted_reward(
+            {name: value for name, value in components.items() if name != "language"}, weights
+        ) * components["language"]
+        row_components[row["index"]] = {name: round(value, 4) for name, value in components.items()}
+        unsupported_numbers.append(
+            _unsupported_number_fraction(row["source"], frontend["visible_text"])
+        )
+        if unsupported_numbers[-1] and _SAMPLE_DUMP["dir"] is not None:
+            _log_unsupported_numbers(step, row["source"], frontend["visible_text"])
         for name, value in components.items():
             component_values[name].append(value)
 
+    scored = {row["index"]: (row, frontend) for row, frontend in zip(rows, frontend_results, strict=True)}
+    for index, key in watched.items():
+        row, frontend = scored.get(index, (None, None))
+        record = {
+            "step": step, "doc_id": key[0], "slide_index": key[1], "reward": rewards[index],
+            "valid": row is not None, "components": row_components.get(index),
+            "dom_issues": sorted({issue.get("type") for issue in frontend["issues"]} - {None}) if frontend else None,
+            "visible_text": frontend["visible_text"] if frontend else None,
+            "completion": completions[index],
+        }
+        _sample_path(step, key, ".json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+
     if log_metric is not None:
         log_metric("reward/valid_fraction", len(rows) / max(1, len(completions)))
+        log_metric("reward_content/unsupported_number_fraction", float(np.mean(unsupported_numbers)))
+        for issue_type in (*_DOM_PENALTY_WEIGHTS, "image_load"):
+            log_metric(f"reward_dom/{issue_type}_fraction", dom_issue_slides[issue_type] / len(rows))
         for name in _COMPONENT_NAMES:
             values = component_values.get(name, [])
             log_metric(
                 f"reward_component/{name}",
                 float(np.mean(values)) if values else 0.0,
             )
-
+        for name in ("format", "wrong_tool", "unknown_expected_tool", "image_mode",
+                     "missing_images", "tool_image_compatibility", "schema",
+                     "image_injection", "styled_schema", "tool_execution", "tool_input"):
+            log_metric(f"reward/invalid_{name}_fraction", invalid_reasons[name] / len(completions))
 
     print(
         "  [Composite Reward] "
         f"valid={len(rows)}/{len(completions)} "
         f"components={{{' '.join(f'{key}={np.mean(value):.3f}' for key, value in component_values.items())}}} "
+        f"invalid={dict(invalid_reasons)} "
         f"scores=[{' '.join(f'{score:.3f}' for score in rewards)}]"
     )
     return rewards

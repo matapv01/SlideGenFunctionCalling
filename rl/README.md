@@ -25,10 +25,10 @@ Sơ đồ luồng GRPO và phần giải thích vai trò từng file:
 5. Train with DAPO, normalize rollout losses across an optimizer update, and
    periodically evaluate/save full Trainer checkpoints.
 
-The composite reward validates the assigned tool and uses validity/canonical format as a hard gate. Valid completions receive a
+The composite reward validates the assigned tool and uses the Qwen native tool-call format and declared schema as a hard gate. Valid completions receive a
 weighted sum of bounded [0, 1] signals: lexical coverage, multilingual semantic
 similarity, numeric-fact preservation, normalized DOM layout, image-load status,
-and ViT aesthetics. Literal numeric tokens are excluded from the lexical and
+and ViT aesthetics. Text overflow, slide-boundary violations, and textbox collisions zero the DOM component. Literal numeric tokens are excluded from the lexical and
 semantic inputs so number fidelity is measured only by `numeric_fact`. Each signal contributes once through an explicit
 weighted sum. If no image is expected, image loading is neutral (1.0); a missing
 expected image lowers only the image component. Production deck style is applied
@@ -42,7 +42,7 @@ artifacts, preserving their paths relative to the repository:
 
 - `rl/data/grpo_replanned_dataset.json` (or set `GRPO_OFFLINE_DATASET`).
 - `static/output/grpo_image_cache/`, including all assets referenced by the corpus.
-- `ViT/experiments/vit_multilabel_small/best.pt` (or set `REWARD_MODEL_PATH`).
+- `models/vit/best_model_pairwise.pt` (or set `REWARD_MODEL_PATH`).
 - The Qwen3-8B base checkpoint, available locally or through the configured model ID.
 
 ViT is a frozen reward model only: its parameters have gradients disabled and
@@ -52,7 +52,7 @@ only the compatible trained `best.pt` checkpoint is needed.
 
 For the default paths, bundle the inputs without credentials or unrelated files:
 
-    tar -czf /tmp/grpo-inputs.tar.gz rl/data/grpo_replanned_dataset.json static/output/grpo_image_cache ViT/experiments/vit_multilabel_small/best.pt
+    tar -czf /tmp/grpo-inputs.tar.gz rl/data/grpo_replanned_dataset.json static/output/grpo_image_cache models/vit/best_model_pairwise.pt
     (cd /tmp && sha256sum grpo-inputs.tar.gz > grpo-inputs.tar.gz.sha256)
 
 Transfer both files to `/tmp` on H100, verify with
@@ -174,7 +174,10 @@ Important defaults:
 | RL_REWARD_RENDER_WORKERS | 4 | Concurrent isolated pages in one persistent browser |
 | RL_RENDER_TIMEOUT_SECONDS | 60 | Per-sample render timeout, excluding queue wait |
 | RL_SOURCE_EMBEDDING_CACHE_SIZE | 4096 | Maximum cached source chunks; 0 disables retention |
-| REWARD_MODEL_PATH | ViT small checkpoint | Aesthetic reward checkpoint |
+| REWARD_MODEL_PATH | models/vit/best_model_pairwise.pt | ViT-Base pairwise checkpoint |
+| RL_PAIRWISE_CENTER | 0 | Fixed utility center |
+| RL_PAIRWISE_TEMPERATURE | 1 | Positive fixed sigmoid temperature |
+| RL_VIT_BATCH_SIZE | 4 | Maximum screenshots per ViT forward |
 | PLAYWRIGHT_CHROMIUM_EXECUTABLE | unset; Playwright Chromium | Optional existing browser executable override |
 | BROWSER_PREVIEW_URL (backend/config.py) | Local XML preview route | Frontend endpoint used by Playwright; not an environment override |
 
@@ -190,7 +193,7 @@ Planner model/URL and vision model/URL are configuration constants in
 
 Before loading the 8B model, startup prepares the corpus/layouts, checks prompt
 length plus the completion budget against the model context, and validates the
-resume contract. Preflight then checks ViT label semantics and a finite ViT score
+resume contract. Preflight then checks strict pairwise ViT loading and a finite bounded score
 on an actual frontend screenshot. Every distinct approved image is decoded locally
 and checked through `BROWSER_PREVIEW_URL`; an unrelated loaded image cannot satisfy
 this check. The FE preview, browser, retriever, and reward model must be available.
@@ -208,9 +211,9 @@ Source embeddings are deduplicated and cached with a bounded LRU cache. Metrics
 `reward_time/semantic_seconds` expose reward-stage timings. Batch size and completion
 length still require a measured smoke run on the target H100.
 
-Qwen3 uses its native tokenizer template with `enable_thinking=False`. Since the
-ViT labels `1=error`, the aesthetic reward is one minus the mean error
-probability. Content similarity and overflow/collision are computed from the
+Qwen3 uses its native tokenizer template with `enable_thinking=False`. The
+pairwise aesthetic reward is sigmoid of centered, temperature-scaled utility;
+higher utility means preferred. Content similarity and overflow/collision are computed from the
 rendered frontend text and DOM. Source number/context records are extracted once
 while preparing each training sample. `reward_component/numeric_fact` reports the
 heuristic number-to-context score; it is an independent component, not multiplied
@@ -218,12 +221,9 @@ into lexical/semantic scores and not subtracted again as a second penalty. DOM
 layout issues and expected-image loading also contribute once each. No-image
 samples receive a neutral image-loading score.
 
-The aesthetic component uses a trained local five-label ViT checkpoint for
-background color, text color, font size, overlap/layout, and overflow errors; its
-score is one minus the mean predicted error probability. The caveat about
-"uncalibrated" applies to the manually configured coefficients that combine this
-ViT score with lexical, semantic, numeric, DOM, and image-loading signals. Those
-coefficients are not learned from human preferences. Numeric attribution is also a
+The aesthetic component uses a trained local pairwise ViT-Base checkpoint.
+Its score mapping and the coefficients combining reward components are
+uncalibrated baselines. Numeric attribution is also a
 heuristic based on local context and direction cues, not a general entailment or
 factuality model; it can miss negation, causal reversal, equivalent units, and
 numbers written as words. Validate reward ranking and component distributions on a
@@ -248,6 +248,67 @@ limited number-to-context attribution. It is a heuristic, not an entailment judg
 general factual paraphrases, equivalent units, negation/causal reversal, and
 numbers written as words are not reliably resolved. ViT remains an aesthetic/error
 signal, not a full judge of content correctness or image relevance.
+
+## Pairwise reward and pilot tuning
+
+The frozen ViT-Base/16 was trained with Bradley–Terry preferences: higher utility
+means preferred. The loader supports the notebook's raw state_dict and a
+model_state_dict wrapper, loaded strictly without a pretrained Hub download.
+Inference matches RGB, resize 224×224 and ImageNet normalization from the notebook.
+
+Aesthetic = sigmoid((logit - center) / temperature). RL_PAIRWISE_CENTER=0 and
+RL_PAIRWISE_TEMPERATURE=1 are uncalibrated defaults. Pairwise training does not
+identify the absolute origin of utility; this is not a probability of quality.
+Choose fixed center/temperature using a separate calibration set of policy-like
+screenshots, then freeze them. Never normalize per rollout batch. Changes affect
+the resume contract and require a fresh run.
+
+RL_VIT_BATCH_SIZE=4 bounds each forward while preserving score order.
+REWARD_MODEL_DEVICE=cpu conserves policy VRAM. On H100, profile CPU versus cuda
+with actual rollouts; use cuda if ViT time is a bottleneck and memory permits.
+ViT stays FP32, frozen, eval-only, with inference_mode.
+
+Monitor reward_pairwise/{raw_mean,raw_std,raw_min,raw_max,score_std,saturated_fraction}
+and reward_time/vit_seconds. Saturation counts valid scores below 0.01 or above
+0.99. Inspect examples before adjusting calibration; saturation can flatten useful
+group differences. Keep content/numeric/DOM/image rewards because preference alone
+does not establish correctness.
+
+Start the pilot at LR=1e-6, 4 generations, 3072 completion tokens and existing
+component weights. Measure throughput, peak VRAM, invalid fraction, clipped_ratio,
+frac_reward_zero_std and held-out components before tuning. Use fresh directories
+for smoke 1, pilot 10, calibration 50 and full 500. Reward growth alone does not
+show slide quality improved; inspect held-out rankings and rendered samples.
+
+The notebook records 189/193 validation pairs correct (97.93%), using that same
+validation set for checkpoint selection. This is not an independent rollout
+evaluation. Its slide-ID split construction cell is commented out and training
+reads prebuilt CSVs; audit those CSVs for leakage and keep a separate final test
+set. The former five-label checkpoint is incompatible with this pairwise loader.
+
+For a fresh H100 infrastructure smoke after preflight (one optimizer update):
+
+    OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 REWARD_MODEL_DEVICE=cuda \
+    RL_PAIRWISE_CENTER=0 RL_PAIRWISE_TEMPERATURE=1 RL_VIT_BATCH_SIZE=4 \
+    GRPO_OUTPUT_DIR=/data/checkpoints/slidegen-grpo/pairwise_smoke_01 \
+    GRPO_RESUME=false TOTAL_STEPS=1 GRPO_SAVE_STEPS=1 GRPO_EVAL_STEPS=0 \
+    uv run --locked python rl/train.py
+
+Repeat with the exact same settings and GRPO_RESUME=true to verify full state
+resume. These calibration defaults are suitable for infrastructure checks;
+select calibration on representative held-out screenshots before a long run.
+
+## Training logs
+
+Every run writes live artifacts under `rl/log/grpo/run_<timestamp>/`:
+
+- `run.log` captures stdout/stderr.
+- `training_metrics.jsonl` appends one structured JSON record per optimizer update, epoch summary, evaluation, checkpoint, and run start/end.
+- `training_readable.log` records the same events as readable lines.
+- `manifest.json` stores model, GPU, code revision, dataset, hyperparameters, and log paths.
+- `metrics.json` and `metrics_trend.png` summarize Trainer history after the run.
+
+Each update includes epoch/global step, learning rate, loss, gradient norm, token/completion lengths, clipping, total and component rewards, pairwise ViT utility/score distribution, saturation, entropy, reward timings, and all Trainer metrics available at that step. Epoch averages are written at epoch boundaries, with a partial-epoch summary at the end. The JSONL and readable files flush after each event so they remain useful if a job stops early.
 
 ## Checkpoints and resume
 
@@ -283,7 +344,7 @@ it. Reduce generation batch first. If OOM persists, lower completion length to
 
 ## Verification
 
-    uv run pytest -q rl/test_grpo_pipeline.py rl/test_grpo_runtime.py rl/test_eval_tooluse.py
+    uv run pytest -q rl/test_grpo_pipeline.py rl/test_grpo_runtime.py rl/test_eval_tooluse.py rl/test_pairwise_reward.py
 
 Key files:
 

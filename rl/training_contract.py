@@ -61,7 +61,7 @@ def build_training_contract(
     train_rows, eval_rows, args, model_id, lora_config, corpus_path, model_revision=None,
 ):
     from backend import config
-    from rl.rewards.aesthetic_reward import _model_path
+    from rl.rewards.aesthetic_reward import _model_path, reward_model_settings
     from rl.rewards.composite_reward import reward_weights
     import os
 
@@ -69,13 +69,16 @@ def build_training_contract(
     fields = (
         "learning_rate", "per_device_train_batch_size", "per_device_eval_batch_size",
         "gradient_accumulation_steps", "generation_batch_size", "steps_per_generation",
-        "max_steps", "warmup_steps", "warmup_ratio", "lr_scheduler_type", "optim",
-        "save_strategy", "save_steps", "save_total_limit", "eval_strategy", "eval_steps",
+        "max_steps", "warmup_steps", "warmup_ratio", "lr_scheduler_type",
+        "lr_scheduler_kwargs", "metric_for_best_model", "greater_is_better",
+        "load_best_model_at_end", "eval_seed", "optim",
+        "save_strategy", "save_steps", "save_total_limit", "eval_strategy", "eval_steps", "eval_on_start",
         "logging_steps", "dataloader_drop_last",
         "weight_decay", "adam_beta1", "adam_beta2", "adam_epsilon", "max_grad_norm",
         "num_generations", "num_generations_eval", "num_iterations", "max_completion_length",
         "temperature", "top_p", "top_k", "min_p", "repetition_penalty",
         "beta", "epsilon", "epsilon_high", "loss_type", "scale_rewards",
+        "router_aux_loss_coef",
         "mask_truncated_completions", "seed", "data_seed", "bf16", "fp16",
         "gradient_checkpointing", "gradient_checkpointing_kwargs", "use_vllm",
     )
@@ -109,10 +112,12 @@ def build_training_contract(
             for asset in row.get("approved_images") or []
         ]} for row in rows]
     return {
-        "version": 2,
+        "version": 3,
         "model_id": model_id,
         "model_revision": model_revision,
         "model_files": _local_model_files(model_id),
+        "load_in_4bit": os.getenv("GRPO_LOAD_IN_4BIT", "false").lower()
+        in {"1", "true", "yes", "on"},
         "corpus_sha256": file_digest(corpus_path),
         "train_sha256": contract_digest(portable_rows(train_rows)),
         "eval_sha256": contract_digest(portable_rows(eval_rows)),
@@ -123,6 +128,7 @@ def build_training_contract(
         "reward_weights": reward_weights(),
         "invalid_reward": float(os.getenv("RL_INVALID_REWARD", "-2.0")),
         "vit_sha256": file_digest(_model_path()),
+        "reward_model": reward_model_settings(),
         "embedding": {
             "model": config.EMBEDDING_MODEL_NAME,
             "device": config.EMBEDDING_DEVICE,

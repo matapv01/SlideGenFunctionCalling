@@ -79,16 +79,12 @@ def test_vit_loader_freezes_reward_parameters(monkeypatch, tmp_path):
 
     checkpoint = tmp_path / "best.pt"
     checkpoint.touch()
-    model = torch.nn.Linear(2, 5)
+    model = torch.nn.Linear(2, 1)
     monkeypatch.setattr(aesthetic, "_MODEL", None)
     monkeypatch.setattr(aesthetic, "_model_path", lambda: checkpoint)
     monkeypatch.setenv("REWARD_MODEL_DEVICE", "cpu")
     monkeypatch.setattr(aesthetic, "ViTForImageClassification", lambda config: model)
-    monkeypatch.setattr(aesthetic.torch, "load", lambda *a, **k: {
-        "criteria": ["mau_nen", "mau_chu", "size_chu", "de_nhau", "tran_chu"],
-        "label_semantics": "1=error,0=no_error",
-        "model_state_dict": model.state_dict(),
-    })
+    monkeypatch.setattr(aesthetic.torch, "load", lambda *a, **k: model.state_dict())
     provider = aesthetic._get_model()
     assert provider.model is model
     assert not model.training
@@ -106,6 +102,21 @@ def test_vit_loader_freezes_reward_parameters(monkeypatch, tmp_path):
 ])
 def test_numeric_fact_score_tracks_missing_or_changed_values(source, output, expected):
     assert content_reward._numeric_fact_coverage(source, output) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("source,output,expected", [
+    ("Doanh thu đạt 15.501 tỷ", "Doanh thu: 15501", 0.0),
+    ("Tăng 48%", "Tăng 48% và 3 trụ cột", 0.0),
+    ("Tăng 48%", "Tăng 48%, lợi nhuận 1.200 tỷ", 0.5),
+    ("Không có số liệu", "Lợi nhuận tăng 35,8%", 1.0),
+])
+def test_unsupported_numbers_ignore_formatting_and_enumerations(source, output, expected):
+    assert content_reward._unsupported_number_fraction(source, output) == pytest.approx(expected)
+
+
+def test_fabricated_figures_reduce_numeric_fact_score():
+    assert content_reward._numeric_fact_coverage("Tiêu đề", "Tăng 35,8%") == 0.0
+    assert content_reward._numeric_fact_coverage("Tăng 48%", "Tăng 48%, đạt 900 dự án") == pytest.approx(0.5)
 
 
 class Embedder:
@@ -317,6 +328,9 @@ def test_training_contract_builds_and_detects_asset_changes(monkeypatch, tmp_pat
     first = build()
     assert isinstance(first["lora"]["target_modules"], list)
     assert contract_digest(first) == contract_digest(build())
+    monkeypatch.setenv("RL_PAIRWISE_TEMPERATURE", "2")
+    assert contract_digest(first) != contract_digest(build())
+    monkeypatch.delenv("RL_PAIRWISE_TEMPERATURE")
     asset.write_bytes(b"changed")
     assert contract_digest(first) != contract_digest(build())
 
@@ -530,3 +544,52 @@ def test_precomputed_numeric_facts_match_runtime_extraction():
     assert content_reward._numeric_fact_scores(
         source, changed, records
     ) == content_reward._numeric_fact_scores(source, changed)
+
+
+def test_language_consistency_penalizes_english_slides_for_vietnamese_sources():
+    source = "Đã đến lúc chuyển từ bán cái mình có sang chế biến sâu và bán câu chuyện thị trường cần."
+    assert content_reward._language_consistency(source, "Strategic shift to value creation") == 0.0
+    assert content_reward._language_consistency(source, "Bước ngoặt: chế biến sâu cà phê Việt") == 1.0
+    assert content_reward._language_consistency("Revenue grew strongly", "Doanh thu tăng") == 1.0
+
+
+def test_timeline_milestones_survive_structured_tool_invocation():
+    from backend.workflows.slidegen_workflow.tools import tool_des_xml
+
+    xml = tool_des_xml.TOOL_MAP["generate_implementation_timeline_slide_xml"].invoke({
+        "title": "Lộ trình", "subtitle": "Ba giai đoạn",
+        "timeline_items": [{"label": "Hiện tại", "content": "Bán thô"}, {"label": "Mục tiêu", "content": "Chế biến sâu"}],
+    })
+    assert "Hiện tại" in xml and "Chế biến sâu" in xml
+
+
+def test_warm_start_lora_copies_adapter_weights(tmp_path):
+    import torch
+    from peft import LoraConfig, get_peft_model, get_peft_model_state_dict
+    from safetensors.torch import save_file
+    from rl import train
+
+    def tiny():
+        torch.manual_seed(0)
+        base = torch.nn.Sequential()
+        base.add_module("q_proj", torch.nn.Linear(8, 8))
+        return get_peft_model(base, LoraConfig(r=2, lora_alpha=4, target_modules=["q_proj"]))
+
+    trained = tiny()
+    for name, parameter in trained.named_parameters():
+        if "lora_B" in name:
+            torch.nn.init.normal_(parameter)
+    save_file(get_peft_model_state_dict(trained), str(tmp_path / "adapter_model.safetensors"))
+    fresh = tiny()
+    train._warm_start_lora(fresh, str(tmp_path))
+    expected = dict(trained.named_parameters())
+    for name, parameter in fresh.named_parameters():
+        if "lora_" in name:
+            assert torch.equal(parameter, expected[name])
+
+
+def test_fabricated_contact_details_count_as_unsupported():
+    assert content_reward._unsupported_number_fraction("Cảm ơn quý vị", "Cảm ơn info@vinfast.com vinfast.com") == 1.0
+    assert content_reward._unsupported_number_fraction(
+        "Website: https://fpt.com.vn, email support@fpt.com", "support@fpt.com www.fpt.com.vn"
+    ) == 0.0

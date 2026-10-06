@@ -196,10 +196,63 @@ def _numeric_fact_scores(
     return scores
 
 
+def _number_support_key(value: str) -> str:
+    # Digits only, so "15.501", "15,501" and a chart value of 15501 count as the same figure.
+    return re.sub(r"\D", "", value).lstrip("0") or "0"
+
+
+def _is_checkable_number(value: str) -> bool:
+    # Bare 1-2 digit integers are mostly enumerations ("01", "Top 3"); skip them.
+    return "%" in value or bool(re.search(r"\d[.,]\d", value)) or len(re.sub(r"\D", "", value)) >= 3
+
+
+_CONTACT_PATTERN = re.compile(
+    r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+|(?:https?://)?(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|vn|net|org|io)(?:\.vn)?\b",
+    re.IGNORECASE,
+)
+
+
+def _unsupported_number_fraction(source: str, generated: str) -> float:
+    """Share of the slide's figures and contact details (email/website) absent from the source."""
+    supported = {_number_support_key(number) for number, _ in _numeric_occurrences(source)}
+    checked = [
+        number for number, _ in _numeric_occurrences(generated) if _is_checkable_number(number)
+    ]
+    def normalize(contact: str) -> str:
+        return re.sub(r"^(?:https?://)?(?:www\.)?", "", contact.casefold())
+
+    source_contacts = {normalize(match) for match in _CONTACT_PATTERN.findall(source)}
+    contacts = [normalize(match) for match in _CONTACT_PATTERN.findall(generated)]
+    if not checked and not contacts:
+        return 0.0
+    fabricated = sum(_number_support_key(number) not in supported for number in checked)
+    fabricated += sum(contact not in source_contacts for contact in contacts)
+    return fabricated / (len(checked) + len(contacts))
+
+
 def _numeric_fact_coverage(source: str, generated: str, source_facts=None) -> float:
-    """Average number-to-subject preservation; heuristic, not entailment."""
+    """Correctly attributed source facts, scaled down by any fabricated figures."""
     scores = _numeric_fact_scores(source, generated, source_facts)
-    return float(sum(score or 0.0 for score in scores) / len(scores)) if scores else 1.0
+    recall = float(sum(score or 0.0 for score in scores) / len(scores)) if scores else 1.0
+    return recall * (1.0 - _unsupported_number_fraction(source, generated))
+
+
+_VIETNAMESE_MARKS = set(
+    "àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ"
+)
+
+
+def _vietnamese_word_ratio(text: str) -> float:
+    words = [word for word in _TOKEN_PATTERN.findall(str(text).casefold()) if not word.isdigit()]
+    return sum(bool(_VIETNAMESE_MARKS.intersection(word)) for word in words) / len(words) if words else 0.0
+
+
+def _language_consistency(source: str, generated: str) -> float:
+    """Vietnamese sources must yield Vietnamese slides; the multilingual embedder cannot see the switch."""
+    source_ratio = _vietnamese_word_ratio(source)
+    if source_ratio < 0.2:
+        return 1.0
+    return float(min(1.0, _vietnamese_word_ratio(generated) / (0.6 * source_ratio)))
 
 
 def _lexical_score(source: str, generated: str) -> float:

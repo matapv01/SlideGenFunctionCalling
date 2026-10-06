@@ -20,8 +20,48 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
 
 
 def execute_tool(tool_call: dict) -> str:
-    """Execute one XML tool call and surface invalid calls to reward functions."""
-    return _execute_xml_tool(tool_call, raise_on_error=True)
+    """Strictly validate one RL tool call before passing it to the permissive executor.
+
+    The production workflow accepts legacy/coercible arguments for compatibility.
+    GRPO previews and rewards must instead render only arguments that satisfy the
+    selected tool's declared schema; otherwise a malformed JSON string can be
+    silently converted into a one-item list and look like an accepted rollout.
+    """
+    if not isinstance(tool_call, dict) or set(tool_call) != {"name", "arguments"}:
+        raise ValueError("RL tool call must contain exactly name and arguments")
+
+    name = tool_call.get("name")
+    arguments = tool_call.get("arguments")
+    if not isinstance(name, str) or not isinstance(arguments, dict):
+        raise ValueError("RL tool call name and arguments have invalid types")
+
+    tool = next(
+        (
+            candidate
+            for category_tools in TOOLS_DICT.values()
+            for candidate in category_tools
+            if candidate.name == name
+        ),
+        None,
+    )
+    if tool is None:
+        raise ValueError(f"Unknown RL XML tool: {name}")
+
+    schema = getattr(tool, "args_schema", None)
+    fields = getattr(schema, "model_fields", None)
+    if schema is None or fields is None or set(arguments) - set(fields):
+        raise ValueError(f"Arguments do not match the schema for {name}")
+    try:
+        validated_arguments = schema.model_validate(arguments).model_dump(
+            exclude_unset=True
+        )
+    except Exception as exc:
+        raise ValueError(f"Invalid arguments for {name}: {exc}") from exc
+
+    return _execute_xml_tool(
+        {"name": name, "arguments": validated_arguments},
+        raise_on_error=True,
+    )
 
 
 _DOM_METRICS_SCRIPT = r"""() => {
@@ -65,8 +105,14 @@ _DOM_METRICS_SCRIPT = r"""() => {
       }
       const visibleRects = textRects.filter(item => item.width > 0 && item.height > 0);
       const textRect = union(visibleRects);
+      // Line boxes are ~1.2x the font size; inset them to approximate visible glyph ink.
+      const inkRects = visibleRects.map(item => {
+        const inset = item.height * 0.15;
+        return {left: item.left, right: item.right, width: item.width,
+                top: item.top + inset, bottom: item.bottom - inset, height: item.height - 2 * inset};
+      });
       const collisionRects = [
-        ...visibleRects,
+        ...inkRects,
         ...Array.from(content.querySelectorAll('math-field, math-span'))
           .map(field => field.getBoundingClientRect())
           .filter(rect => rect.width > 0 && rect.height > 0),
@@ -84,7 +130,9 @@ _DOM_METRICS_SCRIPT = r"""() => {
       if (textRect && (textRect.left < rect.left - tolerance || textRect.right > rect.right + tolerance)) {
         reasons.push('text_width');
       }
-      if (textRect && (textRect.top < rect.top - tolerance || textRect.bottom > rect.bottom + tolerance)) {
+      // Flag only when a line loses more than a third of its box, i.e. glyphs are visibly clipped.
+      if (visibleRects.some(item => Math.max(rect.top - item.top, item.bottom - rect.bottom) >
+                                    Math.max(tolerance, item.height * 0.35))) {
         reasons.push('text_height');
       }
       const maxLinesValue = box.getAttribute('data-xml-max-lines');
@@ -193,9 +241,20 @@ QWEN_GENERATOR_SYSTEM_PROMPT = (
     + """
 
 RL SERIALIZATION CONTRACT:
-- Return exactly one call to the supplied XML tool.
-- Serialize it exactly as <tool_call>{"name":"...","arguments":{...}}</tool_call>.
-- Do not add prose, markdown, image-search calls, or raw XML.
+- Return exactly one serialized Qwen native call to the supplied XML tool, using
+  <tool_call><function=TOOL_NAME> ... </function></tool_call>.
+- Inside it, emit one <parameter=FIELD_NAME>VALUE</parameter> for each argument.
+  Use the exact tool name and parameter names from the supplied schema.
+- For a scalar text parameter, VALUE is the text itself. For an array or object
+  parameter, VALUE must be valid JSON of the declared type; escape quotes inside
+  JSON strings. Never stringify an array/object as ordinary prose or leave its
+  inner quotation marks unescaped. When slide text quotes a phrase, prefer the
+  typographic marks “ ” over a raw " so the JSON stays valid; never put a
+  backslash before an apostrophe (\' is not valid JSON).
+- Write every visible slide text in the same language as SLIDE CONTENT, even
+  when the slide plan, topic, or design instruction is written in English.
+- Do not add prose, markdown, image-search calls, or raw XML. Emit one complete
+  call only; do not append a second tool call or end-of-turn text.
 """
 )
 
@@ -236,4 +295,12 @@ def build_generator_human_prompt(
         slide_content=slide_content,
         previous_function_call="None — this is the first attempt for this slide.",
         previous_evaluation="None — this is the first attempt for this slide.",
-    ) + "\n\nOutput exactly one serialized <tool_call> JSON object."
+    ) + f"""
+
+RL OUTPUT FORMAT:
+Return one Qwen native call to the assigned tool `{assigned_tool_name}`. Use
+<tool_call><function={assigned_tool_name}> with one parameter tag per schema
+field, then </function></tool_call>. List and object parameter values must be
+valid JSON of the schema-declared type, with quotes inside JSON strings escaped.
+Return no prose, second call, or trailing text.
+"""

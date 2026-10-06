@@ -364,7 +364,7 @@ Invalid completion không được render và không được đưa qua ViT.
 
 ### 8.2. Reward cho completion hợp lệ
 
-Validity và canonical format là hard gate: completion lỗi nhận riêng
+Format Qwen native, tool name và schema là hard gate: completion lỗi nhận riêng
 `RL_INVALID_REWARD=-2.0`, không render. Với completion hợp lệ, mỗi tín hiệu reward
 nằm trong `[0,1]` và chỉ xuất hiện một lần trong tổng có trọng số:
 
@@ -377,32 +377,32 @@ nằm trong `[0,1]` và chỉ xuất hiện một lần trong tổng có trọng
 
 Giá trị mặc định:
 
-    R = 0.7 * lexical
-      + 0.8 * semantic
-      + 1.5 * numeric_fact
-      + 0.8 * dom
-      + 1.0 * aesthetic
-      + 0.4 * image_loaded
+    R = 0.5 * lexical
+      + 0.7 * semantic
+      + 1.0 * numeric_fact
+      + 1.5 * dom
+      + 1.5 * aesthetic
+      + 0.25 * image_loaded
 
 | Thành phần | Range | Ý nghĩa |
 |---|---:|---|
 | lexical | 0 đến 1 | Tỷ lệ keyword nguồn xuất hiện trong text thực sự được frontend render, có điều chỉnh theo độ dài |
 | semantic | 0 đến 1 | Mức tương đồng ngữ nghĩa đa ngôn ngữ trên toàn bộ nội dung đã chia chunk |
 | numeric_fact | 0 đến 1 | Tỷ lệ số liệu được giữ nguyên và gắn với ngữ cảnh/chỉ tiêu gần đúng |
-| dom | 0 đến 1 | Điểm layout chuẩn hóa từ overflow, boundary và textbox collision |
-| aesthetic | 0 đến 1 | Điểm thẩm mỹ từ ViT 5 nhãn đã train |
+| dom | 0 đến 1 | Điểm layout; text overflow/cắt, vượt biên hoặc va chạm textbox đặt điểm bằng 0 |
+| aesthetic | 0 đến 1 | Điểm preference từ ViT-Base pairwise đã train |
 | image_loaded | 0 đến 1 | Tỷ lệ ảnh được yêu cầu và tải đúng URL trong preview; bằng 1 nếu sample không yêu cầu ảnh |
 
-Canonical format/tool/schema là cổng validity, không phải component hằng số được
-cộng thêm vào mọi valid completion. Numeric literal được loại khỏi lexical token overlap và được mask khỏi semantic
+Format Qwen native, tool name và schema là cổng validity; array/object phải là
+JSON đúng kiểu và preview validate lại schema trước khi render. Cổng validity
+không phải component hằng số được cộng vào completion hợp lệ. Numeric literal
+được loại khỏi lexical token overlap và được mask khỏi semantic
 embedding; vì vậy việc giữ số chỉ thuộc `numeric_fact`. Không còn penalty shaping
 trừ lần hai sau tổng reward. Thiếu số liệu chỉ tác động
-`numeric_fact`; layout chỉ tác động `dom`; ảnh lỗi chỉ tác động `image_loaded`;
+`numeric_fact`; lỗi layout nặng đặt `dom` bằng 0; ảnh lỗi chỉ tác động `image_loaded`;
 thiếu nội dung được biểu diễn bởi lexical và semantic. Các tín hiệu nội dung vẫn
-có thể tương quan. ViT 5 nhãn là checkpoint đã train; “chưa hiệu chuẩn” chỉ nói
-về các hệ số ghép component hiện đặt thủ công, không phải ViT. Các hệ số này chưa
-được fit trên preference pairwise có nhãn. Cần đánh giá phân phối, pairwise ranking
-và ablation trên tập held-out trước khi chạy dài trên H100.
+có thể tương quan. ViT pairwise đã train; center/temperature và hệ số ghép
+component vẫn cần calibration và đánh giá ranking trên held-out trước run dài.
 
 Semantic reward chia cả source content và text thực sự render trên frontend thành
 các chunk theo tokenizer của embedder. Điểm là harmonic mean giữa source coverage
@@ -481,34 +481,40 @@ Các XML hợp lệ trong rollout được render bằng:
 
 Cách này tránh khởi động một browser process cho từng completion.
 
-### 8.7. ViT aesthetic reward
+### 8.7. ViT pairwise aesthetic reward
 
-ViT-small 5-label được load từ checkpoint local. Loader RL:
+Checkpoint mặc định: `models/vit/best_model_pairwise.pt`, override bằng
+`REWARD_MODEL_PATH`. ViT-Base/16: hidden 768, 12 layers, 12 attention heads,
+intermediate 3072, classifier một logit. Loader dựng model local, load
+weights_only=True và strict=True; không tải pretrained weights từ Hub.
+Hỗ trợ state_dict thô và wrapper model_state_dict do notebook lưu.
 
-- Không tải pretrained base model từ Hub.
-- Mở inner model_state_dict của checkpoint.
-- Dựng đúng kiến trúc ViT-small.
-- Load toàn bộ tensor bằng strict=True.
-- Chạy eval mode.
-- Chấm toàn bộ rendered images trong một tensor batch.
+Nguồn semantics: models/vit/reward-model-vit-only.ipynb. Bradley–Terry loss
+tối ưu -log(sigmoid(score_good - score_bad)): điểm cao là slide được ưa thích.
+Inference resize RGB về 224×224, normalize ImageNet giống test_transforms.
+ViT luôn eval, khóa gradient và forward bằng inference_mode.
 
-Năm nhãn là:
+Aesthetic = sigmoid((logit - center) / temperature). RL_PAIRWISE_CENTER=0 và
+RL_PAIRWISE_TEMPERATURE=1 là baseline chưa hiệu chuẩn, không phải xác suất slide
+đúng. Pairwise loss không xác định mốc tuyệt đối của utility. Chọn calibration
+cố định trên tập ảnh độc lập rồi đóng băng trong run; không chuẩn hóa theo từng
+rollout batch. Đổi calibration phải tạo run mới.
 
-- Màu nền.
-- Màu chữ.
-- Size chữ.
-- Bố cục.
-- Tràn nội dung.
+RL_VIT_BATCH_SIZE=4 giới hạn ảnh mỗi forward, giữ thứ tự score khi chia batch.
+REWARD_MODEL_DEVICE=cpu mặc định; trên H100 có thể dùng cuda sau khi đo VRAM và
+reward_time/vit_seconds trong pilot. Logit NaN/Inf hoặc output sai shape làm
+dừng trước sigmoid. Preflight load checkpoint thật và chấm screenshot FE thật.
 
-Checkpoint phải khai báo `label_semantics=1=error,0=no_error` và đúng thứ tự năm
-criteria. Reward là `1 - mean(sigmoid(logits))`, tức điểm slide sạch thay vì
-xác suất lỗi.
+Theo dõi reward_pairwise/{raw_mean,raw_std,raw_min,raw_max,score_std,saturated_fraction}.
+Saturation tính trên valid samples có score <0.01 hoặc >0.99. Nếu cao, xem phân
+phối và điều chỉnh center/temperature trên calibration trước run mới.
+Contract resume fingerprint checkpoint, kind/direction/mapping, calibration,
+batch size và preprocessing.
 
-Checkpoint mặc định:
-
-    ViT/experiments/vit_multilabel_small/best.pt
-
-Có thể override bằng REWARD_MODEL_PATH.
+Notebook ghi 189/193 cặp validation đúng (97.93%), trên tập dùng chọn checkpoint;
+chưa phải benchmark độc lập trên slide policy. Cell tạo split theo slide ID đang
+comment; training đọc CSV có sẵn, cần audit CSV để xác nhận không leakage.
+Model chấm preference tổng thể; nội dung/số liệu/DOM/ảnh vẫn cần component riêng.
 
 ## 9. Reward group không có phương sai
 
@@ -599,10 +605,14 @@ Mỗi run tạo:
 Các artifact chính:
 
 - run.log: stdout/stderr đầy đủ.
-- manifest.json: model, GPU, git revision, dataset và hyperparameters.
-- metrics.json: Trainer log history.
+- manifest.json: model, GPU, git revision, dataset, hyperparameters và đường dẫn log.
+- training_metrics.jsonl: log ngay từng optimizer update, epoch summary, eval, checkpoint và cấu hình lúc bắt đầu; mỗi dòng là một JSON object độc lập.
+- training_readable.log: cùng sự kiện nhưng trình bày thành dòng dễ đọc, ghi ngay trong lúc train.
+- metrics.json: Trainer log history tổng hợp sau khi kết thúc.
 - metrics_trend.png: biểu đồ loss/reward/eval/learning-rate.
 - run_summary.png: tóm tắt cuối run.
+
+Mỗi bản ghi train có global step, epoch, learning rate, loss, grad norm, token/completion lengths, clipped ratio, reward tổng và từng reward component, pairwise ViT raw/score distribution, saturation, entropy, clip ratio, timings và các metric Trainer có tại step đó. Epoch summary tính trung bình các update trong epoch; lần cuối được ghi thành partial summary nếu run kết thúc giữa epoch. Cả hai log dạng dòng đều flush sau mỗi sự kiện để còn dùng khi job dừng bất ngờ.
 
 Runtime metadata còn ghi CUDA visible devices, GPU snapshot, Python, Torch và
 commit hiện tại để có thể truy vết experiment.
@@ -615,7 +625,7 @@ Bắt buộc:
 
 - Base model local hoặc có thể resolve từ TRAINING_MODEL_ID.
 - ViT checkpoint local hoặc REWARD_MODEL_PATH hợp lệ. File
-  `ViT/experiments/vit_multilabel_small/best.pt` hiện là tài sản local, không nằm
+  `models/vit/best_model_pairwise.pt` hiện là tài sản local, không nằm
   trong Git; phải chép file này lên H100 hoặc đặt `REWARD_MODEL_PATH` tới bản đã
   chép.
 - Chromium/Playwright hoạt động và `BROWSER_PREVIEW_URL` trỏ đúng route XML preview
@@ -636,7 +646,7 @@ Bắt buộc:
 Ví dụ:
 
     export TRAINING_MODEL_ID=/models/Qwen3-8B
-    export REWARD_MODEL_PATH=/models/slidegen-vit-small/best.pt
+    export REWARD_MODEL_PATH=/data/SlideGenFunctionCalling/models/vit/best_model_pairwise.pt
     # Configure BROWSER_PREVIEW_URL in backend/config.py, not .env.
     export GRPO_OUTPUT_DIR=/data/checkpoints/slidegen-grpo
     export GRPO_FAISS_INDEX_PATH=/data/checkpoints/slidegen-grpo/tool_retriever_index
@@ -802,29 +812,41 @@ multi-GPU vẫn cần pilot để kiểm tra VRAM và throughput.
 
 ## 18. Trạng thái verification
 
-### Đã xác minh trong worktree hiện tại
+### Đã xác minh ngày 2026-09-28 khi chuyển sang pairwise
 
-- API Qwen thật trả lời text, structured output, vision và native tool call thành công.
-- Rebuild smoke hai slide đã chạy planner, tìm ảnh, duyệt ảnh, lưu cache và refine; loader đọc được corpus, giữ nguyên nội dung nguồn, với hai ảnh đã duyệt. Smoke corpus nằm ở `/tmp/grpo_be_synced_smoke.json`, không phải corpus train mặc định.
-- 236 test backend và RL đã đạt trước lần thêm guard CUDA cuối; guard và tài liệu ở lượt này chưa chạy lại test suite.
-- FE preview, Chromium và ViT preflight đã chạy thành công trên máy phát triển trong vòng kiểm tra trước. Điều này không thay thế preflight trên H100 vì endpoint FE, browser và file ViT ở đó có thể khác.
-- Source loader trước đó đọc được 49 tài liệu và 414 slide. Đây là kích thước corpus nguồn; corpus GRPO mới đầy đủ chưa được rebuild.
+- Loader nạp strict checkpoint models/vit/best_model_pairwise.pt, ViT-Base một
+  logit, theo semantics và preprocessing trong notebook nguồn.
+- 67 regression tests hiện có đạt; 10 test pairwise bổ sung đạt. Nhóm runtime
+  có thêm kiểm tra fingerprint thay đổi khi đổi temperature cũng đã chạy lại đạt.
+- Full preflight trên host H100 với ViT CPU và CUDA đều đạt: 372 train prompts, 42 eval
+  prompts; 194 train + 25 eval prompts có ảnh; renderer kiểm tra assets local.
+  Tổng 44 train documents và 5 held-out documents. Policy chưa được nạp.
+  Báo cáo CUDA: rl/log/grpo/run_20260928_113905/preflight.json.
+- Corpus GRPO rebuilt và image cache đã có trên host. FE build và backend preview
+  hoạt động. Prompt tối đa 4382 + completion cap 3072 = 7454 tokens.
+- Microbenchmark ViT riêng (batch 4 ảnh cùng screenshot, warmup rồi đo 3 lần,
+  4 CPU threads): CPU ~0.585 s/batch, CUDA ~0.436 s/batch; peak allocated CUDA
+  ~395 MiB. Đây không phải throughput/VRAM của cả GRPO với Qwen.
+- Ảnh preflight đơn giản có utility ~-7.66, sigmoid mặc định ~0.00047: chưa
+  đủ để chọn calibration, cần phân phối ảnh rollout đại diện có nhãn.
 
 ### Còn phải hoàn tất trước full run
 
-- Rebuild đủ corpus GRPO mới và chuyển JSON cùng `static/output/grpo_image_cache/` lên H100.
-- Trên H100, xác nhận đường dẫn local của Qwen3-8B và ViT, FE preview/Chromium, retriever và cache ảnh qua preflight mặc định.
-- Chạy một optimizer step, xác nhận loss/reward/grad hữu hạn, checkpoint lưu và resume được; sau đó chạy pilot 10 bước và calibration 50 bước như kế hoạch. VRAM/throughput chưa được đo trên H100.
-- Trainer hiện dừng sớm nếu CUDA không khả dụng; chỉ chạy CPU khi đặt `USE_CPU=true` tường minh cho chẩn đoán nhỏ.
+- Chạy một optimizer step với Qwen, xác nhận loss/reward/grad hữu hạn, checkpoint
+  lưu và resume được. Preflight không chứng nhận memory/backward của policy.
+- Chạy pilot 10 bước và calibration 50 bước, đo throughput/VRAM toàn pipeline.
+- Audit dữ liệu reward train/validation từ notebook, giữ test set độc lập; chọn
+  center/temperature và component weights bằng ranking/ảnh có nhãn trước run dài.
+- Trainer dừng nếu CUDA không khả dụng; USE_CPU=true chỉ cho chẩn đoán nhỏ.
 
-Không khởi chạy job 500 bước trước khi các mục trên đạt.
+Chỉ chạy job 500 bước sau khi các mục trên đạt, trong output directory mới.
 
 ## 19. Checklist trước full run
 
 - [ ] TRAINING_MODEL_ID trỏ đúng local base model.
-- [ ] REWARD_MODEL_PATH trỏ đúng checkpoint ViT.
-- [ ] Chromium launch được từ user chạy job.
-- [ ] Dataset snapshot có đúng số document và prompt.
+- [x] REWARD_MODEL_PATH trỏ đúng checkpoint ViT pairwise (hoặc dùng default).
+- [x] Chromium launch được từ user chạy preflight.
+- [x] Dataset snapshot: 44/5 documents, 372/42 train/eval prompts.
 - [ ] Pilot 1 step tạo checkpoint hoàn chỉnh.
 - [ ] Resume từ checkpoint pilot thành công.
 - [ ] Pilot 10 steps không OOM/NaN.

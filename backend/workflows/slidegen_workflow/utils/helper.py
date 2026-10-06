@@ -296,7 +296,71 @@ def repair_and_parse_json(s: str) -> Optional[Any]:
     except Exception:
         pass
 
+    # 4. Heuristic: escape quotation marks used as text inside a string,
+    # e.g. ["Chuyển từ "đánh nhanh" sang "đánh chắc"", "..."]; also drop the
+    # invalid \' escape and close truncated containers in nesting order.
+    candidate = _escape_inner_quotes(cleaned.replace("\\'", "'"))
+    for attempt in (candidate, _close_open_containers(candidate)):
+        try:
+            return json.loads(attempt)
+        except Exception:
+            pass
+
     return None
+
+
+def _close_open_containers(text: str) -> str:
+    """Append the missing closers for any unterminated string, object or array."""
+    stack = []
+    in_string = False
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if in_string:
+            if char == "\\":
+                index += 1
+            elif char == '"':
+                in_string = False
+        elif char == '"':
+            in_string = True
+        elif char in "[{":
+            stack.append("]" if char == "[" else "}")
+        elif char in "]}" and stack:
+            stack.pop()
+        index += 1
+    return text + ('"' if in_string else "") + "".join(reversed(stack))
+
+
+def _escape_inner_quotes(text: str) -> str:
+    """Keep a quote as a string terminator only where JSON structure can follow it."""
+    value_starts = '"{[-0123456789tfn'
+    out = []
+    in_string = False
+    index = 0
+    while index < len(text):
+        char = text[index]
+        if char == "\\" and in_string:
+            out.append(text[index:index + 2])
+            index += 2
+            continue
+        if char == '"':
+            if not in_string:
+                in_string = True
+            else:
+                rest = text[index + 1:].lstrip()
+                follower = rest[:1]
+                closes = follower in ("]", "}", ":", "") or (
+                    follower == "," and rest[1:].lstrip()[:1] in tuple(value_starts)
+                )
+                if closes:
+                    in_string = False
+                else:
+                    out.append('\\"')
+                    index += 1
+                    continue
+        out.append(char)
+        index += 1
+    return "".join(out)
 
 
 def parse_tool_calls_json(text: str) -> List[dict]:

@@ -1,0 +1,12 @@
+{
+  "step": 250,
+  "metric": "eval_reward",
+  "metric_name": "eval_reward",
+  "value": 3.2090739607810974,
+  "best": 3.4830195563180104,
+  "best_metric": 3.4830195563180104,
+  "improved": false,
+  "bad_evaluations": 4,
+  "patience": 4,
+  "min_steps": 93
+}

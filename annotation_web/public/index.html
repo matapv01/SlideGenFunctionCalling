@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chấm slide SlideGen</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <strong>Chấm slide SlideGen</strong>
+    <span id="progress-label"></span>
+    <button id="guide-button" class="ghost" hidden>Hướng dẫn</button>
+  </header>
+  <div id="progress"><div id="progress-bar"></div></div>
+
+  <main>
+    <section id="login-view" class="card narrow">
+      <h1>Đăng nhập</h1>
+      <p>Nhập mã người chấm bạn được cấp.</p>
+      <form id="login-form">
+        <input id="code-input" autocomplete="off" placeholder="Mã người chấm" required>
+        <button type="submit">Bắt đầu</button>
+      </form>
+      <p id="login-error" class="error" hidden></p>
+    </section>
+
+    <section id="guide-view" class="card" hidden>
+      <h1>Hướng dẫn chấm</h1>
+      <p>Mỗi lượt bạn xem <b>văn bản nguồn</b> và <b>hai slide A, B</b> làm từ cùng nội dung đó. Hai slide do các hệ thống khác nhau tạo ra; thứ tự và vị trí đã được xáo ngẫu nhiên. Hãy chấm độc lập, không đoán hệ thống.</p>
+      <h2>Phần 1: So sánh (A tốt hơn / Ngang nhau / B tốt hơn)</h2>
+      <ol>
+        <li><b>Trung thực với nguồn</b>: slide nào ít thông tin sai hoặc bịa hơn (số liệu, tên, liên hệ, sự kiện không có trong nguồn, gán số cho sai đối tượng)?</li>
+        <li><b>Đầy đủ, đúng trọng tâm</b>: slide nào giữ được các ý quan trọng nhất của nguồn, không bỏ sót ý chính, không lan man hay chung chung?</li>
+        <li><b>Ngôn ngữ</b>: tiếng Việt đúng chính tả, ngữ pháp; tiêu đề súc tích; không lẫn ký tự lạ hay cú pháp định dạng; không lặp ý.</li>
+        <li><b>Bố cục, khả năng đọc</b>: không tràn, cắt hay đè chữ; phân cấp rõ; cỡ chữ và độ tương phản dễ đọc.</li>
+        <li><b>Thẩm mỹ</b>: slide nào đẹp và chuyên nghiệp hơn về tổng thể?</li>
+        <li><b>Lựa chọn tổng thể</b>: nếu phải đưa một slide vào bài thuyết trình thật, bạn chọn slide nào?</li>
+      </ol>
+      <h2>Phần 2: Lỗi nghiêm trọng (đánh dấu riêng cho từng slide)</h2>
+      <ul>
+        <li><b>Thông tin bịa/sai</b>: có ít nhất một thông tin không có trong nguồn hoặc sai so với nguồn.</li>
+        <li><b>Lỗi hiển thị</b>: chữ bị cắt, tràn ra ngoài, đè lên nhau, hoặc slide gần như trống.</li>
+        <li><b>Sai ngôn ngữ</b>: phần lớn nội dung không phải tiếng Việt.</li>
+      </ul>
+      <h2>Lưu ý</h2>
+      <ul>
+        <li>Chỉ dùng văn bản nguồn được hiển thị để đánh giá độ trung thực, không dùng hiểu biết bên ngoài.</li>
+        <li>Slide tiêu đề, chuyển ý hay cảm ơn có thể rất ngắn; hãy đánh giá theo mục đích của loại slide đó.</li>
+        <li>Chọn "Ngang nhau" khi thật sự không phân biệt được. Nhấp vào ảnh để phóng to.</li>
+        <li>Phím tắt: <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> chọn A/Ngang/B cho tiêu chí đang chọn, <kbd>Enter</kbd> để lưu và sang cặp tiếp theo.</li>
+      </ul>
+      <button id="start-button">Tôi đã hiểu, bắt đầu chấm</button>
+    </section>
+
+    <section id="rate-view" hidden>
+      <div class="source card">
+        <div class="eyebrow">Văn bản nguồn · <span id="pair-label"></span></div>
+        <h2 id="source-title"></h2>
+        <p id="source-text"></p>
+      </div>
+      <div class="slides">
+        <figure><figcaption>Slide A</figcaption><img id="img-A" alt="Slide A"></figure>
+        <figure><figcaption>Slide B</figcaption><img id="img-B" alt="Slide B"></figure>
+      </div>
+      <form id="rating-form" class="card">
+        <table class="criteria">
+          <thead><tr><th>Tiêu chí</th><th>A tốt hơn</th><th>Ngang nhau</th><th>B tốt hơn</th></tr></thead>
+          <tbody id="criteria-body"></tbody>
+        </table>
+        <div class="flags">
+          <div><b>Lỗi của slide A</b><div id="flags-A"></div></div>
+          <div><b>Lỗi của slide B</b><div id="flags-B"></div></div>
+        </div>
+        <textarea id="comment" placeholder="Ghi chú (không bắt buộc)" rows="2"></textarea>
+        <div class="actions">
+          <button type="button" id="prev-button" class="ghost">← Cặp trước</button>
+          <span id="save-status"></span>
+          <button type="submit" id="next-button">Lưu và tiếp tục →</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="done-view" class="card narrow" hidden>
+      <h1>Hoàn thành</h1>
+      <p>Bạn đã chấm xong toàn bộ các cặp được giao. Cảm ơn bạn!</p>
+    </section>
+  </main>
+
+  <dialog id="zoom"><img id="zoom-img" alt="Phóng to"><button id="zoom-close">Đóng</button></dialog>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from datetime import datetime
@@ -42,14 +43,17 @@ from backend.infrastructure.rag.gemini_provider import (
 )
 from rl.grpo_trainer import (
     DapoAccumulationGRPOTrainer,
+    ValidationStopCallback,
 )
 from rl.image_assets import image_cache_dir
 from rl.rewards.composite_reward import (
     preflight_reward_runtime,
+    configure_sample_dump,
     slidegen_composite_reward,
 )
 from rl.rewards.content_reward import set_text_embedder
 from rl.run_artifacts import (
+    DetailedTrainingLogCallback,
     get_runtime_metadata,
     save_metric_trend_image,
     save_text_summary_image,
@@ -69,17 +73,21 @@ OUTPUT_DIR = Path(os.getenv("GRPO_OUTPUT_DIR", "./qwen3_8b_slidegen_grpo"))
 RETRIEVER_INDEX_DIR = Path(
     os.getenv("GRPO_FAISS_INDEX_PATH", str(OUTPUT_DIR / "tool_retriever_index"))
 )
-TOTAL_STEPS = int(os.getenv("TOTAL_STEPS", "500"))
+TOTAL_STEPS = int(os.getenv("TOTAL_STEPS", "0"))
+MAX_TRAIN_EPOCHS = float(os.getenv("GRPO_MAX_TRAIN_EPOCHS", "3"))
+EARLY_STOPPING = os.getenv("GRPO_EARLY_STOPPING", "true").lower() in {"1", "true", "yes", "on"}
 LEARNING_RATE = float(os.getenv("LEARNING_RATE", "1e-6"))
 TRAIN_BATCH_SIZE = int(os.getenv("PER_DEVICE_TRAIN_BATCH_SIZE", "1"))
 GRAD_ACCUMULATION = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16"))
 NUM_GENERATIONS = int(os.getenv("NUM_GENERATIONS", "4"))
 GENERATION_BATCH_SIZE = int(os.getenv("GRPO_GENERATION_BATCH_SIZE", "4"))
+EVAL_BATCH_SIZE = int(os.getenv("GRPO_EVAL_BATCH_SIZE", str(NUM_GENERATIONS)))
 MAX_COMPLETION_LENGTH = int(os.getenv("MAX_COMPLETION_LENGTH", "3072"))
 LOSS_TYPE = os.getenv("GRPO_LOSS_TYPE", "dapo")
-SAVE_STEPS = int(os.getenv("GRPO_SAVE_STEPS", "25"))
-EVAL_STEPS = int(os.getenv("GRPO_EVAL_STEPS", "50"))
+EVAL_STEPS = int(os.getenv("GRPO_EVAL_STEPS", "25"))
+SAVE_STEPS = int(os.getenv("GRPO_SAVE_STEPS", str(EVAL_STEPS or 25)))
 EVAL_DOCS = int(os.getenv("GRPO_EVAL_DOCS", "5"))
+EVAL_ON_START = os.getenv("GRPO_EVAL_ON_START", "false").lower() in {"1", "true", "yes", "on"}
 DATA_SEED = int(os.getenv("GRPO_DATA_SEED", "42"))
 USE_CPU = os.getenv("USE_CPU", "false").lower() in {"1", "true", "yes", "on"}
 USE_LORA = os.getenv("USE_LORA", "true").lower() in {"1", "true", "yes", "on"}
@@ -89,6 +97,13 @@ USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "true").lower() in {
     "yes",
     "on",
 }
+LOAD_IN_4BIT = os.getenv("GRPO_LOAD_IN_4BIT", "false").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+INIT_ADAPTER = os.getenv("GRPO_INIT_ADAPTER", "").strip()
 RESUME = os.getenv("GRPO_RESUME", "true").lower() in {"1", "true", "yes", "on"}
 RUN_PREFLIGHT = os.getenv("GRPO_PREFLIGHT", "true").lower() in {
     "1",
@@ -102,12 +117,18 @@ REQUIRE_IMAGE_ASSETS = os.getenv("GRPO_REQUIRE_IMAGE_ASSETS", "true").lower() in
 
 
 def _validate_config() -> None:
-    if TOTAL_STEPS < 1:
-        raise ValueError("TOTAL_STEPS must be positive")
+    if TOTAL_STEPS < 0:
+        raise ValueError("TOTAL_STEPS must be zero (derive from epochs) or positive")
+    if MAX_TRAIN_EPOCHS <= 0:
+        raise ValueError("GRPO_MAX_TRAIN_EPOCHS must be positive")
+    if EARLY_STOPPING and EVAL_STEPS < 1:
+        raise ValueError("Early stopping requires GRPO_EVAL_STEPS > 0")
     if min(TRAIN_BATCH_SIZE, GRAD_ACCUMULATION, GENERATION_BATCH_SIZE, SAVE_STEPS) < 1:
         raise ValueError("Batch sizes, accumulation and save steps must be positive")
     if NUM_GENERATIONS < 2:
         raise ValueError("NUM_GENERATIONS must be >= 2 for GRPO")
+    if EVAL_BATCH_SIZE < 1 or EVAL_BATCH_SIZE % NUM_GENERATIONS:
+        raise ValueError("GRPO_EVAL_BATCH_SIZE must be a positive multiple of NUM_GENERATIONS")
     if GENERATION_BATCH_SIZE % NUM_GENERATIONS:
         raise ValueError(
             "GRPO_GENERATION_BATCH_SIZE must be divisible by NUM_GENERATIONS"
@@ -226,24 +247,107 @@ def _model_runtime():
     return device, dtype
 
 
+def _prepare_qwen35_moe_for_kbit_training(model):
+    """Freeze the BF16 MoE base without PEFT's blanket FP32 upcast."""
+    for name, param in model.named_parameters():
+        param.requires_grad = False
+        # Keep the large fused expert matrices in BF16; upcast only small norms.
+        if "norm" in name.lower() and param.dtype in (torch.float16, torch.bfloat16):
+            param.data = param.data.to(torch.float32)
+    if USE_GRAD_CHECKPOINT and hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
+    return model
+
+
+def _warm_start_lora(model, adapter_dir: str) -> None:
+    """Initialize LoRA from a finished run's adapter (fresh optimizer/scheduler, current contract)."""
+    from safetensors.torch import load_file
+
+    # Copy tensors by name: PEFT's set_peft_model_state_dict breaks on Transformers 5.x weight converters.
+    state = load_file(str(Path(adapter_dir) / "adapter_model.safetensors"))
+    targets = {
+        name.replace(".default.", "."): parameter
+        for name, parameter in model.named_parameters()
+        if "lora_" in name
+    }
+    if set(state) != set(targets):
+        raise RuntimeError(
+            "Warm-start adapter does not match the LoRA config: "
+            f"missing={sorted(set(targets) - set(state))[:3]} extra={sorted(set(state) - set(targets))[:3]}"
+        )
+    with torch.no_grad():
+        for name, tensor in state.items():
+            target = targets[name]
+            if target.shape != tensor.shape:
+                raise RuntimeError(f"Warm-start shape mismatch for {name}: {tuple(tensor.shape)} vs {tuple(target.shape)}")
+            target.copy_(tensor.to(device=target.device, dtype=target.dtype))
+    print(f"Warm-started LoRA from {adapter_dir} ({len(state)} tensors)")
+
+
+def _route_gated_delta_kernel_by_grad() -> str:
+    """Use FLA's chunk kernel for rollouts only; its backward is wrong on Hopper with Triton < 3.7.1 (fla #640)."""
+    from transformers.models.qwen3_5_moe import modeling_qwen3_5_moe as qwen
+
+    fast = qwen.torch_chunk_gated_delta_rule
+    reference = getattr(fast, "__wrapped__", None)
+    if reference is None or getattr(fast, "_routed_by_grad", False):
+        return "unchanged"
+
+    def routed(*args, **kwargs):
+        return (reference if torch.is_grad_enabled() else fast)(*args, **kwargs)
+
+    routed._routed_by_grad = True
+    qwen.torch_chunk_gated_delta_rule = routed
+    return "fla_no_grad_torch_grad"
+
+
 def _load_model(tokenizer=None, revision=None):
     device, dtype = _model_runtime()
-    model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID,
-        torch_dtype=dtype,
-        trust_remote_code=True,
-        low_cpu_mem_usage=True,
-        revision=revision,
-    )
+    if os.getenv("GRPO_FLA_ROLLOUT_ONLY", "true").lower() in {"1", "true", "yes", "on"}:
+        print(f"Gated-delta kernel routing: {_route_gated_delta_kernel_by_grad()}")
+    model_kwargs = {
+        "torch_dtype": dtype,
+        "trust_remote_code": True,
+        "low_cpu_mem_usage": True,
+        "revision": revision,
+    }
+    if LOAD_IN_4BIT:
+        if device != "cuda":
+            raise RuntimeError("GRPO_LOAD_IN_4BIT requires CUDA")
+        from peft import prepare_model_for_kbit_training
+        from transformers import BitsAndBytesConfig
+
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=dtype,
+            bnb_4bit_use_double_quant=True,
+        )
+        # Quantized weights are placed during loading and cannot be moved later.
+        model_kwargs["device_map"] = {"": 0}
+    model = AutoModelForCausalLM.from_pretrained(MODEL_ID, **model_kwargs)
     if tokenizer is None:
         tokenizer = AutoTokenizer.from_pretrained(
             MODEL_ID, trust_remote_code=True, revision=revision
         )
+    if LOAD_IN_4BIT:
+        if getattr(model.config, "model_type", "") in {"qwen3_5_moe", "qwen3_5_moe_text"}:
+            # Routed experts are fused Parameter tensors, not Linear modules, so
+            # bnb leaves them in BF16. PEFT's generic helper would copy every
+            # such tensor to FP32 and exhaust an 80GB GPU before training starts.
+            model = _prepare_qwen35_moe_for_kbit_training(model)
+        else:
+            model = prepare_model_for_kbit_training(
+                model,
+                use_gradient_checkpointing=USE_GRAD_CHECKPOINT,
+            )
     model = get_peft_model(model, _lora_config())
-    if USE_GRAD_CHECKPOINT and device == "cuda":
+    if INIT_ADAPTER:
+        _warm_start_lora(model, INIT_ADAPTER)
+    if USE_GRAD_CHECKPOINT and device == "cuda" and not LOAD_IN_4BIT:
         model.gradient_checkpointing_enable()
     model.config.use_cache = False
-    if device == "cuda":
+    if device == "cuda" and not LOAD_IN_4BIT:
         model = model.to(device)
     tokenizer.pad_token = tokenizer.pad_token or tokenizer.eos_token
     return model, tokenizer, device, dtype
@@ -360,15 +464,43 @@ def _train_main(*, preflight_only: bool = False) -> None:
     print(f"Prompt token lengths: min={min(prompt_lengths)}, max={max(prompt_lengths)}")
 
     eval_enabled = EVAL_STEPS > 0
+    global_batch_size = TRAIN_BATCH_SIZE * int(os.getenv("WORLD_SIZE", "1"))
+    prompts_per_update = (
+        GRAD_ACCUMULATION * global_batch_size // NUM_GENERATIONS
+    )
+    steps_per_epoch = max(1, math.ceil(len(train_rows) / prompts_per_update))
+    max_steps = TOTAL_STEPS or max(1, math.ceil(steps_per_epoch * MAX_TRAIN_EPOCHS))
+    if EARLY_STOPPING and SAVE_STEPS != EVAL_STEPS:
+        raise ValueError(
+            "GRPO_SAVE_STEPS must equal GRPO_EVAL_STEPS when best-checkpoint "
+            "selection and early stopping are enabled"
+        )
+    scheduler_type = os.getenv(
+        "GRPO_LR_SCHEDULER_TYPE",
+        "reduce_lr_on_plateau" if eval_enabled else "linear",
+    )
+    default_warmup_steps = 0 if scheduler_type == "reduce_lr_on_plateau" else max(2, round(max_steps * 0.03))
+    warmup_steps = int(os.getenv("WARMUP_STEPS", str(default_warmup_steps)))
     training_args = GRPOConfig(
         output_dir=str(OUTPUT_DIR),
         learning_rate=LEARNING_RATE,
         per_device_train_batch_size=TRAIN_BATCH_SIZE,
-        per_device_eval_batch_size=NUM_GENERATIONS,
+        per_device_eval_batch_size=EVAL_BATCH_SIZE,
         gradient_accumulation_steps=GRAD_ACCUMULATION,
         generation_batch_size=GENERATION_BATCH_SIZE,
-        max_steps=TOTAL_STEPS,
-        warmup_steps=int(os.getenv("WARMUP_STEPS", "0")),
+        max_steps=max_steps,
+        warmup_steps=warmup_steps,
+        lr_scheduler_type=scheduler_type,
+        lr_scheduler_kwargs={
+            "mode": "max", "factor": float(os.getenv("GRPO_LR_REDUCE_FACTOR", "0.5")),
+            "patience": int(os.getenv("GRPO_LR_REDUCE_PATIENCE", "1")),
+            "threshold": float(os.getenv("GRPO_LR_REDUCE_THRESHOLD", "0.02")),
+            "threshold_mode": "abs", "cooldown": 0,
+            "min_lr": float(os.getenv("GRPO_MIN_LEARNING_RATE", "1e-7")),
+        } if scheduler_type == "reduce_lr_on_plateau" else {},
+        metric_for_best_model="eval_reward" if eval_enabled else None,
+        greater_is_better=True if eval_enabled else None,
+        load_best_model_at_end=EARLY_STOPPING and eval_enabled,
         logging_steps=1,
         logging_first_step=True,
         save_strategy="steps",
@@ -376,19 +508,21 @@ def _train_main(*, preflight_only: bool = False) -> None:
         save_total_limit=int(os.getenv("GRPO_SAVE_TOTAL_LIMIT", "3")),
         eval_strategy="steps" if eval_enabled else "no",
         eval_steps=EVAL_STEPS if eval_enabled else None,
+        eval_on_start=EVAL_ON_START and eval_enabled,
         report_to="none",
         num_generations=NUM_GENERATIONS,
         num_generations_eval=NUM_GENERATIONS,
         max_completion_length=MAX_COMPLETION_LENGTH,
-        temperature=float(os.getenv("GRPO_TEMPERATURE", "0.7")),
-        top_p=float(os.getenv("GRPO_TOP_P", "0.8")),
-        top_k=int(os.getenv("GRPO_TOP_K", "20")),
+        temperature=float(os.getenv("GRPO_TEMPERATURE", "1.0")),
+        top_p=float(os.getenv("GRPO_TOP_P", "0.95")),
+        top_k=int(os.getenv("GRPO_TOP_K", "0")),
         beta=float(os.getenv("GRPO_BETA", "0.0")),
         epsilon=float(os.getenv("GRPO_EPSILON", "0.2")),
         epsilon_high=float(os.getenv("GRPO_EPSILON_HIGH", "0.28")),
         mask_truncated_completions=True,
         loss_type=LOSS_TYPE,
-        scale_rewards="group",
+        # Group-std scaling turns ViT noise in near-tied groups into full-size advantages.
+        scale_rewards=os.getenv("GRPO_SCALE_REWARDS", "batch"),
         use_cpu=device == "cpu",
         bf16=dtype == torch.bfloat16,
         fp16=dtype == torch.float16,
@@ -398,6 +532,9 @@ def _train_main(*, preflight_only: bool = False) -> None:
         data_seed=DATA_SEED,
         remove_unused_columns=False,
     )
+    # Transformers 5.17 does not expose eval_seed on GRPOConfig, so attach it
+    # after construction for the trainer's deterministic evaluation wrapper.
+    training_args.eval_seed = int(os.getenv("GRPO_EVAL_SEED", str(DATA_SEED + 1)))
 
     if training_args.loss_type in {"dapo", "cispo", "vespo"}:
         if training_args.gradient_accumulation_steps % training_args.steps_per_generation:
@@ -454,6 +591,14 @@ def _train_main(*, preflight_only: bool = False) -> None:
     snapshots.mkdir(parents=True, exist_ok=True)
     write_json(snapshots / "train.json", train_rows)
     write_json(snapshots / "eval.json", eval_rows)
+    sample_count = min(len(eval_rows), int(os.getenv("GRPO_SAMPLE_SLIDES", "4")))
+    if sample_count:
+        picked = [eval_rows[i * len(eval_rows) // sample_count] for i in range(sample_count)]
+        configure_sample_dump(
+            OUTPUT_DIR / "samples", [(row["source_doc_id"], row["slide_index"]) for row in picked]
+        )
+        print("Sample slides saved each eval:",
+              [f"{row['source_doc_id']}#{row['slide_index']}:{row['assigned_tool_name']}" for row in picked])
     train_dataset = Dataset.from_list(train_rows)
     eval_dataset = Dataset.from_list(eval_rows)
 
@@ -468,6 +613,16 @@ def _train_main(*, preflight_only: bool = False) -> None:
         train_dataset=train_dataset,
         eval_dataset=eval_dataset if eval_enabled else None,
     )
+    trainer.add_callback(DetailedTrainingLogCallback(run_log_dir, run_id))
+    if EARLY_STOPPING and eval_enabled:
+        min_steps = steps_per_epoch * int(os.getenv("GRPO_EARLY_STOP_MIN_EPOCHS", "1"))
+        trainer.add_callback(ValidationStopCallback(
+            metric_name="eval_reward",
+            patience=int(os.getenv("GRPO_EARLY_STOP_PATIENCE", "4")),
+            threshold=float(os.getenv("GRPO_EARLY_STOP_THRESHOLD", "0.02")),
+            min_steps=min_steps,
+            state_path=OUTPUT_DIR / "early_stopping_state.json",
+        ))
     trainer.model_id = MODEL_ID
     trainer.dapo_accumulation_factor = dapo_accumulation_factor
     trainer.training_contract = fingerprint
@@ -480,7 +635,18 @@ def _train_main(*, preflight_only: bool = False) -> None:
             "training_contract": fingerprint,
             "output_dir": str(OUTPUT_DIR),
             "resume_checkpoint": str(checkpoint) if checkpoint else None,
-            "total_steps": TOTAL_STEPS,
+            "total_steps": max_steps,
+            "max_train_epochs": MAX_TRAIN_EPOCHS,
+            "steps_per_epoch_estimate": steps_per_epoch,
+            "prompts_per_optimizer_update_estimate": prompts_per_update,
+            "lr_scheduler_type": training_args.lr_scheduler_type,
+            "lr_scheduler_kwargs": training_args.lr_scheduler_kwargs,
+            "init_adapter": INIT_ADAPTER or None,
+            "early_stopping": EARLY_STOPPING and eval_enabled,
+            "eval_on_start": training_args.eval_on_start,
+            "early_stopping_metric": "eval_reward",
+            "early_stopping_patience": int(os.getenv("GRPO_EARLY_STOP_PATIENCE", "4")),
+            "early_stopping_min_steps": steps_per_epoch * int(os.getenv("GRPO_EARLY_STOP_MIN_EPOCHS", "1")),
             "train_documents": len(train_documents),
             "eval_documents": len(eval_documents),
             "train_prompts": len(train_rows),
@@ -493,6 +659,7 @@ def _train_main(*, preflight_only: bool = False) -> None:
             "gradient_accumulation_steps": GRAD_ACCUMULATION,
             "max_completion_length": MAX_COMPLETION_LENGTH,
             "loss_type": training_args.loss_type,
+            "load_in_4bit": LOAD_IN_4BIT,
             "dapo_accumulation_factor": dapo_accumulation_factor,
             "steps_per_generation": training_args.steps_per_generation,
             "epsilon": training_args.epsilon,
@@ -502,12 +669,14 @@ def _train_main(*, preflight_only: bool = False) -> None:
             "tool_retriever_index": str(RETRIEVER_INDEX_DIR),
             "device": device,
             "run_log": str(run_log_path),
+            "training_metrics_jsonl": str(run_log_dir / "training_metrics.jsonl"),
+            "training_readable_log": str(run_log_dir / "training_readable.log"),
         }
     )
     write_json(run_log_dir / "manifest.json", manifest)
 
     print(
-        f"Starting GRPO: steps={TOTAL_STEPS}, prompts={len(train_rows)}, "
+        f"Starting GRPO: steps={max_steps}, prompts={len(train_rows)}, "
         f"generations={NUM_GENERATIONS}, generation_batch={GENERATION_BATCH_SIZE}"
     )
     if checkpoint:
@@ -561,7 +730,7 @@ def _train_main(*, preflight_only: bool = False) -> None:
             {
                 "title": "Result",
                 "body": (
-                    f"Steps: {trainer.state.global_step}/{TOTAL_STEPS}\n"
+                    f"Steps: {trainer.state.global_step}/{max_steps}\n"
                     f"Train prompts: {len(train_rows)}\n"
                     f"Eval prompts: {len(eval_rows)}\n"
                     f"Final adapter: {final_adapter}\n"

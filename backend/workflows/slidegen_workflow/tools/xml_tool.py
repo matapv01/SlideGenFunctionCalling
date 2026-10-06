@@ -13656,6 +13656,9 @@ def generate_implementation_timeline_slide_xml(
     )
     normalized_timeline_items: list[dict[str, str]] = []
     for index, raw_item in enumerate(raw_timeline_items):
+        # LangChain's StructuredTool passes nested milestones as pydantic models, not dicts.
+        if hasattr(raw_item, "model_dump"):
+            raw_item = raw_item.model_dump()
         item = raw_item if isinstance(raw_item, dict) else {}
         normalized_timeline_items.append(
             {
@@ -20923,6 +20926,7 @@ def generate_dark_gold_thank_you_slide_xml(
         {"icon": "email", "text": email_text.strip(), "max_width": 290.0},
         {"icon": "website", "text": website_text.strip(), "max_width": 210.0},
     ]
+    contact_specs = [spec for spec in contact_specs if spec["text"]]
 
     contact_layouts: list[dict] = []
     for spec in contact_specs:
@@ -21121,15 +21125,16 @@ def generate_dark_gold_thank_you_slide_xml(
         margin_bottom=0,
     )
 
-    add(
-        "line",
-        x1=divider_x1,
-        y1=divider_y,
-        x2=divider_x2,
-        y2=divider_y,
-        color=divider_color,
-        width=1.1,
-    )
+    if contact_layouts:
+        add(
+            "line",
+            x1=divider_x1,
+            y1=divider_y,
+            x2=divider_x2,
+            y2=divider_y,
+            color=divider_color,
+            width=1.1,
+        )
 
     for item in contact_layouts:
         icon_x = item["icon_x"]

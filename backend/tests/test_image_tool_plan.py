@@ -163,3 +163,66 @@ def test_ddgs_ranking_prefers_target_dimensions_and_layout():
 
     assert _parse_target_dimensions("Recommended image size: 960x1080px") == (960, 1080)
     assert ranked[0]["image"] == "https://example.com/portrait.jpg"
+
+
+def test_freeform_items_declaring_image_url_are_image_layouts():
+    from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
+    from backend.workflows.slidegen_workflow.executors.tool_plan_executor import tool_matches_image_mode
+
+    gallery = next(
+        tool for tools in TOOLS_DICT.values() for tool in tools
+        if tool.name == "generate_timeline_gallery_slide_xml"
+    )
+    assert tool_has_image_slots(gallery)
+    assert not tool_matches_image_mode(gallery, "none", 0)
+
+
+def test_json_repair_escapes_quotes_used_as_text_inside_strings():
+    from backend.workflows.slidegen_workflow.utils.helper import repair_and_parse_json
+
+    broken = '["Phát hiện âm mưu", "Chuyển từ "đánh nhanh" sang "đánh chắc, tiến chắc"", "Chuẩn bị"]'
+    assert repair_and_parse_json(broken) == [
+        "Phát hiện âm mưu", 'Chuyển từ "đánh nhanh" sang "đánh chắc, tiến chắc"', "Chuẩn bị",
+    ]
+    assert repair_and_parse_json('[{"title": "Cách mạng "tư duy"", "n": 1}]') == [
+        {"title": 'Cách mạng "tư duy"', "n": 1}
+    ]
+    assert repair_and_parse_json('["a", "b"]') == ["a", "b"]
+
+
+def test_chart_layouts_need_source_figures():
+    from backend.workflows.slidegen_workflow.nodes.section_batch_orchestrator import _chart_data_points
+
+    assert _chart_data_points("Doanh thu đạt 15.501 tỷ, tăng 35%") == 2
+    assert _chart_data_points("Năm 2023 chứng kiến những con số ấn tượng") == 0
+
+
+def test_thank_you_slide_never_shows_demo_contacts():
+    from backend.workflows.slidegen_workflow.tools.tool_des_xml import execute_tool
+
+    xml = execute_tool({
+        "name": "generate_dark_gold_thank_you_slide_xml",
+        "arguments": {"title": "CẢM ƠN", "subtitle": "Hẹn gặp lại quý vị"},
+    }, raise_on_error=True)
+    assert "456-7890" not in xml and "langford" not in xml and "CẢM ƠN" in xml
+
+
+def test_json_repair_handles_backslash_apostrophes_and_truncation():
+    from backend.workflows.slidegen_workflow.utils.helper import repair_and_parse_json
+
+    broken = '[{"label": "A", "content": "Shift from \\\'selling\\\' to \\\'processing\\\'"}, {"label": "B", "content": "Done"'
+    assert repair_and_parse_json(broken) == [
+        {"label": "A", "content": "Shift from 'selling' to 'processing'"},
+        {"label": "B", "content": "Done"},
+    ]
+
+
+def test_highlight_accepts_single_bracket_closers():
+    from backend.workflows.slidegen_workflow.utils.rich_text import extract_highlight_markers
+
+    for closer in ("[/hl]", "[/hl]]", "[[/hl]", "[[/hl]]"):
+        clean, highlights = extract_highlight_markers(
+            {"d": f'sang [[hl color="#B91C1C"]]đánh chắc{closer}, xong'}, source_content=None
+        )
+        assert clean["d"] == "sang đánh chắc, xong"
+        assert [item.text for item in highlights] == ["đánh chắc"]

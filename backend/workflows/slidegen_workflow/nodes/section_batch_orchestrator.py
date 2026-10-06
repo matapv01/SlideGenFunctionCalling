@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from collections import Counter
 from copy import deepcopy
 from typing import Any, Dict, List
@@ -31,6 +33,15 @@ def prepare_section_batches(state: State) -> Dict[str, Any]:
         "section_batches": batches,
         "deck_slide_count": len(jobs),
     }
+
+
+_DATA_NUMBER = re.compile(r"(?<![\w.,])[+-]?\d+(?:[.,]\d+)*\s*%?(?![\w])")
+_YEAR = re.compile(r"(?:19|20)\d\d")
+
+
+def _chart_data_points(content: str) -> int:
+    """Count figures a chart could plot; bare years are labels, not data."""
+    return sum(not _YEAR.fullmatch(number.strip()) for number in _DATA_NUMBER.findall(content))
 
 
 def _compatible_category(
@@ -78,6 +89,9 @@ def assign_layouts(state: State, config: RunnableConfig) -> Dict[str, Any]:
             image_mode = "semantic" if approved_images else "none"
         if image_mode == "semantic" and not approved_images:
             image_mode = "none"
+        if category == "CHART_TOOLS" and _chart_data_points(str(job.get("content") or "")) < 2:
+            # A chart without source figures can only be filled with invented data.
+            category = "CONTENT_TOOLS"
         selected_category, category_tools, compatible_tools = _compatible_category(
             tools_dict, category, image_mode, len(approved_images)
         )

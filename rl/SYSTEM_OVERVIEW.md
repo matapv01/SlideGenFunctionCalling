@@ -31,23 +31,25 @@ JSON slide nguồn
   -> evaluation, checkpoint và training-contract kiểm tra resume
 ```
 
-Canonical format/tool/schema là hard gate: completion không hợp lệ nhận
+Qwen native format/tool/schema là hard gate: completion không hợp lệ nhận
 `RL_INVALID_REWARD` (mặc định `-2.0`) và không đưa qua renderer/ViT. Với
 completion hợp lệ, các reward component đều trong `[0,1]` và được cộng đúng một lần:
 
 ```text
-R = 0.7*lexical + 0.8*semantic + 1.5*numeric_fact
-  + 0.8*dom + 1.0*aesthetic + 0.4*image_loaded
+R = 0.5*lexical + 0.7*semantic + 1.0*numeric_fact
+  + 1.5*dom + 1.5*aesthetic + 0.25*image_loaded
 ```
 
 Đây là scalar reward đưa vào GRPO/DAPO, không phải mỗi rule là một loss
 vi phân độc lập. Numeric literal bị loại khỏi lexical/semantic inputs; tín hiệu numeric không
-được đếm lại ở hai metric đó. Lỗi DOM
-không bị trừ penalty lần nữa; tải ảnh chỉ thuộc `image_loaded`. Các hằng số validity/format không cộng điểm
-thừa cho mọi valid completion. Nếu sample không
-cần ảnh, `image_loaded=1.0` (không áp dụng, không phạt). DOM chuẩn hóa về `[0,1]`.
-Aesthetic component đến từ checkpoint ViT 5 nhãn đã train (lỗi màu nền, màu chữ,
-size chữ, overlap/layout, tràn nội dung), đổi xác suất lỗi thành điểm `1 - mean(p_error)`.
+được đếm lại ở hai metric đó. Text bị cắt/tràn, vượt biên slide hoặc va chạm
+textbox đặt `dom=0`; lỗi DOM không bị trừ thêm lần nữa ngoài component này. Tải
+ảnh chỉ thuộc `image_loaded`. Nếu sample không cần ảnh, `image_loaded=1.0` (không
+áp dụng, không phạt). Các trọng số ưu tiên bố cục và thẩm mỹ ngang với tổng tín
+hiệu nội dung tối đa.
+Aesthetic dùng ViT-Base pairwise một logit: điểm cao là slide được ưa thích.
+Score = sigmoid((logit - center) / temperature), mặc định center=0, temperature=1.
+Đây là mapping bounded chưa hiệu chuẩn, không phải xác suất đúng.
 ViT chỉ là reward model cố định: toàn bộ tham số bị khóa gradient, model ở chế độ
 eval và forward nằm trong `torch.inference_mode()`. Optimizer GRPO chỉ cập nhật
 LoRA của Qwen3-8B; không train lại ViT. Khi chuyển máy chỉ cần checkpoint ViT,
@@ -60,9 +62,9 @@ Không khởi tạo policy, optimizer hay chạy backward. Trên máy không có
 `USE_CPU=true` và thư mục output riêng; trên H100 phải kiểm tra lại với cấu hình
 GPU thật. Preflight không thay thế smoke một optimizer step hoặc pilot chất lượng.
 
-Cụm “chưa hiệu chuẩn” ở đây chỉ nói về các hệ số ghép component đang đặt thủ công,
-không có nghĩa ViT chưa được train; chúng chưa được fit/đánh giá trên preference
-pairwise có nhãn. Numeric attribution cũng là heuristic dựa trên context/cue, không
+ViT đã được train pairwise; các tham số center/temperature và hệ số ghép component
+vẫn là baseline chưa hiệu chuẩn trên phân phối rollout. Cần đánh giá chúng trên
+tập preference có nhãn độc lập. Numeric attribution cũng là heuristic dựa trên context/cue, không
 phải factuality model. Unit test kiểm tra invariant code chứ không chứng minh chất
 lượng reward trên corpus; cần audit ví dụ và component distributions trước run H100 dài.
 
@@ -99,7 +101,7 @@ base model khi resume.
 | `run_artifacts.py` | Tee stdout/stderr; ghi runtime/Git/GPU metadata, JSON logs, biểu đồ metric và ảnh tóm tắt run. Không tham gia tính loss/reward. |
 | `rewards/__init__.py` | Expose API công khai cho composite reward, preflight và setter text embedder. |
 | `rewards/content_reward.py` | Metric thuần nội dung: token/keyword overlap; heuristic giữ số và liên hệ số–ngữ cảnh/cue tăng-giảm; semantic embedding theo chunk với cache LRU có giới hạn. Numeric heuristic không phải bộ kiểm chứng entailment. |
-| `rewards/aesthetic_reward.py` | Nạp checkpoint ViT 5 nhãn local theo `REWARD_MODEL_PATH`, kiểm tra label/order, chấm batch ảnh render; đổi xác suất nhãn lỗi thành điểm thẩm mỹ cao khi ít lỗi. |
+| `rewards/aesthetic_reward.py` | Nạp ViT-Base pairwise local strict; khóa gradient, chia batch inference; sigmoid utility với center/temperature cố định; log raw score và saturation. |
 | `rewards/composite_reward.py` | Bộ điều phối online reward: strict parse/schema/tool gate; áp deck style và ảnh được duyệt; chạy BE XML; render FE; ghép lexical/semantic/numeric/DOM/image/ViT thành scalar weighted reward và log metrics/timing. |
 | `test_eval_tooluse.py` | Regression test cho parser, scoring response và holdout evaluator offline. |
 | `test_grpo_pipeline.py` | Regression test cho split theo doc, gán layout/tool, strict validity, nội dung render, DAPO scaling, model/checkpoint và ViT reward. |
@@ -113,14 +115,19 @@ base model khi resume.
 - `backend/config.py`: cấu hình model/API của bước rebuild, embedding, browser preview và viewport.
 - `backend/workflows/slidegen_workflow/`: tool schema, layout retrieval, deck styling và XML execution dùng lại.
 - `frontend/src/components/XmlSlideCanvas.tsx`, `frontend/src/lib/xmlSlide.ts`: render XML và DOM được reward đọc.
-- `ViT/experiments/vit_multilabel_small/best.pt`: checkpoint aesthetic reward local; không tải pretrained ViT từ Hub trong lúc train.
+- `models/vit/best_model_pairwise.pt`: checkpoint aesthetic reward local; không tải pretrained ViT từ Hub trong lúc train.
 
 ## Trạng thái khoa học và giới hạn
 
 Reward là một tổ hợp engineering signal, không phải ground-truth judge. Semantic
 cosine có thể nhầm paraphrase/contradiction; lexical có thể đánh giá thấp cách
 viết lại; numeric context có thể bỏ sót phủ định, quy đổi đơn vị hoặc số viết bằng
-chữ; ViT đo các nhãn đã train chứ không bảo đảm toàn diện thẩm mỹ. Vì vậy, trước
+chữ; ViT đo preference đã học, không bảo đảm toàn diện thẩm mỹ. Vì vậy, trước
 train tốn kém nên tạo tập completion đối chứng có nhãn, đo pairwise accuracy và
 xem ablation từng component/weight trên holdout. Khi chưa có kết quả đó, không
 nên gọi trọng số mặc định là “đã tối ưu” hay “đã hiệu chuẩn”.
+
+Pairwise settings và preprocessing được fingerprint trong training contract. Đổi
+checkpoint/calibration cần run mới. RL_VIT_BATCH_SIZE=4 giới hạn mỗi forward.
+Theo dõi reward_pairwise/saturated_fraction và score_std; không chuẩn hóa theo
+từng rollout batch.

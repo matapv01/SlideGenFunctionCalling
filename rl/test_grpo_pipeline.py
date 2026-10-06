@@ -169,6 +169,7 @@ def test_content_reward_uses_frontend_rendered_text_not_tool_arguments(monkeypat
     monkeypatch.setenv("RL_REWARD_LEXICAL_WEIGHT", "1")
     monkeypatch.setenv("RL_REWARD_NUMERIC_FACT_WEIGHT", "0")
     monkeypatch.setenv("RL_REWARD_IMAGE_LOADED_WEIGHT", "0")
+    monkeypatch.setenv("RL_REWARD_LANGUAGE_WEIGHT", "0")
 
     source = "quantum quasar neutron"
     completion = (
@@ -315,7 +316,7 @@ def test_reward_preflight_runs_vit_on_frontend_render(monkeypatch):
     assert len(calls) == 1
 
 
-def test_vit_aesthetic_reward_is_higher_for_clean_logits(tmp_path):
+def test_vit_pairwise_reward_is_higher_for_preferred_logits(tmp_path):
     class FixedClassifier(torch.nn.Module):
         def __init__(self, logits):
             super().__init__()
@@ -330,11 +331,106 @@ def test_vit_aesthetic_reward_is_higher_for_clean_logits(tmp_path):
     Image.new("RGB", (16, 16), "white").save(image_path)
 
     def evaluate(value):
-        provider = SimpleNamespace(
-            model=FixedClassifier(torch.full((1, 5), value)),
+        provider = aesthetic_reward.PairwiseRewardModel(
+            model=FixedClassifier(torch.full((1, 1), value)),
             transform=lambda image: torch.zeros((3, 224, 224)),
             device=torch.device("cpu"),
         )
         return aesthetic_reward._evaluate_batch(provider, [image_path])[0]
 
-    assert evaluate(4.0) < evaluate(-4.0)
+    assert evaluate(4.0) > evaluate(-4.0)
+    assert evaluate(0.0) == pytest.approx(0.5)
+
+
+def _stub_reward_runtime(monkeypatch, execute):
+    class Args(BaseModel):
+        text: str
+
+    tool = SimpleNamespace(name="assigned_layout", args_schema=Args)
+    monkeypatch.setattr(composite_reward, "_TOOL_BY_NAME", {tool.name: tool})
+    monkeypatch.setattr(composite_reward, "apply_deck_style_to_tool_call", lambda call, tools, style: call)
+    monkeypatch.setattr(composite_reward, "execute_tool", execute)
+
+    def render(xml, paths, max_concurrency=4):
+        for path in paths:
+            Image.new("RGB", (8, 8)).save(path)
+        return [{"visible_text": "Doanh thu tăng", "issues": []} for _ in paths]
+
+    monkeypatch.setattr(composite_reward, "render_xml_batch_to_png", render)
+    monkeypatch.setattr(composite_reward, "_get_model", lambda: object())
+    monkeypatch.setattr(composite_reward, "_evaluate_batch", lambda model, paths: [0.5] * len(paths))
+
+    class Embedder:
+        def encode(self, texts, **kwargs):
+            return np.tile(np.array([[1.0, 0.0]], dtype=np.float32), (len(texts), 1))
+
+    monkeypatch.setattr(composite_reward, "_get_text_embedder", lambda: Embedder())
+    return '<tool_call>{"name":"assigned_layout","arguments":{"text":"Doanh thu tăng"}}</tool_call>'
+
+
+def test_layout_code_exceptions_from_policy_text_are_invalid_not_fatal(monkeypatch):
+    from xml.parsers.expat import ExpatError
+
+    def broken(call):
+        raise ExpatError("not well-formed (invalid token)")
+
+    completion = _stub_reward_runtime(monkeypatch, broken)
+    reward = slidegen_composite_reward(
+        ["p"], [completion], assigned_tool_name=["assigned_layout"],
+        source_content=["Doanh thu tăng"], deck_style=[{}],
+    )
+    assert reward == [-2.0]
+
+
+def test_watched_eval_slides_are_saved_once_per_step(monkeypatch, tmp_path):
+    completion = _stub_reward_runtime(monkeypatch, lambda call: "<slide />")
+    composite_reward.configure_sample_dump(tmp_path, [("doc-a", 3)])
+    try:
+        slidegen_composite_reward(
+            ["p"] * 3, [completion, completion, "not a tool call"],
+            assigned_tool_name=["assigned_layout"] * 3, source_content=["Doanh thu tăng"] * 3,
+            deck_style=[{}] * 3, source_doc_id=["doc-a", "doc-a", "doc-b"], slide_index=[3, 3, 1],
+            trainer_state=SimpleNamespace(global_step=25),
+        )
+    finally:
+        composite_reward.configure_sample_dump(None, [])
+    saved = sorted(path.name for path in (tmp_path / "step_0025").iterdir())
+    assert saved == ["doc-a_slide03.json", "doc-a_slide03.png"]
+    record = json.loads((tmp_path / "step_0025" / "doc-a_slide03.json").read_text(encoding="utf-8"))
+    assert record["valid"] and record["visible_text"] == "Doanh thu tăng" and record["components"]
+
+
+def _score_one(monkeypatch, visible_text, source):
+    completion = _stub_reward_runtime(monkeypatch, lambda call: "<slide />")
+    monkeypatch.setattr(
+        composite_reward, "render_xml_batch_to_png",
+        lambda xml, paths, max_concurrency=4: [{"visible_text": visible_text, "issues": []} for _ in paths],
+    )
+    return slidegen_composite_reward(
+        ["p"], [completion], assigned_tool_name=["assigned_layout"],
+        source_content=[source], deck_style=[{}],
+    )[0]
+
+
+def test_wrong_language_zeroes_an_otherwise_valid_slide(monkeypatch):
+    source = "Doanh thu tăng trưởng mạnh nhờ chuyển đổi số toàn diện"
+    assert _score_one(monkeypatch, "Revenue grew strongly thanks to digital transformation", source) == 0.0
+    assert _score_one(monkeypatch, "Doanh thu tăng trưởng mạnh nhờ chuyển đổi số", source) > 0.0
+
+
+def test_leaked_highlight_markup_costs_layout_score(monkeypatch):
+    source = "Chuyển từ đánh nhanh thắng nhanh sang đánh chắc tiến chắc"
+    clean = _score_one(monkeypatch, "Chuyển từ đánh nhanh thắng nhanh sang đánh chắc tiến chắc", source)
+    leaked = _score_one(monkeypatch, "Chuyển từ <đánh nhanh thắng nhanh[/hl]]> sang đánh chắc tiến chắc", source)
+    assert leaked < clean
+
+
+def test_unsupported_figures_are_logged_for_diagnosis(monkeypatch, tmp_path):
+    composite_reward.configure_sample_dump(tmp_path, [])
+    try:
+        _score_one(monkeypatch, "Doanh thu tăng 48% và lợi nhuận đạt 1.200 tỷ", "Doanh thu tăng 48%")
+    finally:
+        composite_reward.configure_sample_dump(None, [])
+    records = [json.loads(line) for line in (tmp_path / "unsupported_numbers.jsonl").read_text().splitlines()]
+    assert [item["value"] for item in records[0]["flagged"]] == ["1.200"]
+    assert records[0]["source_numbers"] == ["48%"]

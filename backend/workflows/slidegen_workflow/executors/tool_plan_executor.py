@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import re
 from typing import Any
 
 from backend.application.services.slide_asset_service import (
@@ -17,6 +18,9 @@ class NoApprovedImageError(ValueError):
 
 class ToolPlanError(ValueError):
     """Raised when the generator returns an invalid XML tool call."""
+
+
+_FREEFORM_IMAGE_KEY = re.compile(r"['\"](?:image_url|image_path)['\"]")
 
 
 def _is_image_param_name(name: str) -> bool:
@@ -140,6 +144,15 @@ def tool_has_image_slots(tool) -> bool:
             if any(contains_image_field(child) for child in properties.values()):
                 return True
         if contains_image_field(node.get("items")):
+            return True
+        items = node.get("items")
+        # Free-form dict items declare their keys only in prose (e.g. "'image_url' is the URL ...").
+        if (
+            node.get("type") == "array"
+            and isinstance(items, dict)
+            and not items.get("properties")
+            and _FREEFORM_IMAGE_KEY.search(str(node.get("description", "")))
+        ):
             return True
         for key in ("$defs", "definitions", "anyOf", "oneOf", "allOf"):
             value = node.get(key)

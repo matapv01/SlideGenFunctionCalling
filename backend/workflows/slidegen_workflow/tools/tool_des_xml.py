@@ -2,6 +2,7 @@
 # This conversion maintains the exact parameter definitions from the source
 
 import json
+import re
 from xml.sax.saxutils import escape
 
 from typing import List, Dict, Optional, Union
@@ -397,12 +398,18 @@ class GenerateInstructionsSlideInput(BaseModel):
     body_color: str = Field(default="#FFFFFF", description="Color of the instructional paragraph text.")
     footer_color: str = Field(default="#39C62F", description="Color of the footer information text.")
 
+def _visible_word_count(value: str) -> int:
+    """Count visible words without temporary highlight control markers."""
+    plain = re.sub(r"\[\[(?:hl\b[^\]]*|/hl)\]\]?", " ", str(value), flags=re.IGNORECASE)
+    return len(plain.split())
+
+
 class GenerateSplitContentSlideInput(BaseModel):
     """Input schema for generate_split_content_slide_xml."""
 
-    title: str = Field(..., description="Main slide title displayed at the top-left of the dark diagonal content panel. example: 'YOU CAN ALSO SPLIT YOUR CONTENT'")
-    column_titles: List[str] = Field(..., min_length=2, max_length=2, description="Exactly two column headings displayed below the main title. example: ['White', 'Black']")
-    column_descriptions: List[str] = Field(..., min_length=2, max_length=2, description="Exactly two supporting descriptions, one for each column heading. example: ['White is the color of milk and fresh snow.', 'Black is the color of ebony and outer space.']")
+    title: str = Field(..., description="Main slide title displayed at the top-left of the dark diagonal content panel. Keep it concise enough to fit the title area. example: 'YOU CAN ALSO SPLIT YOUR CONTENT'")
+    column_titles: List[str] = Field(..., min_length=2, max_length=2, description="Exactly two concise column headings displayed below the main title. example: ['White', 'Black']")
+    column_descriptions: List[str] = Field(..., min_length=2, max_length=2, description="Exactly two short supporting descriptions, one per column. Keep each to at most 22 visible words (the columns are 350 px wide); use one concise sentence and preserve the key fact. example: ['White is the color of milk and fresh snow.', 'Black is the color of ebony and outer space.']")
     image_url: str = Field(default="", description="URL for a full-slide landscape image rendered at 1600 × 900 px with a 16:9 aspect ratio. The image covers the entire slide, while a dark diagonal panel overlays most of the left side. Use a wide, high-resolution image with the main subject positioned toward the right side so it remains visible and is not obscured by the content panel.")
     background_color: str = Field(default="#F3F4F7", description="Background color of the slide.")
     dark_panel_color: str = Field(default="#34343B", description="Color of the dark diagonal content panel covering the left side.")
@@ -410,6 +417,18 @@ class GenerateSplitContentSlideInput(BaseModel):
     title_color: str = Field(default="#98F20F", description="Color of the main slide title.")
     heading_color: str = Field(default="#FFFFFF", description="Color of the column headings.")
     body_color: str = Field(default="#FFFFFF", description="Color of the column description text.")
+
+    @model_validator(mode="after")
+    def validate_column_capacity(self):
+        if any(not text.strip() for text in self.column_descriptions):
+            raise ValueError("Both column descriptions must contain visible text")
+        for index, text in enumerate(self.column_descriptions, start=1):
+            if _visible_word_count(text) > 22:
+                raise ValueError(
+                    f"column_descriptions[{index - 1}] exceeds the 22-word limit "
+                    "for the 350 px column"
+                )
+        return self
 
 class GeneratePictureQuoteSlideInput(BaseModel):
     """Input schema for generate_picture_quote_slide_xml."""
@@ -449,12 +468,31 @@ class GenerateClientSnapshotSlideInput(BaseModel):
     subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
     body_color: str = Field(default="#F7F2FF", description="Color of the client details text.")
 
+class ImplementationTimelineMilestoneInput(BaseModel):
+    """One schema-checked milestone sized for a timeline cell."""
+
+    model_config = {"extra": "forbid"}
+
+    label: str = Field(..., description="Short milestone label, at most 5 visible words.")
+    content: str = Field(..., description="Concise milestone description, at most 16 visible words. The timeline automatically shrinks text, but long content can still overflow.")
+
+    @model_validator(mode="after")
+    def validate_cell_capacity(self):
+        if not self.label.strip() or not self.content.strip():
+            raise ValueError("Timeline milestone label and content must not be empty")
+        if _visible_word_count(self.label) > 5:
+            raise ValueError("Timeline milestone labels must contain at most 5 words")
+        if _visible_word_count(self.content) > 16:
+            raise ValueError("Timeline milestone content must contain at most 16 words")
+        return self
+
+
 class GenerateImplementationTimelineSlideInput(BaseModel):
     """Input schema for generate_implementation_timeline_slide_xml."""
 
-    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Implementation timeline'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'Forge offers a structured rollout designed for minimal disruption'")
-    timeline_items: List[Dict[str, str]] = Field(..., description="List of timeline milestones displayed across a horizontal timeline. Each item must contain a 'label' and a 'content' field. example: [{'label': 'Week 1', 'content': 'Kickoff and workspace setup'}, {'label': 'Week 2', 'content': 'Workflow configuration and security policies'}]")
+    title: str = Field(..., description="Main slide title displayed at the top-left. Keep it concise enough for the title area. example: 'Implementation timeline'")
+    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. Keep it to one concise sentence. example: 'Forge offers a structured rollout designed for minimal disruption'")
+    timeline_items: List[ImplementationTimelineMilestoneInput] = Field(..., min_length=2, max_length=6, description="Provide 2–6 timeline milestones. Each item must contain exactly a short 'label' (at most 5 visible words) and 'content' (at most 16 visible words). Pass an actual JSON array of objects, not a string containing JSON. example: [{'label': 'Week 1', 'content': 'Kickoff and workspace setup'}, {'label': 'Week 2', 'content': 'Workflow configuration and security policies'}]")
     background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
     title_color: str = Field(default="#A678FF", description="Color of the main title.")
     subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
@@ -598,9 +636,9 @@ class GenerateDarkGoldThankYouSlideInput(BaseModel):
 
     title: str = Field(..., description="Main thank-you headline displayed in one centered line inside the dark panel. Recommended maximum of 40 characters. example: 'THANK YOU'")
     subtitle: str = Field(..., description="Supporting closing message displayed below the title. Recommended maximum of 180 characters and up to 2 lines. example: 'Thank you for your time and attention. We look forward to working with you.'")
-    phone_text: str = Field(..., description="Phone number displayed beside the phone icon in one line. example: '(123) 456-7890'")
-    email_text: str = Field(..., description="Email address displayed beside the email icon in one line. example: 'david.langford@email.com'")
-    website_text: str = Field(..., description="Website address displayed beside the website icon in one line. example: 'davidlangford.com'")
+    phone_text: str = Field(default="", description="Phone number displayed beside the phone icon in one line. Fill it only when SLIDE CONTENT states it; otherwise leave it empty (never invent contact details).")
+    email_text: str = Field(default="", description="Email address displayed beside the email icon in one line. Fill it only when SLIDE CONTENT states it; otherwise leave it empty (never invent contact details).")
+    website_text: str = Field(default="", description="Website address displayed beside the website icon in one line. Fill it only when SLIDE CONTENT states it; otherwise leave it empty (never invent contact details).")
     image_url: str = Field(default="", description="URL for a landscape background image displayed at 1600 × 900 px in PowerPoint with a 16:9 aspect ratio.")
     background_color: str = Field(default="#050505", description="Fallback background color of the slide.")
     panel_color: str = Field(default="#000000", description="Background color of the centered content panel.")
@@ -659,8 +697,8 @@ class GenerateMonthlySalesRevenueLineSlideInput(BaseModel):
 class GenerateMarketShareDistributionSlideInput(BaseModel):
     """Input schema for generate_market_share_distribution_slide_xml."""
 
-    title: str = Field(default="...", description="Main slide title displayed as large bold text in the upper-left area. Write a concise phrase that states the subject or comparison represented by the donut chart. Supports up to 3 wrapped lines. example: 'Customer Distribution by Region'")
-    intro_text: str = Field(default="...", description="Short introductory paragraph displayed in the upper-right area. Explain what the chart is measuring, which groups or segments are being compared, and any relevant period, scope, or context. Do not write a list of values. Supports up to 4 wrapped lines. example: 'The chart compares the distribution of customers across international and domestic segments during the current reporting period.'")
+    title: str = Field(..., description="Main slide title displayed as large bold text in the upper-left area. Write a concise phrase that states the subject or comparison represented by the donut chart. Supports up to 3 wrapped lines. example: 'Customer Distribution by Region'")
+    intro_text: str = Field(..., description="Short introductory paragraph displayed in the upper-right area. Explain what the chart is measuring, which groups or segments are being compared, and any relevant period, scope, or context. Do not write a list of values. Supports up to 4 wrapped lines. example: 'The chart compares the distribution of customers across international and domestic segments during the current reporting period.'")
     items: list[dict[str, str | int]] = Field(..., description="List of up to 8 comparable categories or segments represented in the donut chart and detail cards. The layout supports a maximum of 8 items arranged responsively in one or two columns. For each item, provide 'title' as the category label, 'description' as a short sentence explaining what the category represents, 'value' as a positive comparable number used to calculate the percentage, and 'color' as a distinct hexadecimal color. Values greater than 0 are automatically normalized into percentages; do not format the value as text with a percent sign. The generator selects a suitable icon automatically from the item's title and description, so do not include an 'icon' field. example: [{'title': 'International', 'description': 'Customers located outside the domestic market.', 'value': 50, 'color': '#7ED957'}, {'title': 'Local', 'description': 'Customers located within the domestic market.', 'value': 50, 'color': '#FFBD59'}]")
     background_color: str = Field(default="#FFFFFF", description="Background color of the entire slide.")
     title_color: str = Field(default="#000000", description="Color of the main slide title.")
@@ -669,9 +707,9 @@ class GenerateMarketShareDistributionSlideInput(BaseModel):
 class GenerateBestSellingProductChartSlideInput(BaseModel):
     """Input schema for generate_best_selling_product_chart_slide_xml."""
 
-    title: str = Field(default="...", description="Main slide title displayed prominently at the top center. Write a concise, presentation-ready phrase describing the subject, category, metric, or comparison shown in the grouped column chart. example: 'BEST SELLING PRODUCT'")
+    title: str = Field(..., description="Main slide title displayed prominently at the top center. Write a concise, presentation-ready phrase describing the subject, category, metric, or comparison shown in the grouped column chart. example: 'BEST SELLING PRODUCT'")
     chart_data: list[dict[str, object]] = Field(..., description="Ordered data for the grouped column chart. Each item represents one category on the horizontal axis and must contain 'category' as its label and 'series' as a dictionary mapping consistent series names to numeric values. Use the same series names in every category so the grouped bars and legend align correctly. The layout supports up to 6 categories and up to 3 series; provide raw numeric values without percentage signs or formatted numeric strings. example: [{'category': 'January', 'series': {'Sunscreen': 7, 'Moisturizer': 6, 'Serum': 5}}, {'category': 'February', 'series': {'Sunscreen': 8, 'Moisturizer': 8, 'Serum': 4}}, {'category': 'March', 'series': {'Sunscreen': 15, 'Moisturizer': 10, 'Serum': 5}}]")
-    footer_text: str = Field(default="...", description="Short supporting paragraph displayed below the chart. Summarize the main trend, comparison, reporting period, or key takeaway shown by the bars. Use one concise paragraph and do not repeat every individual value. example: 'Sales increased across the reporting period, with Sunscreen remaining the strongest-performing product in the final month.'")
+    footer_text: str = Field(..., description="Short supporting paragraph displayed below the chart. Summarize the main trend, comparison, reporting period, or key takeaway shown by the bars. Use one concise paragraph and do not repeat every individual value. example: 'Sales increased across the reporting period, with Sunscreen remaining the strongest-performing product in the final month.'")
     background_color: str = Field(default="#FFFFFF", description="Background color of the entire slide.")
     panel_color: str = Field(default="#F8F8F8", description="Very light background color used for the main chart panel containing the legend, grid, axes, and grouped bars.")
     title_color: str = Field(default="#2B8FB4", description="Color of the centered slide title.")
@@ -803,7 +841,7 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
     func=generate_split_content_slide_xml,
     name="generate_split_content_slide_xml",
-    description="Generates a split-content slide with a full-slide workspace image, a dark diagonal content panel on the left, a large title, multiple text columns, and a bright slanted accent bar aligned with the panel boundary. Ideal for comparisons, paired concepts, contrasting ideas, feature summaries, and side-by-side content presentations.",
+    description="Generates a split-content slide with a full-slide workspace image, a dark diagonal content panel on the left, a large title, and two text columns. Each 350 px column description must stay within 22 visible words to avoid clipping. Ideal for comparisons, paired concepts, contrasting ideas, feature summaries, and side-by-side content presentations.",
     args_schema=GenerateSplitContentSlideInput,
     ),
     StructuredTool.from_function(
@@ -827,7 +865,7 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
     func=generate_implementation_timeline_slide_xml,
     name="generate_implementation_timeline_slide_xml",
-    description="Generates an implementation timeline slide with a large title and subtitle, an abstract vector decoration, and horizontally arranged milestones containing labels and descriptions. Ideal for project schedules, rollout plans, implementation phases, product roadmaps, and delivery timelines.",
+    description="Generates an implementation timeline slide with a large title and subtitle, an abstract vector decoration, and 2–6 horizontally arranged milestones. Each milestone has a label of at most 5 visible words and content of at most 16 visible words; supply timeline_items as an array of objects. Ideal for project schedules, rollout plans, implementation phases, product roadmaps, and delivery timelines.",
     args_schema=GenerateImplementationTimelineSlideInput,
     ),
     StructuredTool.from_function(
@@ -1198,6 +1236,13 @@ def execute_tool(
                 args,
                 source_content=source_content,
             )
+            # StructuredTool forwards only supplied keys, so omitted optional fields would
+            # fall back to the Python function's demo text instead of the schema default.
+            schema = getattr(TOOL_MAP[name], "args_schema", None)
+            if isinstance(clean_args, dict) and hasattr(schema, "model_fields"):
+                for field_name, field in schema.model_fields.items():
+                    if field_name not in clean_args and not field.is_required():
+                        clean_args[field_name] = field.get_default(call_default_factory=True)
             result = TOOL_MAP[name].invoke(clean_args)
             result_text = str(result) if result is not None else ""
             if result_text.strip() and result_text.strip().lower() != "none":
