@@ -7,6 +7,9 @@ backend, which remains aligned with minh_dep.
 from __future__ import annotations
 
 import json
+import os
+import re
+from pathlib import Path
 
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     TOOLS_DICT,
@@ -93,13 +96,24 @@ _DOM_METRICS_SCRIPT = r"""() => {
       if (!content || !content.textContent?.trim()) return null;
       const rect = box.getBoundingClientRect();
       const textRects = [];
+      const colorRuns = [];
       const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
       let node = walker.nextNode();
       while (node) {
         if (node.textContent?.trim()) {
           const range = document.createRange();
           range.selectNodeContents(node);
-          textRects.push(...Array.from(range.getClientRects()));
+          const nodeRects = Array.from(range.getClientRects());
+          textRects.push(...nodeRects);
+          const nodeStyle = getComputedStyle(node.parentElement);
+          const color = nodeStyle.color;
+          const fontPx = toY(parseFloat(nodeStyle.fontSize) || 0);
+          for (const item of nodeRects) {
+            if (item.width > 0 && item.height > 0) {
+              colorRuns.push({color, font_px: fontPx, x: toX(item.left - canvasRect.left), y: toY(item.top - canvasRect.top),
+                              width: toX(item.width), height: toY(item.height)});
+            }
+          }
         }
         node = walker.nextNode();
       }
@@ -135,6 +149,11 @@ _DOM_METRICS_SCRIPT = r"""() => {
                                     Math.max(tolerance, item.height * 0.35))) {
         reasons.push('text_height');
       }
+      // Glyphs past the slide edge are cut off in the exported slide even when their textbox is inside it.
+      if (inkRects.some(item => item.bottom > canvasRect.bottom + tolerance || item.top < canvasRect.top - tolerance ||
+                                item.right > canvasRect.right + tolerance || item.left < canvasRect.left - tolerance)) {
+        reasons.push('text_cutoff');
+      }
       const maxLinesValue = box.getAttribute('data-xml-max-lines');
       const maxLines = maxLinesValue ? Number(maxLinesValue) : null;
       const lines = lineCount(visibleRects);
@@ -144,7 +163,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
         text: content.innerText || content.textContent || '',
         x: toX(rect.left - canvasRect.left), y: toY(rect.top - canvasRect.top),
         width: toX(rect.width), height: toY(rect.height), reasons,
-        collision_rects: collisionRects,
+        collision_rects: collisionRects, color_runs: colorRuns,
       };
     }).filter(Boolean);
   const issues = boxes.flatMap(box => box.reasons.map(type => ({type, textbox: box.id})));
@@ -160,6 +179,8 @@ _DOM_METRICS_SCRIPT = r"""() => {
     issues,
     image_status: imageStatus,
     collision_boxes: boxes.map(box => ({id: box.id, rects: box.collision_rects})),
+    color_boxes: boxes.map(box => ({id: box.id, runs: box.color_runs})),
+    canvas: {width: logicalWidth, height: logicalHeight},
   };
 }"""
 
@@ -202,6 +223,76 @@ def _attach_bbox_collision_issues(metrics: dict) -> dict:
     return metrics
 
 
+_CSS_COLOR = re.compile(r"rgba?\(([^)]+)\)")
+LOW_CONTRAST_RATIO = 2.0
+TINY_TEXT_PX = 15.0
+
+
+def _relative_luminance(rgb) -> float:
+    channels = [value / 255.0 for value in rgb]
+    linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def contrast_ratio(first, second) -> float:
+    lighter, darker = sorted((_relative_luminance(first), _relative_luminance(second)), reverse=True)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def _attach_contrast_issues(metrics: dict, png_path: str) -> dict:
+    """Flag text whose colour is hard to tell from the pixels actually rendered behind it.
+
+    The background comes from the screenshot, so images, gradients and shapes behind the text all count.
+    """
+    boxes = metrics.pop("color_boxes", [])
+    canvas = metrics.pop("canvas", None) or {}
+    worst = None
+    if boxes and canvas.get("width") and Path(png_path).is_file():
+        import numpy as np
+        from PIL import Image
+
+        with Image.open(png_path) as handle:
+            pixels = np.asarray(handle.convert("RGB"))
+        scale_x = pixels.shape[1] / canvas["width"]
+        scale_y = pixels.shape[0] / canvas["height"]
+        for box in boxes:
+            ratios = []
+            for run in box.get("runs", []):
+                match = _CSS_COLOR.match(run.get("color") or "")
+                if match is None:
+                    continue
+                parts = [float(part) for part in match.group(1).replace("/", ",").split(",")[:4]]
+                alpha = parts[3] if len(parts) > 3 else 1.0
+                pad = run["height"] * 0.25
+                left, right = int((run["x"] - pad) * scale_x), int((run["x"] + run["width"] + pad) * scale_x)
+                top, bottom = int((run["y"] - pad) * scale_y), int((run["y"] + run["height"] + pad) * scale_y)
+                region = pixels[max(0, top):max(0, bottom), max(0, left):max(0, right)]
+                if region.size == 0:
+                    continue
+                # Glyph ink covers well under half of a line box, so the median pixel is background.
+                background = np.median(region.reshape(-1, 3), axis=0)
+                text = np.array(parts[:3]) * alpha + background * (1 - alpha)
+                ratios.append((contrast_ratio(text, background), run["width"] * run["height"]))
+            area = sum(weight for _, weight in ratios)
+            if not area:
+                continue
+            low_area = sum(weight for ratio, weight in ratios if ratio < LOW_CONTRAST_RATIO)
+            box_worst = min(ratio for ratio, _ in ratios)
+            worst = box_worst if worst is None else min(worst, box_worst)
+            # A whole unreadable textbox, not a single highlighted word on a busy photo.
+            if low_area / area >= 0.5:
+                metrics.setdefault("issues", []).append({"type": "low_contrast", "textbox": box.get("id", "textbox")})
+    metrics["min_contrast"] = worst
+    sizes = [run.get("font_px") for box in boxes for run in box.get("runs", []) if run.get("font_px")]
+    metrics["min_font_px"] = min(sizes) if sizes else None
+    for box in boxes:
+        box_sizes = [run["font_px"] for run in box.get("runs", []) if run.get("font_px")]
+        # On the 1600 px canvas this is about 9 pt on a 13.33 in slide: below it people stop reading.
+        if box_sizes and max(box_sizes) < TINY_TEXT_PX:
+            metrics.setdefault("issues", []).append({"type": "tiny_text", "textbox": box.get("id", "textbox")})
+    return metrics
+
+
 def render_xml_batch_to_png(
     xml_contents: list[str],
     output_paths: list[str],
@@ -215,7 +306,10 @@ def render_xml_batch_to_png(
 
     from rl.render_runtime import render_batch
     results = render_batch(xml_contents, output_paths, _DOM_METRICS_SCRIPT, max_concurrency)
-    return [_attach_bbox_collision_issues(result) for result in results]
+    return [
+        _attach_contrast_issues(_attach_bbox_collision_issues(result), path)
+        for result, path in zip(results, output_paths, strict=True)
+    ]
 
 
 def render_xml_to_png(xml_content: str, output_path: str) -> None:
@@ -223,8 +317,41 @@ def render_xml_to_png(xml_content: str, output_path: str) -> None:
     render_xml_batch_to_png([xml_content], [output_path], max_concurrency=1)
 
 
+_CAPACITY_PATH = Path(__file__).resolve().parent / "data" / "tool_text_capacity.json"
+_CAPACITY_CACHE: dict | None = None
+
+
+def tool_text_capacity() -> dict:
+    """Per-field text capacity measured by scripts/probe_tool_capacity.py ({} when hints are disabled)."""
+    global _CAPACITY_CACHE
+    if os.getenv("RL_CAPACITY_HINTS", "true").lower() not in {"1", "true", "yes", "on"}:
+        return {}
+    if _CAPACITY_CACHE is None:
+        _CAPACITY_CACHE = (
+            json.loads(_CAPACITY_PATH.read_text(encoding="utf-8")) if _CAPACITY_PATH.is_file() else {}
+        )
+    return _CAPACITY_CACHE
+
+
+def add_capacity_hints(tool: dict, capacity: dict) -> dict:
+    """Tell the generator how much text each field of this layout holds before it is cut off."""
+    tool = json.loads(json.dumps(tool))
+    function = tool["function"]
+    properties = function["parameters"].get("properties", {})
+    for path, entry in capacity.get(function["name"], {}).items():
+        if not isinstance(entry, dict):
+            continue
+        field, _, sub = path.partition(".")
+        if field not in properties:
+            continue
+        scope = f"each item's '{sub}'" if sub else ("each item" if entry.get("per_item") else "this text")
+        note = f" Layout capacity: keep {scope} within about {entry['max_chars']} characters or it will be cut off."
+        properties[field]["description"] = (properties[field].get("description") or "").rstrip() + note
+    return tool
+
+
 def format_tool_for_qwen(tool) -> dict:
-    return {
+    formatted = {
         "type": "function",
         "function": {
             "name": tool.name,
@@ -232,6 +359,8 @@ def format_tool_for_qwen(tool) -> dict:
             "parameters": tool.args_schema.model_json_schema(),
         },
     }
+    capacity = tool_text_capacity()
+    return add_capacity_hints(formatted, capacity) if capacity else formatted
 
 
 QWEN_GENERATOR_SYSTEM_PROMPT = (
@@ -257,6 +386,22 @@ RL SERIALIZATION CONTRACT:
   call only; do not append a second tool call or end-of-turn text.
 """
 )
+
+
+_VIETNAMESE_LETTER = re.compile(r"[ăâđêôơưàảãáạằẳẵắặầẩẫấậèẻẽéẹềểễếệìỉĩíịòỏõóọồổỗốộờởỡớợùủũúụừửữứựỳỷỹýỵ]", re.IGNORECASE)
+
+
+def _language_line(slide_content: str) -> str:
+    """Planner fields are often English while the content is Vietnamese; name the output language outright."""
+    words = slide_content.split()
+    vietnamese = sum(bool(_VIETNAMESE_LETTER.search(word)) for word in words) >= 0.2 * max(1, len(words))
+    if vietnamese:
+        return (
+            "LANGUAGE: SLIDE CONTENT above is written in Vietnamese, so every visible text value you output "
+            "(titles, labels, items, descriptions) must be in Vietnamese, even though the topic and design "
+            "brief are in English."
+        )
+    return "LANGUAGE: write every visible text value in the same language as SLIDE CONTENT above."
 
 
 def build_generator_human_prompt(
@@ -303,4 +448,5 @@ Return one Qwen native call to the assigned tool `{assigned_tool_name}`. Use
 field, then </function></tool_call>. List and object parameter values must be
 valid JSON of the schema-declared type, with quotes inside JSON strings escaped.
 Return no prose, second call, or trailing text.
+{_language_line(slide_content)}
 """

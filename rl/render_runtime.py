@@ -102,7 +102,16 @@ class RenderRuntime:
 
         async def slot(xml, path):
             async with semaphore:
-                return await asyncio.wait_for(render_one(xml, path), timeout=timeout)
+                # A busy renderer can time out one screenshot; that must not end a training run.
+                # Only timeouts are retried: a slide that fails for another reason will fail again.
+                retries = max(0, int(os.getenv("RL_RENDER_TIMEOUT_RETRIES", "2")))
+                for attempt in range(retries + 1):
+                    try:
+                        return await asyncio.wait_for(render_one(xml, path), timeout=timeout)
+                    except Exception as error:
+                        if attempt == retries or "timeout" not in type(error).__name__.lower():
+                            raise
+                        await asyncio.sleep(0.5 * (attempt + 1))
 
         # Wait for all page cleanup even if one sample fails. No orphan tasks
         # are left suspended between Runner.run calls or during model training.

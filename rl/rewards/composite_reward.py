@@ -17,6 +17,8 @@ import numpy as np
 
 from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 from backend.workflows.slidegen_workflow.utils.deck_style import apply_deck_style_to_tool_call
+from backend.workflows.slidegen_workflow.utils.xml_autofit import fit_xml_text
+from backend.workflows.slidegen_workflow.utils.xml_contrast import enforce_xml_text_contrast
 from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
     NoApprovedImageError,
     inject_approved_images,
@@ -46,15 +48,21 @@ _COMPONENT_NAMES = (
     "lexical", "semantic", "numeric_fact", "language", "dom", "aesthetic", "image_loaded"
 )
 _DOM_PENALTY_WEIGHTS = {
-    "text_width": 0.20,
-    "text_height": 0.25,
-    "max_lines": 0.20,
-    "slide_boundary": 0.40,
-    "bbox_collision": 0.25,
+    # Calibrated on 820 human-rated slides (flag "display error"): cut-off text, collisions and unreadable
+    # colours were confirmed by people 73-90% of the time; width overflow alone never was (0/38) and
+    # box-height overflow alone rarely (10%), so those two no longer dominate the layout score.
+    "text_cutoff": 0.40,
+    "low_contrast": 0.40,
+    "bbox_collision": 0.30,
     "markup_leak": 0.5,
+    "slide_boundary": 0.15,
+    "tiny_text": 0.30,
+    "text_height": 0.12,
+    "max_lines": 0.05,
+    "text_width": 0.0,
 }
 # Rich-text markup the frontend failed to parse shows up verbatim on the slide.
-_MARKUP_LEAK = re.compile(r"\[\[|\]\]|\[/?hl\b", re.IGNORECASE)
+_MARKUP_LEAK = re.compile(r"\[\[|\]\]|\[/?hl\b|</?(?:span|b|i|u|strong|em|font|br|p|div)\b[^>]*>|\bstyle\s*=\s*[\"']", re.IGNORECASE)
 
 # One clipped textbox costs 0.2-0.4; about three distinct failures zero the component.
 _DOM_PENALTY_CAP = 1.0
@@ -421,6 +429,19 @@ def slidegen_composite_reward(
                 # Policy text reaches layout code (e.g. control chars break minidom); never kill training.
                 invalid_reasons["tool_execution"] += 1
                 continue
+            # Same final boundary as the production renderer node: shrink text to fit, then repair unreadable colours.
+            style = styles[index] or {}
+            if os.getenv("RL_TEXT_AUTOFIT", "true").lower() in {"1", "true", "yes", "on"}:
+                xml_content, _ = fit_xml_text(xml_content)
+            if os.getenv("RL_CONTRAST_GUARD", "true").lower() in {"1", "true", "yes", "on"}:
+                xml_content, _ = enforce_xml_text_contrast(
+                    xml_content,
+                    preferred_colors=[
+                        color for color in (style.get("accent_color"), style.get("primary_color"),
+                                            style.get("secondary_color"), style.get("text_color")) if color
+                    ],
+                    protect_unknown_surfaces=True,
+                )
             rows.append(
                 {
                     "index": index,
@@ -542,6 +563,8 @@ def slidegen_composite_reward(
             "valid": row is not None, "components": row_components.get(index),
             "dom_issues": sorted({issue.get("type") for issue in frontend["issues"]} - {None}) if frontend else None,
             "visible_text": frontend["visible_text"] if frontend else None,
+            "min_contrast": frontend.get("min_contrast") if frontend else None,
+            "min_font_px": frontend.get("min_font_px") if frontend else None,
             "completion": completions[index],
         }
         _sample_path(step, key, ".json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -284,6 +284,7 @@ def test_browser_reuse_and_failed_batch_cleanup(monkeypatch, tmp_path):
     monkeypatch.delenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE", raising=False)
     monkeypatch.setattr(playwright.async_api, "async_playwright", Manager)
     monkeypatch.setenv("RL_RENDER_TIMEOUT_SECONDS", "1")
+    monkeypatch.setenv("RL_RENDER_TIMEOUT_RETRIES", "0")
     runtime = RenderRuntime()
     async def prepare(page, xml, index, **kwargs):
         page.xml = xml
@@ -593,3 +594,39 @@ def test_fabricated_contact_details_count_as_unsupported():
     assert content_reward._unsupported_number_fraction(
         "Website: https://fpt.com.vn, email support@fpt.com", "support@fpt.com www.fpt.com.vn"
     ) == 0.0
+
+
+def test_contrast_issue_uses_rendered_pixels(tmp_path):
+    from PIL import Image
+
+    from rl.slidegen_adapter import _attach_contrast_issues
+
+    png = tmp_path / "slide.png"
+    image = Image.new("RGB", (320, 180), "#0F172A")
+    image.paste("#FFFFFF", (0, 90, 320, 180))
+    image.save(png)
+    run = {"x": 20, "width": 200, "height": 20}
+    metrics = {
+        "issues": [],
+        "canvas": {"width": 160, "height": 90},
+        "color_boxes": [
+            {"id": "dark_on_dark", "runs": [{**run, "x": 10, "width": 100, "y": 10, "color": "rgb(15, 23, 42)"}]},
+            {"id": "dark_on_light", "runs": [{**run, "x": 10, "width": 100, "y": 60, "color": "rgb(15, 23, 42)"}]},
+            {"id": "translucent", "runs": [{**run, "x": 10, "width": 100, "y": 60, "color": "rgba(15, 23, 42, 0.1)"}]},
+        ],
+    }
+    result = _attach_contrast_issues(metrics, str(png))
+    flagged = {issue["textbox"] for issue in result["issues"] if issue["type"] == "low_contrast"}
+    assert flagged == {"dark_on_dark", "translucent"}
+    assert result["min_contrast"] < 1.1
+    assert "color_boxes" not in result and "canvas" not in result
+
+
+def test_dom_score_penalizes_unreadable_and_cut_off_text():
+    from rl.rewards.composite_reward import _dom_score
+
+    assert _dom_score([]) == 1.0
+    assert _dom_score([{"type": "low_contrast", "textbox": "title"}]) == pytest.approx(0.60)
+    assert _dom_score([{"type": "text_cutoff", "textbox": "body"}]) == pytest.approx(0.60)
+    # Width overflow that people never flagged as a display error costs nothing on its own.
+    assert _dom_score([{"type": "text_width", "textbox": "body"}]) == 1.0

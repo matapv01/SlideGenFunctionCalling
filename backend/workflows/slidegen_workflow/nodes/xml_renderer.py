@@ -8,6 +8,7 @@ import time
 import xml.etree.ElementTree as ET
 
 from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.utils.xml_autofit import fit_xml_text
 from backend.workflows.slidegen_workflow.utils.xml_contrast import (
     enforce_xml_text_contrast,
 )
@@ -44,6 +45,9 @@ async def render_xml(state: State, config: RunnableConfig) -> State:
     # This is the final boundary after tool execution and overflow rewriting.
     # Validate the actual persisted XML rather than trusting prompt/style
     # arguments, which may no longer match the rendered layout surface.
+    xml_content, fit_report = fit_xml_text(xml_content)
+    if fit_report:
+        print(f"Auto-fit shrank {len(fit_report)} overflowing textbox(es).")
     deck_style = state.get("deck_style_plan") or {}
     preferred_colors = [
         deck_style.get("accent_color"),

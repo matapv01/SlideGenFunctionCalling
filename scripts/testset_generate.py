@@ -34,9 +34,9 @@ from dotenv import load_dotenv  # noqa: E402
 load_dotenv(ROOT / ".env")
 
 TESTSET = ROOT / "slidegen_data" / "testset"
-ROWS = TESTSET / "eval_rows.json"
+ROWS = TESTSET / os.getenv("TESTSET_ROWS", "eval_rows.json")
 OUTPUTS = TESTSET / "outputs"
-SCORED = TESTSET / "scored"
+SCORED = TESTSET / os.getenv("TESTSET_SCORED_DIR", "scored")
 MODEL_ID = "Qwen/Qwen3.5-35B-A3B"
 MODEL_REVISION = "59d61f3ce65a6d9863b86d2e96597125219dc754"
 RETRIEVER_INDEX = ROOT / "qwen3_5_35b_dapo_content_final_v3_20261005" / "tool_retriever_index"
@@ -211,13 +211,15 @@ def _gemini_call(row: dict, model: str, api_key: str, schema_mode: str = "json")
     }
     url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent"
     for attempt in range(6):
-        response = requests.post(url, params={"key": api_key}, json=body, timeout=180)
+        # The key travels in a header so it can never end up in an error message or a log line.
+        response = requests.post(url, headers={"x-goog-api-key": api_key}, json=body, timeout=180)
         if response.status_code == 400 and schema_mode == "json" and "chema" in response.text:
             return _gemini_call(row, model, api_key, schema_mode="openapi")
         if response.status_code in {429, 500, 502, 503, 504}:
             time.sleep(min(60, 5 * 2 ** attempt))
             continue
-        response.raise_for_status()
+        if not response.ok:
+            raise RuntimeError(f"Gemini HTTP {response.status_code}: {response.text[:200]}")
         data = response.json()
         parts = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
         call = next((part["functionCall"] for part in parts if "functionCall" in part), None)
@@ -229,12 +231,19 @@ def _gemini_call(row: dict, model: str, api_key: str, schema_mode: str = "json")
     raise RuntimeError(f"Gemini kept failing for {row['key']}")
 
 
+from rl.slidegen_adapter import add_capacity_hints  # noqa: E402
+
+
 def gemini(args) -> None:
     from concurrent.futures import ThreadPoolExecutor
 
     rows = json.loads(ROWS.read_text(encoding="utf-8"))
+    if args.capacity_hints:
+        capacity = json.loads((ROOT / "rl/data/tool_text_capacity.json").read_text(encoding="utf-8"))
+        for row in rows:
+            row["tools"] = [add_capacity_hints(tool, capacity) for tool in row["tools"]]
     api_key = os.environ["GEMINI_API_KEY"].strip()
-    path = OUTPUTS / "gemini.jsonl"
+    path = OUTPUTS / args.output
     done = {(record["key"], record["sample"]) for record in _read_jsonl(path)}
     jobs = [(row, k) for k in range(args.samples) for row in rows if (row["key"], k) not in done]
     print(f"gemini: {len(jobs)} completions to generate ({len(done)} on disk)")
@@ -246,7 +255,7 @@ def gemini(args) -> None:
             text, usage = _gemini_call(row, args.model, api_key)
         except Exception as error:  # noqa: BLE001
             text, usage = "", {"error": str(error)[:300]}
-        return {"system": "gemini", "model": args.model, "key": row["key"], "sample": k, "completion": text,
+        return {"system": Path(args.output).stem, "model": args.model, "key": row["key"], "sample": k, "completion": text,
                 "usage": usage, "seconds": round(time.perf_counter() - started, 2)}
 
     with ThreadPoolExecutor(args.workers) as pool:
@@ -254,6 +263,75 @@ def gemini(args) -> None:
             _append_jsonl(path, [record])
             if count % 20 == 0 or count == len(jobs):
                 print(f"gemini: {count}/{len(jobs)}", flush=True)
+
+
+def _with_retries(function, attempts: int = 5, **kwargs):
+    """The renderer is shared with training; a screenshot timeout should not end a long scoring run."""
+    for attempt in range(attempts):
+        try:
+            return function(**kwargs)
+        except Exception as error:  # noqa: BLE001
+            if attempt == attempts - 1:
+                raise
+            print(f"scoring batch failed ({type(error).__name__}); retry {attempt + 1}", flush=True)
+            time.sleep(20)
+
+
+def llm(args) -> None:
+    """Sample completions from the project's OpenAI-compatible LLM server (backend.config.LLM_BASE_URL)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    import requests
+
+    from backend import config
+
+    rows = json.loads(ROWS.read_text(encoding="utf-8"))
+    if args.capacity_hints:
+        capacity = json.loads((ROOT / "rl/data/tool_text_capacity.json").read_text(encoding="utf-8"))
+        for row in rows:
+            row["tools"] = [add_capacity_hints(tool, capacity) for tool in row["tools"]]
+    if args.extra_system:
+        for row in rows:
+            row["messages"] = [
+                {**message, "content": message["content"].rstrip() + "\n" + args.extra_system + "\n"}
+                if message["role"] == "system" else message for message in row["messages"]
+            ]
+    if args.extra_user:
+        for row in rows:
+            row["messages"] = [
+                {**message, "content": message["content"].rstrip() + "\n" + args.extra_user + "\n"}
+                if message["role"] == "user" else message for message in row["messages"]
+            ]
+    path = OUTPUTS / args.output
+    done = {(record["key"], record["sample"]) for record in _read_jsonl(path)}
+    jobs = [(row, k) for k in range(args.samples) for row in rows if (row["key"], k) not in done]
+    headers = {"Authorization": f"Bearer {os.environ.get('LLM_API_KEY', '').strip()}"}
+    print(f"{path.stem}: {len(jobs)} completions to generate ({len(done)} on disk)")
+
+    def run(job):
+        row, k = job
+        body = {"model": config.LLM_MODEL, "messages": row["messages"], "tools": row["tools"], "tool_choice": "required",
+                "temperature": SAMPLING["temperature"], "top_p": SAMPLING["top_p"], "max_tokens": MAX_NEW_TOKENS}
+        text = ""
+        for attempt in range(4):
+            try:
+                response = requests.post(f"{config.LLM_BASE_URL}/chat/completions", headers=headers, json=body, timeout=240)
+                if response.ok:
+                    calls = response.json()["choices"][0]["message"].get("tool_calls") or []
+                    if calls:
+                        payload = {"name": calls[0]["function"]["name"], "arguments": json.loads(calls[0]["function"]["arguments"])}
+                        text = f"<tool_call>{json.dumps(payload, ensure_ascii=False)}</tool_call>"
+                    break
+            except Exception:  # noqa: BLE001
+                pass
+            time.sleep(5 * (attempt + 1))
+        return {"system": path.stem, "key": row["key"], "sample": k, "completion": text}
+
+    with ThreadPoolExecutor(args.workers) as pool:
+        for count, record in enumerate(pool.map(run, jobs), 1):
+            _append_jsonl(path, [record])
+            if count % 40 == 0 or count == len(jobs):
+                print(f"{path.stem}: {count}/{len(jobs)}", flush=True)
 
 
 def score(args) -> None:
@@ -268,9 +346,16 @@ def score(args) -> None:
     composite_reward.preflight_reward_runtime()
     for path in sorted(OUTPUTS.glob("*.jsonl")):
         system = path.stem
+        if args.systems and system not in args.systems.split(","):
+            continue
         target = SCORED / f"{system}.jsonl"
         done = {(record["key"], record["sample"]) for record in _read_jsonl(target)}
         records = [record for record in _read_jsonl(path) if (record["key"], record["sample"]) not in done]
+        if args.only_annotated:
+            shown = {(("base" if side["system"] == "best8" else side["system"]), side["key"], side["sample"])
+                     for pair in json.loads((ROOT / "slidegen_data/annotation/secret_mapping.json").read_text())["pairs"].values()
+                     for side in (pair["a"], pair["b"])}
+            records = [record for record in records if (system, record["key"], record["sample"]) in shown]
         dump = SCORED / "png" / system
         for start in range(0, len(records), args.batch_size):
             chunk = records[start:start + args.batch_size]
@@ -278,7 +363,8 @@ def score(args) -> None:
             keys = [f"{record['key']}-s{record['sample']}" for record in chunk]
             composite_reward.configure_sample_dump(dump, [(key, 0) for key in keys])
             meta = [rows[record["key"]] for record in chunk]
-            rewards = composite_reward.slidegen_composite_reward(
+            rewards = _with_retries(
+                composite_reward.slidegen_composite_reward,
                 prompts=[row["prompt"] for row in meta],
                 completions=[record["completion"] for record in chunk],
                 assigned_tool_name=[row["assigned_tool_name"] for row in meta],
@@ -297,8 +383,11 @@ def score(args) -> None:
                     "system": system, "key": record["key"], "sample": record["sample"], "reward": reward,
                     "valid": detail["valid"], "components": detail.get("components"),
                     "dom_issues": detail.get("dom_issues"), "visible_text": detail.get("visible_text"),
-                    "png": str(png.relative_to(ROOT)) if png.exists() else None,
+                    "min_contrast": detail.get("min_contrast"), "min_font_px": detail.get("min_font_px"),
+                    "png": str(png.relative_to(ROOT)) if png.exists() and not args.discard_png else None,
                 })
+                if args.discard_png:
+                    png.unlink(missing_ok=True)
             _append_jsonl(target, scored)
             print(f"score {system}: {start + len(chunk)}/{len(records)}", flush=True)
 
@@ -317,10 +406,22 @@ def main() -> None:
     p.add_argument("--model", default="models/gemini-3.5-flash")
     p.add_argument("--samples", type=int, default=1)
     p.add_argument("--workers", type=int, default=8)
+    p.add_argument("--capacity-hints", action="store_true", help="add measured per-field text capacity to the schema")
+    p.add_argument("--output", default="gemini.jsonl")
+    p = commands.add_parser("llm")
+    p.add_argument("--samples", type=int, default=1)
+    p.add_argument("--workers", type=int, default=4)
+    p.add_argument("--capacity-hints", action="store_true")
+    p.add_argument("--output", required=True)
+    p.add_argument("--extra-user", default="", help="extra line appended to the user prompt (prompt experiments)")
+    p.add_argument("--extra-system", default="", help="extra rule appended to the system prompt (prompt experiments)")
     p = commands.add_parser("score")
     p.add_argument("--batch-size", type=int, default=32)
+    p.add_argument("--discard-png", action="store_true", help="keep scores only (re-scoring with a new reward)")
+    p.add_argument("--only-annotated", action="store_true", help="score only slides shown to human annotators")
+    p.add_argument("--systems", default="", help="comma-separated subset of outputs/*.jsonl stems")
     args = parser.parse_args()
-    {"prepare": prepare, "qwen": qwen, "gemini": gemini, "score": score}[args.command](args)
+    {"prepare": prepare, "qwen": qwen, "gemini": gemini, "llm": llm, "score": score}[args.command](args)
 
 
 if __name__ == "__main__":

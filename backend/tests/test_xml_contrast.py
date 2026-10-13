@@ -122,3 +122,19 @@ def test_xml_renderer_enforces_contrast_after_all_rewrites(tmp_path) -> None:
     assert textboxes[0].get("color") == "#0D9488"
     assert textboxes[1].get("color") == "#FFFFFF"
     assert len(state["current_contrast_report"]) == 2
+
+
+def test_autofit_shrinks_overflowing_textbox_to_declared_minimum():
+    from backend.workflows.slidegen_workflow.utils.xml_autofit import fit_xml_text
+
+    long_text = "Một câu rất dài cần nhiều dòng để hiển thị trọn vẹn trong ô chữ hẹp. " * 4
+    xml = (
+        '<presentation width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5"><slide>'
+        f'<textbox x="100" y="100" width="500" height="160" size="30" min_font_size="14">{long_text}</textbox>'
+        '<textbox x="100" y="400" width="900" height="200" size="24" min_font_size="12">Ngắn</textbox>'
+        "</slide></presentation>"
+    )
+    fitted, report = fit_xml_text(xml)
+    assert len(report) == 1 and 14 <= report[0]["to"] < 30
+    assert 'size="24"' in fitted
+    assert fit_xml_text(fitted)[1] == [] or fit_xml_text(fitted)[1][0]["to"] >= 14
