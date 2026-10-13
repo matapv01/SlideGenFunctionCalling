@@ -1,0 +1,40 @@
+# Experiment config — THE SINGLE SOURCE OF TRUTH FOR THIS RUN.
+name: dapo round2d final-boundary reward hints language
+created: 2026-10-13
+git_commit: "51c9d01e7d74fb852865f7ff67f442d5864e74eb"
+run_dir: qwen3_5_35b_dapo_r2d_20261013        # launch.sh there holds every env var; checkpoints carry the training-contract hash
+seed: 42                                       # GRPO_DATA_SEED (split + sampling); eval seed 43
+
+hypothesis: >-
+  We claim DAPO fine-tuning with a human-calibrated composite reward improves the share of usable
+  slides and the composite reward of Qwen3.5-35B-A3B on unseen documents, measured by blind human
+  pairwise preference (primary) and the composite reward (secondary), vs the untrained base model
+  on the same prompts; and reaches parity with Gemini 3.5 Flash on the same prompts.
+delta_vs_prior_work: >-
+  vs round 1 (rl/runs/final_v3_20261005): reward path runs the production final boundary (auto-fit +
+  contrast guard); detectors low_contrast / text_cutoff / tiny_text / HTML leak; layout penalties
+  calibrated on human display-error flags; per-field capacity hints; explicit language line.
+  Several things changed at once, so attribution needs the ablations listed in RESULTS.md.
+
+dataset: rl/data/grpo_replanned_dataset.json (49 decks, about 18 topics)
+split: 44 train decks / 5 eval decks, document-level, seed 42; eval topics overlap train topics
+leakage_check: false   # see RESULTS.md: the 291-slide Wikipedia set was used for design decisions and is now DEV data
+
+baseline: base Qwen3.5-35B-A3B on the same prompts (eval@0 of this run; test-set generation after training)
+
+model: Qwen/Qwen3.5-35B-A3B rev 59d61f3, QLoRA NF4, LoRA r16 alpha32 on q/k/v/o + gate/up/down
+hyperparameters:
+  learning_rate: 1e-5
+  num_generations: 4
+  gradient_accumulation_steps: 16
+  generation_batch_size: 16
+  max_completion_length: 1024
+  epochs: 3            # 279 steps; early stopping patience 4 evals (25 steps apart), min 93 steps
+  temperature: 1.0
+  top_p: 0.95
+  loss_type: dapo
+  reward_weights: {lexical: 0.5, semantic: 0.7, numeric_fact: 1.0, dom: 1.5, aesthetic: 1.0, image_loaded: 0.25}
+  dom_penalties: {text_cutoff: 0.40, low_contrast: 0.40, bbox_collision: 0.30, markup_leak: 0.5, tiny_text: 0.30, slide_boundary: 0.15, text_height: 0.12, max_lines: 0.05, text_width: 0.0}
+
+seeds: [42]       # ONE seed so far: any comparison claim needs >=3 (about 6 GPU-hours each)
+metric: eval_reward on 42 held-out slides x 4 samples every 25 steps (checkpoint selection); final table on a fresh test set
