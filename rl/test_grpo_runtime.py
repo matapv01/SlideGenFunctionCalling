@@ -448,9 +448,9 @@ def test_reward_components_are_bounded_and_have_matching_weights():
 def test_dom_score_is_normalized_and_does_not_recount_image_failures():
     assert reward._dom_score([]) == 1.0
     assert reward._dom_score([{"type": "image_load"}]) == 1.0
-    one_issue = reward._dom_score([{"type": "text_height", "textbox": "body"}])
+    one_issue = reward._dom_score([{"type": "text_cutoff", "textbox": "body"}])
     many_issues = reward._dom_score([
-        {"type": "text_height", "textbox": f"body-{index}"}
+        {"type": "text_cutoff", "textbox": f"body-{index}"}
         for index in range(20)
     ])
     assert 0.0 < one_issue < 1.0

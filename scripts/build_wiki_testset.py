@@ -4,7 +4,7 @@ No LLM rewrites the source: every slide_content sentence is copied from the arti
 faithfulness is judged against real text and no baseline model authored the inputs.
 
 Usage: python scripts/build_wiki_testset.py slidegen_data/testset/wiki_articles.json \
-           slidegen_data/testset/wiki_testset_rows.json
+           slidegen_data/testset/wiki_testset_rows.json [first_doc_id=1000]
 """
 
 import json
@@ -96,9 +96,10 @@ def build_deck(article: dict, doc_id: int) -> list[dict] | None:
 
 def main() -> None:
     articles = json.load(open(sys.argv[1], encoding="utf-8"))
+    base_id = int(sys.argv[3]) if len(sys.argv) > 3 else 1000
     rows, skipped = [], []
     for offset, article in enumerate(articles):
-        deck = build_deck(article, 1000 + offset)
+        deck = build_deck(article, base_id + offset)
         if deck is None:
             skipped.append(article["title"])
         else:

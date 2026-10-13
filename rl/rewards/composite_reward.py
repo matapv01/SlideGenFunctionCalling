@@ -57,8 +57,10 @@ _DOM_PENALTY_WEIGHTS = {
     "markup_leak": 0.5,
     "slide_boundary": 0.15,
     "tiny_text": 0.30,
-    "text_height": 0.12,
-    "max_lines": 0.05,
+    # Round 2d learned to write 14% less text to avoid these two, which people rarely see (10% when alone),
+    # and lost content coverage; they now carry almost no weight.
+    "text_height": 0.03,
+    "max_lines": 0.0,
     "text_width": 0.0,
 }
 # Rich-text markup the frontend failed to parse shows up verbatim on the slide.

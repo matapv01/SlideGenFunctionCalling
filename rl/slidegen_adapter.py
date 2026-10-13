@@ -344,8 +344,18 @@ def add_capacity_hints(tool: dict, capacity: dict) -> dict:
         field, _, sub = path.partition(".")
         if field not in properties:
             continue
-        scope = f"each item's '{sub}'" if sub else ("each item" if entry.get("per_item") else "this text")
-        note = f" Layout capacity: keep {scope} within about {entry['max_chars']} characters or it will be cut off."
+        notes = []
+        if entry.get("max_items"):
+            notes.append(f"use at most {entry['max_items']} items")
+        if entry.get("max_chars"):
+            scope = f"each item's '{sub}'" if sub else ("each item" if entry.get("per_item") else "this text")
+            notes.append(f"keep {scope} within about {entry['max_chars']} characters")
+        if not notes:
+            continue
+        if entry.get("max_items"):
+            note = f" Layout capacity: {' and '.join(notes)}, or the slide will overflow and be cut off."
+        else:  # wording run 2d was trained with
+            note = f" Layout capacity: {notes[0]} or it will be cut off."
         properties[field]["description"] = (properties[field].get("description") or "").rstrip() + note
     return tool
 

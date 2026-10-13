@@ -1,0 +1,379 @@
+{
+ "generate_modern_cover_slide_xml": {
+  "title": {
+   "max_chars": 65
+  }
+ },
+ "generate_it_sales_proposal_cover_inline_vector_xml_closer": {
+  "_baseline_overflow": true
+ },
+ "generate_elegant_professional_cover_slide_xml": {
+  "title": {
+   "max_chars": 15
+  },
+  "subtitle": {
+   "max_chars": 70
+  },
+  "presented_by_label": {
+   "max_chars": 280
+  },
+  "presenter_name": {
+   "max_chars": 250
+  }
+ },
+ "generate_elegant_fancy_font_cover_slide_xml": {
+  "title": {
+   "max_chars": 265
+  },
+  "subtitle": {
+   "max_chars": 215
+  }
+ },
+ "generate_intro_welcome_slide_xml": {
+  "subtitle": {
+   "max_chars": 520
+  }
+ },
+ "generate_memorial_cover_slide_xml": {
+  "title": {
+   "max_chars": 410
+  },
+  "subtitle": {
+   "max_chars": 370
+  }
+ },
+ "generate_social_topic_idea_slide_xml": {
+  "title": {
+   "max_chars": 120
+  },
+  "subtitle": {
+   "max_chars": 170
+  }
+ },
+ "generate_roman_empire_history_cover_slide_xml": {
+  "subtitle": {
+   "max_chars": 185
+  },
+  "title": {
+   "max_chars": 20
+  }
+ },
+ "generate_transition_headline_slide_xml": {
+  "title": {
+   "max_chars": 50
+  },
+  "subtitle": {
+   "max_chars": 125
+  }
+ },
+ "generate_about_us_transition_slide_xml": {
+  "title": {
+   "max_chars": 115
+  }
+ },
+ "generate_gallery_transition_slide_xml": {
+  "title": {
+   "max_chars": 200
+  }
+ },
+ "generate_slide_transition_slide_xml": {
+  "title": {
+   "max_chars": 90
+  }
+ },
+ "generate_green_social_media_transition_slide_xml": {
+  "title": {
+   "max_chars": 120
+  }
+ },
+ "generate_section_header_image_slide_xml": {
+  "section_header": {
+   "max_chars": 60
+  }
+ },
+ "generate_ai_content_slide_xml": {
+  "title": {
+   "max_chars": 20
+  },
+  "intro_text": {
+   "max_chars": 55
+  },
+  "bullet_items": {
+   "max_chars": 25,
+   "per_item": true,
+   "items": 3,
+   "max_items": 2
+  },
+  "footer_text": {
+   "max_chars": 55
+  },
+  "_baseline_overflow": true
+ },
+ "generate_two_ideas_slide_xml": {
+  "title": {
+   "max_chars": 45
+  },
+  "idea_titles": {
+   "max_chars": 40,
+   "per_item": true,
+   "items": 2
+  },
+  "idea_descriptions": {
+   "max_chars": 80,
+   "per_item": true,
+   "items": 2
+  }
+ },
+ "generate_three_ideas_slide_xml": {
+  "title": {
+   "max_chars": 40
+  },
+  "idea_titles": {
+   "max_chars": 30,
+   "per_item": true,
+   "items": 3
+  },
+  "idea_descriptions": {
+   "max_chars": 70,
+   "per_item": true,
+   "items": 3
+  }
+ },
+ "generate_instructions_slide_xml": {
+  "title": {
+   "max_chars": 30
+  },
+  "left_heading": {
+   "max_chars": 30
+  },
+  "left_paragraphs": {
+   "max_chars": 60,
+   "per_item": true,
+   "items": 3,
+   "max_items": 3
+  },
+  "right_heading": {
+   "max_chars": 30
+  },
+  "right_paragraphs": {
+   "max_chars": 100,
+   "per_item": true,
+   "items": 2,
+   "max_items": 2
+  },
+  "footer_text": {
+   "max_chars": 90
+  }
+ },
+ "generate_split_content_slide_xml": {
+  "title": {
+   "max_chars": 90
+  },
+  "column_titles": {
+   "max_chars": 95,
+   "per_item": true,
+   "items": 2
+  }
+ },
+ "generate_picture_quote_slide_xml": {
+  "title": {
+   "max_chars": 100
+  },
+  "content": {
+   "max_chars": 120
+  }
+ },
+ "generate_bullet_content_slide_xml": {
+  "title": {
+   "max_chars": 55
+  },
+  "bullet_items": {
+   "max_chars": 40,
+   "per_item": true,
+   "items": 3,
+   "max_items": 6
+  },
+  "closing_text": {
+   "max_chars": 110
+  }
+ },
+ "generate_client_snapshot_slide_xml": {
+  "title": {
+   "max_chars": 45
+  },
+  "subtitle": {
+   "max_chars": 430
+  },
+  "client_details": {
+   "max_chars": 85,
+   "per_item": true,
+   "items": 4
+  }
+ },
+ "generate_implementation_timeline_slide_xml": {
+  "title": {
+   "max_chars": 250
+  }
+ },
+ "generate_problem_slide_xml": {
+  "title": {
+   "max_chars": 50
+  },
+  "description": {
+   "max_chars": 265
+  },
+  "problem_items": {
+   "max_chars": 90,
+   "per_item": true,
+   "items": 3
+  }
+ },
+ "generate_topics_overview_slide_xml": {
+  "title": {
+   "max_chars": 215
+  },
+  "topics.title": {
+   "max_chars": 580,
+   "per_item": true,
+   "items": 1
+  },
+  "topics": {
+   "max_items": 3
+  }
+ },
+ "generate_timeline_gallery_slide_xml": {
+  "title": {
+   "max_chars": 140
+  },
+  "timeline_items.title": {
+   "max_chars": 80,
+   "per_item": true,
+   "items": 1
+  },
+  "timeline_items.description": {
+   "max_chars": 110,
+   "per_item": true,
+   "items": 1
+  },
+  "timeline_items": {
+   "max_items": 6
+  }
+ },
+ "generate_memorial_introduction_slide_xml": {
+  "section_title": {
+   "max_chars": 95
+  },
+  "body_text": {
+   "max_chars": 640
+  }
+ },
+ "generate_legacy_of_love_slide_xml": {
+  "title": {
+   "max_chars": 140
+  },
+  "left_text": {
+   "max_chars": 760
+  },
+  "right_text": {
+   "max_chars": 760
+  }
+ },
+ "generate_social_media_points_slide_xml": {
+  "title": {
+   "max_chars": 110
+  },
+  "cards.title": {
+   "max_chars": 250,
+   "per_item": true,
+   "items": 1
+  },
+  "cards.description": {
+   "max_chars": 875,
+   "per_item": true,
+   "items": 1
+  },
+  "cards": {
+   "max_items": 3
+  }
+ },
+ "generate_numbered_social_media_points_slide_xml": {
+  "title": {
+   "max_chars": 70
+  },
+  "items": {
+   "max_items": 6
+  }
+ },
+ "generate_platform_instructions_slide_xml": {
+  "items.title": {
+   "max_chars": 60,
+   "per_item": true,
+   "items": 1
+  },
+  "items": {
+   "max_items": 9
+  }
+ },
+ "generate_hanging_thank_you_slide_xml": {
+  "title": {
+   "max_chars": 15
+  },
+  "subtitle": {
+   "max_chars": 315
+  }
+ },
+ "generate_business_thank_you_slide_xml": {
+  "title": {
+   "max_chars": 75
+  },
+  "description": {
+   "max_chars": 425
+  }
+ },
+ "generate_dark_gold_thank_you_slide_xml": {
+  "title": {
+   "max_chars": 90
+  },
+  "subtitle": {
+   "max_chars": 445
+  }
+ },
+ "generate_paper_flight_thank_you_slide_xml": {
+  "title": {
+   "max_chars": 85
+  }
+ },
+ "generate_closing_thank_you_memorial_slide_xml": {
+  "closing_statement": {
+   "max_chars": 270
+  },
+  "title": {
+   "max_chars": 175
+  },
+  "subtitle": {
+   "max_chars": 365
+  }
+ },
+ "generate_monthly_sales_revenue_line_slide_xml": {
+  "_baseline_overflow": true
+ },
+ "generate_market_share_distribution_slide_xml": {
+  "title": {
+   "max_chars": 25
+  },
+  "_baseline_overflow": true
+ },
+ "generate_best_selling_product_chart_slide_xml": {
+  "title": {
+   "max_chars": 25
+  },
+  "chart_data.category": {
+   "max_chars": 35,
+   "per_item": true,
+   "items": 3
+  },
+  "footer_text": {
+   "max_chars": 275
+  }
+ }
+}

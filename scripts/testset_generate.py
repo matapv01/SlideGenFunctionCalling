@@ -33,7 +33,7 @@ from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv(ROOT / ".env")
 
-TESTSET = ROOT / "slidegen_data" / "testset"
+TESTSET = ROOT / "slidegen_data" / os.getenv("TESTSET_DIR", "testset")  # "testset" = development set, "testset_v2" = held-out test
 ROWS = TESTSET / os.getenv("TESTSET_ROWS", "eval_rows.json")
 OUTPUTS = TESTSET / "outputs"
 SCORED = TESTSET / os.getenv("TESTSET_SCORED_DIR", "scored")
@@ -100,7 +100,7 @@ def prepare(args) -> None:
     print(f"{len(rows)} prompts from {len(documents)} decks -> {ROWS}")
 
 
-def _generate_qwen(model, tokenizer, prompts: list[str], seed: int) -> list[tuple[str, int]]:
+def _generate_qwen(model, tokenizer, prompts: list[str], seed: int, temperature: float = 1.0) -> list[tuple[str, int]]:
     import torch
     from transformers import GenerationConfig
 
@@ -109,7 +109,7 @@ def _generate_qwen(model, tokenizer, prompts: list[str], seed: int) -> list[tupl
     config = GenerationConfig(
         max_new_tokens=MAX_NEW_TOKENS, do_sample=True, pad_token_id=tokenizer.pad_token_id,
         bos_token_id=tokenizer.bos_token_id, eos_token_id=tokenizer.eos_token_id,
-        use_cache=True, disable_compile=True, **SAMPLING,
+        use_cache=True, disable_compile=True, **{**SAMPLING, "temperature": temperature},
     )
     with torch.no_grad():
         output = model.generate(**encoded, generation_config=config)
@@ -133,6 +133,9 @@ def qwen(args) -> None:
     model.eval()
     plans = [("dapo", args.rl_samples, False), ("base", args.base_samples, True)]
     for system, samples, disable_adapter in plans:
+        if samples <= 0:
+            continue
+        system = f"{system}{args.tag}"
         path = OUTPUTS / f"{system}.jsonl"
         done = {(record["key"], record["sample"]) for record in _read_jsonl(path)}
         jobs = [(row, k) for k in range(samples) for row in rows if (row["key"], k) not in done]
@@ -145,9 +148,11 @@ def qwen(args) -> None:
             try:
                 if disable_adapter:
                     with model.disable_adapter():
-                        results = _generate_qwen(model, tokenizer, [row["prompt"] for row, _ in chunk], seed=index)
+                        results = _generate_qwen(model, tokenizer, [row["prompt"] for row, _ in chunk], seed=index,
+                                                 temperature=args.temperature)
                 else:
-                    results = _generate_qwen(model, tokenizer, [row["prompt"] for row, _ in chunk], seed=index)
+                    results = _generate_qwen(model, tokenizer, [row["prompt"] for row, _ in chunk], seed=index,
+                                                 temperature=args.temperature)
             except Exception as error:  # noqa: BLE001
                 import torch
 
@@ -334,6 +339,51 @@ def llm(args) -> None:
                 print(f"{path.stem}: {count}/{len(jobs)}", flush=True)
 
 
+def llm_raw(args) -> None:
+    """Sample raw Qwen-native completions from the project LLM server with the exact templated prompt."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    import requests
+
+    from backend import config
+
+    rows = json.loads(ROWS.read_text(encoding="utf-8"))
+    path = OUTPUTS / args.output
+    done = {(record["key"], record["sample"]) for record in _read_jsonl(path)}
+    jobs = [(row, k) for k in range(args.samples) for row in rows if (row["key"], k) not in done]
+    headers = {"Authorization": f"Bearer {os.environ.get('LLM_API_KEY', '').strip()}"}
+    marker = "<|im_end|>\n<|im_start|>assistant"
+    print(f"{path.stem}: {len(jobs)} completions to generate ({len(done)} on disk)")
+
+    def run(job):
+        row, k = job
+        prompt = row["prompt"]
+        if args.extra_user:
+            cut = prompt.rfind(marker)
+            prompt = prompt[:cut].rstrip() + "\n" + args.extra_user + "\n" + prompt[cut:]
+        text = ""
+        for attempt in range(4):
+            try:
+                response = requests.post(f"{config.LLM_BASE_URL}/completions", headers=headers, timeout=300, json={
+                    "model": config.LLM_MODEL, "prompt": prompt, "max_tokens": MAX_NEW_TOKENS,
+                    "temperature": args.temperature, "top_p": SAMPLING["top_p"]})
+                if response.ok:
+                    text = response.json()["choices"][0]["text"].strip()
+                    if text.endswith("</function>"):
+                        text += "\n</tool_call>"  # the server stops on the closing tag
+                    break
+            except Exception:  # noqa: BLE001
+                pass
+            time.sleep(5 * (attempt + 1))
+        return {"system": path.stem, "key": row["key"], "sample": k, "completion": text}
+
+    with ThreadPoolExecutor(args.workers) as pool:
+        for count, record in enumerate(pool.map(run, jobs), 1):
+            _append_jsonl(path, [record])
+            if count % 40 == 0 or count == len(jobs):
+                print(f"{path.stem}: {count}/{len(jobs)}", flush=True)
+
+
 def score(args) -> None:
     from rl.rewards import composite_reward
     from rl.rewards.content_reward import set_text_embedder
@@ -402,6 +452,8 @@ def main() -> None:
     p.add_argument("--rl-samples", type=int, default=4)
     p.add_argument("--base-samples", type=int, default=8)
     p.add_argument("--batch-size", type=int, default=32)
+    p.add_argument("--temperature", type=float, default=SAMPLING["temperature"])
+    p.add_argument("--tag", default="", help="suffix for output names, e.g. _r2d_t03 -> outputs/dapo_r2d_t03.jsonl")
     p = commands.add_parser("gemini")
     p.add_argument("--model", default="models/gemini-3.5-flash")
     p.add_argument("--samples", type=int, default=1)
@@ -415,13 +467,19 @@ def main() -> None:
     p.add_argument("--output", required=True)
     p.add_argument("--extra-user", default="", help="extra line appended to the user prompt (prompt experiments)")
     p.add_argument("--extra-system", default="", help="extra rule appended to the system prompt (prompt experiments)")
+    p = commands.add_parser("llm-raw")
+    p.add_argument("--temperature", type=float, default=SAMPLING["temperature"])
+    p.add_argument("--samples", type=int, default=1)
+    p.add_argument("--workers", type=int, default=6)
+    p.add_argument("--extra-user", default="")
+    p.add_argument("--output", required=True)
     p = commands.add_parser("score")
     p.add_argument("--batch-size", type=int, default=32)
     p.add_argument("--discard-png", action="store_true", help="keep scores only (re-scoring with a new reward)")
     p.add_argument("--only-annotated", action="store_true", help="score only slides shown to human annotators")
     p.add_argument("--systems", default="", help="comma-separated subset of outputs/*.jsonl stems")
     args = parser.parse_args()
-    {"prepare": prepare, "qwen": qwen, "gemini": gemini, "llm": llm, "score": score}[args.command](args)
+    {"prepare": prepare, "qwen": qwen, "gemini": gemini, "llm": llm, "llm-raw": llm_raw, "score": score}[args.command](args)
 
 
 if __name__ == "__main__":
