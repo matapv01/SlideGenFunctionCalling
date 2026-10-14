@@ -45,8 +45,10 @@ def _rolling(values: list[float], window: int = 10) -> list[float]:
 def main() -> None:
     run, out = Path(sys.argv[1]), Path(sys.argv[2])
     out.mkdir(parents=True, exist_ok=True)
-    checkpoint = max(run.glob("checkpoint-*"), key=lambda p: int(p.name.split("-")[1]))
-    history = json.loads((checkpoint / "trainer_state.json").read_text())["log_history"]
+    # Pruned runs keep the newest checkpoint's state at the run root; prefer whichever is longer.
+    states = [path / "trainer_state.json" for path in run.glob("checkpoint-*")] + [run / "trainer_state.json"]
+    histories = [json.loads(path.read_text())["log_history"] for path in states if path.is_file()]
+    history = max(histories, key=len)
     evals = [row for row in history if "eval_reward" in row]
     train = [row for row in history if "reward" in row and "eval_reward" not in row]
     _write_csv(out / "eval_metrics.csv", evals)
