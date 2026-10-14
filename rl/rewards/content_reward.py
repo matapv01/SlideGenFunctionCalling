@@ -247,7 +247,7 @@ def _vietnamese_word_ratio(text: str) -> float:
     return sum(bool(_VIETNAMESE_MARKS.intersection(word)) for word in words) / len(words) if words else 0.0
 
 
-_FOREIGN_SCRIPT = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\u0400-\u04ff\u0e00-\u0e7f]")
+_FOREIGN_SCRIPT = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\u0400-\u04ff\u0e00-\u0e7f\u0590-\u06ff\u0900-\u097f]")
 
 
 # Broken diacritic encoding sampled at T=1.0 ("Ph^\\i^^i^^n Kh^^o^^a"). LaTeX inside math fields puts a
