@@ -149,7 +149,8 @@ XML_CONTENT_PROMPT = """
 8. TEXT-COLOR EMPHASIS:
    - When the slide contains a key metric, date, result, or keyword, emphasize 1 to 3 short phrases. Otherwise, do not add emphasis.
    - Insert this exact control marker only inside a visible text string argument:
-   [[hl color="#RRGGBB"]]important phrase[[/hl]]
+   [[hl color=#RRGGBB]]important phrase[[/hl]]
+   - Write the color without quotes, exactly as above, so the marker stays valid inside JSON string values.
    - Replace #RRGGBB with a valid six-digit hex text color selected from the slide palette, normally its accent color or a closely related shade.
    - The selected color must differ visibly from the surrounding text and remain easy to read against the slide background.
    - On light slides, prefer a dark or saturated accent. On dark slides, prefer a bright or light accent.
@@ -491,3 +492,13 @@ DOCUMENT TO ANALYZE:
 
 Please analyze this document and create a hierarchical structure with appropriate headings and content distribution.
 """
+
+
+# Round-4 models were trained with the quoted marker; set RL_HL_QUOTED=true to rebuild their exact prompt.
+if __import__("os").getenv("RL_HL_QUOTED", "false").lower() in {"1", "true", "yes", "on"}:
+    XML_CONTENT_PROMPT = XML_CONTENT_PROMPT.replace(
+        "   [[hl color=#RRGGBB]]important phrase[[/hl]]\n"
+        "   - Write the color without quotes, exactly as above, so the marker stays valid inside JSON string values.",
+        '   [[hl color="#RRGGBB"]]important phrase[[/hl]]',
+    )
+

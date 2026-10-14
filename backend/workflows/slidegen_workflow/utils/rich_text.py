@@ -18,8 +18,10 @@ _HIGHLIGHT_TOKEN_RE = re.compile(
     r"\[\[hl\b[^\]]*\]\]|\[\[?/hl\]\]?",
     flags=re.IGNORECASE,
 )
+# The colour may be quoted or bare: a bare #RRGGBB stays valid inside JSON string values,
+# where a raw double quote would end the string.
 _CANONICAL_HIGHLIGHT_OPEN_RE = re.compile(
-    r'^\[\[hl\s+color="(?P<color>[^\"]+)"\]\]$',
+    r'^\[\[hl\s+color=(?:"(?P<color>[^\"]+)"|\'(?P<color_single>[^\']+)\'|(?P<color_bare>#[0-9A-Fa-f]{6}))\]\]$',
     flags=re.IGNORECASE,
 )
 _LEGACY_HIGHLIGHT_OPEN_RE = re.compile(
@@ -456,7 +458,8 @@ def extract_highlight_markers(
                     canonical = _CANONICAL_HIGHLIGHT_OPEN_RE.fullmatch(token)
                     legacy = _LEGACY_HIGHLIGHT_OPEN_RE.fullmatch(token)
                     active_color = (
-                        canonical.group("color") if canonical else
+                        (canonical.group("color") or canonical.group("color_single") or canonical.group("color_bare"))
+                        if canonical else
                         legacy.group("color") if legacy else None
                     )
                     depth = 1

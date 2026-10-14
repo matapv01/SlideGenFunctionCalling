@@ -247,6 +247,30 @@ def _vietnamese_word_ratio(text: str) -> float:
     return sum(bool(_VIETNAMESE_MARKS.intersection(word)) for word in words) / len(words) if words else 0.0
 
 
+_FOREIGN_SCRIPT = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\u0400-\u04ff\u0e00-\u0e7f]")
+
+
+def _foreign_text_penalty(source: str, generated: str) -> float:
+    """Multiplier for script/language slips the slide-level ratio misses (sampling noise at T=1.0).
+
+    A CJK/Cyrillic/Thai character absent from the source, or a 4+ word line with no Vietnamese
+    letters on a Vietnamese slide (e.g. an English title), each cost a fixed share. Off unless
+    RL_FOREIGN_TEXT_CHECK is set, so earlier rounds stay comparable.
+    """
+    if os.getenv("RL_FOREIGN_TEXT_CHECK", "false").lower() not in {"1", "true", "yes", "on"}:
+        return 1.0
+    factor = 1.0
+    if _FOREIGN_SCRIPT.search(generated or "") and not _FOREIGN_SCRIPT.search(source or ""):
+        factor *= 0.3
+    if _vietnamese_word_ratio(source) >= 0.2:
+        for line in re.split(r"\n|(?<=[.!?:])\s", generated or ""):
+            words = re.findall(r"[A-Za-zÀ-ỹ]+", line)
+            if len(words) >= 4 and not any(_vietnamese_word_ratio(word) > 0 for word in words):
+                factor *= 0.7
+                break
+    return factor
+
+
 def _language_consistency(source: str, generated: str) -> float:
     """Vietnamese sources must yield Vietnamese slides; the multilingual embedder cannot see the switch."""
     source_ratio = _vietnamese_word_ratio(source)

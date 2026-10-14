@@ -27,6 +27,7 @@ from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
 from rl.rewards.aesthetic_reward import _evaluate_batch, _get_model, reward_model_settings
 from rl.rewards.content_reward import (
     _get_text_embedder,
+    _foreign_text_penalty,
     _keypoint_coverage_scores,
     _language_consistency,
     _lexical_score,
@@ -543,7 +544,8 @@ def slidegen_composite_reward(
             "semantic": semantic,
             "keypoint": keypoint,
             "numeric_fact": fact_coverage,
-            "language": _language_consistency(row["source"], frontend["visible_text"]),
+            "language": _language_consistency(row["source"], frontend["visible_text"])
+            * _foreign_text_penalty(row["source"], frontend["visible_text"]),
             "dom": dom,
             "aesthetic": float(aesthetic),
             "image_loaded": float(row["image_loaded"]),
