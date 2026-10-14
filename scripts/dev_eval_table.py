@@ -1,4 +1,4 @@
-"""Dev-set table for scored systems. Usage: python scripts/dev_eval_table.py <scored_dir> name=system[:bestN] ..."""
+"""Dev-set table for scored systems. Usage: python scripts/dev_eval_table.py name=scored_dir/system[:bestN] ..."""
 import collections
 import json
 import random
@@ -45,7 +45,8 @@ def row(name, records):
     return {"system": name, "n": n, "reward": sum(r["reward"] for r in records) / n, "ci": [lo, hi], "valid": len(valid) / n,
             "usable": (len(valid) - visible) / n, "visible": visible / n, "cutoff": issue("text_cutoff"),
             "collision": issue("bbox_collision"), "low_contrast": issue("low_contrast"), "markup_leak": issue("markup_leak"),
-            "lexical": comp("lexical"), "semantic": comp("semantic"), "numeric_fact": comp("numeric_fact"),
+            "spill": sum(bool({"plate_spill", "panel_spill"} & set(r["dom_issues"])) for r in valid) / n,
+            "keypoint": comp("keypoint"), "lexical": comp("lexical"), "semantic": comp("semantic"), "numeric_fact": comp("numeric_fact"),
             "language": comp("language"), "aesthetic": comp("aesthetic")}
 
 
@@ -56,7 +57,7 @@ def main():
         scored, _, system = rest.partition("/")
         system, _, best = system.partition(":")
         rows.append(row(name, pick(load(scored, system), int(best) if best else 0)))
-    cols = ["reward", "valid", "usable", "visible", "cutoff", "collision", "lexical", "numeric_fact", "aesthetic"]
+    cols = ["reward", "valid", "usable", "visible", "cutoff", "collision", "spill", "keypoint", "numeric_fact", "aesthetic"]
     print("| system | n | " + " | ".join(cols) + " |")
     print("|---|---|" + "---|" * len(cols))
     for r in rows:

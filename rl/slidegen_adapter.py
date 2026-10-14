@@ -81,8 +81,8 @@ _DOM_METRICS_SCRIPT = r"""() => {
   // 0.06-0.07 is a descender grazing the plate edge; >= 0.2 was always visibly outside it (114 dev slides checked).
   const PLATE_SPILL_RATIO = 0.15;
   // Share of a line (font size) that runs past the filled panel the textbox starts on. On 116 dev/r4 slides
-  // only true spills crossed 0 (0.085 a descender line off a title band, 1.74 a subtitle pushed off a cover panel).
-  const PANEL_SPILL_RATIO = 0.05;
+  // only true spills crossed 0; 0.05-0.09 is text grazing a band's edge, >= 0.2 clearly off it (1.74 a cover subtitle).
+  const PANEL_SPILL_RATIO = 0.1;
   const union = rects => rects.length ? rects.reduce((result, rect) => ({
     left: Math.min(result.left, rect.left), top: Math.min(result.top, rect.top),
     right: Math.max(result.right, rect.right), bottom: Math.max(result.bottom, rect.bottom),
@@ -101,6 +101,20 @@ _DOM_METRICS_SCRIPT = r"""() => {
     .filter(el => opaque(getComputedStyle(el).backgroundColor))
     .map(el => el.getBoundingClientRect())
     .filter(r => r.width > 40 && r.height > 40);
+  // Spills are only candidates here: Python checks the screenshot on both sides of the edge, since an
+  // overhang onto a surface of the same colour (white plate on a white slide) is invisible.
+  const logical = r => ({x: toX(r.left - canvasRect.left), y: toY(r.top - canvasRect.top), width: toX(r.width), height: toY(r.height)});
+  const worstSide = (items, edge, scale) => {
+    let best = {amount: 0, side: null};
+    for (const item of items) {
+      for (const [side, over] of [['bottom', item.bottom - edge.bottom], ['top', edge.top - item.top],
+                                  ['right', item.right - edge.right], ['left', edge.left - item.left]]) {
+        const amount = Math.max(over, 0) / scale(item);
+        if (amount > best.amount) best = {amount, side};
+      }
+    }
+    return best;
+  };
   const boxes = Array.from(document.querySelectorAll('[data-xml-textbox="true"]'))
     .map(box => {
       const content = box.querySelector('[data-xml-text-content="true"]');
@@ -169,17 +183,19 @@ _DOM_METRICS_SCRIPT = r"""() => {
       // surface behind, which the in-box tolerance above does not see.
       const fill = getComputedStyle(box).backgroundColor || '';
       const filled = fill && fill !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(fill);
-      const spill = visibleRects.length ? Math.max(...visibleRects.map(item =>
-        Math.max(rect.top - item.top, item.bottom - rect.bottom, 0) / item.height)) : 0;
-      if (filled && spill > PLATE_SPILL_RATIO) reasons.push('plate_spill');
+      // Vertical overhang only: line boxes are wider than glyphs, and text_width covers the sides.
+      const plate = worstSide(visibleRects.map(item => ({top: item.top, bottom: item.bottom, height: item.height,
+                                                         left: rect.left, right: rect.right})), rect, item => item.height);
+      const spill = plate.amount;
+      const spillCandidates = [];
+      if (filled && spill > PLATE_SPILL_RATIO) spillCandidates.push({type: 'plate_spill', side: plate.side, edge: logical(rect)});
       // Text that starts on a panel but runs past the panel's edge onto whatever lies behind it.
       const anchorX = rect.left + rect.width / 2, anchorY = rect.top + 2;
       const homes = panels.filter(p => p.left <= anchorX && anchorX <= p.right && p.top <= anchorY && anchorY <= p.bottom);
       const home = homes.length ? homes.reduce((a, b) => a.width * a.height <= b.width * b.height ? a : b) : null;
-      const panelSpill = home && inkRects.length ? Math.max(...inkRects.map(item =>
-        Math.max(item.bottom - home.bottom, home.top - item.top, item.right - home.right, home.left - item.left, 0)
-        / (item.height / 0.7))) : 0;
-      if (panelSpill > PANEL_SPILL_RATIO) reasons.push('panel_spill');
+      const panel = home ? worstSide(inkRects, home, item => item.height / 0.7) : {amount: 0, side: null};
+      const panelSpill = panel.amount;
+      if (panelSpill > PANEL_SPILL_RATIO) spillCandidates.push({type: 'panel_spill', side: panel.side, edge: logical(home)});
       const maxLinesValue = box.getAttribute('data-xml-max-lines');
       const maxLines = maxLinesValue ? Number(maxLinesValue) : null;
       const lines = lineCount(visibleRects);
@@ -188,7 +204,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
         id: box.getAttribute('data-xml-element-id') || 'textbox',
         text: content.innerText || content.textContent || '',
         x: toX(rect.left - canvasRect.left), y: toY(rect.top - canvasRect.top),
-        width: toX(rect.width), height: toY(rect.height), reasons, plate_spill: filled ? spill : 0, panel_spill: panelSpill,
+        width: toX(rect.width), height: toY(rect.height), reasons, plate_spill: filled ? spill : 0, panel_spill: panelSpill, spill_candidates: spillCandidates,
         collision_rects: collisionRects, color_runs: colorRuns,
       };
     }).filter(Boolean);
@@ -208,6 +224,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
     color_boxes: boxes.map(box => ({id: box.id, runs: box.color_runs})),
     plate_spill: Math.max(0, ...boxes.map(box => box.plate_spill)),
     panel_spill: Math.max(0, ...boxes.map(box => box.panel_spill)),
+    spill_candidates: boxes.flatMap(box => box.spill_candidates.map(c => ({...c, textbox: box.id}))),
     canvas: {width: logicalWidth, height: logicalHeight},
   };
 }"""
@@ -280,6 +297,48 @@ def contrast_ratio(first, second) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
+SPILL_EDGE_CONTRAST = 1.25
+
+
+def _attach_spill_issues(metrics: dict, candidates: list[dict], png_path: str, canvas: dict) -> None:
+    """Keep a plate/panel spill only when the edge it crosses is visible in the screenshot.
+
+    Compares the median colour of a thin strip just inside the edge with one just outside it, along the
+    whole edge, so the few glyph pixels crossing it do not decide the colour.
+    """
+    import numpy as np
+    from PIL import Image
+
+    with Image.open(png_path) as handle:
+        pixels = np.asarray(handle.convert("RGB"))
+    sx, sy = pixels.shape[1] / canvas["width"], pixels.shape[0] / canvas["height"]
+    seen = set()
+    for candidate in candidates:
+        edge, side = candidate["edge"], candidate["side"]
+        x0, x1 = int(edge["x"] * sx), int((edge["x"] + edge["width"]) * sx)
+        y0, y1 = int(edge["y"] * sy), int((edge["y"] + edge["height"]) * sy)
+        gap, depth = 3, 6
+        strips = {
+            "bottom": ((y1 - gap - depth, y1 - gap, x0, x1), (y1 + gap, y1 + gap + depth, x0, x1)),
+            "top": ((y0 + gap, y0 + gap + depth, x0, x1), (y0 - gap - depth, y0 - gap, x0, x1)),
+            "right": ((y0, y1, x1 - gap - depth, x1 - gap), (y0, y1, x1 + gap, x1 + gap + depth)),
+            "left": ((y0, y1, x0 + gap, x0 + gap + depth), (y0, y1, x0 - gap - depth, x0 - gap)),
+        }.get(side)
+        if strips is None:
+            continue
+        colours = []
+        for top, bottom, left, right in strips:
+            region = pixels[max(0, top):max(0, bottom), max(0, left):max(0, right)]
+            colours.append(None if region.size == 0 else np.median(region.reshape(-1, 3), axis=0))
+        inside, outside = colours
+        # Past the slide edge counts as visible: the overhang is cut off there.
+        visible = outside is None or inside is None or contrast_ratio(inside, outside) >= SPILL_EDGE_CONTRAST
+        key = (candidate["type"], candidate.get("textbox"))
+        if visible and key not in seen:
+            seen.add(key)
+            metrics.setdefault("issues", []).append({"type": candidate["type"], "textbox": candidate.get("textbox", "textbox")})
+
+
 def _attach_contrast_issues(metrics: dict, png_path: str) -> dict:
     """Flag text whose colour is hard to tell from the pixels actually rendered behind it.
 
@@ -324,6 +383,9 @@ def _attach_contrast_issues(metrics: dict, png_path: str) -> dict:
             if low_area / area >= 0.5:
                 metrics.setdefault("issues", []).append({"type": "low_contrast", "textbox": box.get("id", "textbox")})
     metrics["min_contrast"] = worst
+    candidates = metrics.pop("spill_candidates", [])
+    if candidates and canvas.get("width") and Path(png_path).is_file():
+        _attach_spill_issues(metrics, candidates, png_path, canvas)
     sizes = [run.get("font_px") for box in boxes for run in box.get("runs", []) if run.get("font_px")]
     metrics["min_font_px"] = min(sizes) if sizes else None
     for box in boxes:
