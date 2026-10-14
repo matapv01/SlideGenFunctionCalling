@@ -80,6 +80,9 @@ _DOM_METRICS_SCRIPT = r"""() => {
   const tolerance = 1.5;
   // 0.06-0.07 is a descender grazing the plate edge; >= 0.2 was always visibly outside it (114 dev slides checked).
   const PLATE_SPILL_RATIO = 0.15;
+  // Share of a line (font size) that runs past the filled panel the textbox starts on. On 116 dev/r4 slides
+  // only true spills crossed 0 (0.085 a descender line off a title band, 1.74 a subtitle pushed off a cover panel).
+  const PANEL_SPILL_RATIO = 0.05;
   const union = rects => rects.length ? rects.reduce((result, rect) => ({
     left: Math.min(result.left, rect.left), top: Math.min(result.top, rect.top),
     right: Math.max(result.right, rect.right), bottom: Math.max(result.bottom, rect.bottom),
@@ -92,6 +95,12 @@ _DOM_METRICS_SCRIPT = r"""() => {
     }
     return tops.length;
   };
+  const opaque = color => color && color !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(color);
+  // Filled rectangles a textbox can sit on (cards, content panels).
+  const panels = Array.from(document.querySelectorAll('[data-xml-element-tag="shape"]'))
+    .filter(el => opaque(getComputedStyle(el).backgroundColor))
+    .map(el => el.getBoundingClientRect())
+    .filter(r => r.width > 40 && r.height > 40);
   const boxes = Array.from(document.querySelectorAll('[data-xml-textbox="true"]'))
     .map(box => {
       const content = box.querySelector('[data-xml-text-content="true"]');
@@ -163,6 +172,14 @@ _DOM_METRICS_SCRIPT = r"""() => {
       const spill = visibleRects.length ? Math.max(...visibleRects.map(item =>
         Math.max(rect.top - item.top, item.bottom - rect.bottom, 0) / item.height)) : 0;
       if (filled && spill > PLATE_SPILL_RATIO) reasons.push('plate_spill');
+      // Text that starts on a panel but runs past the panel's edge onto whatever lies behind it.
+      const anchorX = rect.left + rect.width / 2, anchorY = rect.top + 2;
+      const homes = panels.filter(p => p.left <= anchorX && anchorX <= p.right && p.top <= anchorY && anchorY <= p.bottom);
+      const home = homes.length ? homes.reduce((a, b) => a.width * a.height <= b.width * b.height ? a : b) : null;
+      const panelSpill = home && inkRects.length ? Math.max(...inkRects.map(item =>
+        Math.max(item.bottom - home.bottom, home.top - item.top, item.right - home.right, home.left - item.left, 0)
+        / (item.height / 0.7))) : 0;
+      if (panelSpill > PANEL_SPILL_RATIO) reasons.push('panel_spill');
       const maxLinesValue = box.getAttribute('data-xml-max-lines');
       const maxLines = maxLinesValue ? Number(maxLinesValue) : null;
       const lines = lineCount(visibleRects);
@@ -171,7 +188,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
         id: box.getAttribute('data-xml-element-id') || 'textbox',
         text: content.innerText || content.textContent || '',
         x: toX(rect.left - canvasRect.left), y: toY(rect.top - canvasRect.top),
-        width: toX(rect.width), height: toY(rect.height), reasons, plate_spill: filled ? spill : 0,
+        width: toX(rect.width), height: toY(rect.height), reasons, plate_spill: filled ? spill : 0, panel_spill: panelSpill,
         collision_rects: collisionRects, color_runs: colorRuns,
       };
     }).filter(Boolean);
@@ -190,6 +207,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
     collision_boxes: boxes.map(box => ({id: box.id, rects: box.collision_rects})),
     color_boxes: boxes.map(box => ({id: box.id, runs: box.color_runs})),
     plate_spill: Math.max(0, ...boxes.map(box => box.plate_spill)),
+    panel_spill: Math.max(0, ...boxes.map(box => box.panel_spill)),
     canvas: {width: logicalWidth, height: logicalHeight},
   };
 }"""

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VISIBLE = {"low_contrast", "text_cutoff", "slide_boundary", "bbox_collision", "markup_leak", "tiny_text", "plate_spill"}
+VISIBLE = {"low_contrast", "text_cutoff", "slide_boundary", "bbox_collision", "markup_leak", "tiny_text", "plate_spill", "panel_spill"}
 
 
 def load(scored: str, system: str):
