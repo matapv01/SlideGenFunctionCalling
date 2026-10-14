@@ -631,3 +631,17 @@ def test_dom_score_penalizes_unreadable_and_cut_off_text():
     assert _dom_score([{"type": "text_height", "textbox": "body"}]) == pytest.approx(0.75)
     # Width overflow that people never flagged as a display error costs nothing on its own.
     assert _dom_score([{"type": "text_width", "textbox": "body"}]) == 1.0
+
+
+def test_lenient_json_repairs_inner_quotes_only_when_enabled(monkeypatch):
+    raw = '["Ô nhiễm", "Giải pháp "nói không với rác thải"", "Tăng [[hl color="#0D9488"]]495%[[/hl]]"]'
+    monkeypatch.delenv("RL_LENIENT_JSON", raising=False)
+    with pytest.raises(json.JSONDecodeError):
+        reward._loads_structured(raw)
+    monkeypatch.setenv("RL_LENIENT_JSON", "true")
+    assert reward._loads_structured(raw) == [
+        "Ô nhiễm", 'Giải pháp "nói không với rác thải"', "Tăng [[hl color=#0D9488]]495%[[/hl]]",
+    ]
+    # Structurally broken arrays stay invalid.
+    with pytest.raises(json.JSONDecodeError):
+        reward._loads_structured('[{"label": "a", "content": "b" [[/hl]], "label": "c"}')

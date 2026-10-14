@@ -79,6 +79,46 @@ def _reject_duplicate_keys(pairs):
     return result
 
 
+_QUOTED_HL_COLOR = re.compile(r"""(\[\[hl\s+colou?r\s*=\s*)\\?["']([^"'\]]*)\\?["']""", re.IGNORECASE)
+_STRING_CLOSER = re.compile(r'\s*(?:$|:|,\s*(?:["\[{\-\d]|true|false|null)|[\]}]\s*(?:$|[,\]}:]))')
+
+
+def _repair_json_quotes(text: str) -> str:
+    """Escape double quotes the model left unescaped inside JSON string values.
+
+    A quote inside a string only closes it when what follows can continue the JSON
+    document; any other quote (e.g. ``"Giải pháp "nói không" "``) is content.
+    Quoted highlight colours are unquoted first, since the marker accepts a bare colour.
+    """
+    text = _QUOTED_HL_COLOR.sub(r"\1\2", text)
+    out, in_string, index = [], False, 0
+    while index < len(text):
+        char = text[index]
+        if in_string and char == "\\":
+            out.append(text[index:index + 2])
+            index += 2
+            continue
+        if char == '"':
+            if not in_string:
+                in_string = True
+            elif _STRING_CLOSER.match(text, index + 1):
+                in_string = False
+            else:
+                char = '\\"'
+        out.append(char)
+        index += 1
+    return "".join(out)
+
+
+def _loads_structured(value: str):
+    try:
+        return json.loads(value, object_pairs_hook=_reject_duplicate_keys)
+    except (json.JSONDecodeError, ValueError):
+        if os.getenv("RL_LENIENT_JSON", "false").lower() not in {"1", "true", "yes", "on"}:
+            raise
+    return json.loads(_repair_json_quotes(value), object_pairs_hook=_reject_duplicate_keys)
+
+
 def _parse_qwen_native_tool_call(body: str) -> dict | None:
     match = re.fullmatch(
         r"<function=([A-Za-z_][A-Za-z0-9_]*)>\s*(.*?)\s*</function>",
@@ -115,7 +155,7 @@ def _parse_qwen_native_tool_call(body: str) -> dict | None:
         expected_type = (properties.get(key) or {}).get("type")
         if expected_type in {"array", "object", "integer", "number", "boolean"}:
             try:
-                value = json.loads(value, object_pairs_hook=_reject_duplicate_keys)
+                value = _loads_structured(value)
             except (json.JSONDecodeError, ValueError):
                 # Structured and non-text parameters must parse as JSON. Never
                 # pass malformed structured data to the compatibility executor.
