@@ -48,18 +48,16 @@ _COMPONENT_NAMES = (
     "lexical", "semantic", "numeric_fact", "language", "dom", "aesthetic", "image_loaded"
 )
 _DOM_PENALTY_WEIGHTS = {
-    # Calibrated on 820 human-rated slides (flag "display error"): cut-off text, collisions and unreadable
-    # colours were confirmed by people 73-90% of the time; width overflow alone never was (0/38) and
-    # box-height overflow alone rarely (10%), so those two no longer dominate the layout score.
-    "text_cutoff": 0.40,
-    "low_contrast": 0.40,
-    "bbox_collision": 0.30,
-    "markup_leak": 0.5,
-    "slide_boundary": 0.15,
-    "tiny_text": 0.30,
-    # Round 2d learned to write 14% less text to avoid these two, which people rarely see (10% when alone),
-    # and lost content coverage; they now carry almost no weight.
-    "text_height": 0.03,
+    # Round 3: fitted on round-1 human ratings (342 pairs with a preferred side, 820 rated slides).
+    # A slide with any defect people confirm as a display error (73-90% of the time) loses the whole
+    # layout score; box-height overflow alone costs a quarter of it; the rest was never flagged alone.
+    "text_cutoff": 1.0,
+    "low_contrast": 1.0,
+    "bbox_collision": 1.0,
+    "markup_leak": 1.0,
+    "slide_boundary": 1.0,
+    "tiny_text": 1.0,
+    "text_height": 0.25,
     "max_lines": 0.0,
     "text_width": 0.0,
 }

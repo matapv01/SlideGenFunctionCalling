@@ -453,7 +453,7 @@ def test_dom_score_is_normalized_and_does_not_recount_image_failures():
         {"type": "text_cutoff", "textbox": f"body-{index}"}
         for index in range(20)
     ])
-    assert 0.0 < one_issue < 1.0
+    assert one_issue == 0.0
     assert many_issues == 0.0
 
 
@@ -626,7 +626,8 @@ def test_dom_score_penalizes_unreadable_and_cut_off_text():
     from rl.rewards.composite_reward import _dom_score
 
     assert _dom_score([]) == 1.0
-    assert _dom_score([{"type": "low_contrast", "textbox": "title"}]) == pytest.approx(0.60)
-    assert _dom_score([{"type": "text_cutoff", "textbox": "body"}]) == pytest.approx(0.60)
+    assert _dom_score([{"type": "low_contrast", "textbox": "title"}]) == 0.0
+    assert _dom_score([{"type": "text_cutoff", "textbox": "body"}]) == 0.0
+    assert _dom_score([{"type": "text_height", "textbox": "body"}]) == pytest.approx(0.75)
     # Width overflow that people never flagged as a display error costs nothing on its own.
     assert _dom_score([{"type": "text_width", "textbox": "body"}]) == 1.0
