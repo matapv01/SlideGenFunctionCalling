@@ -59,6 +59,8 @@ _DOM_PENALTY_WEIGHTS = {
     "markup_leak": 1.0,
     "slide_boundary": 1.0,
     "tiny_text": 1.0,
+    # Glyphs spilling past their own filled plate (added after round 4; not in the round-1 fit).
+    "plate_spill": 1.0,
     "text_height": 0.25,
     "max_lines": 0.0,
     "text_width": 0.0,

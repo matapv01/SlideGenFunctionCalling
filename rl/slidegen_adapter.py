@@ -78,6 +78,8 @@ _DOM_METRICS_SCRIPT = r"""() => {
   const toX = value => value / scaleX;
   const toY = value => value / scaleY;
   const tolerance = 1.5;
+  // 0.06-0.07 is a descender grazing the plate edge; >= 0.2 was always visibly outside it (114 dev slides checked).
+  const PLATE_SPILL_RATIO = 0.15;
   const union = rects => rects.length ? rects.reduce((result, rect) => ({
     left: Math.min(result.left, rect.left), top: Math.min(result.top, rect.top),
     right: Math.max(result.right, rect.right), bottom: Math.max(result.bottom, rect.bottom),
@@ -154,6 +156,13 @@ _DOM_METRICS_SCRIPT = r"""() => {
                                 item.right > canvasRect.right + tolerance || item.left < canvasRect.left - tolerance)) {
         reasons.push('text_cutoff');
       }
+      // A filled textbox (e.g. a contrast backplate) shows its edge: glyphs spilling past it sit on the
+      // surface behind, which the in-box tolerance above does not see.
+      const fill = getComputedStyle(box).backgroundColor || '';
+      const filled = fill && fill !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(fill);
+      const spill = visibleRects.length ? Math.max(...visibleRects.map(item =>
+        Math.max(rect.top - item.top, item.bottom - rect.bottom, 0) / item.height)) : 0;
+      if (filled && spill > PLATE_SPILL_RATIO) reasons.push('plate_spill');
       const maxLinesValue = box.getAttribute('data-xml-max-lines');
       const maxLines = maxLinesValue ? Number(maxLinesValue) : null;
       const lines = lineCount(visibleRects);
@@ -162,7 +171,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
         id: box.getAttribute('data-xml-element-id') || 'textbox',
         text: content.innerText || content.textContent || '',
         x: toX(rect.left - canvasRect.left), y: toY(rect.top - canvasRect.top),
-        width: toX(rect.width), height: toY(rect.height), reasons,
+        width: toX(rect.width), height: toY(rect.height), reasons, plate_spill: filled ? spill : 0,
         collision_rects: collisionRects, color_runs: colorRuns,
       };
     }).filter(Boolean);
@@ -180,6 +189,7 @@ _DOM_METRICS_SCRIPT = r"""() => {
     image_status: imageStatus,
     collision_boxes: boxes.map(box => ({id: box.id, rects: box.collision_rects})),
     color_boxes: boxes.map(box => ({id: box.id, runs: box.color_runs})),
+    plate_spill: Math.max(0, ...boxes.map(box => box.plate_spill)),
     canvas: {width: logicalWidth, height: logicalHeight},
   };
 }"""
