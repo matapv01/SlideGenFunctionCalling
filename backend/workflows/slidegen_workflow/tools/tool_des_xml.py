@@ -113,8 +113,8 @@ class GenerateElegantProfessionalCoverSlideInput(BaseModel):
 
     title: str = Field(..., description="Main presentation title displayed in the right content panel. example: 'Messi cầu thủ vĩ đại nhất thế giới'")
     subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'Bài thuyết trình về Messi và những thành tích nổi bật của anh ấy.'")
-    presented_by_label: str = Field(..., description="Small presenter label displayed near the bottom of the content panel. example: 'PRESENTED BY'")
-    presenter_name: str = Field(..., description="Presenter name displayed below the presenter label. example: 'NAME SURNAME'")
+    presented_by_label: str = Field(default="", description="Small presenter label displayed near the bottom of the content panel, only when presenter_name is given. example: 'PRESENTED BY'")
+    presenter_name: str = Field(default="", description="Presenter name displayed below the presenter label. Leave empty unless the source names the presenter; an empty value hides the presenter block. example: 'NAME SURNAME'")
     image_url: str = Field(default="", description="URL for a portrait image sized 650 × 716 px with an approximately 0.91:1 aspect ratio.")
     background_color: str = Field(default="#E5E5DB", description="Background color of the slide.")
     panel_color: str = Field(default="#F2F0E7", description="Color of the right content panel.")

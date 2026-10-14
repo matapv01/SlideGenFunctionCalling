@@ -64,7 +64,12 @@ _DOM_PENALTY_WEIGHTS = {
     "text_width": 0.0,
 }
 # Rich-text markup the frontend failed to parse shows up verbatim on the slide.
-_MARKUP_LEAK = re.compile(r"\[\[|\]\]|\[/?hl\b|</?(?:span|b|i|u|strong|em|font|br|p|div)\b[^>]*>|\bstyle\s*=\s*[\"']", re.IGNORECASE)
+# A "<" opening a word (``<Vị đậm đà``, ``<hl``, ``<math-field>``) never occurs in prose: checked on
+# ~15k scored dev slides, every hit was a leaked tag.
+_MARKUP_LEAK = re.compile(
+    r"\[\[|\]\]|\[/?hl\b|</?(?:span|b|i|u|strong|em|font|br|p|div)\b[^>]*>|\bstyle\s*=\s*[\"']|(?:^|\s)<(?=[^\W\d_])",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 # One clipped textbox costs 0.2-0.4; about three distinct failures zero the component.
 _DOM_PENALTY_CAP = 1.0
