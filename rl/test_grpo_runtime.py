@@ -645,3 +645,10 @@ def test_lenient_json_repairs_inner_quotes_only_when_enabled(monkeypatch):
     # Structurally broken arrays stay invalid.
     with pytest.raises(json.JSONDecodeError):
         reward._loads_structured('[{"label": "a", "content": "b" [[/hl]], "label": "c"}')
+
+
+def test_foreign_text_penalty_catches_garbled_diacritics_but_not_math(monkeypatch):
+    monkeypatch.setenv("RL_FOREIGN_TEXT_CHECK", "true")
+    source = "Hành trình nâng tầm cà phê Việt Nam ra thế giới"
+    assert content_reward._foreign_text_penalty(source, "Cùng H Fle Ph^\\i^^i^^n Kh^^o^^a") < 1.0
+    assert content_reward._foreign_text_penalty(source, "Nhiệt độ 23^\\circ C, diện tích 2007 m}^2, Li^+") == 1.0

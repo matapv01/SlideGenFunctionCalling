@@ -250,10 +250,15 @@ def _vietnamese_word_ratio(text: str) -> float:
 _FOREIGN_SCRIPT = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\u0400-\u04ff\u0e00-\u0e7f]")
 
 
+# Broken diacritic encoding sampled at T=1.0 ("Ph^\\i^^i^^n Kh^^o^^a"). LaTeX inside math fields puts a
+# digit, brace or sign next to "^", never a letter on both sides: 0 hits on 17,620 scored dev slides.
+_GARBLED_DIACRITICS = re.compile(r"\^\^|[A-Za-zÀ-ỹ]\^\\?[A-Za-zÀ-ỹ]")
+
+
 def _foreign_text_penalty(source: str, generated: str) -> float:
     """Multiplier for script/language slips the slide-level ratio misses (sampling noise at T=1.0).
 
-    A CJK/Cyrillic/Thai character absent from the source, or a 4+ word line with no Vietnamese
+    A CJK/Cyrillic/Thai character absent from the source, garbled diacritics, or a 4+ word line with no Vietnamese
     letters on a Vietnamese slide (e.g. an English title), each cost a fixed share. Off unless
     RL_FOREIGN_TEXT_CHECK is set, so earlier rounds stay comparable.
     """
@@ -261,6 +266,8 @@ def _foreign_text_penalty(source: str, generated: str) -> float:
         return 1.0
     factor = 1.0
     if _FOREIGN_SCRIPT.search(generated or "") and not _FOREIGN_SCRIPT.search(source or ""):
+        factor *= 0.3
+    if _GARBLED_DIACRITICS.search(generated or ""):
         factor *= 0.3
     if _vietnamese_word_ratio(source) >= 0.2:
         for line in re.split(r"\n|(?<=[.!?:])\s", generated or ""):
