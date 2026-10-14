@@ -208,6 +208,19 @@ def _attach_bbox_collision_issues(metrics: dict) -> dict:
             and width * height / smaller_area > 0.05
         )
 
+    # Smallest vertical gap between lines of different textboxes that share a column, in line heights
+    # (negative = overlapping). Recorded only; whether crowding matters to people is still being checked.
+    gaps = []
+    for index, first in enumerate(boxes):
+        for second in boxes[index + 1 :]:
+            for a in first.get("rects", []):
+                for b in second.get("rects", []):
+                    shared = min(a["x"] + a["width"], b["x"] + b["width"]) - max(a["x"], b["x"])
+                    if shared > 0.3 * min(a["width"], b["width"]) > 0:
+                        gap = max(b["y"] - (a["y"] + a["height"]), a["y"] - (b["y"] + b["height"]))
+                        gaps.append(gap / max(1.0, min(a["height"], b["height"])))
+    metrics["min_text_gap"] = min(gaps) if gaps else None
+
     for index, first in enumerate(boxes):
         for second in boxes[index + 1 :]:
             if any(
@@ -327,9 +340,8 @@ def tool_text_capacity() -> dict:
     if os.getenv("RL_CAPACITY_HINTS", "true").lower() not in {"1", "true", "yes", "on"}:
         return {}
     if _CAPACITY_CACHE is None:
-        _CAPACITY_CACHE = (
-            json.loads(_CAPACITY_PATH.read_text(encoding="utf-8")) if _CAPACITY_PATH.is_file() else {}
-        )
+        path = Path(os.getenv("RL_CAPACITY_FILE") or _CAPACITY_PATH)
+        _CAPACITY_CACHE = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
     return _CAPACITY_CACHE
 
 

@@ -433,7 +433,7 @@ def score(args) -> None:
                     "system": system, "key": record["key"], "sample": record["sample"], "reward": reward,
                     "valid": detail["valid"], "components": detail.get("components"),
                     "dom_issues": detail.get("dom_issues"), "visible_text": detail.get("visible_text"),
-                    "min_contrast": detail.get("min_contrast"), "min_font_px": detail.get("min_font_px"),
+                    "min_contrast": detail.get("min_contrast"), "min_font_px": detail.get("min_font_px"), "min_text_gap": detail.get("min_text_gap"),
                     "png": str(png.relative_to(ROOT)) if png.exists() and not args.discard_png else None,
                 })
                 if args.discard_png:

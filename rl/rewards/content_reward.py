@@ -392,3 +392,36 @@ def _semantic_reward_scores(
             else 0.0
         )
     return scores
+
+
+_KEYPOINT_UNIT = re.compile(r"(?<=[.!?;:])\s+|\n+")
+_SLIDE_CHUNK = re.compile(r"(?<=[.!?;:])\s+|\n+|•")
+KEYPOINT_THRESHOLD = 0.6
+
+
+def _keypoint_units(text: str, minimum: int) -> list[str]:
+    return [unit.strip() for unit in _KEYPOINT_UNIT.split(text) if len(unit.strip()) > minimum]
+
+
+def _keypoint_coverage_scores(sources, generated_texts, embedder, threshold: float = KEYPOINT_THRESHOLD):
+    """Share of source sentences whose meaning appears somewhere on the slide.
+
+    Rewards condensing: a short paraphrase covers a sentence as well as copying it does, unlike word overlap.
+    The first source line is the heading and is not counted; one-sentence sources get full credit.
+    """
+    scores = []
+    for source, generated in zip(sources, generated_texts, strict=True):
+        body = source.split("\n", 1)[-1]
+        points = _keypoint_units(body, 25)
+        chunks = [c.strip() for c in _SLIDE_CHUNK.split(generated or "") if len(c.strip()) > 8]
+        if len(points) < 2:
+            scores.append(1.0)
+            continue
+        if not chunks or embedder is None:
+            scores.append(0.0)
+            continue
+        point_vectors = embedder.encode(points, normalize_embeddings=True, show_progress_bar=False)
+        chunk_vectors = embedder.encode(chunks, normalize_embeddings=True, show_progress_bar=False)
+        best = (point_vectors @ chunk_vectors.T).max(axis=1)
+        scores.append(float((best > threshold).mean()))
+    return scores

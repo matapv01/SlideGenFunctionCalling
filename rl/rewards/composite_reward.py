@@ -27,6 +27,7 @@ from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
 from rl.rewards.aesthetic_reward import _evaluate_batch, _get_model, reward_model_settings
 from rl.rewards.content_reward import (
     _get_text_embedder,
+    _keypoint_coverage_scores,
     _language_consistency,
     _lexical_score,
     _numeric_fact_coverage,
@@ -45,7 +46,7 @@ _TOOL_BY_NAME = {
     for tool in tools
 }
 _COMPONENT_NAMES = (
-    "lexical", "semantic", "numeric_fact", "language", "dom", "aesthetic", "image_loaded"
+    "lexical", "semantic", "keypoint", "numeric_fact", "language", "dom", "aesthetic", "image_loaded"
 )
 _DOM_PENALTY_WEIGHTS = {
     # Round 3: fitted on round-1 human ratings (342 pairs with a preferred side, 820 rated slides).
@@ -318,6 +319,7 @@ def reward_weights() -> dict[str, float]:
     weights = {
         "lexical": float(os.getenv("RL_REWARD_LEXICAL_WEIGHT", "0.5")),
         "semantic": float(os.getenv("RL_REWARD_SEMANTIC_WEIGHT", "0.7")),
+        "keypoint": float(os.getenv("RL_REWARD_KEYPOINT_WEIGHT", "0.0")),
         "numeric_fact": float(os.getenv("RL_REWARD_NUMERIC_FACT_WEIGHT", "1.0")),
         "dom": float(os.getenv("RL_REWARD_DOM_WEIGHT", "1.5")),
         "aesthetic": float(os.getenv("RL_REWARD_AESTHETIC_WEIGHT", "1.0")),
@@ -513,6 +515,9 @@ def slidegen_composite_reward(
     semantic_scores = _semantic_reward_scores(
         [row["source"] for row in rows], generated_texts, embedder,
     )
+    keypoint_scores = _keypoint_coverage_scores(
+        [row["source"] for row in rows], generated_texts, embedder,
+    )
     semantic_seconds = time.perf_counter() - semantic_started
     if log_metric is not None:
         log_metric("reward_time/render_seconds", render_seconds)
@@ -523,8 +528,8 @@ def slidegen_composite_reward(
     unsupported_numbers = []
     row_components = {}
     dom_issue_slides = Counter()
-    for row, frontend, semantic, aesthetic in zip(
-        rows, frontend_results, semantic_scores, aesthetic_scores, strict=True,
+    for row, frontend, semantic, keypoint, aesthetic in zip(
+        rows, frontend_results, semantic_scores, keypoint_scores, aesthetic_scores, strict=True,
     ):
         source_facts = fact_rows[row["index"]]
         lexical = _lexical_score(row["source"], frontend["visible_text"])
@@ -536,6 +541,7 @@ def slidegen_composite_reward(
         components = {
             "lexical": lexical,
             "semantic": semantic,
+            "keypoint": keypoint,
             "numeric_fact": fact_coverage,
             "language": _language_consistency(row["source"], frontend["visible_text"]),
             "dom": dom,
@@ -565,6 +571,7 @@ def slidegen_composite_reward(
             "visible_text": frontend["visible_text"] if frontend else None,
             "min_contrast": frontend.get("min_contrast") if frontend else None,
             "min_font_px": frontend.get("min_font_px") if frontend else None,
+            "min_text_gap": frontend.get("min_text_gap") if frontend else None,
             "completion": completions[index],
         }
         _sample_path(step, key, ".json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")

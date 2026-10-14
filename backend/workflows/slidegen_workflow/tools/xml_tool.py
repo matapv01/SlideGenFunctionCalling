@@ -12,7 +12,7 @@ from PIL import ImageFont
 # Keep the requested font size even when the text exceeds its textbox.
 # Overflow is handled by wrapping/clipping in the renderer; generation never
 # silently reduces the requested font size.
-AUTO_SHRINK_TEXT = False
+AUTO_SHRINK_TEXT = os.getenv("SLIDEGEN_AUTO_SHRINK_TEXT", "false").lower() in {"1", "true", "yes", "on"}
 
 
 def _resolve_font_fallback_path(
