@@ -132,7 +132,17 @@ Reward tổng hợp gồm nội dung (từ vựng, ngữ nghĩa, giữ đúng s�
 
 ![Reward càng chênh càng khớp người chấm](docs/bao_cao/4_reward_khop_nguoi_cham.png)
 
-> **INSIGHT** Reward có nghĩa nhưng thiếu tín hiệu: học lại trọng số từ dữ liệu người không tăng độ khớp (69,7% so với 70,2%). Người chấm phàn nàn nhiều nhất về chữ khó đọc trên nền và chữ tràn viền, đúng hai lỗi reward không đo.
+Trên slide do model sinh, chấm thẩm mỹ khó hơn hẳn bộ cặp nhân tạo. Cùng 192 cặp người chấm có kết quả rõ ở tiêu chí thẩm mỹ (`slidegen_data/pairs/baselines.json`, `human_aesthetic`):
+
+| Bộ chấm | Chọn trùng người (thẩm mỹ) |
+|---|---|
+| ViT train trên bộ cặp | 60,4% |
+| Reward tổng hợp | 69,8% |
+| Qwen3.5-35B-A3B (VLM), zero-shot, khử thiên lệch vị trí | 71,6% |
+
+ViT đạt 97,9% trên bộ cặp nhân tạo nhưng chỉ 60,4% trên slide thật: lỗi do model sinh tinh tế hơn lỗi gán tay. VLM hơn ViT 11 điểm, nhưng cũng chỉ khoảng 72%.
+
+> **INSIGHT** Reward có nghĩa nhưng thiếu tín hiệu, và ViT là thành phần yếu nhất trên slide thật (60,4% so với VLM 71,6%): học lại trọng số từ dữ liệu người không tăng độ khớp (69,7% so với 70,2%). Người chấm phàn nàn nhiều nhất về chữ khó đọc trên nền và chữ tràn viền, đúng hai lỗi reward không đo.
 
 > **NEXT IDEA** Tìm vì sao reward bỏ sót hai lỗi này trước khi train tiếp.
 
@@ -299,6 +309,7 @@ DAPO giảm lỗi hiển thị một cách lặp lại được, nhưng phần l
 2. Chạy lại Gemini 3.5 Flash trên tập test giữ riêng khi có key API mới.
 3. Phạt thẩm mỹ thấp bằng phép nhân thay vì cộng: slide cảm ơn ghép 18 ô chữ nhỏ có ViT 0,07 nhưng reward tổng 5,04, cao hơn bản gọn 5 ô (4,94), vì điểm nội dung bù lại.
 4. Sửa layout bìa và layout cảm ơn đang tự sinh lỗi ở mọi hệ thống: tiêu đề dài 3 dòng đè nội dung, hình trang trí đè chữ.
+5. Thay ViT trong reward bằng bản chưng cất từ VLM, hoặc tinh chỉnh ViT trên slide do model sinh có người chấm: ViT khớp người 60,4% ở thẩm mỹ trên slide thật, VLM 71,6%.
 
 > **NEXT EXPERIMENT** Chấm người đợt 2 cho bản chốt so với model gốc, vì đó là câu hỏi duy nhất số liệu tự động không trả lời được.
 
