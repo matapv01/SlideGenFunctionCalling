@@ -1,0 +1,43 @@
+# Experiment config — THE SINGLE SOURCE OF TRUTH FOR THIS RUN.
+name: dapo round4 keypoint reward, no auto-shrink, three seeds
+created: 2026-10-14
+git_commit: "f48a815c"                         # all three runs train on this commit (seeds 7/2026 via worktree /data/sg_r4code)
+run_dirs:
+  seed_42: qwen3_5_35b_dapo_r4_20261014        # final model = checkpoint-175
+  seed_7: qwen3_5_35b_dapo_r4_seed7_20261014   # best checkpoint-50
+  seed_2026: qwen3_5_35b_dapo_r4_seed2026_20261014  # best checkpoint-175
+seeds: [42, 7, 2026]                           # GRPO_DATA_SEED sets both trainer seed and data seed
+
+hypothesis: >-
+  DAPO with a key-point coverage content reward and fixed font sizes raises the share of usable slides
+  (valid and no visible defect) of Qwen3.5-35B-A3B over the base model on the same prompts, at a key-point
+  coverage cost of at most 0.03, repeatably across seeds.
+delta_vs_prior_work: >-
+  vs round 3: fresh LoRA; lexical weight 0 and key-point coverage 1.5; capacity hints v2 (joint + max items);
+  layout auto-shrink off (product decision: font size must stay uniform).
+
+dataset: rl/data/grpo_replanned_dataset.json (370 train prompts from 44 decks; 168-slide eval split)
+dev_set: slidegen_data/testset/eval_rows_r4.json (291 slides, 38 Wikipedia decks; used for checkpoint choice -> development data)
+test_set: slidegen_data/testset_v2/eval_rows_r4.json (337 slides, 44 decks, topic-disjoint; run once for the final model)
+
+baseline: base Qwen3.5-35B-A3B rev 59d61f3 on the same prompts (base_r4_t03 on dev, base_final_* on test)
+
+model: Qwen/Qwen3.5-35B-A3B rev 59d61f3, QLoRA NF4, LoRA r16 alpha32 on q/k/v/o + gate/up/down
+hyperparameters:
+  loss_type: dapo
+  learning_rate: 1e-5
+  num_generations: 4
+  gradient_accumulation_steps: 16
+  generation_batch_size: 16
+  temperature: 1.0
+  top_p: 0.95
+  max_completion_length: 1024
+  eval_steps: 25
+  early_stop_patience: 4 (seed 42, stopped manually after 3) / 3 (seeds 7, 2026)
+reward_weights: {keypoint: 1.5, semantic: 0.4, numeric_fact: 0.7, dom: 2.1, aesthetic: 1.5, image_loaded: 0.25, lexical: 0}
+env: {RL_CAPACITY_FILE: rl/data/tool_text_capacity_v2_joint.json, prompt highlight marker: quoted (RL_HL_QUOTED=true to rebuild)}
+evaluation:
+  decoding: T=0.3, one sample (deployment); test set also T=1.0 x4 (best-of-4)
+  scoring: TESTSET_SCORED_DIR=scored_r4 / scored_final with RL_FOREIGN_TEXT_CHECK=true RL_LENIENT_JSON=true and
+           the pixel-verified plate/panel spill detectors (commit 9f26b8e)
+  gate: valid >= 98%, usable >= 95%, visible <= 4%, keypoint >= base - 0.03

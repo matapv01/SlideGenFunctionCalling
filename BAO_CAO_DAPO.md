@@ -1,259 +1,317 @@
-# Báo cáo: train DAPO cho SlideGen (Qwen3.5-35B-A3B)
+RESEARCH REPORT
 
-Cập nhật: 13/10/2026. Vòng 1 đã xong (train, tập test, người chấm). Vòng 2 đang train.
+# DAPO cho SlideGen: model mở tự dựng slide ít lỗi hiển thị hơn
 
-## Tóm tắt
+Học tăng cường cho Qwen3.5-35B-A3B gọi công cụ XML dựng slide tiếng Việt, với reward kiểm chứng bằng người chấm
 
-- **Xuất phát điểm:** bộ 1.929 cặp slide đẹp–xấu gán tay và reward model ViT train trên đó (chọn đúng 97,9%).
-- **Bài toán:** model nhận nội dung một slide và sinh đúng một lời gọi công cụ XML để dựng slide. Mục tiêu là slide vừa đẹp vừa đúng nội dung.
-- **Kết quả vòng 1:** DAPO tốt hơn model gốc theo cả điểm tự động lẫn người chấm, và tiệm cận Gemini 3.5 Flash. DAPO chưa thắng Gemini và chưa thắng cách "sinh 8 mẫu rồi lọc".
-- **Phát hiện lớn nhất:** ba lần liên tiếp, lỗi tưởng là của model hóa ra là lỗi của môi trường train (công cụ, prompt, bước áp style). Sửa môi trường cho kết quả lớn hơn nhiều so với chỉnh thuật toán.
-- **Đang làm:** train vòng 2 trên môi trường đã sửa lỗi màu chữ, với reward có thêm hai phép đo mới.
-
-| Hệ thống | Reward tự động | Người chấm: DAPO thắng – thua (tổng thể) |
-|---|---|---|
-| Model gốc | 2.72 | 83 – 42 |
-| **DAPO vòng 1** | **3.49** | – |
-| Gemini 3.5 Flash | 3.42 | 53 – 75 |
-| Best-of-8 (model gốc) | 3.92 | 35 – 54 |
+SlideGen · bản 2 · 2026.10
 
 ---
 
-## 1. Điểm xuất phát: dữ liệu gán tay và reward model thẩm mỹ
+## Mục lục
 
-**Vấn đề.** Muốn dùng RL để model sinh slide đẹp thì cần một hàm chấm "đẹp hay xấu" chạy tự động hàng chục nghìn lần. Không có bộ dữ liệu slide nào có nhãn thẩm mỹ theo từng loại lỗi, và dùng LLM lớn để chấm thì quá chậm và đắt cho RL.
-
-**Giải pháp.**
-- **Tự dựng dữ liệu cặp đẹp–xấu bằng tay.** Mỗi cặp gồm một slide đẹp và một bản xấu của chính slide đó, mang một hoặc hai lỗi cụ thể được gán nhãn. Hai slide trong một cặp có cùng nội dung, chỉ khác ở lỗi, nên nhãn "bên nào đẹp hơn" là chắc chắn.
-- **5 loại lỗi:** các khối đè nhau, cỡ chữ sai, màu nền xấu, màu chữ xấu, tràn chữ ra ngoài. 18 tổ hợp lỗi đơn và lỗi kép.
-- **Quy mô:** 1.929 cặp từ 1.805 slide gốc, do 5 người làm.
-- **Chia tập theo slide gốc**, cân bằng theo loại lỗi: 1.736 cặp train, 193 cặp kiểm thử, không có slide gốc nào nằm ở cả hai tập.
-- **Train ViT-Base theo kiểu so cặp** (loss Bradley–Terry: `-log sigmoid(điểm_đẹp − điểm_xấu)`). Model cho mỗi slide một điểm số; reward thẩm mỹ là sigmoid của điểm đó.
-
-**Kết quả.**
-
-![Dữ liệu và độ chính xác của reward model](docs/bao_cao/0_reward_model.png)
-
-Trên 193 cặp chưa thấy, ViT chọn đúng slide đẹp 97,9%. Bộ cặp này dùng lại được theo hai cách: train reward model kiểu so cặp, hoặc làm benchmark đánh giá các bộ chấm thẩm mỹ khác.
-
-**Insight.**
-- Reward model rất tốt trên dữ liệu gán tay, nhưng slide do model sinh ra nằm ở vùng nó không chắc: điểm trung vị của slide sinh là −0,99, trong khi slide đẹp gán tay là +4,92 và slide xấu là −6,11. Vì vậy thẩm mỹ chỉ là một thành phần trong reward tổng hợp, không dùng một mình (mục 5 và 7).
-- Reward model có học lỗi "màu chữ xấu": ở vòng 1 nó chấm gần 0 cho các slide bìa chữ trùng màu nền (mục 8). Tín hiệu có, nhưng bị các thành phần khác lấn át.
+01 · Tóm tắt
+02 · Bối cảnh và bài toán
+03 · Bước 1: dữ liệu cặp đẹp–xấu và reward model thẩm mỹ
+04 · Bước 2: DAPO vòng 1 và đợt chấm người đầu tiên
+05 · Bước 3: lỗi "của model" hóa ra là lỗi môi trường
+06 · Bước 4: hiệu chỉnh reward bằng 820 slide người chấm, và các lần thử thất bại
+07 · Bước 5: vòng 4, model học tóm gọn thay vì thu nhỏ chữ
+08 · Bước 6: xem ảnh để vá các chỗ reward bị lừa
+09 · Bước 7: tập test giữ riêng
+10 · Kết luận
+11 · Phụ lục
 
 ---
 
-## 2. Hệ thống đã dựng
+## 01 · Tóm tắt
 
-| Thành phần | Nội dung |
-|---|---|
-| Model | Qwen3.5-35B-A3B (35B tham số, ~3B kích hoạt mỗi token), QLoRA NF4, LoRA r16 |
-| Thuật toán | DAPO (TRL `GRPOTrainer`), 4 mẫu mỗi prompt, LR 1e-5, early stopping |
-| Reward | (0.5·lexical + 0.7·semantic + 1.0·numeric_fact + 1.5·dom + 1.0·ViT thẩm mỹ + 0.25·ảnh tải được) × hệ số ngôn ngữ; output hỏng = −2 |
-| Đo bố cục (dom) | Render slide bằng trình duyệt thật, đo tràn chữ, đè chữ, vượt khung, lộ ký hiệu |
-| Reward model thẩm mỹ | ViT pairwise ở mục 1 |
-| Tập test | 38 bài Wikipedia tiếng Việt, 291 slide, chủ đề không trùng tập train, nội dung trích nguyên văn |
-| Trang chấm người | https://slidegen-annotation.vercel.app, so cặp mù, 6 tiêu chí + 3 cờ lỗi |
+DAPO trên Qwen3.5-35B-A3B giảm tỉ lệ slide có lỗi nhìn thấy từ 7,6% xuống 4,6% ± 0,7 (ba seed) trên tập phát triển, và tỉ lệ slide dùng được tăng từ 90,0% lên 94,0% ± 1,4. Cái giá là độ phủ ý chính giảm 0,021 ± 0,005, vì model học tóm gọn để vừa layout chứ không thu nhỏ chữ. Người xem chưa được chứng minh là thích bản DAPO hơn: xác suất được chọn dự đoán là 0,507 ± 0,008, khoảng tin cậy chứa 0,5.
 
----
+Kết luận chính:
 
-## 3. Vấn đề 1: train quá chậm
+1. Bộ 1.929 cặp slide đẹp–xấu gán tay cho reward model ViT chọn đúng 97,9% trên cặp chưa thấy (Bước 1).
+2. DAPO vòng 1 thắng model gốc khi người chấm: tỉ lệ thắng 0,565 [0,530; 0,598] trên 1.281 lượt chấm, nhưng thua Gemini 3.5 Flash (0,458) (Bước 2).
+3. Ba lần liên tiếp, lỗi tưởng do model hóa ra do môi trường: số liệu bịa giảm từ 11,7% xuống 1,5% chỉ nhờ sửa công cụ và prompt, chưa train gì (Bước 3).
+4. Phần lớn cải thiện đến từ môi trường và reward: lỗi nhìn thấy của chính model gốc giảm theo từng lần sửa; RL thêm phần ổn định và hợp lệ (Bước 3 đến Bước 6).
+5. Trên tập test giữ riêng 337 slide: [DATA NEEDED: kết quả testset_v2] (Bước 7).
 
-**Vấn đề.** Mỗi bước train mất khoảng 166 giây, một lần train trọn vẹn mất hơn nửa ngày, không thể thử nhiều phương án.
-
-**Giải pháp.** Dùng kernel tối ưu cho lớp linear attention của Qwen3.5 (flash-linear-attention, causal-conv1d), sửa lỗi tính gradient của kernel này trên GPU H100 bằng tilelang, và gom batch khi sinh mẫu.
-
-**Kết quả.** Còn khoảng 60 giây mỗi bước (nhanh hơn 2,7 lần). Một lần train từ đầu đến lúc dừng sớm mất khoảng 6 giờ.
-
-**Insight.** Nhờ nhanh hơn mới chạy được hơn 10 lần thử trong vài ngày, và chính các lần thử này làm lộ ra các lỗi môi trường ở mục 4.
+> **Báo cáo trả lời ba câu hỏi**
+> RL có làm slide do model mở dựng ít lỗi hơn không, và có lặp lại qua nhiều seed không?
+> Reward tự động có khớp với đánh giá của người không?
+> Phần cải thiện đến từ RL hay từ việc sửa môi trường?
 
 ---
 
-## 4. Vấn đề 2: model "bịa số liệu", nhưng thủ phạm là môi trường
+## 02 · Bối cảnh và bài toán
 
-**Vấn đề.** Ở model gốc chưa train, 11,7% slide có số liệu, email hoặc số điện thoại không có trong nguồn.
+Model nhận nội dung một slide (đoạn trích từ tài liệu nguồn và layout được gán) rồi sinh đúng một lời gọi công cụ XML; công cụ dựng slide, trình duyệt render ra ảnh. Slide tốt phải vừa không lỗi hiển thị vừa giữ đủ ý của nguồn.
 
-**Giải pháp.** Không chỉnh thuật toán. Bóc tách từng slide lỗi thì thấy:
-- Công cụ slide cảm ơn có sẵn giá trị mặc định cho số điện thoại, email, website, nên model để trống thì công cụ tự điền thông tin giả.
-- Công cụ biểu đồ có số liệu mẫu mặc định; slide không có số liệu vẫn bị gán layout biểu đồ.
-- Một gợi ý trong prompt khiến model viết sai ký tự thoát, làm hỏng JSON.
+**Hiện trạng.** Model gốc Qwen3.5-35B-A3B trên tập phát triển: 97,6% lời gọi hợp lệ, nhưng 7,6% slide có lỗi người nhìn thấy được (chữ bị cắt, chữ khó đọc trên nền, khối đè nhau, chữ tràn khỏi nền).
 
-Sửa ba chỗ đó ở công cụ, schema và bước gán layout.
+**Vấn đề cốt lõi.**
 
-**Kết quả.**
+> Không ai chấm tay được hàng chục nghìn slide trong lúc train. Reward phải tự động, mà reward tự động thì bị model khai thác ở đúng những chỗ nó đo sai. Mọi bước trong báo cáo là vòng lặp: đo, xem ảnh thật, tìm chỗ đo sai, sửa.
 
-![Lỗi bịa số liệu giảm nhờ sửa môi trường](docs/bao_cao/1_bia_so_lieu_do_moi_truong.png)
+**Tiêu chí thành công.** Chỉ số chính là tỉ lệ slide dùng được, tức hợp lệ và không có lỗi nhìn thấy.
 
-**Insight.** Phần lớn "ảo giác" đo được là do môi trường tạo ra. Nếu train RL trên môi trường lỗi, model bị phạt vì thứ nó không điều khiển được, tín hiệu reward thành nhiễu.
-
----
-
-## 5. Vấn đề 3: reward chưa đủ để nội dung "hoàn mỹ"
-
-**Vấn đề.** Reward ban đầu chủ yếu thưởng thẩm mỹ. Model sinh slide tiếng Anh từ nguồn tiếng Việt, làm rơi mục trong timeline, để lộ ký hiệu định dạng, và lần eval ở bước 25 làm tràn bộ nhớ GPU.
-
-**Giải pháp.**
-- Thêm thành phần `numeric_fact`: thưởng giữ đúng số liệu của nguồn, phạt số liệu và thông tin liên hệ không có trong nguồn.
-- Thêm hệ số ngôn ngữ dạng nhân: slide sai ngôn ngữ thì toàn bộ reward về gần 0.
-- Chuyển điểm bố cục từ "sai là 0" sang phạt theo mức độ, để mỗi lỗi sửa được đều có tín hiệu.
-- Sửa phép đo tràn chữ (trước đó báo sai 94% trường hợp).
-- Tăng learning rate từ 1e-6 lên 1e-5 (ở 1e-6 LoRA gần như không đổi).
-
-**Kết quả (run cuối vòng 1, tập eval lúc train).**
-
-| Chỉ số | Model gốc | DAPO tốt nhất (bước 150) |
-|---|---|---|
-| Reward tổng hợp | 2.63 | **3.48** |
-| Output hợp lệ | 0.887 | **0.970** |
-| Tràn chữ | 0.475 | **0.355** |
-| Đúng ngôn ngữ | 0.878 | **1.000** |
-| Số liệu bịa | 0.015 | 0.025 |
-| Thẩm mỹ (ViT) | 0.510 | 0.445 |
-
-![Đường cong train vòng 1](docs/bao_cao/duong_cong_train_vong1.png)
-
-**Insight.** DAPO học nhanh các lỗi có tín hiệu rõ (hợp lệ, ngôn ngữ, tràn chữ). Sau bước 150 mọi chỉ số đi xuống, nên early stopping là cần thiết. Điểm ViT không tăng, và số liệu bịa không giảm thêm vì đã ở mức sàn sau khi sửa môi trường.
-
----
-
-## 6. Vấn đề 4: đánh giá cũ không đủ tin cậy cho paper
-
-**Vấn đề.** Tập eval lúc train chỉ có khoảng 18 chủ đề, trùng chủ đề với tập train, và chỉ có điểm của chính reward đã dùng để train.
-
-**Giải pháp.**
-- Dựng tập test mới từ Wikipedia: 291 slide, chủ đề tách biệt, có link và mã phiên bản từng bài.
-- So bốn hệ thống trên cùng prompt, cùng layout, cùng renderer: model gốc, DAPO, Gemini 3.5 Flash, và best-of-8 (model gốc sinh 8 mẫu, reward chọn mẫu tốt nhất).
-- Chấm người so cặp mù: 595 cặp, 3 người chấm, mỗi cặp ít nhất 2 người, có cặp lặp để kiểm tra chú ý.
-
-**Kết quả tự động.**
-
-![Điểm tự động trên tập test](docs/bao_cao/2_diem_tu_dong_tap_test.png)
-
-| Hệ thống | Reward [95% CI] | Hợp lệ | Bố cục | Tràn ngang | Số liệu đúng |
-|---|---|---|---|---|---|
-| Model gốc | 2.72 [2.52, 2.93] | 0.887 | 0.807 | 8.5% | 0.813 |
-| DAPO | 3.49 [3.36, 3.63] | 0.969 | 0.860 | 3.5% | 0.800 |
-| Gemini 3.5 Flash | 3.42 [3.27, 3.57] | 0.962 | 0.718 | 33.6% | 0.868 |
-| Best-of-8 | 3.92 [3.81, 4.02] | 0.997 | 0.893 | 5.9% | 0.897 |
-
-**Kết quả người chấm (1.281 lượt, cả 3 người chấm đủ 100%).**
-
-![Tỉ lệ thắng theo người chấm](docs/bao_cao/3_nguoi_cham_ti_le_thang.png)
-
-| So sánh (tổng thể) | Cặp | DAPO thắng | Hòa | DAPO thua | Tỉ lệ thắng [95% CI] |
-|---|---|---|---|---|---|
-| DAPO – model gốc | 254 | 83 | 129 | 42 | 0.565 [0.530, 0.598] |
-| DAPO – Gemini | 168 | 53 | 40 | 75 | 0.458 [0.409, 0.506] |
-| DAPO – best-of-8 | 145 | 35 | 56 | 54 | 0.456 [0.420, 0.495] |
-
-**Insight.**
-- **Chứng minh được:** DAPO hơn model gốc ở mọi loại slide. Lỗi sai ngôn ngữ do người đánh dấu giảm từ 11,9% xuống 3,6%.
-- **Chứng minh được:** model mở sau DAPO tiệm cận Gemini 3.5 Flash. DAPO hơn về bố cục, ngang về thẩm mỹ, thua về độ đầy đủ nội dung.
-- **Không chứng minh được:** DAPO thắng Gemini, và DAPO thắng best-of-8. Điểm sáng: DAPO lấy 4 mẫu đạt reward bằng model gốc lấy 8 mẫu, tức RL và lọc mẫu cộng dồn được.
-- **Không có tín hiệu:** về độ trung thực. Người chấm chọn "ngang nhau" hơn 94% ở tiêu chí này.
-
-DAPO thắng Gemini rõ ở layout 2–3 ý, thua ở layout bìa và layout nhiều khối chữ:
-
-![DAPO so với Gemini theo layout](docs/bao_cao/5_dapo_vs_gemini_theo_layout.png)
-
----
-
-## 7. Vấn đề 5: reward có đáng tin không
-
-**Vấn đề.** Toàn bộ việc train dựa vào reward. Nếu reward không phản ánh đánh giá của người thì model đang học sai mục tiêu.
-
-**Giải pháp.** Dùng dữ liệu người chấm để kiểm tra: với mỗi cặp slide, reward có chọn cùng bên với người không.
-
-**Kết quả.**
-
-![Reward khớp người chấm](docs/bao_cao/4_reward_khop_nguoi_cham.png)
-
-| Tiêu chí người chấm | Thành phần reward | Độ khớp |
-|---|---|---|
-| Tổng thể | Reward tổng hợp | 70,6% |
-| Bố cục | dom | 84,6% |
-| Thẩm mỹ | ViT | 66,7% |
-| Đầy đủ | lexical / semantic | 65,0% / 62,3% |
-
-**Insight.**
-- Reward có nghĩa, và càng chắc khi hai slide chênh điểm càng lớn (100% khi chênh từ 2.0 trở lên).
-- Học lại trọng số các thành phần từ dữ liệu người chấm không cải thiện gì (69,7% so với 70,2%). Trần 70% là do reward **thiếu tín hiệu**, không phải do cân sai trọng số.
-- Người chấm quyết định chủ yếu theo thẩm mỹ và độ đầy đủ, trong khi reward đặt trọng số cao nhất cho bố cục và số liệu.
-- Bộ đo bố cục bỏ sót 53 slide mà người thấy lỗi hiển thị.
-
----
-
-## 8. Vấn đề 6: chữ trùng màu nền và chữ bị cắt ở mép slide
-
-**Vấn đề.** Người chấm phản ánh lỗi nặng nhất là màu chữ khó đọc trên nền và chữ tràn viền. Reward không đo hai lỗi này.
-
-![Slide chữ không đọc được ở vòng 1](docs/bao_cao/loi_mau_truoc_khi_sua.png)
-
-**Chẩn đoán.** Lại là lỗi môi trường:
-- Model chọn màu đúng (chữ trắng trên dải tối).
-- Bước áp style của bộ slide ghi đè màu tiêu đề thành màu chủ đạo, trùng với màu dải nền.
-- Pipeline thật có sẵn bước sửa tương phản ở khâu render cuối, nhưng đường train và đường chấm tập test bỏ qua bước này.
-
-Hệ quả: mọi kết quả vòng 1, kể cả người chấm, đều đo trên slide chưa qua bước sửa màu. Cả ba hệ thống chịu chung điều kiện nên so sánh vẫn công bằng, nhưng đó không phải slide mà sản phẩm thật xuất ra.
-
-**Giải pháp.**
-- Nối bước sửa tương phản của pipeline thật vào đường reward.
-- Thêm phép đo `low_contrast`: đo tương phản giữa màu chữ và pixel nền thật trên ảnh render, nên tính được cả nền là ảnh hay gradient.
-- Thêm phép đo `text_cutoff`: chữ bị cắt ở mép slide.
-
-**Kết quả.** 9/9 slide đầu tiên bị gắn cờ `low_contrast` đều đúng là không đọc được. Sau khi sửa, các slide từng hỏng đã đọc được (trái: DAPO, phải: Gemini):
-
-![Sau khi sửa màu](docs/bao_cao/sau_khi_sua_mau.png)
-
-Chấm lại toàn bộ output cũ của vòng 1 (mẫu đầu tiên, 291 slide mỗi hệ thống) trước và sau khi nối bước sửa màu:
-
-| Hệ thống | Slide có chữ khó đọc: trước → sau | Thẩm mỹ (ViT): trước → sau | Chữ bị cắt ở mép | Reward mới |
+| Tiêu chí | Model gốc | Hiện tại (DAPO-4, 3 seed) | Mục tiêu | Khoảng cách |
 |---|---|---|---|---|
-| Model gốc | 17,7% → 0,4% | 0.49 → 0.59 | 12,4% | 2.76 |
-| DAPO vòng 1 | 12,9% → 1,1% | 0.49 → 0.55 | 9,2% | 3.52 |
-| Gemini 3.5 Flash | 12,5% → 0,4% | 0.51 → 0.57 | 19,3% | 3.40 |
+| Slide dùng được (tập phát triển) | 90,0% | 94,0% ± 1,4 | ≥ 95% | 1,0 điểm (bản chốt: 95,2%, đạt) |
+| Slide có lỗi nhìn thấy | 7,6% | 4,6% ± 0,7 | ≤ 4% | 0,6 điểm (bản chốt: 3,8%, đạt) |
+| Độ phủ ý chính (keypoint) | 0,817 | 0,796 ± 0,005 | không thấp hơn gốc quá 0,03 | đạt |
+| Người chọn DAPO hơn gốc (dự đoán) | 0,5 | 0,507 ± 0,008 | > 0,5 có ý nghĩa | chưa đạt |
 
-Cột "trước" của lỗi chữ khó đọc đo trên các slide người đã chấm; các cột còn lại đo trên cả 291 slide.
+**Dữ liệu.**
 
-Reward mới so với reward cũ, đối chiếu với đúng những slide người chấm đã xem ở vòng 1:
+| Tập | Nguồn | Quy mô | Dùng để |
+|---|---|---|---|
+| Dữ liệu train RL | 44 bộ slide dựng sẵn, khoảng 18 chủ đề | 370 prompt | Train DAPO |
+| Eval lúc train | Cùng phân phối với tập train | 168 slide × 4 mẫu | Early stopping |
+| Tập phát triển | 38 bài Wikipedia tiếng Việt, chủ đề không trùng tập train | 291 slide | Chọn checkpoint, đo seed |
+| Tập test giữ riêng (v2) | 44 bài Wikipedia mới, chủ đề không trùng hai tập trên | 337 slide | Chạy một lần duy nhất cho bản chốt |
+| Người chấm vòng 1 | Trang so cặp mù trên Vercel, 3 người | 1.281 lượt, 595 cặp | Kiểm chứng reward |
 
-| Phép kiểm tra | Reward cũ | Reward mới |
+Model: Qwen3.5-35B-A3B (35B tham số, khoảng 3B kích hoạt mỗi token), QLoRA NF4, LoRA r=16. Thuật toán: DAPO (DAPO: An Open-Source LLM Reinforcement Learning System at Scale, 2025) qua TRL `GRPOTrainer`, 4 mẫu mỗi prompt, LR 1e-5, early stopping theo reward eval. Giải thích thuật ngữ ở Phụ lục D.
+
+---
+
+## 03 · Bước 1
+
+# Dữ liệu cặp đẹp–xấu gán tay cho reward thẩm mỹ chính xác 97,9%
+
+Không có bộ dữ liệu slide nào gán nhãn thẩm mỹ theo loại lỗi, và LLM lớn chấm thì quá chậm cho RL. Chúng tôi tự dựng 1.929 cặp, mỗi cặp là một slide đẹp và một bản xấu của chính nó mang một hoặc hai lỗi cụ thể.
+
+## Ý tưởng
+
+- 5 loại lỗi: khối đè nhau, cỡ chữ sai, màu nền xấu, màu chữ xấu, chữ tràn ra ngoài; 18 tổ hợp lỗi đơn và kép; 1.805 slide gốc, 5 người làm.
+- Chia tập theo slide gốc và cân bằng theo loại lỗi: 1.736 cặp train, 193 cặp kiểm thử, không slide gốc nào nằm ở cả hai tập.
+- ViT-Base (An Image is Worth 16x16 Words, 2021) train kiểu so cặp với loss Bradley–Terry; reward thẩm mỹ là sigmoid của điểm.
+
+## Kết quả
+
+![ViT chọn đúng slide đẹp 97,9% trên 193 cặp chưa thấy, đều trên cả 5 loại lỗi](docs/bao_cao/0_reward_model.png)
+
+Slide do model sinh nằm ở vùng ViT không chắc: điểm trung vị −0,99, giữa slide đẹp gán tay (+4,92) và slide xấu (−6,11). Vì thế thẩm mỹ chỉ là một thành phần của reward tổng hợp.
+
+> **INSIGHT** Bộ cặp cùng nội dung, khác đúng một lỗi cho nhãn chắc chắn; nó dùng được cả để train reward model lẫn làm benchmark cho bộ chấm thẩm mỹ khác.
+
+> **NEXT IDEA** Ghép ViT với các phép đo bố cục trên trình duyệt thật và các phép đo nội dung thành reward tổng hợp, rồi train DAPO.
+
+---
+
+## 04 · Bước 2
+
+# DAPO vòng 1 thắng model gốc khi người chấm, nhưng chưa thắng Gemini
+
+Reward tổng hợp gồm nội dung (từ vựng, ngữ nghĩa, giữ đúng số liệu), bố cục đo trong trình duyệt, ViT thẩm mỹ, nhân với hệ số đúng ngôn ngữ; lời gọi hỏng bị −2. Ba người chấm so cặp mù 595 cặp trên tập phát triển.
+
+## Ý tưởng
+
+- Tăng tốc train 2,7 lần (166 → 60 giây mỗi bước) bằng kernel flash-linear-attention và causal-conv1d, sửa gradient trên H100 bằng tilelang. Nhờ vậy chạy được hơn 10 lần thử.
+- So bốn hệ thống cùng prompt, cùng renderer: model gốc, DAPO, Gemini 3.5 Flash, best-of-8 (model gốc sinh 8 mẫu, reward chọn mẫu tốt nhất).
+
+## Kết quả
+
+![Người chấm: DAPO hơn model gốc ở mọi tiêu chí; thua Gemini và best-of-8 ở tiêu chí tổng thể](docs/bao_cao/3_nguoi_cham_ti_le_thang.png)
+
+- DAPO thắng model gốc 0,565 [0,530; 0,598]; lỗi sai ngôn ngữ người đánh dấu giảm từ 11,9% xuống 3,6%.
+- DAPO thua Gemini 0,458 [0,409; 0,506] và best-of-8 0,456 [0,420; 0,495]. DAPO lấy 4 mẫu đạt reward bằng model gốc lấy 8 mẫu.
+- Reward tổng hợp chọn trùng người 70,6%, lên 100% khi hai slide chênh nhau từ 2,0 điểm reward; điểm bố cục khớp người 84,6%.
+
+![Reward càng chênh càng khớp người chấm](docs/bao_cao/4_reward_khop_nguoi_cham.png)
+
+> **INSIGHT** Reward có nghĩa nhưng thiếu tín hiệu: học lại trọng số từ dữ liệu người không tăng độ khớp (69,7% so với 70,2%). Người chấm phàn nàn nhiều nhất về chữ khó đọc trên nền và chữ tràn viền, đúng hai lỗi reward không đo.
+
+> **NEXT IDEA** Tìm vì sao reward bỏ sót hai lỗi này trước khi train tiếp.
+
+---
+
+## 05 · Bước 3
+
+# Lỗi "của model" hóa ra là lỗi môi trường, ba lần liên tiếp
+
+Bóc tách từng slide lỗi cho thấy nhiều lỗi model bị phạt là do công cụ, prompt hoặc bước áp style tạo ra. Train RL trên môi trường như vậy là phạt model vì thứ nó không điều khiển được.
+
+## Ý tưởng
+
+- Số liệu bịa: công cụ slide cảm ơn tự điền số điện thoại, email mẫu khi model để trống; công cụ biểu đồ có số liệu mẫu mặc định; một gợi ý trong prompt làm hỏng ký tự thoát JSON.
+- Chữ khó đọc: model chọn màu đúng, nhưng bước áp style ghi đè màu tiêu đề thành màu dải nền. Pipeline thật có bước sửa tương phản ở khâu render cuối, đường train và đường chấm lại bỏ qua bước này.
+- Thêm phép đo `low_contrast` trên pixel nền thật của ảnh render và `text_cutoff` cho chữ bị cắt ở mép slide.
+
+## Kết quả
+
+![Chỉ sửa môi trường, chưa train, số liệu bịa của model gốc giảm từ 11,7% xuống 1,5%](docs/bao_cao/1_bia_so_lieu_do_moi_truong.png)
+
+Nối bước sửa tương phản và hai phép đo mới: slide có chữ khó đọc của model gốc giảm từ 17,7% xuống 0,4%; bộ đo bố cục bắt được 185/190 slide người đánh dấu lỗi hiển thị, trước đó 138/190.
+
+> **INSIGHT** Với RL gọi công cụ, phải kiểm tra môi trường train khớp với pipeline thật trước khi tin reward. Đây là một luận điểm của paper.
+
+> **NEXT IDEA** Dùng chính dữ liệu người chấm để định trọng số các lỗi bố cục.
+
+---
+
+## 06 · Bước 4
+
+# Hiệu chỉnh reward bằng 820 slide người chấm; các lần thử còn lại đều thất bại
+
+Từ 342 cặp người chấm có kết quả rõ (820 slide), lỗi nào người xác nhận là lỗi hiển thị trong 73–90% trường hợp thì xóa toàn bộ điểm bố cục; tràn chiều cao khung chỉ mất một phần tư; các lỗi người không bao giờ đánh dấu riêng lẻ thì bỏ phạt.
+
+## Ý tưởng
+
+- Vòng 3: trọng số lỗi bố cục khớp người (lỗi nhìn thấy = 1,0; tràn chiều cao = 0,25; tràn chiều ngang và quá số dòng = 0).
+- Thêm thành phần độ phủ ý chính (keypoint): mỗi câu nguồn có được thể hiện trên slide không. Khớp người ở tiêu chí đầy đủ 70,6%, hơn trùng từ vựng (65,0%) và ngữ nghĩa cả slide (62,3%).
+- Gợi ý sức chứa đo bằng chính layout: chạy công cụ với chữ mẫu, tìm số ký tự dài nhất không tràn cho từng trường.
+
+## Kết quả
+
+Các thay đổi đơn lẻ thử trước khi có cấu hình vòng 4 đều không đạt, và được giữ lại như kết quả âm:
+
+| Thử | Kết quả | Vì sao bỏ |
 |---|---|---|
-| Slide người đánh dấu "lỗi hiển thị" mà bộ đo bố cục bắt được | 138/190 (73%) | **185/190 (97%)** |
-| Điểm bố cục chọn trùng người ở tiêu chí bố cục | 84,6% | **89,9%** |
-| Reward tổng hợp chọn trùng người ở tiêu chí tổng thể | 70,6% | 72,3% |
+| Thêm câu "không bịa số liệu" vào prompt | Không đổi tỉ lệ bịa | Lỗi bịa chủ yếu do môi trường (Bước 3) |
+| Nhắc escape dấu nháy JSON trong prompt | Không đổi tỉ lệ hợp lệ | Chuyển sang sửa ở bộ phân tích (Bước 6) |
+| Gợi ý sức chứa v2 (đo đồng thời mọi trường) | Lỗi giảm một nửa trên máy chủ thử, nội dung và reward không tăng | Giữ cho vòng 4, không coi là cải tiến riêng |
+| Vòng 2e: train tiếp từ 2d | Không hồi được độ phủ nội dung | Quay về LoRA mới cho vòng 4 |
+| Tự co chữ ở layout | Lỗi nhìn thấy của model gốc 8,2% → 3,8% | Bỏ theo yêu cầu sản phẩm: cỡ chữ phải đồng nhất, model phải học tóm gọn |
+| Đo độ chen chữ (khoảng cách giữa hai hộp chữ) | 78/262 slide sát nhau dưới 1 px, phần lớn bình thường | Không tách được slide lỗi |
 
-Hai phép đo mới gần như xóa hết phần bộ đo bố cục bỏ sót (còn sót 5 slide thay vì 52). Độ khớp ở tiêu chí tổng thể chỉ tăng nhẹ, còn trong khoảng sai số, vì người chấm quyết định tổng thể chủ yếu theo thẩm mỹ và độ đầy đủ. Bộ đo bố cục vẫn khắt khe hơn người: trong các slide nó báo lỗi, người chỉ đồng ý khoảng 47%.
+> **INSIGHT** Thay đổi nào không qua được tập phát triển ở nhiệt độ 0,3 thì không đáng một lần train 6 giờ trên H100. Hầu hết được kiểm trên máy chủ Qwen ngoài hoặc trên output có sẵn trước.
 
-**Insight.** Lỗi môi trường xuất hiện lần thứ ba (sau số liệu bịa và ký tự thoát). Đây là một luận điểm của paper: khi dùng RL cho bài toán gọi công cụ, phải kiểm tra môi trường train khớp với pipeline thật trước khi tin vào reward.
-
----
-
-## 9. Đang chạy: train vòng 2
-
-| Thay đổi so với vòng 1 | Lý do |
-|---|---|
-| Reward đi qua bước sửa tương phản của pipeline thật | Model không còn bị phạt vì màu do style gây ra |
-| Phạt `low_contrast` (0.35) và `text_cutoff` (0.30) trong điểm bố cục | Hai lỗi người chấm thấy nhiều nhất mà reward cũ bỏ sót |
-| Trọng số lexical 0.5 → 0.8 | Người chấm coi trọng độ đầy đủ; DAPO vòng 1 thua Gemini ở điểm này |
-
-Mọi thiết lập khác giữ nguyên để so được với vòng 1. Thư mục run: `qwen3_5_35b_dapo_guard_20261013`.
+> **NEXT IDEA** Vòng 4: LoRA mới, reward keypoint thay trùng từ vựng, gợi ý sức chứa v2, không tự co chữ.
 
 ---
 
-## 10. Việc tiếp theo
+## 07 · Bước 5
 
-1. **Chấm người vòng 2** trên slide của pipeline đã sửa, cho bảng kết quả chính của paper. Sửa giao thức chấm: bắt buộc chọn bên thắng ở tiêu chí tổng thể, đổi cách hỏi hai tiêu chí trung thực và đầy đủ (độ đồng thuận vòng 1 chỉ 0.13–0.14), đặt thời gian tối thiểu mỗi cặp.
-2. **Nâng độ khớp ở tiêu chí tổng thể** (hiện 72,3%): cần tín hiệu thẩm mỹ và độ đầy đủ tốt hơn, vì hai phép đo bố cục mới chỉ giải quyết phần lỗi hiển thị.
-3. **DAPO kết hợp lọc mẫu:** chấm người cho DAPO best-of-4 so với model gốc best-of-8.
-4. **Tinh chỉnh ViT** bằng 192 cặp người chấm phân biệt được về thẩm mỹ, vì ViT hiện chỉ khớp người 66,7% trên slide do model sinh.
-5. **Sửa layout bìa** trong thư viện: slide mở đầu bị gắn cờ lỗi hiển thị 35–44% ở cả ba hệ thống.
-6. **Ablation model dense** (ví dụ Qwen3-8B) nếu muốn khẳng định lựa chọn kiến trúc A3B.
+# Vòng 4: model học tóm gọn để vừa layout, lặp lại trên ba seed
+
+Vòng 4 thay trùng từ vựng bằng độ phủ ý chính (trọng số 1,5), giữ nguyên cỡ chữ của layout, và dừng khi 3 mốc eval liền không vượt mức tốt nhất. Bản chốt là bước 175 của seed 42; hai seed lặp lại (7 và 2026) chạy trên đúng code đó.
+
+## Ý tưởng
+
+- Reward: 1,5·keypoint + 0,4·ngữ nghĩa + 0,7·số liệu + 2,1·bố cục + 1,5·ViT, nhân hệ số ngôn ngữ.
+- Chọn bản chốt bằng cổng trên tập phát triển: hợp lệ ≥ 98%, dùng được ≥ 95%, lỗi nhìn thấy ≤ 4%, keypoint không thấp hơn gốc quá 0,03; trong các bản qua cổng lấy bản có xác suất người chọn dự đoán cao nhất.
+- Đo lặp lại: hai seed thêm, đánh giá bản tốt nhất của từng seed trên tập phát triển với cùng bộ kiểm tra.
+
+## Kết quả
+
+![Ba seed đều vượt mức bước 0 nhưng đỉnh rơi vào bước 50, 175, 175](docs/bao_cao/7_duong_cong_vong4.png)
+
+![DAPO-4 giảm lỗi nhìn thấy gần một nửa so với model gốc, đổi lại độ phủ ý chính giảm 0,02](docs/bao_cao/6_tap_phat_trien_vong4.png)
+
+- Chỉ bản chốt qua đủ cổng: dùng được 95,2%, lỗi nhìn thấy 3,8%, keypoint 0,791 (gốc 0,817). DAPO-2d hụt sát (lỗi nhìn thấy 4,1%, keypoint thấp hơn gốc 0,031); DAPO-3 hụt xa (lỗi nhìn thấy 8,9%).
+- Chữ bị cắt giảm từ 2,7% xuống 1,0% ± 0,3. Ví dụ slide "Sức mạnh cốt lõi từ hạt Robusta" bị cắt chữ ở các mốc 150, 175 và 200 (mẫu lấy ở nhiệt độ 1,0), rồi ở bước 225 model tóm gọn đủ để vừa khung, reward 2,13 → 4,29.
+- Ở nhiệt độ 0,3, phần lớn slide bìa và mục lục gần như giống hệt model gốc; khác biệt nằm ở slide nhiều chữ.
+
+> **INSIGHT** RL làm slide ít lỗi hơn và ổn định qua seed, nhưng không làm nội dung hay hơn theo dự đoán của người. Seed ảnh hưởng mạnh đến thời điểm đạt đỉnh, nên early stopping theo eval là bắt buộc.
+
+> **NEXT IDEA** Xem ảnh thật ở mỗi mốc để tìm chỗ reward chấm sai mà số liệu không lộ ra.
 
 ---
 
-## 11. Hạn chế cần ghi trong paper
+## 08 · Bước 6
 
-- Người chấm vòng 1 chọn "ngang nhau" rất nhiều (34–60% ở tiêu chí tổng thể), nên tỉ lệ thắng bị kéo về 0.5.
-- Một người chấm làm rất nhanh (trung vị 8,8 giây mỗi cặp). Bỏ người này thì hướng kết quả không đổi.
+# Xem ảnh thật tìm ra năm chỗ reward chấm sai
+
+Mỗi mốc eval, ảnh mẫu được đặt cạnh mốc trước. Năm lỗi dưới đây có reward cao trong khi slide hỏng rõ ràng; mỗi bộ phát hiện chỉ được thêm sau khi kiểm trên hàng nghìn slide đã chấm và xem ảnh các ca bị gắn cờ.
+
+## Ý tưởng
+
+| Lỗi thấy trong ảnh | Ví dụ | Bộ phát hiện | Kiểm tra báo nhầm |
+|---|---|---|---|
+| Chữ có dấu bị hỏng | tiêu đề *"Cùng H Fle Ph^\i^^i^^n Kh^^o^^a"*, reward 5,16 | chữ^chữ hoặc ^^ | 0 trên 17.620 slide, kể cả công thức LaTeX |
+| Chữ ngoại lai | *"Xuất khẩu خام Sang Tạo"*, *"trực tiếp指挥"* | thêm chữ Ả Rập, Do Thái, Devanagari | chỉ tính khi nguồn không có |
+| Thẻ HTML lọt | *"<Vị đậm đà"*, `<math-field>` | "<" mở đầu một từ | mọi ca trên khoảng 15.000 slide là lỗi thật |
+| Chữ tràn khỏi nền hoặc panel | tiêu đề cảm ơn tràn xuống ảnh tối; subtitle bị đẩy khỏi panel bìa | đo phần chữ vượt mép, xác nhận bằng pixel hai bên mép | bản chỉ đo DOM báo nhầm khoảng một nửa (nhãn trắng trên nền trắng); bản xác nhận pixel giữ mọi ca thấy rõ trên 20 slide xem tay |
+| JSON hỏng vì dấu nháy lồng | *"Chiến dịch "nói không với rác thải nhựa""* | sửa dấu nháy khi phân tích, chỉ dùng khi đánh giá | dữ liệu đúng không đổi (51/51); mảng hỏng cấu trúc vẫn bị loại |
+
+## Kết quả
+
+- Bộ phát hiện tràn khỏi nền bản đầu gắn cờ 6–9% slide; xem ảnh thấy nửa số đó không nhìn thấy được. Sau khi xác nhận bằng pixel còn 1,7–3,1%.
+- Sửa dấu nháy JSON đưa tỉ lệ hợp lệ của model gốc từ 97,9% lên 99,3% trên tập phát triển; bản chốt từ 99,3% lên 100%.
+- Ở nhiệt độ 0,3, chữ ngoại lai, chữ hỏng và thẻ lọt đều bằng 0 ở mọi hệ thống; chúng chỉ xuất hiện khi lấy mẫu ở nhiệt độ 1,0 lúc train (khoảng 1% ở cả model gốc lẫn DAPO).
+
+> **INSIGHT** Số liệu tổng hợp không lộ ra các lỗi này; chỉ xem ảnh mới thấy. Bộ phát hiện nào cũng phải kiểm tra báo nhầm bằng ảnh trước khi đưa vào reward.
+
+> **NEXT IDEA** Chạy bản chốt đúng một lần trên tập test giữ riêng.
+
+---
+
+## 09 · Bước 7
+
+# Tập test giữ riêng
+
+[DATA NEEDED: kết quả testset_v2, 337 slide, bản chốt và model gốc, nhiệt độ 0,3 và best-of-4 ở nhiệt độ 1,0]
+
+---
+
+## 10 · Kết luận
+
+DAPO giảm lỗi hiển thị một cách lặp lại được, nhưng phần lớn chất lượng đến từ việc sửa môi trường và reward.
+
+**Kết luận chính**
+
+1. Dữ liệu cặp đẹp–xấu gán tay cho reward thẩm mỹ chính xác 97,9% và dùng lại được làm benchmark.
+2. Trên tập phát triển, DAPO-4 giảm lỗi nhìn thấy từ 7,6% xuống 4,6% ± 0,7 qua ba seed và tăng slide dùng được từ 90,0% lên 94,0% ± 1,4.
+3. Đánh đổi: độ phủ ý chính giảm 0,021 ± 0,005 vì model tóm gọn để giữ nguyên cỡ chữ.
+4. Chưa chứng minh được người xem thích bản DAPO hơn (0,507 ± 0,008).
+5. Ba lần lỗi môi trường và năm chỗ reward chấm sai đều chỉ lộ ra khi bóc tách từng slide và xem ảnh.
+
+**Việc tiếp theo**
+
+1. Chấm người đợt 2 trên pipeline đã sửa: bản chốt so với model gốc và Gemini 3.5 Flash. Bắt buộc chọn bên thắng ở tiêu chí tổng thể, đặt thời gian tối thiểu mỗi cặp.
+2. Chạy lại Gemini 3.5 Flash trên tập test giữ riêng khi có key API mới.
+3. Phạt thẩm mỹ thấp bằng phép nhân thay vì cộng: slide cảm ơn ghép 18 ô chữ nhỏ có ViT 0,07 nhưng reward tổng 5,04, cao hơn bản gọn 5 ô (4,94), vì điểm nội dung bù lại.
+4. Sửa layout bìa và layout cảm ơn đang tự sinh lỗi ở mọi hệ thống: tiêu đề dài 3 dòng đè nội dung, hình trang trí đè chữ.
+
+> **NEXT EXPERIMENT** Chấm người đợt 2 cho bản chốt so với model gốc, vì đó là câu hỏi duy nhất số liệu tự động không trả lời được.
+
+---
+
+## 11 · Phụ lục
+
+### A. Bảng chi tiết
+
+Tập phát triển, 291 slide, nhiệt độ 0,3, cùng prompt vòng 4, cùng bộ kiểm tra (sinh bằng `scripts/dev_eval_table.py` và `scripts/predicted_preference.py`, thư mục `slidegen_data/testset/scored_r4`).
+
+| Hệ thống | Hợp lệ | Dùng được | Lỗi nhìn thấy | Chữ bị cắt | Tràn nền | Keypoint | Số liệu | ViT | Người chọn hơn gốc (dự đoán) |
+|---|---|---|---|---|---|---|---|---|---|
+| Model gốc | 97,6% | 90,0% | 7,6% | 2,7% | 3,1% | 0,817 | 0,822 | 0,581 | n/a |
+| DAPO-2d | 99,7% | 95,5% | 4,1% | 1,4% | 1,7% | 0,786 | 0,804 | 0,558 | 0,501 [0,485; 0,519] |
+| DAPO-3 | 99,0% | 90,0% | 8,9% | 3,1% | 3,4% | 0,804 | 0,824 | 0,544 | 0,494 [0,477; 0,513] |
+| DAPO-4 seed 42 (bản chốt) | 99,0% | 95,2% | 3,8% | 0,7% | 2,7% | 0,791 | 0,789 | 0,598 | 0,509 [0,493; 0,524] |
+| DAPO-4 seed 7 | 97,6% | 92,4% | 5,2% | 1,0% | 3,4% | 0,800 | 0,816 | 0,570 | 0,498 [0,485; 0,510] |
+| DAPO-4 seed 2026 | 99,3% | 94,5% | 4,8% | 1,4% | 2,4% | 0,798 | 0,817 | 0,591 | 0,513 [0,500; 0,529] |
+
+Người chấm vòng 1 (1.281 lượt): DAPO-1 so với model gốc 0,565 [0,530; 0,598]; so với Gemini 3.5 Flash 0,458 [0,409; 0,506]; so với best-of-8 0,456 [0,420; 0,495].
+
+### B. Bài học đánh giá và hạn chế
+
+- Tập phát triển đã dùng để chọn checkpoint và thiết kế bộ phát hiện, nên là tập phát triển chứ không phải tập test; kết quả độc lập chỉ có ở tập test giữ riêng (Bước 7).
+- Xác suất người chọn là dự đoán của một hồi quy logistic fit trên 342 cặp người chấm vòng 1 (độ chính xác chéo khoảng 0,72), không phải người chấm thật.
+- Eval nội bộ lúc train dùng 168 slide và lấy mẫu phụ thuộc seed: mức bước 0 dao động 3,90–4,18 giữa các seed, nên không so seed bằng eval nội bộ.
+- Người chấm vòng 1 chọn "ngang nhau" rất nhiều (34–60% ở tiêu chí tổng thể); độ đồng thuận ở tiêu chí trung thực và đầy đủ chỉ 0,13–0,14.
 - Tập train chỉ có 44 bộ slide, khoảng 18 chủ đề.
-- Bảng điểm tự động dùng chính hàm mục tiêu lúc train, nên có lợi cho DAPO; kết quả chính phải là người chấm.
+- Reward tự động là chính hàm mục tiêu lúc train nên có lợi cho DAPO; các chỉ số nhìn thấy được (cắt chữ, tràn nền) được kiểm bằng ảnh, còn kết luận về sở thích phải chờ người chấm.
+- Lỗi thư viện: nạp lại checkpoint tốt nhất cuối run báo lỗi trong peft 0.19.1 (`WeightConverter ... distributed_operation`) sau khi train đã xong; các checkpoint không bị ảnh hưởng.
+
+### C. Tài liệu tham khảo
+
+- DAPO: An Open-Source LLM Reinforcement Learning System at Scale, 2025, arXiv:2503.14476.
+- DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models, 2024, arXiv:2402.03300 (GRPO).
+- An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale, 2021, ICLR.
+- QLoRA: Efficient Finetuning of Quantized LLMs, 2023, NeurIPS.
+- LoRA: Low-Rank Adaptation of Large Language Models, 2022, ICLR.
+- Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons (Bradley, Terry), 1952, Biometrika.
+
+### D. Thuật ngữ
+
+- DAPO - biến thể của GRPO: so điểm các mẫu cùng prompt để biết mẫu nào tốt hơn, không cần model giá trị.
+- Hợp lệ - lời gọi công cụ phân tích được và công cụ chạy được.
+- Lỗi nhìn thấy - chữ bị cắt, chữ khó đọc trên nền, khối đè nhau, lộ ký hiệu, vượt mép slide, chữ quá nhỏ, chữ tràn khỏi nền hoặc panel.
+- Dùng được - hợp lệ và không có lỗi nhìn thấy.
+- Keypoint - tỉ lệ câu của nguồn được thể hiện trên slide, đo bằng embedding đa ngôn ngữ.
+- Best-of-N - sinh N mẫu, reward chọn mẫu tốt nhất.
+- T=0,3 / T=1,0 - nhiệt độ lấy mẫu; 0,3 là thiết lập khi dùng thật, 1,0 là lúc train.
+- Seed - hạt giống ngẫu nhiên quyết định thứ tự dữ liệu và việc lấy mẫu khi train.
