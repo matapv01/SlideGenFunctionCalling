@@ -30,7 +30,7 @@ DAPO trên Qwen3.5-35B-A3B giảm tỉ lệ slide có lỗi nhìn thấy từ 7,
 
 Kết luận chính:
 
-1. Bộ 1.929 cặp slide đẹp–xấu gán tay cho reward model ViT chọn đúng 97,9% trên cặp chưa thấy (Bước 1).
+1. Bộ 1.929 cặp slide đẹp–xấu gán tay cho reward model ViT chọn đúng 97,9% trên cặp chưa thấy, ngang VLM 35B không train (97,4%) và vượt xa CLIP (47,9%) (Bước 1).
 2. DAPO vòng 1 thắng model gốc khi người chấm: tỉ lệ thắng 0,565 [0,530; 0,598] trên 1.281 lượt chấm, nhưng thua Gemini 3.5 Flash (0,458) (Bước 2).
 3. Ba lần liên tiếp, lỗi tưởng do model hóa ra do môi trường: số liệu bịa giảm từ 11,7% xuống 1,5% chỉ nhờ sửa công cụ và prompt, chưa train gì (Bước 3).
 4. Phần lớn cải thiện đến từ môi trường và reward: lỗi nhìn thấy của chính model gốc giảm theo từng lần sửa; RL thêm phần ổn định và hợp lệ (Bước 3 đến Bước 6).
@@ -92,9 +92,20 @@ Không có bộ dữ liệu slide nào gán nhãn thẩm mỹ theo loại lỗi,
 
 ![ViT chọn đúng slide đẹp 97,9% trên 193 cặp chưa thấy, đều trên cả 5 loại lỗi](docs/bao_cao/0_reward_model.png)
 
-Slide do model sinh nằm ở vùng ViT không chắc: điểm trung vị −0,99, giữa slide đẹp gán tay (+4,92) và slide xấu (−6,11). Vì thế thẩm mỹ chỉ là một thành phần của reward tổng hợp.
+So với các bộ chấm không train trên cùng 193 cặp kiểm thử (`slidegen_data/pairs/baselines.json`):
 
-> **INSIGHT** Bộ cặp cùng nội dung, khác đúng một lỗi cho nhãn chắc chắn; nó dùng được cả để train reward model lẫn làm benchmark cho bộ chấm thẩm mỹ khác.
+| Bộ chấm | Khối đè nhau | Cỡ chữ sai | Màu nền xấu | Màu chữ xấu | Tràn chữ | Tổng |
+|---|---|---|---|---|---|---|
+| Ngẫu nhiên | 50% | 50% | 50% | 50% | 50% | 50% |
+| CLIP ViT-B/32, zero-shot | 50,6% | 39,0% | 47,2% | 42,6% | 61,8% | 47,9% |
+| Qwen3.5-35B-A3B (VLM), zero-shot, khử thiên lệch vị trí | 99,4% | 90,2% | 100% | 97,9% | 98,0% | 97,4% |
+| ViT-Base train trên bộ cặp | 97,7% | 97,6% | 100% | 100% | 96,1% | 97,9% |
+
+- CLIP zero-shot không phân biệt được (dưới mức ngẫu nhiên ở 3/5 loại lỗi).
+- Một VLM 35B không train làm gần bằng ViT: lỗi tạo nhân tạo trong bộ cặp rõ ràng với model lớn. ViT chỉ hơn rõ ở cỡ chữ sai (97,6% so với 90,2%), nhưng nhỏ hơn và nhanh hơn rất nhiều, đủ để chấm hàng chục nghìn slide trong RL.
+- Slide do model sinh nằm ở vùng ViT không chắc: điểm trung vị −0,99, giữa slide đẹp gán tay (+4,92) và slide xấu (−6,11). Vì thế thẩm mỹ chỉ là một thành phần của reward tổng hợp.
+
+> **INSIGHT** Bộ cặp cùng nội dung, khác đúng một lỗi cho nhãn chắc chắn và đủ để train một reward nhỏ, nhanh, chính xác ngang VLM 35B. Nhưng nó không phải benchmark khó: VLM lớn không train đã đạt 97,4%. Phép thử khó là slide do model sinh có người chấm (Bước 2).
 
 > **NEXT IDEA** Ghép ViT với các phép đo bố cục trên trình duyệt thật và các phép đo nội dung thành reward tổng hợp, rồi train DAPO.
 
@@ -275,7 +286,7 @@ DAPO giảm lỗi hiển thị một cách lặp lại được, nhưng phần l
 
 **Kết luận chính**
 
-1. Dữ liệu cặp đẹp–xấu gán tay cho reward thẩm mỹ chính xác 97,9% và dùng lại được làm benchmark.
+1. Dữ liệu cặp đẹp–xấu gán tay cho reward thẩm mỹ nhỏ, nhanh, chính xác 97,9%, ngang VLM 35B không train; tập kiểm thử của nó quá dễ để làm benchmark cho model lớn.
 2. Trên tập phát triển, DAPO-4 giảm lỗi nhìn thấy từ 7,6% xuống 4,6% ± 0,7 qua ba seed và tăng slide dùng được từ 90,0% lên 94,0% ± 1,4.
 3. Đánh đổi: độ phủ ý chính giảm 0,021 ± 0,005 vì model tóm gọn để giữ nguyên cỡ chữ.
 4. Chưa chứng minh được người xem thích bản DAPO hơn (0,507 ± 0,008 trên tập phát triển, 0,502 trên tập test).
