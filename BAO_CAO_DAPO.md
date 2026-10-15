@@ -26,7 +26,7 @@ SlideGen · bản 2 · 2026.10
 
 ## 01 · Tóm tắt
 
-DAPO trên Qwen3.5-35B-A3B giảm tỉ lệ slide có lỗi nhìn thấy từ 7,6% xuống 4,6% ± 0,7 (ba seed) trên tập phát triển, và tỉ lệ slide dùng được tăng từ 90,0% lên 94,0% ± 1,4. Cái giá là độ phủ ý chính giảm 0,021 ± 0,005, vì model học tóm gọn để vừa layout chứ không thu nhỏ chữ. Người xem chưa được chứng minh là thích bản DAPO hơn: xác suất được chọn dự đoán là 0,507 ± 0,008, khoảng tin cậy chứa 0,5.
+DAPO trên Qwen3.5-35B-A3B giảm tỉ lệ slide có lỗi nhìn thấy từ 7,6% xuống 4,6% ± 0,7 (ba seed) trên tập phát triển và từ 4,7% xuống 3,0% trên tập test giữ riêng, và tỉ lệ slide dùng được tăng từ 90,0% lên 94,0% ± 1,4. Cái giá là độ phủ ý chính giảm 0,021 ± 0,005, vì model học tóm gọn để vừa layout chứ không thu nhỏ chữ. Người xem chưa được chứng minh là thích bản DAPO hơn (xác suất được chọn dự đoán 0,507 ± 0,008), và model gốc lấy best-of-4 đạt cùng mức với DAPO best-of-4.
 
 Kết luận chính:
 
@@ -34,7 +34,7 @@ Kết luận chính:
 2. DAPO vòng 1 thắng model gốc khi người chấm: tỉ lệ thắng 0,565 [0,530; 0,598] trên 1.281 lượt chấm, nhưng thua Gemini 3.5 Flash (0,458) (Bước 2).
 3. Ba lần liên tiếp, lỗi tưởng do model hóa ra do môi trường: số liệu bịa giảm từ 11,7% xuống 1,5% chỉ nhờ sửa công cụ và prompt, chưa train gì (Bước 3).
 4. Phần lớn cải thiện đến từ môi trường và reward: lỗi nhìn thấy của chính model gốc giảm theo từng lần sửa; RL thêm phần ổn định và hợp lệ (Bước 3 đến Bước 6).
-5. Trên tập test giữ riêng 337 slide: [DATA NEEDED: kết quả testset_v2] (Bước 7).
+5. Trên tập test giữ riêng 337 slide, chạy một lần: slide dùng được 90,2% → 94,7%, lỗi nhìn thấy 4,7% → 3,0%. Nhưng model gốc sinh 4 mẫu rồi để reward chọn (best-of-4) đạt 97,0%, ngang DAPO best-of-4 (97,3%): RL tiết kiệm chi phí suy luận, không nâng trần chất lượng (Bước 7).
 
 > **Báo cáo trả lời ba câu hỏi**
 > RL có làm slide do model mở dựng ít lỗi hơn không, và có lặp lại qua nhiều seed không?
@@ -240,9 +240,32 @@ Mỗi mốc eval, ảnh mẫu được đặt cạnh mốc trước. Năm lỗi 
 
 ## 09 · Bước 7
 
-# Tập test giữ riêng
+# Tập test giữ riêng xác nhận DAPO giảm lỗi, nhưng best-of-4 của model gốc làm được như vậy
 
-[DATA NEEDED: kết quả testset_v2, 337 slide, bản chốt và model gốc, nhiệt độ 0,3 và best-of-4 ở nhiệt độ 1,0]
+Bản chốt và model gốc chạy đúng một lần trên 337 slide của 44 bài Wikipedia chủ đề mới, cùng prompt, cùng bộ kiểm tra; ở nhiệt độ 0,3 một mẫu và ở nhiệt độ 1,0 bốn mẫu.
+
+## Ý tưởng
+
+- Kiểm tra kết luận trên tập phát triển ở dữ liệu chưa từng dùng để chọn bất cứ thứ gì.
+- So với best-of-4 cùng chi phí lấy mẫu, câu hỏi reviewer sẽ hỏi đầu tiên: cần RL làm gì nếu lọc mẫu đã đủ.
+
+## Kết quả
+
+| Hệ thống (337 slide) | Reward | Hợp lệ | Dùng được | Lỗi nhìn thấy | Chữ bị cắt | Keypoint | Số liệu | ViT |
+|---|---|---|---|---|---|---|---|---|
+| Model gốc, T=0,3 | 3,597 | 95,0% | 90,2% | 4,7% | 1,5% | 0,811 | 0,826 | 0,599 |
+| DAPO-4, T=0,3 | 3,715 | 97,6% | 94,7% | 3,0% | 0,6% | 0,788 | 0,798 | 0,579 |
+| Model gốc, best-of-4, T=1,0 | 4,059 | 99,1% | 97,0% | 2,1% | 0,6% | 0,815 | 0,855 | 0,676 |
+| DAPO-4, best-of-4, T=1,0 | 4,069 | 99,4% | 97,3% | 2,1% | 0,6% | 0,817 | 0,854 | 0,685 |
+
+- Một mẫu ở T=0,3, DAPO tăng slide dùng được 4,5 điểm và giảm chữ bị cắt khoảng 2,5 lần; keypoint giảm 0,023, giống tập phát triển. Xác suất người chọn dự đoán 0,502 [0,486; 0,518].
+- Có 21 slide khác trạng thái lỗi giữa hai hệ thống: 18 chỉ model gốc lỗi, 3 chỉ DAPO lỗi. Ví dụ 2001_06: model gốc đè chữ chín ban điện lực lên nhau, DAPO dựng 9 thẻ sạch.
+- Best-of-4 xóa gần hết khác biệt: model gốc 97,0% so với DAPO 97,3% slide dùng được, reward 4,059 so với 4,069.
+- 8 slide không hợp lệ của DAPO: 7 slide vượt số mục tối đa của layout (13 thẻ cho layout 3 thẻ), lỗi này model gốc cũng có với tần suất tương đương (4 so với 5 trên tập test).
+
+> **INSIGHT** RL ở đây chuyển phần chất lượng của việc lọc 4 mẫu vào một mẫu duy nhất (rẻ hơn 4 lần khi suy luận), chứ không nâng trần chất lượng: khi được lọc, model gốc và DAPO ngang nhau.
+
+> **NEXT IDEA** Người chấm phải trả lời phần còn lại: DAPO một mẫu so với model gốc một mẫu và so với model gốc best-of-4.
 
 ---
 
@@ -255,12 +278,13 @@ DAPO giảm lỗi hiển thị một cách lặp lại được, nhưng phần l
 1. Dữ liệu cặp đẹp–xấu gán tay cho reward thẩm mỹ chính xác 97,9% và dùng lại được làm benchmark.
 2. Trên tập phát triển, DAPO-4 giảm lỗi nhìn thấy từ 7,6% xuống 4,6% ± 0,7 qua ba seed và tăng slide dùng được từ 90,0% lên 94,0% ± 1,4.
 3. Đánh đổi: độ phủ ý chính giảm 0,021 ± 0,005 vì model tóm gọn để giữ nguyên cỡ chữ.
-4. Chưa chứng minh được người xem thích bản DAPO hơn (0,507 ± 0,008).
-5. Ba lần lỗi môi trường và năm chỗ reward chấm sai đều chỉ lộ ra khi bóc tách từng slide và xem ảnh.
+4. Chưa chứng minh được người xem thích bản DAPO hơn (0,507 ± 0,008 trên tập phát triển, 0,502 trên tập test).
+5. Best-of-4 của model gốc ngang DAPO best-of-4 trên tập test (97,0% so với 97,3% slide dùng được): giá trị của RL là giảm chi phí suy luận, không phải nâng trần.
+6. Ba lần lỗi môi trường và năm chỗ reward chấm sai đều chỉ lộ ra khi bóc tách từng slide và xem ảnh.
 
 **Việc tiếp theo**
 
-1. Chấm người đợt 2 trên pipeline đã sửa: bản chốt so với model gốc và Gemini 3.5 Flash. Bắt buộc chọn bên thắng ở tiêu chí tổng thể, đặt thời gian tối thiểu mỗi cặp.
+1. Chấm người đợt 2 trên pipeline đã sửa: bản chốt so với model gốc, model gốc best-of-4 và Gemini 3.5 Flash, khoảng 400 cặp không hòa mỗi so sánh. Bắt buộc chọn bên thắng ở tiêu chí tổng thể, đặt thời gian tối thiểu mỗi cặp.
 2. Chạy lại Gemini 3.5 Flash trên tập test giữ riêng khi có key API mới.
 3. Phạt thẩm mỹ thấp bằng phép nhân thay vì cộng: slide cảm ơn ghép 18 ô chữ nhỏ có ViT 0,07 nhưng reward tổng 5,04, cao hơn bản gọn 5 ô (4,94), vì điểm nội dung bù lại.
 4. Sửa layout bìa và layout cảm ơn đang tự sinh lỗi ở mọi hệ thống: tiêu đề dài 3 dòng đè nội dung, hình trang trí đè chữ.
