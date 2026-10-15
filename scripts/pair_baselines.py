@@ -76,10 +76,10 @@ def vlm_scores(pairs: list[dict]) -> list[float]:
         images = [Image.open(p).convert("RGB").resize((960, 540)) for order in orders for p in order]
         inputs = processor(text=[text] * len(orders), images=images, return_tensors="pt", padding=True).to("cuda")
         with torch.no_grad():
-            logits = model(**inputs).logits[:, -1]
+            logits = model(**inputs, logits_to_keep=1).logits[:, -1]
         return logits[:, letters].float().softmax(-1)[:, 0].tolist()
 
-    out, batch = [], 8
+    out, batch = [], 4
     for start in range(0, len(pairs), batch):
         chunk = pairs[start:start + batch]
         probs = prefer_first([(p["good"], p["bad"]) for p in chunk] + [(p["bad"], p["good"]) for p in chunk])
@@ -90,11 +90,44 @@ def vlm_scores(pairs: list[dict]) -> list[float]:
     return out
 
 
+def human_pairs(criterion: str) -> list[dict]:
+    """Round-1 human-rated pairs of model-generated slides with a non-tie majority on `criterion`."""
+    ann = ROOT / "slidegen_data" / "annotation"
+    images = {p["id"]: p for p in json.loads((ROOT / "annotation_web/public/data/pairs.json").read_text())["pairs"]}
+    mapping = json.loads((ann / "secret_mapping.json").read_text())["pairs"]
+    votes = collections.defaultdict(list)
+    for rating in json.loads((ann / "ratings.json").read_text())["ratings"]:
+        if not mapping[rating["pair_id"]]["attention_check_of"]:
+            votes[rating["pair_id"]].append({"A": 1, "tie": 0, "B": -1}[rating["answers"][criterion]])
+    out = []
+    for pid, vote in votes.items():
+        mean = sum(vote) / len(vote)
+        entry = mapping[pid]
+        if mean == 0 or not (entry["a"].get("valid") and entry["b"].get("valid")):
+            continue
+        a, b = (ann / "images" / images[pid]["a"]), (ann / "images" / images[pid]["b"])
+        good, bad = (a, b) if mean > 0 else (b, a)
+        side = (entry["a"], entry["b"]) if mean > 0 else (entry["b"], entry["a"])
+        out.append({"good": str(good), "bad": str(bad), "defects": [],
+                    "vit": float(side[0]["components"]["aesthetic"] > side[1]["components"]["aesthetic"]),
+                    "reward": float(side[0]["reward"] > side[1]["reward"])})
+    return out
+
+
 def main() -> None:
     pairs = load_pairs()
     path = PAIRS / "baselines.json"
     results = json.loads(path.read_text()) if path.exists() else {}
-    for judge in sys.argv[1:] or ["clip", "vlm"]:
+    for judge in [j for j in sys.argv[1:] if j.startswith("human_")]:
+        criterion = judge.removeprefix("human_")
+        pairs_h = human_pairs(criterion)
+        vlm = vlm_scores(pairs_h)
+        results[judge] = {"n": len(pairs_h), "vlm": sum(vlm) / len(vlm),
+                          "vit": sum(p["vit"] for p in pairs_h) / len(pairs_h),
+                          "reward": sum(p["reward"] for p in pairs_h) / len(pairs_h)}
+        print(judge, json.dumps(results[judge]), flush=True)
+        path.write_text(json.dumps(results, indent=1, ensure_ascii=False))
+    for judge in [j for j in sys.argv[1:] if not j.startswith("human_")] or ([] if sys.argv[1:] else ["clip", "vlm"]):
         correct = {"clip": clip_scores, "vlm": vlm_scores}[judge](pairs)
         per = collections.defaultdict(list)
         for pair, c in zip(pairs, correct):
