@@ -32,3 +32,18 @@ Config: [`config.yaml`](config.yaml) · final model `qwen3_5_35b_dapo_r4_2026101
 - With reward-based selection of 4 samples, base and round 4 are equal: RL buys inference cost, not a higher ceiling.
 - Seeds peak at very different steps (50, 175, 175); early stopping on eval reward is required.
 - Too-many-items tool calls (7 of 8 invalid test slides) occur at the same rate in the base model; not caused by RL.
+
+## Gemini 3.5 Flash on the dev set (old round-1 outputs, rescored; T=1.0, round-1 prompt without capacity hints)
+| system | valid | usable | visible | cutoff | keypoint |
+|---|---|---|---|---|---|
+| Gemini, 1 sample | 96.2% | 73.2% | 23.0% | 15.8% | 0.858 |
+| Gemini, best-of-4 | 98.6% | 82.8% | 15.8% | 12.4% | 0.879 |
+Predicted P(round 4 final preferred over Gemini) = 0.573 [0.548, 0.598]; not a fair comparison (prompt and temperature differ).
+
+## Aesthetic judges vs round-1 human raters (generated slides)
+| judge | aesthetic (192 pairs) | overall (342 pairs) |
+|---|---|---|
+| ViT | 60.4% | 57.0% |
+| composite reward | 69.8% | 70.2% |
+| Qwen3.5-35B-A3B VLM zero-shot | 71.6% | 65.2% |
+On the 193 synthetic held-out pairs: CLIP 47.9%, VLM 97.4%, ViT 97.9%.

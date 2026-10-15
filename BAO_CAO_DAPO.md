@@ -140,7 +140,9 @@ Trên slide do model sinh, chấm thẩm mỹ khó hơn hẳn bộ cặp nhân t
 | Reward tổng hợp | 69,8% |
 | Qwen3.5-35B-A3B (VLM), zero-shot, khử thiên lệch vị trí | 71,6% |
 
-ViT đạt 97,9% trên bộ cặp nhân tạo nhưng chỉ 60,4% trên slide thật: lỗi do model sinh tinh tế hơn lỗi gán tay. VLM hơn ViT 11 điểm, nhưng cũng chỉ khoảng 72%.
+Ở tiêu chí tổng thể (342 cặp), reward tổng hợp khớp người 70,2%, VLM 65,2%, ViT 57,0%: người chấm tổng thể theo cả nội dung, thứ VLM không được hỏi.
+
+ViT đạt 97,9% trên bộ cặp nhân tạo nhưng chỉ 60,4% trên slide thật: lỗi do model sinh tinh tế hơn lỗi gán tay. VLM hơn ViT 11 điểm ở thẩm mỹ, nhưng cũng chỉ khoảng 72%.
 
 > **INSIGHT** Reward có nghĩa nhưng thiếu tín hiệu, và ViT là thành phần yếu nhất trên slide thật (60,4% so với VLM 71,6%): học lại trọng số từ dữ liệu người không tăng độ khớp (69,7% so với 70,2%). Người chấm phàn nàn nhiều nhất về chữ khó đọc trên nền và chữ tràn viền, đúng hai lỗi reward không đo.
 
@@ -283,6 +285,17 @@ Bản chốt và model gốc chạy đúng một lần trên 337 slide của 44 
 - Có 21 slide khác trạng thái lỗi giữa hai hệ thống: 18 chỉ model gốc lỗi, 3 chỉ DAPO lỗi. Ví dụ 2001_06: model gốc đè chữ chín ban điện lực lên nhau, DAPO dựng 9 thẻ sạch.
 - Best-of-4 xóa gần hết khác biệt: model gốc 97,0% so với DAPO 97,3% slide dùng được, reward 4,059 so với 4,069.
 - 8 slide không hợp lệ của DAPO: 7 slide vượt số mục tối đa của layout (13 thẻ cho layout 3 thẻ), lỗi này model gốc cũng có với tần suất tương đương (4 so với 5 trên tập test).
+
+Gemini 3.5 Flash trên tập phát triển (output cũ của vòng 1, chấm lại bằng cùng bộ kiểm tra; Gemini được sinh ở nhiệt độ 1,0 với prompt vòng 1, chưa có gợi ý sức chứa, nên so sánh nghiêng về DAPO):
+
+| Hệ thống (291 slide) | Hợp lệ | Dùng được | Lỗi nhìn thấy | Chữ bị cắt | Keypoint | Số liệu |
+|---|---|---|---|---|---|---|
+| Model gốc, T=0,3 | 97,6% | 90,0% | 7,6% | 2,7% | 0,817 | 0,822 |
+| DAPO-4, T=0,3 | 99,0% | 95,2% | 3,8% | 0,7% | 0,791 | 0,789 |
+| Gemini 3.5 Flash, 1 mẫu | 96,2% | 73,2% | 23,0% | 15,8% | 0,858 | 0,868 |
+| Gemini 3.5 Flash, best-of-4 | 98,6% | 82,8% | 15,8% | 12,4% | 0,879 | 0,895 |
+
+Gemini giữ nội dung đầy đủ hơn hẳn (keypoint 0,858 so với 0,791) nhưng viết dài quá sức chứa layout: 15,8% slide bị cắt chữ; xem ảnh 6 slide bị gắn cờ, cả 6 đều tràn hoặc đè chữ thật. Xác suất người chọn dự đoán DAPO-4 hơn Gemini 0,573 [0,548; 0,598], nhưng ở vòng 1 người thật chọn Gemini hơn DAPO-1 (0,458), vì họ coi trọng độ đầy đủ. Kết luận về Gemini cần sinh lại trên tập test với cùng prompt và người chấm.
 
 > **INSIGHT** RL ở đây chuyển phần chất lượng của việc lọc 4 mẫu vào một mẫu duy nhất (rẻ hơn 4 lần khi suy luận), chứ không nâng trần chất lượng: khi được lọc, model gốc và DAPO ngang nhau.
 
