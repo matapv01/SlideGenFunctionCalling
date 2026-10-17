@@ -50,3 +50,7 @@ slidegen_data/
 rl/log/grpo/run_*/
 annotation_web/node_modules/
 annotation_web/.vercel/
+
+# score_in_h100_fonts.sh
+.venv-h100fonts/
+.cache-h100fonts/

@@ -196,7 +196,7 @@ def _gemini_schema(schema):
     return convert(schema)
 
 
-def _gemini_call(row: dict, model: str, api_key: str, schema_mode: str = "json") -> tuple[str, dict]:
+def _gemini_call(row: dict, model: str, api_key: str, schema_mode: str = "json", temperature: float = 1.0) -> tuple[str, dict]:
     import requests
 
     function = row["tools"][0]["function"]
@@ -212,14 +212,14 @@ def _gemini_call(row: dict, model: str, api_key: str, schema_mode: str = "json")
                else {"parameters": _gemini_schema(function["parameters"])}),
         }]}],
         "toolConfig": {"functionCallingConfig": {"mode": "ANY", "allowedFunctionNames": [function["name"]]}},
-        "generationConfig": {"temperature": 1.0, "topP": 0.95, "maxOutputTokens": 8192},
+        "generationConfig": {"temperature": temperature, "topP": 0.95, "maxOutputTokens": 8192},
     }
     url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent"
     for attempt in range(6):
         # The key travels in a header so it can never end up in an error message or a log line.
         response = requests.post(url, headers={"x-goog-api-key": api_key}, json=body, timeout=180)
         if response.status_code == 400 and schema_mode == "json" and "chema" in response.text:
-            return _gemini_call(row, model, api_key, schema_mode="openapi")
+            return _gemini_call(row, model, api_key, schema_mode="openapi", temperature=temperature)
         if response.status_code in {429, 500, 502, 503, 504}:
             time.sleep(min(60, 5 * 2 ** attempt))
             continue
@@ -257,17 +257,24 @@ def gemini(args) -> None:
         row, k = job
         started = time.perf_counter()
         try:
-            text, usage = _gemini_call(row, args.model, api_key)
+            text, usage = _gemini_call(row, args.model, api_key, temperature=args.temperature)
         except Exception as error:  # noqa: BLE001
             text, usage = "", {"error": str(error)[:300]}
         return {"system": Path(args.output).stem, "model": args.model, "key": row["key"], "sample": k, "completion": text,
                 "usage": usage, "seconds": round(time.perf_counter() - started, 2)}
 
+    failed = 0
     with ThreadPoolExecutor(args.workers) as pool:
         for count, record in enumerate(pool.map(run, jobs), 1):
-            _append_jsonl(path, [record])
+            # An API failure is not a model output: leave it off disk so a rerun retries it.
+            if "error" in record["usage"]:
+                failed += 1
+                if failed == 1:
+                    print(f"gemini: first API error: {record['usage']['error']}", flush=True)
+            else:
+                _append_jsonl(path, [record])
             if count % 20 == 0 or count == len(jobs):
-                print(f"gemini: {count}/{len(jobs)}", flush=True)
+                print(f"gemini: {count}/{len(jobs)} ({failed} API errors, rerun to retry)", flush=True)
 
 
 def _with_retries(function, attempts: int = 5, **kwargs):
@@ -459,6 +466,7 @@ def main() -> None:
     p.add_argument("--samples", type=int, default=1)
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--capacity-hints", action="store_true", help="add measured per-field text capacity to the schema")
+    p.add_argument("--temperature", type=float, default=1.0)
     p.add_argument("--output", default="gemini.jsonl")
     p = commands.add_parser("llm")
     p.add_argument("--samples", type=int, default=1)
