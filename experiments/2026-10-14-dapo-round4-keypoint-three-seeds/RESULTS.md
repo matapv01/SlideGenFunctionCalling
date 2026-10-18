@@ -8,7 +8,7 @@ Config: [`config.yaml`](config.yaml) · final model `qwen3_5_35b_dapo_r4_2026101
 - [x] Held-out, topic-disjoint test set run once for the final model (testset_v2, 337 slides)
 - [x] Images inspected at every training milestone and for 30+ dev/test slides vs the base model
 - [ ] Human judgement on this round — not yet (predicted preference only)
-- [ ] Gemini 3.5 Flash on the test set — waiting for an API key
+- [x] Gemini 3.5 Flash on the test set, same round-4 prompts (re-scored with base/DAPO on the RTX 5880 in the H100-font container)
 
 ## Dev set (291 slides, T=0.3)
 | system | valid | usable | visible | keypoint | P(preferred over base), predicted |
@@ -27,10 +27,23 @@ Config: [`config.yaml`](config.yaml) · final model `qwen3_5_35b_dapo_r4_2026101
 | base, best-of-4 at T=1.0 | 4.059 | 99.1% | 97.0% | 2.1% | 0.815 |
 | round 4 final, best-of-4 at T=1.0 | 4.069 | 99.4% | 97.3% | 2.1% | 0.817 |
 
+### Base vs DAPO vs Gemini 3.5 Flash, one scoring environment (RTX 5880, `scripts/score_in_h100_fonts.sh`, `scored_5880`)
+| system | reward | valid | usable | visible | spill | keypoint | P(preferred over base), predicted |
+|---|---|---|---|---|---|---|---|
+| base, T=0.3 | 3.577 | 95.0% | 90.2% | 4.7% | 3.0% | 0.811 | n/a |
+| round 4 final, T=0.3 | 3.695 | 97.6% | 94.7% | 3.0% | 1.8% | 0.788 | 0.502 [0.486, 0.518] |
+| Gemini 3.5 Flash, T=0.3 | 3.394 | 96.4% | 87.8% | 8.6% | 6.5% | 0.778 | 0.456 [0.436, 0.475] |
+| base, best-of-4 at T=1.0 | 4.037 | 99.1% | 97.0% | 2.1% | 0.6% | 0.813 | |
+| round 4 final, best-of-4 at T=1.0 | 4.051 | 99.4% | 97.3% | 2.1% | 0.9% | 0.815 | |
+| Gemini 3.5 Flash, best-of-4 at T=1.0 | 4.007 | 99.1% | 97.0% | 2.1% | 0.9% | 0.826 | |
+
+Re-scoring base/DAPO on the 5880 reproduces the H100 table (usable/visible identical; 5/337 DAPO slides change verdict, all from 11 source images that no longer download).
+
 ## Conclusions
 - RL reliably lowers visible defects at one sample (dev 7.6% -> 4.6% ± 0.7 over seeds; test 4.7% -> 3.0%) at a key-point cost of about 0.02.
 - With reward-based selection of 4 samples, base and round 4 are equal: RL buys inference cost, not a higher ceiling.
 - Seeds peak at very different steps (50, 175, 175); early stopping on eval reward is required.
+- Gemini with the same capacity-hinted prompts stops cutting text (0.6%) but writes shorter (keypoint 0.778) and leaves template placeholders (15 slides); one sample it is below the base model, best-of-4 it ties.
 - Too-many-items tool calls (7 of 8 invalid test slides) occur at the same rate in the base model; not caused by RL.
 
 ## Gemini 3.5 Flash on the dev set (old round-1 outputs, rescored; T=1.0, round-1 prompt without capacity hints)

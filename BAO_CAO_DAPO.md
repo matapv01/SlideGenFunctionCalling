@@ -35,6 +35,7 @@ Kết luận chính:
 3. Ba lần liên tiếp, lỗi tưởng do model hóa ra do môi trường: số liệu bịa giảm từ 11,7% xuống 1,5% chỉ nhờ sửa công cụ và prompt, chưa train gì (Bước 3).
 4. Phần lớn cải thiện đến từ môi trường và reward: lỗi nhìn thấy của chính model gốc giảm theo từng lần sửa; RL thêm phần ổn định và hợp lệ (Bước 3 đến Bước 6).
 5. Trên tập test giữ riêng 337 slide, chạy một lần: slide dùng được 90,2% → 94,7%, lỗi nhìn thấy 4,7% → 3,0%. Nhưng model gốc sinh 4 mẫu rồi để reward chọn (best-of-4) đạt 97,0%, ngang DAPO best-of-4 (97,3%): RL tiết kiệm chi phí suy luận, không nâng trần chất lượng (Bước 7).
+6. Gemini 3.5 Flash cùng prompt trên tập test: một mẫu kém cả model gốc (87,8% slide dùng được, lỗi nhìn thấy 8,6%, keypoint 0,778); best-of-4 ngang base và DAPO (97,0%) (Bước 7).
 
 > **Báo cáo trả lời ba câu hỏi**
 > RL có làm slide do model mở dựng ít lỗi hơn không, và có lặp lại qua nhiều seed không?
@@ -295,7 +296,24 @@ Gemini 3.5 Flash trên tập phát triển (output cũ của vòng 1, chấm l�
 | Gemini 3.5 Flash, 1 mẫu | 96,2% | 73,2% | 23,0% | 15,8% | 0,858 | 0,868 |
 | Gemini 3.5 Flash, best-of-4 | 98,6% | 82,8% | 15,8% | 12,4% | 0,879 | 0,895 |
 
-Gemini giữ nội dung đầy đủ hơn hẳn (keypoint 0,858 so với 0,791) nhưng viết dài quá sức chứa layout: 15,8% slide bị cắt chữ; xem ảnh 6 slide bị gắn cờ, cả 6 đều tràn hoặc đè chữ thật. Xác suất người chọn dự đoán DAPO-4 hơn Gemini 0,573 [0,548; 0,598], nhưng ở vòng 1 người thật chọn Gemini hơn DAPO-1 (0,458), vì họ coi trọng độ đầy đủ. Kết luận về Gemini cần sinh lại trên tập test với cùng prompt và người chấm.
+Gemini giữ nội dung đầy đủ hơn hẳn (keypoint 0,858 so với 0,791) nhưng viết dài quá sức chứa layout: 15,8% slide bị cắt chữ; xem ảnh 6 slide bị gắn cờ, cả 6 đều tràn hoặc đè chữ thật. Xác suất người chọn dự đoán DAPO-4 hơn Gemini 0,573 [0,548; 0,598], nhưng ở vòng 1 người thật chọn Gemini hơn DAPO-1 (0,458), vì họ coi trọng độ đầy đủ. Vì vậy Gemini được sinh lại trên tập test giữ riêng, cùng prompt vòng 4 và cùng cách lấy mẫu với DAPO.
+
+Gemini 3.5 Flash trên tập test giữ riêng (máy RTX 5880, cả ba hệ thống chấm lại trong cùng môi trường: container `scripts/score_in_h100_fonts.sh` có đúng bộ font của H100, ảnh minh họa tải lại từ URL gốc bằng `scripts/restore_image_cache.py`; base và DAPO chấm lại khớp số H100, chỉ 5/337 slide DAPO đổi trạng thái lỗi, cả 5 do 11 ảnh không còn tải được):
+
+| Hệ thống (337 slide) | Reward | Hợp lệ | Dùng được | Lỗi nhìn thấy | Chữ bị cắt | Tràn khung | Keypoint | Số liệu | ViT |
+|---|---|---|---|---|---|---|---|---|---|
+| Model gốc, T=0,3 | 3,577 | 95,0% | 90,2% | 4,7% | 1,5% | 3,0% | 0,811 | 0,826 | 0,584 |
+| DAPO-4, T=0,3 | 3,695 | 97,6% | 94,7% | 3,0% | 0,6% | 1,8% | 0,788 | 0,798 | 0,564 |
+| Gemini 3.5 Flash, T=0,3 | 3,394 | 96,4% | 87,8% | 8,6% | 0,6% | 6,5% | 0,778 | 0,816 | 0,523 |
+| Model gốc, best-of-4, T=1,0 | 4,037 | 99,1% | 97,0% | 2,1% | 0,6% | 0,6% | 0,813 | 0,854 | 0,660 |
+| DAPO-4, best-of-4, T=1,0 | 4,051 | 99,4% | 97,3% | 2,1% | 0,6% | 0,9% | 0,815 | 0,854 | 0,674 |
+| Gemini 3.5 Flash, best-of-4, T=1,0 | 4,007 | 99,1% | 97,0% | 2,1% | 0,9% | 0,9% | 0,826 | 0,861 | 0,653 |
+
+- Có gợi ý sức chứa, Gemini hết cắt chữ (15,8% trên tập phát triển với prompt cũ, 0,6% ở đây) nhưng viết ngắn lại: keypoint 0,778, thấp hơn cả DAPO.
+- Một mẫu, Gemini kém cả model gốc: 87,8% slide dùng được, lỗi nhìn thấy 8,6%, xác suất người chọn dự đoán hơn model gốc 0,456 [0,436; 0,475] (DAPO 0,502).
+- 48 slide chỉ Gemini lỗi, 13 slide chỉ DAPO lỗi. Xem ảnh, lỗi của Gemini là thật: viết hoa tiêu đề làm "VIETCOMBA/NK" gãy chữ và đè phụ đề (2000_00), để lọt ký tự Markdown "# PETROVIETNAM" và tràn khung (2003_00), bỏ trống template để nguyên chữ mẫu tiếng Anh "Add instruction text for this platform" (2001_06, 15 slide bị trừ điểm ngôn ngữ), nhồi chữ quá nhỏ (2000_04). DAPO cũng còn lỗi thật: phụ đề đè nhau (2001_00), chữ tràn khung (2014_05), giữ chữ mẫu tiếng Anh ở slide cảm ơn (2018_07).
+- 12 slide Gemini không hợp lệ: 8 slide vượt giới hạn số từ ghi rõ trong mô tả tool (mỗi mốc timeline tối đa 16 từ, mỗi cột tối đa 22 từ), 4 slide sai ràng buộc khác của tool.
+- Best-of-4 đưa cả ba hệ thống về cùng mức (97,0–97,3% slide dùng được); Gemini giữ keypoint cao nhất (0,826).
 
 > **INSIGHT** RL ở đây chuyển phần chất lượng của việc lọc 4 mẫu vào một mẫu duy nhất (rẻ hơn 4 lần khi suy luận), chứ không nâng trần chất lượng: khi được lọc, model gốc và DAPO ngang nhau.
 
@@ -319,10 +337,9 @@ DAPO giảm lỗi hiển thị một cách lặp lại được, nhưng phần l
 **Việc tiếp theo**
 
 1. Chấm người đợt 2 trên pipeline đã sửa: bản chốt so với model gốc, model gốc best-of-4 và Gemini 3.5 Flash, khoảng 400 cặp không hòa mỗi so sánh. Bắt buộc chọn bên thắng ở tiêu chí tổng thể, đặt thời gian tối thiểu mỗi cặp.
-2. Chạy lại Gemini 3.5 Flash trên tập test giữ riêng khi có key API mới.
-3. Phạt thẩm mỹ thấp bằng phép nhân thay vì cộng: slide cảm ơn ghép 18 ô chữ nhỏ có ViT 0,07 nhưng reward tổng 5,04, cao hơn bản gọn 5 ô (4,94), vì điểm nội dung bù lại.
-4. Sửa layout bìa và layout cảm ơn đang tự sinh lỗi ở mọi hệ thống: tiêu đề dài 3 dòng đè nội dung, hình trang trí đè chữ.
-5. Thay ViT trong reward bằng bản chưng cất từ VLM, hoặc tinh chỉnh ViT trên slide do model sinh có người chấm: ViT khớp người 60,4% ở thẩm mỹ trên slide thật, VLM 71,6%.
+2. Phạt thẩm mỹ thấp bằng phép nhân thay vì cộng: slide cảm ơn ghép 18 ô chữ nhỏ có ViT 0,07 nhưng reward tổng 5,04, cao hơn bản gọn 5 ô (4,94), vì điểm nội dung bù lại.
+3. Sửa layout bìa và layout cảm ơn đang tự sinh lỗi ở mọi hệ thống: tiêu đề dài 3 dòng đè nội dung, hình trang trí đè chữ.
+4. Thay ViT trong reward bằng bản chưng cất từ VLM, hoặc tinh chỉnh ViT trên slide do model sinh có người chấm: ViT khớp người 60,4% ở thẩm mỹ trên slide thật, VLM 71,6%.
 
 > **NEXT EXPERIMENT** Chấm người đợt 2 cho bản chốt so với model gốc, vì đó là câu hỏi duy nhất số liệu tự động không trả lời được.
 
