@@ -1,6 +1,8 @@
 # Trang chấm slide SlideGen
 
-Đang chạy tại https://slidegen-annotation.vercel.app (Vercel project `slidegen-annotation`, Postgres Neon đã kết nối, `ANNOTATOR_CODES` và `ADMIN_TOKEN` đã đặt; mã nằm trong `slidegen_data/annotation/credentials.json`, không push).
+Đang chạy tại https://slidegen-annotation.vercel.app (Vercel project `slidegen-annotation`, Postgres Neon đã kết nối, `ANNOTATOR_CODES` và `ADMIN_TOKEN` đã đặt; mã đợt 2 nằm trong `slidegen_data/annotation/round2/credentials.json`, không push).
+
+Đợt 2 (tập test `testset_v2`, prompt vòng 4) dùng cùng giao thức và cùng bảng `ratings`; mã cặp có tiền tố `r2-`, ảnh ở thư mục `img2/` của dataset ảnh, bảng ánh xạ ở `slidegen_data/annotation/round2/secret_mapping.json`. Dựng lại bằng `python scripts/build_annotation_set.py --round 2 --upload`.
 
 Trang web tĩnh + 3 API serverless trên Vercel để người chấm so sánh cặp slide (chấm mù). Kết quả lưu trong Postgres (Neon). Ảnh slide được tải từ một dataset Hugging Face, tên file là mã ngẫu nhiên nên không lộ hệ thống tạo ra slide.
 
@@ -42,6 +44,8 @@ Có thể deploy bằng CLI thay cho bước 1 và 4: `npx vercel --cwd annotati
 ```bash
 curl -s -H "x-admin-token: $ADMIN_TOKEN" https://<ten-project>.vercel.app/api/export > ratings.json
 python scripts/analyze_annotations.py ratings.json slidegen_data/annotation/secret_mapping.json
+# đợt 2:
+python scripts/analyze_annotations.py ratings.json slidegen_data/annotation/round2/secret_mapping.json --out slidegen_data/annotation/round2/report
 ```
 
 ## Chạy thử cục bộ

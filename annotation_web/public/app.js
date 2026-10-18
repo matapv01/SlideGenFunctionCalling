@@ -18,7 +18,7 @@ const store = {
   set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ } },
 };
 
-const state = { code: null, annotator: null, queue: [], done: new Set(), pairs: {}, imageBase: "", index: 0, active: 0, shownAt: 0 };
+const state = { code: null, annotator: null, queue: [], done: new Set(), pairs: {}, imageBase: "", round: 1, index: 0, active: 0, shownAt: 0 };
 
 function show(view) {
   for (const id of ["login-view", "guide-view", "rate-view", "done-view"]) $(id).hidden = id !== view;
@@ -42,12 +42,15 @@ async function login(code) {
   state.annotator = session.annotator_id;
   state.done = new Set(session.done);
   state.imageBase = pairs.image_base;
+  state.round = pairs.round || 1;
   state.pairs = Object.fromEntries(pairs.pairs.map((pair) => [pair.id, pair]));
   state.queue = assignments[state.annotator] || [];
+  // The ratings table keeps earlier rounds; only this round's queue counts.
+  state.done = new Set(state.queue.filter((id) => state.done.has(id)));
   const firstOpen = state.queue.findIndex((id) => !state.done.has(id));
   state.index = firstOpen === -1 ? state.queue.length : firstOpen;
   store.set("slidegen-code", code);
-  if (!store.get(`guide-seen-${state.annotator}`, false)) show("guide-view");
+  if (!store.get(guideKey(), false)) show("guide-view");
   else renderPair();
 }
 
@@ -56,6 +59,8 @@ function updateProgress() {
   $("progress-label").textContent = `${state.annotator} · đã chấm ${state.done.size}/${state.queue.length}`;
   $("progress-bar").style.width = `${(100 * state.done.size) / total}%`;
 }
+
+function guideKey() { return `guide-seen-${state.annotator}-r${state.round}`; }
 
 function draftKey(pairId) { return `draft-${state.annotator}-${pairId}`; }
 
@@ -140,7 +145,7 @@ $("login-form").addEventListener("submit", async (event) => {
   try { await login($("code-input").value.trim()); }
   catch (error) { $("login-error").textContent = error.message; $("login-error").hidden = false; }
 });
-$("start-button").addEventListener("click", () => { store.set(`guide-seen-${state.annotator}`, true); renderPair(); });
+$("start-button").addEventListener("click", () => { store.set(guideKey(), true); renderPair(); });
 $("guide-button").addEventListener("click", () => { saveDraft(); show("guide-view"); });
 $("rating-form").addEventListener("submit", (event) => { event.preventDefault(); submit(); });
 $("rating-form").addEventListener("change", (event) => {

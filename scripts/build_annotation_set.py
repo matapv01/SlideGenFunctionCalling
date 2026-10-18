@@ -1,10 +1,9 @@
 """Build the blind pairwise human-evaluation set from scored test-set outputs.
 
 Systems (one slide per system per source slide):
-  dapo    DAPO adapter, sample 0
-  base    base Qwen3.5-35B-A3B, sample 0
-  best8   base model, best of 8 samples by composite reward
-  gemini  Gemini 3.5 Flash, sample 0
+  round 1 (testset, scored/):  dapo, base (sample 0), best8 (base, best of 8 by composite reward), gemini
+  round 2 (testset_v2, scored_5880/, round-4 prompts, T=0.3): dapo_final_t03, base_final_t03, gemini_final_t03
+          (sample 0) and base_best4 (base_final_t10, best of 4 by composite reward; rendered as outputs/base_best4)
 
 Comparisons are stratified by slide category and image mode, then every pair's left/right
 order and the global order are shuffled; ~5% of pairs reappear later with sides swapped as
@@ -14,10 +13,12 @@ are recorded as automatic decisions in the secret mapping.
 Outputs:
   annotation_web/public/data/pairs.json        (public: source text + opaque image names)
   annotation_web/public/data/assignments.json  (public: per-annotator shuffled queues)
-  slidegen_data/annotation/secret_mapping.json (private: pair -> systems, scores)
-  slidegen_data/annotation/images/<opaque>.jpg (upload with --upload)
+  slidegen_data/annotation[/round2]/secret_mapping.json (private: pair -> systems, scores)
+  slidegen_data/annotation[/round2]/images/<opaque>.jpg (upload with --upload; round 2 goes to img2/)
 
-Usage: python scripts/build_annotation_set.py [--upload] [--annotators 3]
+Round 2 uses the same protocol and site; its pair ids carry an "r2-" prefix so both rounds share one table.
+
+Usage: python scripts/build_annotation_set.py [--round 2] [--upload] [--annotators 3]
 """
 
 from __future__ import annotations
@@ -34,32 +35,39 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-TESTSET = ROOT / "slidegen_data" / "testset"
-OUT = ROOT / "slidegen_data" / "annotation"
 WEB_DATA = ROOT / "annotation_web" / "public" / "data"
 HF_DATASET = "mata01/slidegen-human-eval-images"
 KIND = {"INTRO_TOOLS": "Slide mở đầu", "TRANSITION_TOOLS": "Slide chuyển ý", "CONTENT_TOOLS": "Slide nội dung",
         "CHART_TOOLS": "Slide số liệu", "THANK_YOU_TOOLS": "Slide cảm ơn"}
-COMPARISONS = {("dapo", "base"): None, ("dapo", "gemini"): 180, ("dapo", "best8"): 150, ("base", "gemini"): 0}
+# name -> scored file stem (best-of-N systems pick from it), per round; same comparison sizes in both rounds.
+ROUNDS = {
+    1: {"testset": "testset", "rows": "eval_rows.json", "scored": "scored", "out": "annotation", "prefix": "", "img": "img",
+        "systems": {"dapo": "dapo", "base": "base", "gemini": "gemini", "best8": "base"}, "best_of": {"best8"},
+        "comparisons": {("dapo", "base"): None, ("dapo", "gemini"): 180, ("dapo", "best8"): 150}},
+    2: {"testset": "testset_v2", "rows": "eval_rows_r4.json", "scored": "scored_5880", "out": "annotation/round2",
+        "prefix": "r2-", "img": "img2",
+        "systems": {"dapo": "dapo_final_t03", "base": "base_final_t03", "gemini": "gemini_final_t03",
+                    "best4": "base_best4"}, "best_of": set(),
+        "comparisons": {("dapo", "base"): None, ("dapo", "gemini"): 180, ("dapo", "best4"): 150}},
+}
 
 
 def _load(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def _pick_systems(scored: dict[str, list[dict]]) -> dict[str, dict[str, dict]]:
+def _pick_systems(scored: dict[str, list[dict]], config: dict) -> dict[str, dict[str, dict]]:
     by_key = defaultdict(lambda: defaultdict(list))
-    for system, records in scored.items():
+    for stem, records in scored.items():
         for record in records:
-            by_key[system][record["key"]].append(record)
+            by_key[stem][record["key"]].append(record)
     picks = defaultdict(dict)
-    for key in by_key["base"]:
-        for system in ("dapo", "base", "gemini"):
-            samples = sorted(by_key[system].get(key, []), key=lambda r: r["sample"])
-            if samples:
-                picks[system][key] = samples[0]
-        base_samples = by_key["base"][key]
-        picks["best8"][key] = max(base_samples, key=lambda r: (r["reward"], -r["sample"]))
+    for name, stem in config["systems"].items():
+        for key, samples in by_key[stem].items():
+            if name in config["best_of"]:
+                picks[name][key] = max(samples, key=lambda r: (r["reward"], -r["sample"]))
+            else:
+                picks[name][key] = min(samples, key=lambda r: r["sample"])
     return picks
 
 
@@ -80,6 +88,7 @@ def _stratified(keys: list[str], rows: dict, count: int | None, rng: random.Rand
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--round", type=int, default=1, choices=sorted(ROUNDS))
     parser.add_argument("--annotators", type=int, default=3)
     parser.add_argument("--per-pair", type=int, default=2, help="annotators per pair")
     parser.add_argument("--triple-fraction", type=float, default=0.15, help="pairs rated by every annotator")
@@ -87,22 +96,26 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=20261006)
     parser.add_argument("--upload", action="store_true")
     args = parser.parse_args()
+    config = ROUNDS[args.round]
+    testset = ROOT / "slidegen_data" / config["testset"]
+    out = ROOT / "slidegen_data" / config["out"]
     rng = random.Random(args.seed)
     salt = secrets.token_hex(16)
 
-    rows = {row["key"]: row for row in json.loads((TESTSET / "eval_rows.json").read_text(encoding="utf-8"))}
-    planned = json.loads((TESTSET / "wiki_testset_planned.json").read_text(encoding="utf-8"))
+    rows = {row["key"]: row for row in json.loads((testset / config["rows"]).read_text(encoding="utf-8"))}
+    planned = json.loads((testset / "wiki_testset_planned.json").read_text(encoding="utf-8"))
     category = {f"{r['doc_id']}_{int(r['slide_index']):02d}": r["category"] for r in planned}
     # Role of the source passage (what annotators see) vs. the planner's layout category (used for strata).
-    extracted = json.loads((TESTSET / "wiki_testset_rows.json").read_text(encoding="utf-8"))
+    extracted = json.loads((testset / "wiki_testset_rows.json").read_text(encoding="utf-8"))
     role = {f"{r['doc_id']}_{int(r['slide_index']):02d}": r["category"] for r in extracted}
     for key, row in rows.items():
         row["category"] = category.get(key, "CONTENT_TOOLS")
         row["role"] = role.get(key, row["category"])
-    scored = {path.stem: _load(path) for path in (TESTSET / "scored").glob("*.jsonl")}
-    picks = _pick_systems(scored)
+    stems = set(config["systems"].values())
+    scored = {path.stem: _load(path) for path in (testset / config["scored"]).glob("*.jsonl") if path.stem in stems}
+    picks = _pick_systems(scored, config)
 
-    image_dir = OUT / "images"
+    image_dir = out / "images"
     shutil.rmtree(image_dir, ignore_errors=True)
     image_dir.mkdir(parents=True)
 
@@ -116,12 +129,11 @@ def main() -> None:
 
     def side(record: dict, system: str) -> dict:
         return {"system": system, "key": record["key"], "sample": record["sample"], "reward": record["reward"],
-                "valid": record["valid"], "components": record["components"], "dom_issues": record["dom_issues"]}
+                "valid": record["valid"], "components": record["components"], "dom_issues": record["dom_issues"],
+                "png": record["png"]}
 
     shown, automatic = [], []
-    for (left, right), count in COMPARISONS.items():
-        if count == 0:
-            continue
+    for (left, right), count in config["comparisons"].items():
         keys = sorted(key for key in picks[left] if key in picks[right])
         for key in _stratified(keys, rows, count, rng):
             first, second = picks[left][key], picks[right][key]
@@ -144,7 +156,7 @@ def main() -> None:
     rng.shuffle(order)
     ids = {}
     for position, item_index in enumerate(order):
-        ids[item_index] = f"p{position + 1:04d}"
+        ids[item_index] = f"{config['prefix']}p{position + 1:04d}"
     for item_index, (entry, check_of) in enumerate(items):
         a, b = entry["sides"] if check_of is None else entry["sides"][::-1]
         pair_id = ids[item_index]
@@ -152,7 +164,7 @@ def main() -> None:
         text = row["source_content"]
         title = (row.get("source_meta") or {}).get("title", "")
         pairs_public.append({"id": pair_id, "title": title, "kind": KIND.get(row["role"], ""), "text": text,
-                             "a": image_name({**a, "png": _png(scored, a)}), "b": image_name({**b, "png": _png(scored, b)})})
+                             "a": image_name(a), "b": image_name(b)})
         mapping[pair_id] = {**{k: v for k, v in entry.items() if k != "sides"}, "a": a, "b": b,
                             "attention_check_of": ids[check_of] if check_of is not None else None}
     pairs_public.sort(key=lambda pair: pair["id"])
@@ -173,13 +185,13 @@ def main() -> None:
     for name in names:
         rng.shuffle(queues[name])
 
-    image_base = f"https://huggingface.co/datasets/{HF_DATASET}/resolve/main/img/"
+    image_base = f"https://huggingface.co/datasets/{HF_DATASET}/resolve/main/{config['img']}/"
     WEB_DATA.mkdir(parents=True, exist_ok=True)
-    (WEB_DATA / "pairs.json").write_text(json.dumps({"image_base": image_base, "pairs": pairs_public}, ensure_ascii=False))
+    (WEB_DATA / "pairs.json").write_text(json.dumps({"round": args.round, "image_base": image_base, "pairs": pairs_public}, ensure_ascii=False))
     (WEB_DATA / "assignments.json").write_text(json.dumps(queues))
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "secret_mapping.json").write_text(json.dumps(
-        {"seed": args.seed, "salt": salt, "pairs": mapping, "automatic": automatic}, ensure_ascii=False, indent=1))
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "secret_mapping.json").write_text(json.dumps(
+        {"round": args.round, "seed": args.seed, "salt": salt, "pairs": mapping, "automatic": automatic}, ensure_ascii=False, indent=1))
     print(f"pairs shown {len(shown)} + checks {len(checks)}; automatic {len(automatic)}; "
           f"queues {[len(q) for q in queues.values()]}; images {len(list(image_dir.iterdir()))}")
     for name in sorted({entry['comparison'] for entry in shown}):
@@ -195,17 +207,9 @@ def main() -> None:
         load_dotenv(ROOT / ".env")
         api = HfApi(token=os.environ["HF_TOKEN"])
         api.create_repo(HF_DATASET, repo_type="dataset", private=False, exist_ok=True)
-        api.upload_folder(repo_id=HF_DATASET, repo_type="dataset", folder_path=str(image_dir), path_in_repo="img",
-                          delete_patterns=["img/*"], commit_message="Blind slide images for human evaluation")
+        api.upload_folder(repo_id=HF_DATASET, repo_type="dataset", folder_path=str(image_dir), path_in_repo=config["img"],
+                          delete_patterns=[f"{config['img']}/*"], commit_message="Blind slide images for human evaluation")
         print(f"uploaded to {image_base}")
-
-
-def _png(scored: dict, side_record: dict) -> str:
-    system = "base" if side_record["system"] == "best8" else side_record["system"]
-    for record in scored[system]:
-        if record["key"] == side_record["key"] and record["sample"] == side_record["sample"]:
-            return record["png"]
-    raise KeyError(side_record)
 
 
 if __name__ == "__main__":
