@@ -122,7 +122,7 @@ save(fig, "v3_03_bo_cham_tham_my.png")
 
 # 4. Held-out test set overview: one sample vs best-of-4, three systems.
 systems = [("Model gốc", "base_final_t03", "base_final_t10", BASE), ("DAPO", "dapo_final_t03", "dapo_final_t10", DAPO),
-           ("Gemini 3.5 Flash", "gemini_final_t03", "gemini_final_t10", GEMINI)]
+           ("Gemini 3.6 Flash", "gemini_final_t03", "gemini_final_t10", GEMINI)]
 rows = {name: (test_row(one), test_row(four, 4)) for name, one, four, _ in systems}
 fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.2))
 for ax, (key, label, low) in zip(axes, [("usable", "Slide dùng được (%) — cao hơn tốt hơn", 80),
@@ -177,7 +177,7 @@ interim = ROOT / "slidegen_data" / "annotation" / "round2" / "report_interim" / 
 if interim.exists():
     win = json.loads(interim.read_text())["win_rates"]
     comparisons = [("dapo_vs_base", "so với model gốc"), ("dapo_vs_best4", "so với model gốc best-of-4"),
-                   ("dapo_vs_gemini", "so với Gemini 3.5 Flash")]
+                   ("dapo_vs_gemini", "so với Gemini 3.6 Flash")]
     criteria = [("overall", "Tổng thể"), ("aesthetic", "Thẩm mỹ"), ("layout", "Bố cục"), ("coverage", "Đầy đủ"),
                 ("language", "Ngôn ngữ"), ("faithful", "Trung thực")]
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.0), sharey=True)

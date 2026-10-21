@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "bao_cao"
 SURFACE, INK, MUTED, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 COLOR = {"dapo": "#2a78d6", "base": "#eb6834", "gemini": "#1baf7a", "best8": "#eda100"}
-NAME = {"dapo": "DAPO", "base": "Model gốc", "gemini": "Gemini 3.5 Flash", "best8": "Best-of-8 (gốc)"}
+NAME = {"dapo": "DAPO", "base": "Model gốc", "gemini": "Gemini 3.6 Flash", "best8": "Best-of-8 (gốc)"}
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11, "axes.edgecolor": GRID, "axes.labelcolor": MUTED,
                      "xtick.color": MUTED, "ytick.color": MUTED, "text.color": INK, "figure.facecolor": SURFACE,
                      "axes.facecolor": SURFACE, "axes.spines.top": False, "axes.spines.right": False,

@@ -29,9 +29,21 @@ SlideGen · bản 3 · 21/10/2026
 
 **Câu hỏi.** Học tăng cường (DAPO) có giúp một model mở cỡ vừa tự dựng slide tiếng Việt ít lỗi hơn không, và phần cải thiện đến từ RL hay từ việc sửa môi trường?
 
+**Hai model được so sánh**
+
+| | Qwen3.5-35B-A3B + LoRA DAPO (của chúng tôi) | Gemini 3.6 Flash (đối chứng thương mại) |
+|---|---|---|
+| Loại | Mã nguồn mở, tự chạy | Đóng, gọi qua API của Google |
+| Tổng số tham số | 35 tỉ (Mixture-of-Experts, 256 expert) | Google không công bố |
+| Tham số kích hoạt mỗi token | Khoảng 3 tỉ (8 expert + 1 expert chung) | Google không công bố |
+| Phần được train | LoRA r=16 (QLoRA 4-bit), trên 1 GPU H100 | Không train, dùng nguyên |
+| Prompt và công cụ | Prompt vòng 4, cùng bộ công cụ XML | Cùng prompt và cùng bộ công cụ |
+
+Gemini được gọi bằng tên `gemini-3.5-flash`, nhưng API trả về `modelVersion: gemini-3.6-flash`, tức Google đã chuyển tên này sang bản 3.6. Vì vậy báo cáo gọi đối chứng là Gemini 3.6 Flash (chi tiết ở Phụ lục B).
+
 ![Tập test giữ riêng, 337 slide: một mẫu, DAPO có nhiều slide dùng được nhất; khi được lọc best-of-4, cả ba hệ thống ngang nhau](docs/bao_cao/v3_04_tap_test_tong_quan.png)
 
-| Con số chính | Model gốc | DAPO (bản chốt) | Gemini 3.5 Flash |
+| Con số chính | Model gốc | DAPO (bản chốt) | Gemini 3.6 Flash |
 |---|---|---|---|
 | Slide dùng được, tập test, 1 mẫu | 90,2% | **94,7%** | 87,8% |
 | Slide có lỗi nhìn thấy, tập test, 1 mẫu | 4,7% | **3,0%** | 8,6% |
@@ -44,7 +56,7 @@ SlideGen · bản 3 · 21/10/2026
 1. **DAPO giảm lỗi hiển thị, và lặp lại được qua 3 seed.** Lỗi nhìn thấy giảm gần một nửa trên tập phát triển, và từ 4,7% xuống 3,0% trên tập test chưa từng dùng.
 2. **Cái giá là nội dung ngắn hơn.** Keypoint giảm khoảng 0,02, vì model học tóm gọn để vừa layout chứ không thu nhỏ chữ.
 3. **RL chưa nâng trần chất lượng.** Model gốc sinh 4 mẫu rồi để reward chọn thì đạt cùng mức với DAPO (97,0% so với 97,3%). Giá trị của RL là đạt chất lượng đó chỉ với 1 mẫu, rẻ hơn 4 lần khi suy luận.
-4. **Một mẫu, DAPO hơn Gemini 3.5 Flash về lỗi hiển thị**: 3,0% so với 8,6%. Lỗi của Gemini gồm gãy chữ, lộ ký hiệu Markdown và để nguyên chữ mẫu tiếng Anh.
+4. **Một mẫu, DAPO hơn Gemini 3.6 Flash về lỗi hiển thị**: 3,0% so với 8,6%. Lỗi của Gemini gồm gãy chữ, lộ ký hiệu Markdown và để nguyên chữ mẫu tiếng Anh.
 5. **Phần lớn cải thiện đến từ việc sửa môi trường và reward.** Riêng việc sửa môi trường, chưa train, đã giảm số liệu bịa của model gốc từ 11,7% xuống 1,5%.
 6. **Người chấm chưa phân biệt được DAPO với các hệ thống khác.** Theo kết quả tạm của đợt 2 (2/3 người, 651 lượt), tỉ lệ thắng tổng thể quanh 0,5 ở cả ba so sánh, và phần lớn cặp được chấm hòa.
 
@@ -224,7 +236,7 @@ Cả ba hệ thống chạy đúng một lần trên 337 slide, cùng prompt vò
 |---|---|---|---|---|---|---|---|
 | Model gốc, 1 mẫu | 95,0% | 90,2% | 4,7% | 1,5% | 3,0% | 0,811 | 0,826 |
 | **DAPO, 1 mẫu** | **97,6%** | **94,7%** | **3,0%** | 0,6% | 1,8% | 0,788 | 0,798 |
-| Gemini 3.5 Flash, 1 mẫu | 96,4% | 87,8% | 8,6% | 0,6% | 6,5% | 0,778 | 0,816 |
+| Gemini 3.6 Flash, 1 mẫu | 96,4% | 87,8% | 8,6% | 0,6% | 6,5% | 0,778 | 0,816 |
 | Model gốc, best-of-4 | 99,1% | 97,0% | 2,1% | 0,6% | 0,6% | 0,813 | 0,854 |
 | DAPO, best-of-4 | 99,4% | 97,3% | 2,1% | 0,6% | 0,9% | 0,815 | 0,854 |
 | Gemini, best-of-4 | 99,1% | 97,0% | 2,1% | 0,9% | 0,9% | 0,826 | 0,861 |
@@ -239,7 +251,7 @@ Cả ba hệ thống chạy đúng một lần trên 337 slide, cùng prompt vò
 
 ![Cùng nội dung: model gốc đè chữ, tràn khung, cắt chữ; DAPO tóm gọn để vừa layout](docs/bao_cao/v3_08_dapo_sua_loi_base.png)
 
-### Lỗi của Gemini 3.5 Flash
+### Lỗi của Gemini 3.6 Flash
 
 48 slide chỉ Gemini lỗi, so với 13 slide chỉ DAPO lỗi.
 
@@ -274,7 +286,7 @@ Giao thức giữ y như đợt 1: chấm mù, xáo vị trí A/B, 6 tiêu chí 
 |---|---|---|---|---|---|
 | DAPO vs model gốc | 268 | 31 | 206 (77%) | 31 | 0,507 [0,478; 0,537] |
 | DAPO vs model gốc best-of-4 | 120 | 19 | 76 (63%) | 25 | 0,490 [0,442; 0,539] |
-| DAPO vs Gemini 3.5 Flash | 145 | 33 | 77 (53%) | 35 | 0,505 [0,458; 0,549] |
+| DAPO vs Gemini 3.6 Flash | 145 | 33 | 77 (53%) | 35 | 0,505 [0,458; 0,549] |
 
 - **Thẩm mỹ là tiêu chí duy nhất DAPO hơn model gốc có ý nghĩa:** 0,524 [0,512; 0,538].
 - **Độ đầy đủ DAPO hơi kém:** 0,481 so với model gốc, 0,463 so với best-of-4. Khớp với keypoint giảm 0,02 đo tự động.
@@ -293,7 +305,7 @@ Giao thức giữ y như đợt 1: chấm mù, xáo vị trí A/B, 6 tiêu chí 
 2. DAPO giảm lỗi nhìn thấy: tập phát triển 7,6% → 4,6% ± 0,7 (3 seed), tập test 4,7% → 3,0%.
 3. Đánh đổi là keypoint giảm khoảng 0,02, và người chấm đợt 2 cũng thấy DAPO kém đầy đủ hơn một chút.
 4. Best-of-4 của model gốc ngang DAPO best-of-4: giá trị của RL là giảm chi phí suy luận, không phải nâng trần.
-5. Một mẫu, DAPO ít lỗi hơn Gemini 3.5 Flash cùng prompt (3,0% so với 8,6%), nhưng người chấm tạm thời coi hai bên ngang nhau ở tiêu chí tổng thể.
+5. Một mẫu, DAPO ít lỗi hơn Gemini 3.6 Flash cùng prompt (3,0% so với 8,6%), nhưng người chấm tạm thời coi hai bên ngang nhau ở tiêu chí tổng thể.
 6. Ba lần lỗi môi trường và năm chỗ reward chấm sai đều chỉ lộ ra khi bóc tách từng slide và xem ảnh.
 
 **Việc tiếp theo**
@@ -320,7 +332,7 @@ Giao thức giữ y như đợt 1: chấm mù, xáo vị trí A/B, 6 tiêu chí 
 | DAPO-4 seed 42 (bản chốt) | 99,0% | 95,2% | 3,8% | 0,7% | 2,7% | 0,791 | 0,789 | 0,598 | 0,509 [0,493; 0,524] |
 | DAPO-4 seed 7 | 97,6% | 92,4% | 5,2% | 1,0% | 3,4% | 0,800 | 0,816 | 0,570 | 0,498 [0,485; 0,510] |
 | DAPO-4 seed 2026 | 99,3% | 94,5% | 4,8% | 1,4% | 2,4% | 0,798 | 0,817 | 0,591 | 0,513 [0,500; 0,529] |
-| Gemini 3.5 Flash (prompt vòng 1, T=1,0) | 96,2% | 73,2% | 23,0% | 15,8% | n/a | 0,858 | 0,868 | n/a | n/a |
+| Gemini 3.6 Flash (prompt vòng 1, T=1,0) | 96,2% | 73,2% | 23,0% | 15,8% | n/a | 0,858 | 0,868 | n/a | n/a |
 
 Ở tập phát triển, Gemini chạy với prompt cũ chưa có gợi ý sức chứa, nên không so trực tiếp được với DAPO; so sánh công bằng nằm ở mục 09.
 
@@ -332,6 +344,7 @@ Giao thức giữ y như đợt 1: chấm mù, xáo vị trí A/B, 6 tiêu chí 
 - Bảng tập test chấm lại trên máy RTX 5880, trong container có đúng bộ font của máy H100 (`scripts/score_in_h100_fonts.sh`). Slide dùng được và lỗi nhìn thấy khớp số H100; reward thấp hơn khoảng 0,02 vì 268 ảnh minh họa được tải lại đã bị nén lại, và 11 ảnh không còn tải được.
 - Người chấm chọn "ngang nhau" rất nhiều (53–77% ở tiêu chí tổng thể đợt 2); độ đồng thuận ở tiêu chí đầy đủ và thẩm mỹ thấp.
 - Tập train chỉ có 44 bộ slide, khoảng 18 chủ đề.
+- Tên model Gemini: code gọi `models/gemini-3.5-flash`, nhưng khi kiểm tra ngày 21/10/2026, API trả về `modelVersion: gemini-3.6-flash` cho tên này (bản 3.6 phát hành tháng 7/2026), và không còn tên cố định nào gọi được bản 3.5. Lúc sinh dữ liệu, code không lưu `modelVersion` nên không chứng minh trực tiếp được; nhiều khả năng cả output đợt 1 lẫn tập test đều do Gemini 3.6 Flash sinh ra. Các số liệu không đổi, chỉ tên model được sửa.
 
 ### C. Thuật ngữ
 
