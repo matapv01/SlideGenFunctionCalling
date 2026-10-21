@@ -39,8 +39,6 @@ SlideGen · bản 3 · 21/10/2026
 | Phần được train | LoRA r=16 (QLoRA 4-bit), trên 1 GPU H100 | Không train, dùng nguyên |
 | Prompt và công cụ | Prompt vòng 4, cùng bộ công cụ XML | Cùng prompt và cùng bộ công cụ |
 
-Gemini được gọi bằng tên `gemini-3.5-flash`, nhưng API trả về `modelVersion: gemini-3.6-flash`, tức Google đã chuyển tên này sang bản 3.6. Vì vậy báo cáo gọi đối chứng là Gemini 3.6 Flash (chi tiết ở Phụ lục B).
-
 ![Tập test giữ riêng, 337 slide: một mẫu, DAPO có nhiều slide dùng được nhất; khi được lọc best-of-4, cả ba hệ thống ngang nhau](docs/bao_cao/v3_04_tap_test_tong_quan.png)
 
 | Con số chính | Model gốc | DAPO (bản chốt) | Gemini 3.6 Flash |
@@ -344,7 +342,6 @@ Giao thức giữ y như đợt 1: chấm mù, xáo vị trí A/B, 6 tiêu chí 
 - Bảng tập test chấm lại trên máy RTX 5880, trong container có đúng bộ font của máy H100 (`scripts/score_in_h100_fonts.sh`). Slide dùng được và lỗi nhìn thấy khớp số H100; reward thấp hơn khoảng 0,02 vì 268 ảnh minh họa được tải lại đã bị nén lại, và 11 ảnh không còn tải được.
 - Người chấm chọn "ngang nhau" rất nhiều (53–77% ở tiêu chí tổng thể đợt 2); độ đồng thuận ở tiêu chí đầy đủ và thẩm mỹ thấp.
 - Tập train chỉ có 44 bộ slide, khoảng 18 chủ đề.
-- Tên model Gemini: code gọi `models/gemini-3.5-flash`, nhưng khi kiểm tra ngày 21/10/2026, API trả về `modelVersion: gemini-3.6-flash` cho tên này (bản 3.6 phát hành tháng 7/2026), và không còn tên cố định nào gọi được bản 3.5. Lúc sinh dữ liệu, code không lưu `modelVersion` nên không chứng minh trực tiếp được; nhiều khả năng cả output đợt 1 lẫn tập test đều do Gemini 3.6 Flash sinh ra. Các số liệu không đổi, chỉ tên model được sửa.
 
 ### C. Thuật ngữ
 
