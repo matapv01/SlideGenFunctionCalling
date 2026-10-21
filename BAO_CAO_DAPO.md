@@ -174,6 +174,17 @@ Không có bộ dữ liệu slide nào gán nhãn thẩm mỹ theo loại lỗi,
 - **Cổng chọn bản chốt** (trên tập phát triển): hợp lệ ≥ 98%, dùng được ≥ 95%, lỗi nhìn thấy ≤ 4%, keypoint không thấp hơn gốc quá 0,03.
 - **Bản chốt:** seed 42, bước 175. Hai seed lặp lại (7 và 2026) chạy trên đúng code đó.
 
+**Các cấu hình so sánh trong Hình 11.** Tất cả đều là cùng model Qwen3.5-35B-A3B, train DAPO trên cùng 370 prompt; chỉ reward và môi trường khác nhau. Mọi hệ thống được đánh giá lại với cùng prompt vòng 4 và cùng bộ kiểm tra.
+
+| Cấu hình | Reward nội dung | Phạt lỗi bố cục | Tự co chữ | Seed | Kết quả |
+|---|---|---|---|---|---|
+| Model gốc | (không train) | n/a | n/a | n/a | Mốc so sánh |
+| DAPO-2d | Trùng từ vựng 0,5 + ngữ nghĩa 0,7 | Phạt từng lỗi một phần (cắt chữ 0,40; đè khối 0,30; tràn chiều cao 0,03…) | Bật | 42 | Ít lỗi, nhưng viết ngắn: keypoint thấp hơn gốc 0,031 |
+| DAPO-3 | Như 2d | Theo người chấm đợt 1: lỗi người thấy được mất toàn bộ điểm bố cục; tràn chiều cao mất 1/4 | Bật | 42 | Thất bại: lỗi nhìn thấy 8,9%, cao hơn cả gốc |
+| **DAPO-4** | **Keypoint 1,5** + ngữ nghĩa 0,4 (bỏ trùng từ vựng) | Như vòng 3 | **Tắt** (cỡ chữ cố định) | 42, 7, 2026 | Qua cổng; bản chốt là seed 42 |
+
+Vòng 4 cũng bắt đầu từ LoRA mới (không train tiếp vòng trước) và dùng gợi ý sức chứa v2 (đo đồng thời mọi trường, kèm số mục tối đa).
+
 ![Ba seed đều vượt mức bước 0 nhưng đỉnh rơi vào các bước khác nhau (50, 175, 175), nên early stopping theo eval là bắt buộc](docs/bao_cao/7_duong_cong_vong4.png)
 
 ![Tập phát triển, 291 slide, T=0,3: DAPO-4 (trung bình ± độ lệch chuẩn 3 seed) so với model gốc và các vòng trước](docs/bao_cao/v3_11_tap_phat_trien.png)
