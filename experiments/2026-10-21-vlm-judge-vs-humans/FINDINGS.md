@@ -1,9 +1,33 @@
-# Can a VLM judge stand in for the human annotators? (Qwen2.5-VL-32B-Instruct-AWQ, zero-shot)
+# Can a VLM judge stand in for the human annotators? (three open VLMs, zero-shot)
+
+## Update: three judges x two rounds (Qwen2.5-VL-32B-AWQ, Qwen3-VL-32B-AWQ, Gemma-3-27B int4-AWQ)
+Same prompt, both orders, same analysis (RESULTS_round{1,2}_<model>.md; `scripts/run_vlm_judges.sh`). r1 / r2:
+
+| | Humans | Qwen2.5-VL | Qwen3-VL | Gemma-3 |
+|---|---|---|---|---|
+| Same verdict when A/B swapped (overall) | | 0.57 / 0.54 | 0.66 / 0.66 | 0.47 / 0.46 |
+| Agreement with humans, aesthetic (human-human 0.91 / 0.82) | | 0.44 / 0.60 | 0.72 / 0.78 | 0.59 / 0.55 |
+| Agreement with humans, overall (human-human 0.81 / 0.73) | | 0.67 / 0.55 | 0.78 / 0.73 | 0.62 / 0.60 |
+| Picks the longer slide, faithful | 0.48 / 0.78 | 0.84 / 0.92 | 0.81 / 0.89 | 0.72 / 0.76 |
+| Picks the longer slide, overall | 0.54 / 0.65 | 0.66 / 0.83 | 0.77 / 0.87 | 0.38 / 0.47 |
+| Picks the brighter slide, aesthetic | 0.70 / 0.84 | 0.43 / 0.34 | 0.60 / 0.34 | 0.53 / 0.38 |
+| DAPO vs base win rate, overall | 0.565 / 0.504 | 0.521 / 0.423 | 0.513 / 0.359 | 0.505 / 0.517 |
+
+- Robust across all six cells: every judge prefers the brighter slide less than humans do on aesthetic (gap 0.10-0.50).
+- Five of six cells: judges favour the longer slide on faithfulness more than humans (Gemma round 2 matches humans).
+  The overall-level length preference is Qwen-specific (Gemma prefers the shorter slide).
+- Qwen3-VL matches humans on decided pairs about as well as two humans agree (overall 0.73-0.78), yet flips the
+  system-level conclusion in round 2 (DAPO 0.36 vs humans 0.50): it decides pairs humans call ties, by length.
+- Gemma-3 flips its verdict when the images are swapped in more than half of pairs; its numbers are mostly noise.
+- These are correlations over pairs that differ in many ways; the causal test (pairs differing only in palette or only
+  in amount of text) is still to do.
+
+## First pass (Qwen2.5-VL-32B-Instruct-AWQ only)
 
 Setup: the VLM sees what annotators saw (source text, two blind slide images) and answers the same six questions in
 Vietnamese (`scripts/vlm_pairwise_judge.py`); each pair is judged in both A/B orders and the votes averaged.
 Served with vLLM 0.15.0 on one RTX 5880 (GPU1). Human ratings: round 1 final export, round 2 export of 2026-10-21
-04:46 UTC (A1 480, A2 278, A3 101). Analysis: `scripts/analyze_vlm_judge.py` (RESULTS_round1.md, RESULTS_round2.md).
+04:46 UTC (A1 480, A2 278, A3 101). Analysis: `scripts/analyze_vlm_judge.py` (RESULTS_round{1,2}_qwen25vl32b.md).
 Exploratory; nothing here was pre-registered.
 
 ## Agreement with the human pair verdict (same side, pairs where both took a side)

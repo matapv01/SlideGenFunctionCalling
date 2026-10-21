@@ -14,6 +14,7 @@ import argparse
 import asyncio
 import base64
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -45,10 +46,24 @@ Với mỗi tiêu chí trả lời "A", "B" hoặc "tie" (chỉ chọn tie khi t
 Chỉ trả lời một đối tượng JSON, không giải thích:
 {"faithful": "...", "coverage": "...", "language": "...", "layout": "...", "aesthetic": "...", "overall": "..."}
 
-TIÊU ĐỀ BÀI: {title}
+{guide}TIÊU ĐỀ BÀI: {title}
 LOẠI SLIDE: {kind}
 NỘI DUNG NGUỒN:
 {text}"""
+
+
+# --prompt guide: prepend the full annotator guide (annotation_web/public/index.html, #guide-view) verbatim.
+GUIDE = """HƯỚNG DẪN CHẤM (giống hướng dẫn người chấm đã đọc)
+Mỗi lượt bạn xem văn bản nguồn và hai slide A, B làm từ cùng nội dung đó. Hai slide do các hệ thống khác nhau tạo ra; thứ tự và vị trí đã được xáo ngẫu nhiên. Hãy chấm độc lập, không đoán hệ thống.
+- Trung thực với nguồn: slide nào ít thông tin sai hoặc bịa hơn (số liệu, tên, liên hệ, sự kiện không có trong nguồn, gán số cho sai đối tượng)?
+- Đầy đủ, đúng trọng tâm: slide nào giữ được các ý quan trọng nhất của nguồn, không bỏ sót ý chính, không lan man hay chung chung?
+- Ngôn ngữ: tiếng Việt đúng chính tả, ngữ pháp; tiêu đề súc tích; không lẫn ký tự lạ hay cú pháp định dạng; không lặp ý.
+- Bố cục, khả năng đọc: không tràn, cắt hay đè chữ; phân cấp rõ; cỡ chữ và độ tương phản dễ đọc.
+- Thẩm mỹ: slide nào đẹp và chuyên nghiệp hơn về tổng thể?
+- Lựa chọn tổng thể: nếu phải đưa một slide vào bài thuyết trình thật, bạn chọn slide nào?
+Lưu ý: chỉ dùng văn bản nguồn được hiển thị để đánh giá độ trung thực, không dùng hiểu biết bên ngoài. Slide tiêu đề, chuyển ý hay cảm ơn có thể rất ngắn; hãy đánh giá theo mục đích của loại slide đó. Chọn "Ngang nhau" (tie) khi thật sự không phân biệt được.
+
+"""
 
 
 def load_pairs(spec: str) -> dict:
@@ -75,15 +90,18 @@ def parse(text: str) -> dict | None:
     return answers if all(v in {"A", "B", "tie"} for v in answers.values()) else None
 
 
-async def ask(client: AsyncOpenAI, model: str, pair: dict, first: Path, second: Path) -> tuple[dict | None, str]:
-    prompt = PROMPT.replace("{title}", pair.get("title", "")).replace("{kind}", pair.get("kind", "")).replace(
+async def ask(client: AsyncOpenAI, model: str, pair: dict, first: Path, second: Path, guide: str,
+              extra: dict, usage: list) -> tuple[dict | None, str]:
+    prompt = PROMPT.replace("{guide}", guide).replace("{title}", pair.get("title", "")).replace("{kind}", pair.get("kind", "")).replace(
         "{text}", pair.get("text", ""))
     content = [{"type": "text", "text": prompt},
                {"type": "image_url", "image_url": {"url": data_url(first)}},
                {"type": "image_url", "image_url": {"url": data_url(second)}}]
     for _ in range(3):
         response = await client.chat.completions.create(model=model, messages=[{"role": "user", "content": content}],
-                                                        temperature=0.0, max_tokens=200)
+                                                        temperature=0.0, max_tokens=200 if not extra else 2048, **extra)
+        if response.usage:
+            usage.append(response.usage.model_dump(exclude_none=True))
         raw = response.choices[0].message.content or ""
         answers = parse(raw)
         if answers:
@@ -99,6 +117,10 @@ async def main() -> None:
     parser.add_argument("--model", default="qwen2.5-vl-32b")
     parser.add_argument("--concurrency", type=int, default=24)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--prompt", choices=["short", "guide"], default="short")
+    parser.add_argument("--api-key-env", help="read the API key from this variable in the environment or .env "
+                                              "(e.g. GEMINI_API_KEY with --base-url https://generativelanguage.googleapis.com/v1beta/openai/)")
+    parser.add_argument("--reasoning-effort", help="passed through for hosted reasoning models, e.g. low or minimal")
     args = parser.parse_args()
     config = ROUNDS[args.round]
     mapping = json.loads((ROOT / config["mapping"]).read_text())["pairs"]
@@ -113,19 +135,26 @@ async def main() -> None:
         raise SystemExit(f"{len(missing)} pairs miss images, e.g. {missing[:3]}")
     print(f"round {args.round}: {len(pairs)} pairs, {len(done)} done, {len(todo)} to judge", flush=True)
 
-    client, gate, out = AsyncOpenAI(base_url=args.base_url, api_key="local"), asyncio.Semaphore(args.concurrency), args.out.open("a")
+    api_key = "local"
+    if args.api_key_env:
+        env = dict(line.split("=", 1) for line in (ROOT / ".env").read_text().splitlines() if "=" in line and not line.startswith("#"))
+        api_key = os.environ.get(args.api_key_env) or env[args.api_key_env].strip().strip('"')
+    extra = {"reasoning_effort": args.reasoning_effort} if args.reasoning_effort else {}
+    client, gate, out = AsyncOpenAI(base_url=args.base_url, api_key=api_key), asyncio.Semaphore(args.concurrency), args.out.open("a")
     finished = 0
 
     async def judge(pair: dict) -> None:
         nonlocal finished
         async with gate:
             a, b = images / pair["a"], images / pair["b"]
-            forward, raw_forward = await ask(client, args.model, pair, a, b)
-            swapped, raw_swapped = await ask(client, args.model, pair, b, a)
+            guide = GUIDE if args.prompt == "guide" else ""
+            usage: list = []
+            forward, raw_forward = await ask(client, args.model, pair, a, b, guide, extra, usage)
+            swapped, raw_swapped = await ask(client, args.model, pair, b, a, guide, extra, usage)
         flip = {"A": "B", "B": "A", "tie": "tie"}
-        record = {"pair_id": pair["id"], "model": args.model, "forward": forward,
+        record = {"pair_id": pair["id"], "model": args.model, "prompt": args.prompt, "forward": forward,
                   "swapped": {c: flip[v] for c, v in swapped.items()} if swapped else None,
-                  "raw": [raw_forward, raw_swapped]}
+                  "raw": [raw_forward, raw_swapped], "usage": usage}
         out.write(json.dumps(record, ensure_ascii=False) + "\n")
         out.flush()
         finished += 1
